@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.load.outroot</title></head><body>
+<h1>rheome.load.outroot</h1>
+<p><em>function rheome.load</em> &mdash; Rheome</p>
+<pre>  LOAD.OUTROOT  Absolute path to the ANALYSIS OUTPUT workspace: results, figures, reports.
+ 
+    r = rheome.load.outroot()          % $RHEOME_OUT if set, else &lt;repo&gt;/results in a git clone,
+                                % else &lt;userpath&gt;/rheome/results for the installed toolbox
+ 
+  ⭐ TWO ROOTS, TWO KINDS OF FILE. rheome.load.root() is +data: CACHED INPUTS that are regenerable from the
+  source recordings (bases, study, envelope modes) and never hand-written. rheome.load.outroot() is where the
+  analyses write what they FOUND -- tables, .mat results, figures, rendered reports -- laid out by
+  rheome.load.outpath as
+        &lt;root&gt;/&lt;subject&gt;/&lt;analysis&gt;/&lt;file&gt;      a subject's analysis (e.g. a reference subject/alpha_occupancy/)
+        &lt;root&gt;/planted/&lt;analysis&gt;/&lt;file&gt;        subject-free validation on planted or injected data
+        &lt;root&gt;/reports/&lt;file&gt;                   rendered reports; their figures in reports/figures/
+  Both are gitignored: the scripts are the record, the outputs are regenerable from them.
+ 
+  ⚠ NOT tempdir, and NOT the current folder. Twenty-odd scripts once wrote to tempdir, which the OS
+  wipes on reboot, and every figure and report landed in whatever folder MATLAB happened to be in.
+ 
+  Set RHEOME_OUT (setenv, or the shell) to put the outputs anywhere else without touching a script.
+ 
+  See also: rheome.load.outpath, rheome.load.root
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

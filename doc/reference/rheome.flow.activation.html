@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.activation</title></head><body>
+<h1>rheome.flow.activation</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.ACTIVATION  A current field reduced to a scalar activation map, for optical flow.
+ 
+    A = rheome.flow.activation(J)                         % analytic envelope (the default)
+    A = rheome.flow.activation(J, Method=&quot;norm&quot;)           % instantaneous |J|
+    [A, info] = rheome.flow.activation(J, Method=&quot;analytic&quot;, Rate=300, Band=[8 16])
+ 
+  Takes the unconstrained current J [3nV x nT] -- the raw minimum-norm estimate, interleaved
+  [x1;y1;z1;x2;...] -- and returns one non-negative scalar per vertex per frame [nV x nT],
+  which is what a brightness-constancy optical flow needs.
+ 
+  ⚠⚠ THE INSTANTANEOUS NORM IS THE WRONG MAP, AND IT FAILS IN A SPECIFIC WAY. For a
+  band-limited real signal J ~ a(t)cos(2 pi f t + phi), |J| goes as |cos| -- it PULSES AT 2f
+  AND TOUCHES ZERO TWICE PER CYCLE. ⚠ that zero is exact only for a LINEARLY polarised
+  current (one phase for all three components, i.e. a dipole of fixed orientation whose
+  amplitude oscillates, which is the physiological case). Give the components independent
+  phases and the current is elliptical and never passes through zero -- measured on a
+  synthetic, 0.178 of peak instead of ~0. Real resting alpha behaves like the linear case. Brightness constancy (dI/dt + v.grad I = 0) then has to
+  explain the carrier's own rise and fall, which no velocity field can do, so the solver
+  returns whatever minimises the smoothness term at the zero crossings. The apparent motion
+  it reports is the carrier, not the pattern. MEASURED on one 2 s resting alpha tile, left
+  hemisphere, 300 Hz: the per-vertex power at 2*f0 relative to DC is 210x larger for the norm
+  than for the envelope over the 100 strongest vertices (280x over the strongest 1000), and
+  the norm falls to a median of 3.4% of each vertex's own peak within the tile against 21%
+  for the envelope, with 2.5% of vertices dropping below 1% of peak against none. .carrierRatio
+  and .dipRatio report both, per call, so the choice is never a matter of taste.
+ 
+  ⚠ DO NOT MEASURE THE CARRIER ON THE SPATIAL MEAN. The 2f pulsation has a different phase at
+  every vertex, so averaging over the cortex cancels it and both methods score zero -- which
+  is what the first version of this check did, and it made the norm look fine.
+ 
+  ⭐ USE THE ANALYTIC ENVELOPE (Method=&quot;analytic&quot;, the default). Hilbert-transform the
+  band-limited signal along time, so J becomes complex and |J| is the ENVELOPE a(t) with the
+  carrier removed. That is the quantity whose motion across the cortex is the thing being
+  asked about -- how an alpha patch travels over the phase of the oscillation -- and it is
+  smooth on the timescale optical flow assumes.
+ 
+  ⚠ HILBERT BELONGS AT THE SENSORS, NOT HERE, WHEN YOU CAN PUT IT THERE. The inverse is a
+  real linear time-invariant map, so hilbert(K*F) == K*hilbert(F) exactly, and the sensor
+  version costs nCh = 270 transforms instead of 3nV = 61452. This function accepts an
+  ALREADY COMPLEX J and simply takes its modulus, which is the cheap path; pass a real J and
+  it does the transform here, correctly but 200x more expensively. Either way the answer is
+  the same to floating point (asserted in tFlowApparent).
+ 
+  ⚠ THE HILBERT TRANSFORM NEEDS A NARROW BAND TO MEAN ANYTHING. The analytic signal of a
+  broadband field has no interpretable envelope: band-limit first (the alpha octave, 8-16 Hz,
+  is band 6 of the store's ladder) and say so in Band, which is recorded and never applied --
+  this function does not filter.
+ 
+  INPUTS:
+    J     [3nV x nT] interleaved current; real (a band-limited field) or complex (already
+          analytic, e.g. a timefilterbank sub-band or hilbert applied at the sensors)
+    opts (name-value):
+      Method  &quot;analytic&quot; (default) | &quot;norm&quot;
+      Rate    the frame rate of J in Hz; recorded, and used for .samplesPerCycle
+      Band    [fLo fHi] the band J was limited to; recorded, and used for .samplesPerCycle
+      Normalise  scale A to unit maximum (false). ⚠ rheome.dynamics.opticalflow_scalar normalises
+                 internally anyway, so leaving this false keeps A in A.m for reporting.
+ 
+  OUTPUT:
+    A     [nV x nT] non-negative scalar activation
+    info  .method .rate .band .f0 .samplesPerCycle .carrierRatio .dipRatio .wasComplex
+          .carrierRatio  per-vertex power at 2*f0 over power at DC, median over the 100
+                         strongest vertices: two orders of magnitude larger for a norm
+          .dipRatio      median over vertices of min(A)/max(A) within the window: an envelope
+                         stays up (0.21 measured), a norm dips to the floor (0.034)
+ 
+  See also: rheome.flow.apparent, rheome.dynamics.opticalflow_scalar, rheome.flow.rateplan, rheome.select.ladder
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

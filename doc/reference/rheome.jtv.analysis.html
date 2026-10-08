@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.jtv.analysis</title></head><body>
+<h1>rheome.jtv.analysis</h1>
+<p><em>function rheome.jtv</em> &mdash; Rheome</p>
+<pre>  JTV.ANALYSIS  Apply a joint filterbank to a joint spectrum.
+ 
+    Y = rheome.jtv.analysis(C, G)
+    Y = rheome.jtv.analysis(C, G, info)      % info from rheome.jtv.bank; C may be the struct from rheome.flow.joint
+ 
+  INPUTS:  C     [K x nOmega] joint spectrum, OR the struct from rheome.flow.joint (its .C and .axes are
+                 used, so the axes travel with the data rather than beside it)
+           G     [K x nOmega x Nf] filter gains
+           info  (optional) from rheome.jtv.bank. If it carries .axes AND C carries axes, the two are
+                 checked with rheome.jtv.compatible before the multiply.
+  OUTPUT:  Y     [K x nOmega x Nf] one filtered copy per member
+ 
+  Every member is an elementwise multiply -- the bank costs Nf multiplies and no transforms,
+  because both C and G already live on the same (lambda,omega) grid.
+ 
+  ⚠ WHY THE AXES ARE CHECKED AND NOT JUST THE SIZE. Two runs over different bands can retain the
+  same number of bins, so [K x nOmega] agreeing proves nothing about them belonging together. So
+  can a padded and an unpadded run of the same band -- and those differ in df AND in boundary
+  condition. A size check passes all of them silently; rheome.jtv.compatible does not.
+ 
+  See also: rheome.jtv.synthesis, rheome.jtv.dual, rheome.jtv.bank, rheome.jtv.compatible
+ 
+  Author: Diellor Basha, 2026 (after F. Grassi, GSPBox)
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

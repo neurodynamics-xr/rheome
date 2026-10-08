@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.import.atlas</title></head><body>
+<h1>rheome.import.atlas</h1>
+<p><em>function rheome.import</em> &mdash; Rheome</p>
+<pre>  IMPORT.ATLAS  Read the surface's parcellations and cache them to +data.
+ 
+    file = rheome.import.atlas(name)
+ 
+  Reads every atlas out of the dataset's Brainstorm cortical surface (rheome.io.read.atlas) and
+  writes them to +data/&lt;name&gt;/atlas.mat, so the ROI axis is available without the external
+  volume being mounted. Follows the same one-file-per-concern pattern as rheome.import.bases /
+  rheome.import.connectome / rheome.import.sphere.
+ 
+  ⚠ REQUIRES THE ORIGINAL SURFACE FILE. The cached surface.mat keeps geometry and
+  operators but NOT the atlases -- rheome.io.read.surface deliberately extracts only the
+  'Structures' hemisphere split. So this reads `cortexFile` from surface.mat and goes back
+  to the source. If that volume is unmounted, rheome.import.atlas is the one step that fails.
+ 
+  See also: rheome.io.read.atlas, rheome.load.atlas, rheome.import.surface, rheome.load.dataset
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

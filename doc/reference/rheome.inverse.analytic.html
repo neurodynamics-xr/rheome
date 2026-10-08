@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.inverse.analytic</title></head><body>
+<h1>rheome.inverse.analytic</h1>
+<p><em>function rheome.inverse</em> &mdash; Rheome</p>
+<pre>  INVERSE.ANALYTIC  Inverse in the leadfield's OWN measurable basis, truncated at the noise floor.
+ 
+    R = rheome.inverse.analytic(Gain, NoiseCovMat, basis)
+    R = rheome.inverse.analytic(Gain, NoiseCovMat, basis, struct('K',44))
+ 
+  ⭐⭐ WHY THIS IS NOT ANOTHER SMOOTHNESS PRIOR. rheome.inverse.dirac reduces 3nV unknowns to K Dirac modes,
+  which is a real reduction but the wrong subspace: measured, leadfield rows lie only 0.187 inside the
+  400-mode span, just 10 of 270 measurable directions have a principal-angle cosine above 0.5 to it,
+  and the mean cos^2 is 0.041 (§43). Because rank(G*Psi) is still 270 the truncated model fits any
+  sensor pattern exactly, so the misalignment never shows as a bad fit -- it shows as a source
+  estimate dominated by near-null directions. ⭐ This truncates in the span of the leadfield ITSELF,
+  where every retained direction is one the array actually measures.
+ 
+  ⭐ AND THE BASIS IS ANALYTIC. `basis` is the analytic reconstruction of the leadfield
+  (rheome.forward.analyticbank), which spans the true row space to 0.9988 and is built from a closed-form
+  law -- a sphere centre, the sensor position and orientation, and a few envelope coefficients. So
+  the source basis is not extracted numerically from a sampled matrix; it is written down.
+ 
+  ⚠⚠ IT DOES NOT RECOVER THE INVISIBLE PART, AND NOTHING DOES. Only 0.276 of a planted vortex and
+  0.066 of a focal dipole patch lies in the measurable subspace at all. This makes the estimate of
+  the visible part over-determined -- about 44 coordinates rise above the noise at SNR 3, against
+  270 measurements -- rather than regularised into existence. It says nothing about the rest.
+ 
+  INPUTS
+    Gain         [nCh x 3nV]         NoiseCovMat  struct with .NoiseCov, as rheome.inverse.mne
+    basis        [nCh x 3nV] the analytic reconstruction; its rows span the source basis
+    opts .K      directions to keep ([] = the discrepancy choice from the noise floor)
+         .Snr    assumed SNR for that choice (3)
+ 
+  OUTPUT (struct R)
+    .ImagingKernel [3nV x nCh]   .K  directions kept   .spectrum  the truncated singular values
+ 
+  See also: rheome.inverse.mne, rheome.inverse.dirac, rheome.forward.analyticbank, rheome.forward.leadfield
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

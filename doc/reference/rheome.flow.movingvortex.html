@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.movingvortex</title></head><body>
+<h1>rheome.flow.movingvortex</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.MOVINGVORTEX  A vortex atom whose core TRANVELS, at a chosen speed along a geodesic.
+ 
+    out = rheome.flow.movingvortex('sub01')                   % alpha, 0.05 m/s
+    out = rheome.flow.movingvortex(name, SpeedMS=0.2)                 % faster, and broader in band
+    out = rheome.flow.movingvortex(name, SpeedMS=0, ...)              % degenerates to rheome.flow.vortexatom
+ 
+  ⭐⭐ WHY THIS IS A SEPARATE FUNCTION. rheome.flow.vortexatom is a SEPARABLE product -- one spatial factor
+  times one temporal factor -- so its core cannot move: scale, rate and place are independent by
+  construction and the atom has exactly zero speed. Motion is the one thing separability forbids.
+  Here the spatial factor depends on t, and the object stops being rank two.
+ 
+  ⭐ IT IS RANK 2K, AND STILL TWO MATRIX PRODUCTS. The core is carried through K waypoints along a
+  geodesic, each waypoint a vortex of the same scale and charge, blended by a time partition of unity
+  W:
+        J(:,t) = JA*(W.*a)(:,t) + JB*(W.*b)(:,t),      JA, JB  [3nV x K],  W [K x nT]
+  so the forward is (G*JA)*(W.*a) + (G*JB)*(W.*b): 2K leadfield columns for the whole record, and
+  [3nV x nT] is still never formed.
+ 
+  ⚠⚠ SPEED FIGHTS THE BAND, AND THE LIMIT IS TIGHT. A vertex sees the vortex only while it passes,
+  for about lambda/v seconds, and that passage envelope multiplies the carrier -- so motion broadens
+  the spectrum exactly as an amplitude modulation does. Staying inside the octave needs the passage to
+  be no shorter than the tile's own support, v &lt;= lambda/T_support, which at 140 mm and alpha's 1.26 s
+  is about 0.11 m/s. ⭐ MEASURED, that estimate is conservative: in-band energy is 1.0000 / 0.9997 /
+  0.9984 / 0.9765 / 0.7845 / 0.4637 at 0.02 / 0.05 / 0.11 / 0.25 / 0.50 / 1.00 m/s, so the knee is
+  nearer 0.5 m/s than 0.11. But the conclusion survives: at 1 m/s, a figure commonly quoted for
+  cortical travelling waves, less than half the energy is still in the octave and the peak has
+  dragged from 11.25 Hz down to 9.75 Hz. A fast travelling vortex is not a narrowband object.
+  `.check.inbandFrac` measures it; do not assume it.
+ 
+  ⚠⚠ TWO SPEEDS, DIFFERING BY THE FOLDING, AND THE LITERATURE'S FIGURE IS AMBIGUOUS BETWEEN THEM.
+  SpeedMS is GEODESIC -- along the cortical sheet, which is what a wave in the tissue travels. The
+  centroid of the field displaces through SPACE, which is what an observer outside the head would
+  infer, and the two differ by however much the cortex folds in between: measured geodesic/chord
+  1.69 to 2.27 on this mesh, so a core covering 146.6 mm of surface displaces only 86.8 mm of space.
+  `.check.speedGeodesicMS` and `.check.speedEuclideanMS` report both and `.check.foldFactor` their
+  ratio. ⚠ Do not compare a geodesic speed here against a metres-per-second figure from a paper
+  without checking which one that paper measured.
+ 
+  ⚠ The path length is speed x the envelope support, so a fast vortex needs a long path and this mesh
+  is only ~180 mm across. The path is clamped to the farthest reachable vertex and a warning fires.
+ 
+  INPUTS
+    SpeedMS   core speed along the surface, m/s (default 0.05)
+    Vertex    the START vertex (default rheome.flow.seedvortex's gauge-aware choice)
+    Target    end vertex, overriding SpeedMS-derived distance ([] by default)
+    Waypoints K, or [] to space them at WavelengthMM/4 (default)
+    plus WavelengthMM, Winding, Phase, Band, Duration, SampleRate, Chirality, MomentNAm,
+    Hemi, Bases, Gauge -- all as rheome.flow.vortexatom
+ 
+  OUTPUT (struct out)
+    .JA .JB [3nV x K]   .W [K x nT]   .a .b .psi   .path [1 x K] vertices
+    .pathLengthMM .speedMS .transitSec   .materialise  @() [3nV x nT]
+    .check  speedGeodesicMS, speedEuclideanMS, foldFactor, chordMM, inbandFrac, peakHz,
+            passageSec, nWaypoints, clamped
+ 
+  See also: rheome.flow.vortexatom, rheome.flow.seedvortex, rheome.geom.geodesic, rheome.filters.travwave, rheome.dynamics.dispersion
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

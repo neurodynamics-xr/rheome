@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.show.ridges</title></head><body>
+<h1>rheome.show.ridges</h1>
+<p><em>function rheome.show</em> &mdash; Rheome</p>
+<pre>  SHOW.RIDGES  Summary figure for scale-space ridge tracking (rheome.detect.ridges).
+ 
+    rheome.show.ridges(surf, out)
+    hFig = rheome.show.ridges(surf, out, name, value, ...)
+ 
+  Four panels that together say what a ridge run found: WHERE the motifs are and how they moved,
+  at WHAT SIZE, for HOW LONG, and how fast. The scale axis is a first-class coordinate here --
+  trajectories are coloured by their modal sigma, so size is readable off the surface directly.
+ 
+  INPUTS:
+    surf  surface struct (.Vertices, .Faces, .nV) or a path
+    out   output of rheome.detect.ridges
+ 
+  OPTIONS:
+    'MaxRidges'  how many trajectories to draw, longest first (default 60)
+    'View'       camera [az el] (default [-90 10])
+    'Background' [nV x 1] scalar to shade the surface (default flat grey)
+    'Truth'      struct for validation overlays, any of:
+                   .sigma  true scale (m)     -&gt; marked on the scale histogram
+                   .speed  true speed (m/s)   -&gt; marked on the speed panel
+                   .path   [n x 3] true core path -&gt; drawn dashed black on the surface
+    'Lift'       trajectory offset along the normal, as a fraction of mesh extent (default 0.012)
+    'Title'      overall title
+    'Visible'    'on' (default) | 'off'
+ 
+  OUTPUT: hFig figure handle.
+ 
+  See also: rheome.detect.ridges, rheome.show.surface
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

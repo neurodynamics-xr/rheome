@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.eigen.lift</title></head><body>
+<h1>rheome.eigen.lift</h1>
+<p><em>function rheome.eigen</em> &mdash; Rheome</p>
+<pre>  EIGEN.LIFT  Lift a scalar eigenbasis to an ambient (flat) quaternion Dirac basis.
+ 
+    dbasis = rheome.eigen.lift(Phis, Lams, Ms)     % scalar modes + eigenvalues + mass
+    dbasis = rheome.eigen.lift(basis)              % a basis struct with .Phi .Lambda .Mass
+ 
+  Each scalar mode phi_k becomes THREE quaternion modes -- phi_k placed in the imaginary x, y, z
+  slots (w = 0), eigenvalue lam_k each -- and the mass is lifted Mq = kron(Ms, I4). This realizes
+  L (x) I3 (the ambient, component-wise operator): a flat vector basis in which each cortical
+  harmonic points independently along the three ambient axes. Applied to the LB-Connectome scalar
+  basis it is the DIRAC-CONNECTOME vector basis (fiber-spread current). Faithful port of
+  bst_lift_connectome_dirac.
+ 
+  INPUTS:
+    Phis [n x K] scalar eigenbasis;  Lams [K x 1] eigenvalues;  Ms [n x n] scalar mass
+    (or a single struct with those as .Phi .Lambda .Mass)
+ 
+  OUTPUT (struct dbasis, same layout as rheome.eigen.dirac_frame):
+    .Phi [4n x 3K] quaternion modes ([w;x;y;z] interleaved per vertex)  .Lambda [3K x 1]
+    .Mass kron(Ms,I4)  .nVert n  .nModes 3K
+ 
+  See also: rheome.eigen.modes, rheome.eigen.dirac_frame, rheome.operators.lb_connectome, rheome.filters.tovec
+ 
+  Author: Diellor Basha, 2026 (port of bst_lift_connectome_dirac)
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

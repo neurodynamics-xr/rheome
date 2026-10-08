@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.travwave</title></head><body>
+<h1>rheome.filters.travwave</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.TRAVWAVE  Joint traveling-wave filter: energy on the dispersion ridge.
+ 
+    G = rheome.filters.travwave(lambda, omega, c, width)
+ 
+  A non-separable joint filter g(lambda,omega) selecting the (lambda,omega) pairs that
+  obey a linear dispersion relation -- i.e. waves propagating on the cortex at phase
+  speed c. Energy concentrates on the ridge  f = c*sqrt(lambda)/(2*pi) Hz, with Gaussian
+  width. Faithful port of bst_eigfilter_design_travwave (band-pass, even in freq -&gt; real).
+ 
+  INPUTS:
+    lambda [K x 1] eigenvalues (dbasis.Lambda)
+    omega  [1 x N] one-sided frequency axis (Hz) from rheome.filters.jspectrum
+    c      phase speed (m/s), default 1
+    width  ridge width (Hz), default 2
+ 
+  OUTPUT:
+    G      [K x N] joint gains (multiply the joint spectrum elementwise)
+ 
+  See also: rheome.filters.jspectrum, rheome.filters.stmatern, rheome.filters.bandpass
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

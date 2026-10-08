@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.load.cortex</title></head><body>
+<h1>rheome.load.cortex</h1>
+<p><em>function rheome.load</em> &mdash; Rheome</p>
+<pre>  LOAD.CORTEX  Load the bundled folded-cortex sandbox (operators + eigenmodes).
+ 
+    cortex = rheome.load.cortex(name)
+ 
+  Returns the single struct that rheome.import.cortex cached to +data/&lt;name&gt;/cortex.mat -- the
+  subject's folded cortical hemisphere with EVERYTHING on it:
+    .S .L .M .basis .dirac .conn(.C/.Psi/.Lambda) .globalVertices .hemi .meta
+  The folded-metric twin of rheome.load.sphere (same mesh, real cortical embedding). Returns [] if
+  not cached. Named rheome.load.cortex (not load.eigen) to avoid shadowing the rheome.eigen.* package.
+ 
+  See also: rheome.import.cortex, rheome.load.sphere, rheome.load.dataset
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

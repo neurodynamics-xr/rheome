@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.demos.sensor_wavelets</title></head><body>
+<h1>rheome.demos.sensor_wavelets</h1>
+<p><em>function rheome.demos</em> &mdash; Rheome</p>
+<pre>  DEMOS.SENSOR_WAVELETS  Scale, rate and speed: three controls, for GENERATION and ANALYSIS.
+ 
+    out = rheome.demos.sensor_wavelets()
+    out = rheome.demos.sensor_wavelets('_figures')       % also export the 5 PNGs
+ 
+  The joint bank composes three factor lists -- W = K(lambda,omega) * psi_g(lambda) *
+  psi_t(omega) -- and those three factors ARE the three controls:
+ 
+    psi_g   the graph member   -&gt; SPATIAL SCALE, millimetres of sensor separation
+    psi_t   the time member    -&gt; RATE, hertz
+    K       the joint kernel   -&gt; SPEED, metres per second across the array
+ 
+  Each is planted by generating a pattern and then RECOVERED by analysing it. Generation
+  is a delta pushed through a member (rheome.filters.impulse); analysis is the ordinary readout.
+  A control that cannot be recovered is decoration, so every one is measured here.
+ 
+  ⚠ SPEED IS NOT MEASURED THE SAME WAY AS THE OTHER TWO. dispersion states that the
+  members are not involved -- the ridge is fitted on the FULL (lambda, omega) energy --
+  and that the retained band must span the diagonal. Fitting speed inside one graph member
+  returns a confident wrong number: R2 stays above 0.98 while the slope is out by a factor
+  of two to four, and the error is the SAME multiple at every speed, which is what marks
+  it as a conditioning artefact rather than noise. So scale and rate are planted per
+  member; speed is planted with a joint kernel across all wavenumbers.
+ 
+  ⚠ NO SPEED WITHOUT rheome.sensors.calibrate. The Laplacian's lambda is dimensionless. Every
+  millimetre and every metre per second below is a graph quantity times sqrt(alpha).
+ 
+  OUTPUT:
+    out  .ok .checks .scale .rate .speed .independence .bank
+ 
+  See also: rheome.sensors.generate, rheome.filters.impulse, rheome.jointfilterbank, rheome.sensors.calibrate
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

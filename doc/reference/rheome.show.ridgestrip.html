@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.show.ridgestrip</title></head><body>
+<h1>rheome.show.ridgestrip</h1>
+<p><em>function rheome.show</em> &mdash; Rheome</p>
+<pre>  SHOW.RIDGESTRIP  Filmstrip of a field with tracked ridges overlaid frame by frame.
+ 
+    rheome.show.ridgestrip(surf, U, out, frames)
+    hFig = rheome.show.ridgestrip(surf, U, out, frames, name, value, ...)
+ 
+  The Lagrangian companion to rheome.show.filmstrip: each panel renders the field at one frame AND
+  draws the motifs that are alive then -- a marker at the current position and a trail back to
+  the ridge's birth. Reading left to right shows whether motifs persist in place or travel, on
+  the data they were found in.
+ 
+  INPUTS:
+    surf    surface struct (.Vertices, .Faces, .nV)
+    U       [nV x nT] the field the ridges were found in (|.| is taken)
+    out     output of rheome.detect.ridges
+    frames  vector of frame indices to render
+ 
+  OPTIONS:
+    'Top'        show only the N longest-lived ridges (default 12; Inf = all)
+    'View'       camera [az el] (default [-90 10])
+    'CLim'       shared colour limits (default from U over the shown frames)
+    'Colormap'   background colormap (default parula)
+    'Lift'       marker/trail offset along the normal, fraction of mesh extent (default 0.012)
+    'TrailFrames' how many frames of trail to draw behind the current position (default Inf)
+    'Zoom'       camera zoom factor applied after rendering (default 1.8)
+    'Only'       restrict to these ridge indices before the Top sort
+    'Titles'     {1 x numel(frames)} panel titles (default 'frame k')
+    'Title'      overall title
+    'Visible'    'on' (default) | 'off'
+ 
+  OUTPUT: hFig figure handle.
+ 
+  See also: rheome.detect.ridges, rheome.show.ridges, rheome.show.filmstrip
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

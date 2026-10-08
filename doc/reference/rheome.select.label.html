@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.select.label</title></head><body>
+<h1>rheome.select.label</h1>
+<p><em>function rheome.select</em> &mdash; Rheome</p>
+<pre>  SELECT.LABEL  Append labels to tiles in one transaction: idempotent, atomic, rolled back by id.
+ 
+    t = rheome.select.label(db, rows, Kind=&quot;bad&quot;, Source=&quot;manual&quot;, Author=&quot;&quot;)
+        rows  table with level, k and optionally channel_id (0 = none), band_id (0 = none), value
+        t     the txn row (struct): txn_id, count, content_hash, created, and .existed
+ 
+  One transaction: the txn row and the label rows are written together, atomically
+  (select/private/sel_labelio). The content hash (MD5 of the sorted rows, kind and
+  source) is unique per recording: submitting the same rows again returns the existing
+  transaction without writing. In Postgres this is BEGIN; INSERT txn; INSERT label;
+  COMMIT under the unique index txn_content (rheome.select.ddl).
+ 
+  Labels are where bad segments, artefact marks and any later labelling go; features
+  never move here (design §4).
+ 
+  See also: rheome.select.labels, rheome.select.rollback
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.sensors.window</title></head><body>
+<h1>rheome.sensors.window</h1>
+<p><em>function rheome.sensors</em> &mdash; Rheome</p>
+<pre>  SENSORS.WINDOW  Which wavelengths does this array admit? Computed before any signal.
+ 
+    w = rheome.sensors.window(arr)
+ 
+  Three array-intrinsic facts, and nothing else, decide what an array can measure:
+ 
+    FACES     a winding number is summed around a face (a 2-cell); an array that admits
+              no faces cannot carry one AT ALL
+    PITCH     wavelengths below 2*pitch alias -- indistinguishable from longer ones
+    APERTURE  above the aperture the array measures a phase GRADIENT, not a wave: one
+              number, with no way to confirm the pattern is even periodic
+ 
+  ⭐ THE WINDOW IS A PROPERTY OF THE INSTRUMENT. It is known before a signal exists, and no
+  amount of SNR or cleverness moves either edge. The Utah and ECoG presets are the same
+  geometry class two orders of magnitude apart in pitch, and their windows do not overlap.
+ 
+  ⭐ THE PROBE'S TWO LIMITS ARE DIFFERENT IN KIND, which is why .Supports separates them.
+  Winding is UNDEFINED on a chain -- not noisy, not hard, absent. Direction is likewise
+  unavailable: a 1D array measures only k along its axis, so a wave crossing at angle theta
+  reads speed c/cos(theta), biased HIGH and uncorrectable from the probe alone. But
+  omega(lambda) and speed ARE available in that projection, so they stay true.
+ 
+  ⚠ EVERY LENGTH IS SENSOR SEPARATION. LambdaMin and LambdaMax are metres between sensors.
+  They are not source extents and imply nothing about what produced the signal.
+ 
+  INPUTS:
+    arr  a rheome.sensors.* array struct
+  OUTPUT:
+    w  .LambdaMin .LambdaMax .Octaves .Pitch .Aperture .Dim .HasFaces .Supports .Name
+ 
+  See also: rheome.sensors.calibrate, rheome.sensors.graph, rheome.demos.sensor_limits
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

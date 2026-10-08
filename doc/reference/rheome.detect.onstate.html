@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.onstate</title></head><body>
+<h1>rheome.detect.onstate</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.ONSTATE  Binary on/off state of an amplitude series from the bimodality of its log.
+ 
+    S = rheome.detect.onstate(y)                       % y [1 x n] amplitude samples (e.g. per-cycle mean envelope)
+    S = rheome.detect.onstate(y, Posterior=0.5)
+ 
+  An oscillation that switches on and off gives a log-amplitude distribution with two modes: the
+  background floor and the rhythm. A two-component Gaussian mixture on log(y) finds them, and a sample
+  is ON when its posterior for the upper component exceeds Posterior. The threshold is where the
+  posterior crosses, in amplitude units.
+ 
+  ⭐ WHY NOT A ROBUST MEDIAN THRESHOLD (rheome.detect.spindle's). median + k*MAD assumes events are SPARSE:
+  the median is then background. If alpha is on for most of a recording the median sits INSIDE alpha,
+  the threshold lands above the rhythm's own typical level, and a sustained episode is cut into
+  sub-second fragments. The mixture places the threshold between the two states wherever they are.
+ 
+  ⚠ NOT EVERY SERIES IS BIMODAL, and then there is no state to find. .bimodal compares the two-
+  component fit against one by BIC and requires the components to be separated (Ashman's D &gt; 2);
+  when it is false the on/off labels are returned but should not be read as states.
+ 
+  OUTPUT (struct S)
+    .on [1 x n] logical   .threshold (amplitude)   .posterior [1 x n]
+    .bimodal   .ashmanD   .dBIC (BIC one - BIC two; &gt; 0 favours two)   .fracOn
+    .mu [lo hi] .sigma [lo hi] (of log y)   .weight [lo hi]
+ 
+  See also: rheome.detect.occupancy, rheome.detect.spindle, alpha_occupancy_omega
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

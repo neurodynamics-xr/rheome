@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.jtv.bounds</title></head><body>
+<h1>rheome.jtv.bounds</h1>
+<p><em>function rheome.jtv</em> &mdash; Rheome</p>
+<pre>  JTV.BOUNDS  Frame operator and bounds of a joint time-vertex filterbank.
+ 
+    b = rheome.jtv.bounds(G)
+ 
+  For a bank G(:,:,i) of joint filters on the (lambda,omega) grid, the frame operator is
+ 
+    S(lambda,omega) = sum_i |g_i(lambda,omega)|^2
+ 
+  and the bank is a frame iff A = min S &gt; 0. A = B is TIGHT (reconstruction needs no dual beyond a
+  constant). A -&gt; 0 means part of the joint plane is uncovered and the canonical dual does not
+  exist there.
+ 
+  INPUT:   G  [K x nOmega x Nf] filter gains
+  OUTPUT (struct b):
+    .S          [K x nOmega] the frame operator
+    .A .B       min and max of S
+    .Tightness  B/A (1 = tight)
+    .uncovered  fraction of the grid with S below eps*max(S) -- where the dual fails
+    .worst      [k, j] index of the weakest point
+ 
+  See also: rheome.jtv.dual, rheome.jtv.bank
+ 
+  Author: Diellor Basha, 2026 (after F. Grassi, GSPBox)
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

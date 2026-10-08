@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.select.tree</title></head><body>
+<h1>rheome.select.tree</h1>
+<p><em>function rheome.select</em> &mdash; Rheome</p>
+<pre>  SELECT.TREE  Descend the sensor tree from the root, pruning with the bound, to the query's depth.
+ 
+    [R, cost] = rheome.select.tree(db, q)      q = rheome.select.query(..., Scope=&quot;group&quot;, Depth=d)
+ 
+  The position-axis twin of rheome.select.frames: at the query's time level, the survivors at
+  tree depth d are the nodes whose parent survived and whose bound statistic passes the
+  parent test; at Depth the predicate itself is applied. Group rows are exact sums and
+  maxima over member channels, so the bound is exact and tree(db, q) == scan(db, q) for
+  the same query (tests/tSelectGroups.m). In SQL it is the same semi-join chain over
+  sensor_group.parent_id instead of the tile's parent key.
+ 
+  The two descents compose: frames on the root node finds WHEN, tree at those frames
+  finds WHERE.
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

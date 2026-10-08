@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.tilepath</title></head><body>
+<h1>rheome.detect.tilepath</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.TILEPATH  Track-before-detect on the tile graph: the best-scoring walk through a window.
+ 
+    out = rheome.detect.tilepath(Y, G, Baseline=b)
+    out = rheome.detect.tilepath(Y, G, Baseline=b, StepCost=0, NumPaths=3, SampleRate=300)
+ 
+  Y is a tile field over ONE observation window ([nTile x nF], rheome.geom.tilemean then a dyadic block);
+  G is rheome.geom.tiles. A path is a walk on the tile graph -- each frame it stays or steps to an adjacent
+  tile -- and its score is the sum of (Y - Baseline) along it, less StepCost per step. The best path
+  is found exactly by dynamic programming (Viterbi), with a local-alignment reset so it may START AND
+  END ANYWHERE in the window:
+ 
+      S(k,t) = Y(k,t) - b + max(0, max_{j in {k} u adj(k)} S(j,t-1) - StepCost*[j ~= k])
+ 
+  ⭐⭐ WHY NOT DETECT, THEN LINK. plant_select_omega.m: at 10 dB the peak falls under a noise blob every
+  few frames, so a chain of per-frame peaks (rheome.detect.tiletrack) breaks, and each fragment of a 120 mm
+  mover covered 36-88 mm -- no further than noise tracks of the same length. The information was lost
+  when each frame committed to its own peaks. Here no frame commits: a frame where noise wins costs
+  the path a little score instead of breaking it, and evidence accumulates along the motion. It is
+  the tile-graph form of velocity-matched integration, i.e. of the joint speed filter -- the window
+  (tile size, rate) comes from rheome.geom.jointcell, the path is the measurement made inside it.
+ 
+  ⭐ THE BASELINE MAKES NOISE LOSE. Without it every value adds, and the best path is simply the
+  longest. With b above typical noise, a walk through noise scores negative on average -- it can
+  follow a noise blob for its lifetime, then pays for the gap -- while a walk along a real peak gains.
+  Set b from noise alone (a high quantile of noise-only tile values), not by hand.
+ 
+  ⭐ The adjacency-only step is the motion model and it is exact for the window: the ladder's rate is
+  chosen so a trackable feature moves at most one tile per frame (speedTrackMS), so no real path needs
+  a longer step.
+ 
+  INPUTS
+    Y           [nTile x nF] tile values        G  rheome.geom.tiles (.A)
+    Baseline    subtracted from every value (0)
+    StepCost    charged per tile change (0)
+    NumPaths    extract this many disjoint paths, best first (1); later paths may not use a
+                (tile, frame) an earlier one used
+    SampleRate  frames per second, for .duration (1)
+    Span        &quot;local&quot; (default): the path may start and end anywhere; &quot;full&quot;: the path must run
+                from the first frame to the last -- for a window that is ALREADY the event, e.g. an
+                alpha episode from its fitted onset to its offset, where dropping frames would drop
+                the phases being compared
+ 
+  OUTPUT (struct out)  -- the shape of rheome.detect.tiletrack's output, so rheome.detect.trackstats applies
+    .tracks  struct array: frames tiles values held hops firstFrame lastFrame duration score
+    .nTracks
+ 
+  See also: rheome.detect.tiletrack, rheome.detect.trackstats, rheome.detect.tracknull, rheome.geom.jointcell
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

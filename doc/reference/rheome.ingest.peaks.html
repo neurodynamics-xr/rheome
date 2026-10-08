@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.ingest.peaks</title></head><body>
+<h1>rheome.ingest.peaks</h1>
+<p><em>function rheome.ingest</em> &mdash; Rheome</p>
+<pre>  INGEST.PEAKS  Per-tile spectral peak of each band, at the band's OWN level, by FFT.
+ 
+    P = rheome.ingest.peaks(x, bands, g)
+    P = rheome.ingest.peaks(x, bands, g, Pad=2, Window=&quot;hann&quot;)
+ 
+  ⭐ WHY THIS IS NOT A ROLL-UP, AND DOES NOT NEED TO BE. A peak frequency is not mergeable:
+  the loudest frequency of two joined tiles is not a function of each tile's peak. It does
+  not matter, because the DIAGONAL gives every band exactly one home level -- the first tile
+  at least its support long -- so a per-band measurement has one place to live and is
+  computed there once. Not closed form, and not a problem.
+ 
+  ⭐ WHY FFT RATHER THAN THE BANK. The frame bank already gives band ENERGY exactly, and its
+  peak resolution is one member: at four voices that is a 1.19x step, far too coarse to call
+  an alpha peak. A tile's own FFT resolves 1/T: a 2 s alpha tile gives 0.5 Hz bins, and a
+  parabolic fit on the log-magnitude puts the peak between them. That is worth one more pass.
+ 
+  ⚠ THE WINDOW COSTS AMPLITUDE, AND IT IS CORRECTED. A Hann window removes 50 % of the
+  amplitude and leaks either side; the returned peak amplitude divides by the window's
+  coherent gain, so it is the sinusoid's amplitude in the recording's units, not the
+  spectrum's. Band POWER from this path is therefore NOT the store's `energy` -- that one is
+  exact by Parseval over the whole record, this one is a windowed tile's own estimate, and
+  the two agree to a few per cent on stationary content. Use `energy` for power; use this for
+  where the power sits.
+ 
+  INPUTS
+    x      [nT x 1] one channel, double
+    bands  the band table (rheome.ingest.bank)
+    g      the grid (rheome.ingest.grid)
+    Pad    zero-padding factor for the peak fit (2)
+    Window &quot;hann&quot; | &quot;rect&quot;
+ 
+  OUTPUT (struct P), one entry per level that is some band's home:
+    .level      the level
+    .bands      [1 x nb] band ids whose natural level this is
+    .freq       [K x nb] peak frequency in Hz, NaN where the tile holds no samples
+    .amp        [K x nb] peak amplitude in the signal's units
+    .power      [K x nb] the band's power from this spectrum (units^2)
+ 
+  See also: rheome.ingest.bank, rheome.ingest.build, rheome.select.derive
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

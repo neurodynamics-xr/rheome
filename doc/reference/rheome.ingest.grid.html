@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.ingest.grid</title></head><body>
+<h1>rheome.ingest.grid</h1>
+<p><em>function rheome.ingest</em> &mdash; Rheome</p>
+<pre>  INGEST.GRID  The dyadic frame grid of a record: frames per level, their centres and extents.
+ 
+    g = rheome.ingest.grid(nT, fs, cfg)
+ 
+  Pure arithmetic, no data. Level 0 tiles the record in frames of F = FrameFloor*fs samples
+  anchored at sample 1 (the store's Time starts at 0). Level L frames are 2^L level-0
+  frames. The last frame at every level may be partial; it keeps its NOMINAL centre and
+  extent, and carries its real sample count in the statistics (rheome.ingest.reduce .n). Lmax is
+  the first level whose single frame covers the record, so every parent at every level has
+  exactly two children, the second possibly with n = 0.
+ 
+  ⚠ Centres are of the nominal frame, not of the samples it holds. A query box is answered
+  against the grid; how many samples a tile actually saw is a stored statistic, not a
+  geometry.
+ 
+  INPUTS:
+    nT   samples in the record
+    fs   sampling rate (Hz)
+    cfg  rheome.ingest.config
+  OUTPUT (struct g):
+    .F        samples per level-0 frame          .K0      frames at level 0
+    .Lmax     top level (one frame)              .K       [1 x Lmax+1] frames per level
+    .tExtent  [1 x Lmax+1] seconds               .tCenter {1 x Lmax+1} seconds
+    .nT .fs .FrameFloor
+ 
+  See also: rheome.ingest.config, rheome.ingest.reduce, rheome.ingest.rollup
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

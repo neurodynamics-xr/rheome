@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.inverse.mne</title></head><body>
+<h1>rheome.inverse.mne</h1>
+<p><em>function rheome.inverse</em> &mdash; Rheome</p>
+<pre>  INVERSE.MNE  Whitened minimum-norm inverse on the RAW unconstrained leadfield.
+ 
+    R = rheome.inverse.mne(Gain, NoiseCovMat)
+    R = rheome.inverse.mne(Gain, NoiseCovMat, opts)
+ 
+  The standard distributed inverse, with no change of source basis: the estimate is the
+  smallest-norm current consistent with the whitened data. This is the PRIMITIVE the flow
+  operators are built on -- rheome.inverse.dirac is the alternative, not the baseline.
+ 
+  Same five stages as rheome.inverse.dirac, and deliberately the same code path for four of them:
+    1. Noise-covariance regularization + whitener   (+inverse/private/whiten.m, shared)
+    2. Observability SVD   iW*Gain = UL*S*VL'   + SNR -&gt; Lambda
+    3. Wiener spectral window  g(s) = Lambda*s / (Lambda*s^2 + 1)
+    4. Current kernel  VL*diag(g)*UL'
+    5. Source normalization (amplitude / dspm2018 / sloreta) + fold in the whitener
+ 
+  ⭐ THE ONLY DIFFERENCE FROM rheome.inverse.dirac IS THE SOURCE BASIS, AND THAT IS THE POINT. There,
+  stage 2 runs on Gm = rheome.forward.dirac(Gain, dbasis) -- the leadfield projected onto K Dirac
+  modes -- and stage 4 reconstructs through the basis. Here stage 2 runs on the leadfield
+  itself and stage 4 needs no reconstruction, because VL already lives on the 3nV source
+  space. Everything else, including the whitener, is literally the same code. So a difference
+  between the two results is attributable to the basis and to nothing else.
+ 
+  ⚠ WHAT THE DIRAC ROUTE COSTS, AND WHY THIS IS THE DEFAULT. Projecting onto K modes
+  band-limits the current BEFORE the inverse is solved, and that limit is invisible
+  downstream: at the pipeline defaults (400 Dirac modes per hemisphere) the reconstructed
+  current stops at ~90 mm, while the LBO analysis axis built on top of it reaches ~28 mm --
+  a 3.2x mismatch, so the finest apertures were filtering structure the source estimate could
+  not represent. The raw inverse has no such hidden floor: its source space is the full 3nV,
+  and the only band limit left is the one the ANALYSIS basis imposes, where it is visible and
+  reported (rheome.flow.context prints the frame floor).
+ 
+  ⚠ STILL NOT UNBIASED, JUST UNHIDDEN. Minimum norm has its own prior -- it returns the
+  zero-null-space representative, which is why rheome.forward.measurable scores any MNE output 1.0
+  by construction (see tMeasurable). Depth bias is untouched here; use rheome.flow.sensitivity as a
+  mask and rheome.flow.crosstalk for attribution, exactly as before.
+ 
+  INPUTS:
+    Gain         [nCh x 3nV] UNCONSTRAINED leadfield (rheome.io.read.headmodel), rows = the channels
+                 the noise covariance is over
+    NoiseCovMat  struct with .NoiseCov [nCh x nCh] (and .FourthMoment/.nSamples for 'shrink')
+    opts (all optional):
+      .NoiseMethod    'reg'(default) | 'diag' | 'none' | 'median' | 'shrink'
+      .NoiseReg       ridge fraction for 'reg' (default 0.1)
+      .ChannelTypes   {1 x nCh} type per row (default all 'MEG'); whitened per modality
+      .SnrFixed       assumed SNR, amplitude ratio (default 3 -&gt; SNR^2 = 9)
+      .nVert          expected vertex count. ⚠ PASS IT WHEN YOU KNOW IT. Shape alone CANNOT
+                      distinguish an unconstrained [nCh x 3nV] gain from a constrained
+                      [nCh x nV] one whenever nV happens to be divisible by 3 -- the
+                      constrained gain is then silently read as covering nV/3 vertices and
+                      every source lands in the wrong place with no error. rheome.flow.context knows
+                      nV from the surface and always passes it.
+      .InverseMeasure 'dspm2018'(default) | 'amplitude' | 'sloreta'
+                      ⚠ rheome.flow.* wants 'amplitude' -- physical current in A.m. The default
+                      matches rheome.inverse.dirac so the two are swappable without a silent change.
+ 
+  OUTPUT (struct R):
+    .ImagingKernel [3nV x nCh]  J = ImagingKernel * F
+    .Whitener [nCh x nCh] .UL .SL .Lambda .SNR .NoiseRankKept .RankLeadfield .Measure
+ 
+  ⚠ MEMORY. Stage 2 is an economy SVD of an [nCh x 3nV] matrix, so VL is [3nV x nCh] --
+  133 MB at 20484 vertices and 270 channels, in double. The kernel is the same size again.
+  That is the whole cost; nothing here is [3nV x 3nV].
+ 
+  See also: rheome.inverse.dirac, rheome.forward.measurable, rheome.flow.context, rheome.flow.sensitivity
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

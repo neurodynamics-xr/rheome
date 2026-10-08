@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.sensors.linear</title></head><body>
+<h1>rheome.sensors.linear</h1>
+<p><em>function rheome.sensors</em> &mdash; Rheome</p>
+<pre>  SENSORS.LINEAR  A laminar probe: N contacts on a line.
+ 
+    arr = rheome.sensors.linear()
+    arr = rheome.sensors.linear('NumSites', 32, 'Pitch', 100e-6)
+ 
+  The one geometry with intrinsic dimension 1, and the reason that matters is topological
+  rather than numerical: a winding number is summed around a face (a 2-cell), and a chain
+  admits no faces, so a winding number cannot be defined on it at all. Rotating and spiral
+  patterns are not hard to measure on a probe, they are not measurable -- see rheome.sensors.window,
+  which reports this rather than leaving it implicit.
+ 
+  A wave crossing the shank at angle theta also projects: the probe sees only k*cos(theta),
+  so any speed inferred from it reads c/cos(theta), biased HIGH and uncorrectable from the
+  probe alone.
+ 
+  INPUTS (name-value):
+    'NumSites'  contacts (default 32)
+    'Pitch'     contact spacing, metres (default 100e-6)
+    'Name'      display name (default 'laminar probe')
+  OUTPUT:
+    arr  see rheome.sensors.grid for the struct contract
+ 
+  See also: rheome.sensors.grid, rheome.sensors.window, rheome.sensors.graph
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

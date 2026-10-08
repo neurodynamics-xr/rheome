@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Rheome: a MATLAB toolbox for the multiscale geometry of human cortical dynamics"
+type: software
+version: 1.0.0
+license: MIT
+date-released: 2026-10-08
+authors:
+  - family-names: Basha
+    given-names: Diellor
+    orcid: "https://orcid.org/0000-0001-9312-8633"
+    affiliation: "McGill University; Centre de recherche du CHUM (CRCHUM), Université de Montréal"
+  - family-names: Baillet
+    given-names: Sylvain
+    orcid: "https://orcid.org/0000-0002-6762-5713"
+    affiliation: "Université de Montréal; Centre de recherche du CHUM (CRCHUM); McGill University"
+repository-code: "https://github.com/neurodynamics-xr/rheome"
+url: "https://github.com/neurodynamics-xr/rheome"
+abstract: >-
+  Rheome is a MATLAB toolbox for the multiscale geometry of human cortical dynamics: spatiotemporal
+  dynamics on graphs -- cortical meshes, connectomes and sensor arrays. Graph wavelet frames
+  (rheome.graphfilterbank, rheome.jointfilterbank, rheome.timefilterbank) modelled on MATLAB's
+  cwtfilterbank, the joint (lambda, omega) plane, phase geometry, and cortical flow (divergence,
+  rotation, Helmholtz-Hodge, surface optical flow) from MEG source estimates.
+keywords:
+  - MEG
+  - cortical dynamics
+  - cortical flow
+  - graph signal processing
+  - graph wavelets
+  - Laplace-Beltrami
+  - Helmholtz-Hodge decomposition
+  - MATLAB

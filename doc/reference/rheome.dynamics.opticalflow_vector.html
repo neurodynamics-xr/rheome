@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.dynamics.opticalflow_vector</title></head><body>
+<h1>rheome.dynamics.opticalflow_vector</h1>
+<p><em>function rheome.dynamics</em> &mdash; Rheome</p>
+<pre>  DYNAMICS.OPTICALFLOW_VECTOR  Vector optical flow of an unconstrained current field.
+ 
+    velocityField = rheome.dynamics.opticalflow_vector(currentField, surface [,opts])
+ 
+  Estimates the propagation velocity v(x,t) by advecting the WHOLE current vector field J (three
+  ambient components) rather than a single scalar. Because the three components give three
+  brightness-constancy constraints for the two tangent-velocity DOF, the per-vertex problem is
+  OVER-DETERMINED -- aperture-free where at least two components have independent spatial gradients,
+  unlike the scalar Horn-Schunck baseline. Per vertex, with p_c = e1.gradJ_c, q_c = e2.gradJ_c, solve
+  the structure-tensor least squares  [sum p_c^2, sum p_c q_c; sum p_c q_c, sum q_c^2][a;b] =
+  -[sum p_c dJ_c; sum q_c dJ_c], plus a light global smoothness prior alpha*K.
+ 
+  INPUTS:
+    currentField [3nV x nT] ambient per-vertex 3-vector current, rows [x1;y1;z1;x2;...]
+    surface      struct .Vertices .Faces .VertNormals .nV
+    opts.alpha       smoothness weight (default 0.1)
+    opts.transport   'ambient' (default; multi-channel) | 'covariant' (connection-transported)
+  OUTPUT:
+    velocityField [3nV x (nT-1)] ambient tangent velocity per frame
+ 
+  See also: rheome.dynamics.opticalflow_scalar, rheome.dynamics.flow_readout, rheome.operators.connection_laplacian
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

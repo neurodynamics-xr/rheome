@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.show.specparam</title></head><body>
+<h1>rheome.show.specparam</h1>
+<p><em>function rheome.show</em> &mdash; Rheome</p>
+<pre>  SHOW.SPECPARAM  Aperiodic fits and the periodic/aperiodic split, per spatial mode.
+ 
+    rheome.show.specparam(P, f, ap)
+    hFig = rheome.show.specparam(P, f, ap, name, value, ...)
+ 
+  Left: a few modes' spectra with their fitted aperiodic background, log-log.
+  Middle: the split gains h_per and h_ap for one mode, which square to one.
+  Right: chi(lambda) -- the fitted exponent against spatial frequency. That panel is the point of
+  fitting per mode rather than per channel: it asks whether the aperiodic slope depends on
+  spatial scale, which a per-channel fit cannot see.
+ 
+  INPUTS: P [nF x nS] linear power, f [nF x 1], ap from rheome.spectral.aperiodic
+  OPTIONS: 'Modes' which columns to draw (default: 5 spread across), 'Lambda', 'Title', 'Visible'
+ 
+  See also: rheome.spectral.aperiodic, rheome.spectral.decompose
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

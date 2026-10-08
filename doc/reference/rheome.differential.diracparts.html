@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.differential.diracparts</title></head><body>
+<h1>rheome.differential.diracparts</h1>
+<p><em>function rheome.differential</em> &mdash; Rheome</p>
+<pre>  DIFFERENTIAL.DIRACPARTS  Curl, divergence and normal gradient of a field, read off the intrinsic Dirac.
+ 
+    P = rheome.differential.diracparts(J, S)
+    P = rheome.differential.diracparts(J, S, D)      % reuse rheome.operators.dirac_intrinsic(S.Vertices, S.Faces)
+        J   [3nV x nT] ambient vectors (rows x1,y1,z1,...), or [4nV x nT] quaternions [w x y z]
+        S   surface: .Vertices .Faces
+ 
+  One sparse product, D*J, and the three parts of the result per face (rheome.operators.dirac_intrinsic):
+ 
+    P.curlF   [nF x nT]    -Re (D J)                  = curl J . n_f    (vorticity, CCW +)
+    P.divF    [nF x nT]    -Im (D J) . n_f            = div J           (source +)
+    P.gradNF  [3nF x nT]   Im (D J) tangential        = grad (J . n_f)  (rows x1,y1,z1 per face)
+    P.curl P.div           [nV x nT] area-weighted to vertices, exactly as rheome.differential.curl /
+                           rheome.differential.divergence do, so they are interchangeable with them
+    P.energy  struct: face-area integrals of curlF^2, divF^2, |gradNF|^2 (each [1 x nT]) and
+              .total = ||D J||^2 in the face mass, which is their sum
+ 
+  ⭐ WHY THROUGH THE DIRAC. The three parts are one operator, so a field's Dirac energy
+  ||D J||^2 = J' * dirac_intrinsic_sq * J splits EXACTLY into rotational, divergent and normal-bending
+  shares -- and for a basis of dirac_intrinsic_sq (tau = 0) that split holds mode by mode and so band
+  by band: a wavelet band's energy is lambda-weighted and the three shares add up to it.
+  ⚠ ONLY AT tau = 0. The production relative Dirac (tau = 0.5) adds the extrinsic Gauss-map block, so
+  its eigenmodes are not singular vectors of D_int; D_int of such a mode is not &quot;that mode's curl&quot;.
+  ⚠⚠ gradNF IS EXTRINSIC, NOT &quot;THE NORMAL COMPONENT'S&quot; ALONE: with n_f frozen per face it also carries
+  the shape operator acting on J, so a purely TANGENT field has gradNF energy = the integral of |S J|^2
+  (unit sphere: the integral of |J|^2, to 0.02% at ico6). Curl and div are the clean parts; the third
+  is normal variation plus the field's bending with the surface.
+  ⚠⚠ ON REAL CORTEX, READ CURL AND DIV AT A SCALE, NEVER PER VERTEX. Neighbouring vertex normals differ
+  by ~30 deg on a reference subject's mesh, and pointwise curl and div leak into each other at mesh scale: a
+  pure source reads curl/div energy 0.13-0.30; low-passed to &gt; 60 mm it reads 0.002-0.017
+  (dirac_parts_omega.m). This is the same number rheome.differential.curl gives -- not a Dirac property.
+  rheome.differential.helmholtz separates at every scale (91% / 0.7%).
+  ⚠ With a quaternion input, a real part w enters gradNF as a rotated gradient of w (not a vector part).
+ 
+  See also: rheome.operators.dirac_intrinsic, rheome.differential.curl, rheome.differential.divergence, rheome.differential.helmholtz
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

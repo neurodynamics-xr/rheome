@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.load.sphere</title></head><body>
+<h1>rheome.load.sphere</h1>
+<p><em>function rheome.load</em> &mdash; Rheome</p>
+<pre>  LOAD.SPHERE  Load the bundled registration-sphere sandbox (operators + eigenmodes).
+ 
+    sphere = rheome.load.sphere(name)
+ 
+  Returns the single struct that rheome.import.sphere cached to +data/&lt;name&gt;/sphere.mat -- the
+  subject's FreeSurfer registration sphere (ico5 @ 100 mm) with EVERYTHING on it:
+    .S .L .M .basis .dirac .conn(.C/.Psi/.Lambda) .cortex .globalVertices .radius .hemi .meta
+  One call gets the whole sandbox at cortical resolution. Returns [] if not cached.
+ 
+  See also: rheome.import.sphere, rheome.load.dataset
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

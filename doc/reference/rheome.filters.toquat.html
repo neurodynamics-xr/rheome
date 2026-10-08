@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.toquat</title></head><body>
+<h1>rheome.filters.toquat</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.TOQUAT  Physical 3-vector -&gt; pure quaternion Dirac field (real part w = 0).
+ 
+    W = rheome.filters.toquat(V)   % V [3*nV x ...]  -&gt;  W [4*nV x ...]
+ 
+  Embeds a physical current-dipole 3-vector (x,y,z) as a pure quaternion [0 x y z] per vertex,
+  the layout the Dirac basis expects. Feed the result to rheome.filters.frame_analysis / rheome.filters.apply
+  on a Dirac basis. Inverse of rheome.filters.tovec. Port of bst_eigenwavelet('ToQuat').
+ 
+  See also: rheome.filters.tovec, rheome.filters.steer, rheome.filters.frame_analysis
+ 
+  Author: Diellor Basha, 2026 (port of bst_eigenwavelet('ToQuat'))
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

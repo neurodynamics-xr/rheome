@@ -1,0 +1,32 @@
+function Pap = evaluate(ap, f)
+% SPECTRAL.EVALUATE  Evaluate a fitted aperiodic model at arbitrary frequencies.
+%
+%   Pap = rheome.spectral.evaluate(ap, f)
+%
+% Lets the background be FITTED on a broadband spectrum and then APPLIED to a narrow retained
+% band. This separation is not optional: a 1/f exponent cannot be estimated from a few Hz. Fitting
+% inside an 8-13 Hz window returns nonsense -- measured on real data, exponents ranging from -2.5
+% to +7.4, including negative values, which would mean power rising with frequency.
+%
+% INPUTS:  ap  struct from rheome.spectral.aperiodic (.offset .exponent .knee, one entry per spectrum)
+%          f   [nF x 1] frequencies to evaluate at (Hz), strictly positive
+% OUTPUT:  Pap [nF x nS] fitted aperiodic power, linear units
+%
+% See also: rheome.spectral.aperiodic, rheome.spectral.decompose
+%
+% Author: Diellor Basha, 2026
+
+    f = double(f(:));
+    if any(f <= 0), error('spectral:evaluate:dc','f must be strictly positive.'); end
+    nS  = numel(ap.exponent);
+    Pap = zeros(numel(f), nS);
+    for s = 1:nS
+        if ap.knee(s) > 0
+            Pap(:,s) = 10.^(ap.offset(s) - log10(ap.knee(s) + f.^ap.exponent(s)));
+        else
+            Pap(:,s) = 10.^(ap.offset(s) - ap.exponent(s)*log10(f));
+        end
+    end
+end
+
+% Author: Diellor Basha, 2026

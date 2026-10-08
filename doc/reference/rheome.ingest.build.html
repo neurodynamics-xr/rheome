@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.ingest.build</title></head><body>
+<h1>rheome.ingest.build</h1>
+<p><em>function rheome.ingest</em> &mdash; Rheome</p>
+<pre>  INGEST.BUILD  One recording -&gt; one store of constant-Q tile summaries, in +data/&lt;name&gt;/.
+ 
+    file = rheome.ingest.build(name, cfg)
+    file = rheome.ingest.build(name, cfg, Channels=&quot;MEG&quot;, Store=&quot;default&quot;, Mask=[], ...
+                        ChannelChunk=32, Overwrite=false, Verbose=true)
+    file = rheome.ingest.build('/path/to/recording.mat', cfg, ...)      % store beside the file
+ 
+  Opens the recording through pagedrecording, selects the channels, runs rheome.ingest.bank,
+  rheome.ingest.grid, rheome.ingest.reduce (in channel chunks, to bound memory) and rheome.ingest.rollup, and
+  writes a MAT v7.3 store WITHOUT compression whose per-level arrays are TOP-LEVEL
+  variables -- matfile slices only those (paged-io notes). The file is keyed by its
+  parameters the way the repo keys its caches, with the full config hash in meta:
+ 
+      +data/&lt;name&gt;/ingest__F0.25__V10__morse.mat            whole record, default store
+      +data/&lt;name&gt;/ingest__F0.25__V10__morse__native__paged.mat   Store=&quot;native&quot;, Paged=&quot;always&quot;
+ 
+  The path is chosen by cfg.Paged: &quot;auto&quot; pages when the whole-record CWT buffer would
+  exceed MaxBytes (the 2400 Hz native store), &quot;always&quot;/&quot;never&quot; force it. A paged store
+  carries &quot;__paged&quot; in its name only when forced, so the auto choice is recorded in
+  meta.paged and meta.plan rather than the name.
+ 
+  Variables:  meta, bands, frame, grid, and per level L (zero-padded NN):
+      LNN_n [K x 1] uint32       LNN_sumX, LNN_sumX2 [K x C] double
+      LNN_absMax, LNN_min, LNN_max [K x C] single
+      LNN_energy [K x C x B_L] double   LNN_envMax [K x C x B_L] single   LNN_nCoi [K x B_L] uint32
+      with sensor positions (Groups): LNN_g_* over the sensor tree's internal nodes, and
+      the wavelength axis LNN_s_energy / LNN_s_envMax [K x C x S] and LNN_gs_* for groups
+      (meta.sbands, meta.sframe; rheome.ingest.spatial)
+ 
+  THE STORE IS THE DIAGONAL ON EVERY AXIS. Time (design §3.13): level L carries only the
+  temporal bands whose natural level is &lt;= L. Position (select design §2b-c): channel rows
+  only from cfg.ChannelMinTile up (grid.channelLevel); finer tiles are described by the
+  sensor tree; a wavelength band is stored on a node only if the node is at least one of
+  its wavelengths across (grid.spaceSlots, packed [K x nSlots]; grid.chanSpace for
+  sensors). In memory every unit has every band at every level; the diagonal is taken
+  when writing. Below the diagonal a query goes to raw samples (phase 2).
+ 
+  ORIGINAL NOTE -- level L carries only the bands whose natural
+  level (first tile &gt;= the band's support, bands.naturalLevel) is &lt;= L, listed in
+  grid.bandsAt{L+1}. A band's third index at level L is its position in that list, not
+  its j. Below its natural level a band's tile is a smoothed reading of a wider
+  neighbourhood, not a measurement of its own extent (the residual is negative there);
+  queries finer than the natural level go to raw samples. In memory (rheome.ingest.reduce,
+  rheome.ingest.rollup) every band exists at every level; the diagonal is taken when writing.
+ 
+  ⚠ A store with this name and a DIFFERENT config hash is never overwritten silently:
+  error ingest:build:hash unless Overwrite=true. The same hash returns the existing file
+  without rebuilding (Overwrite=true rebuilds).
+ 
+  ⚠ Whole-record: the CWT runs over the record per channel (0.45 GB single at 600 Hz,
+  156 filters). Paged: rheome.ingest.pages gives each band a level and rheome.ingest.reducepaged runs
+  one sub-bank per job and page (design §3.12); the 2400 Hz native store takes this path.
+ 
+  ⚠ Deterministic: same store, same cfg, same release give identical level variables.
+  Only meta.created differs between two builds.
+ 
+  INPUTS:
+    src   dataset name under +data, or a path to a recording store
+    cfg   rheome.ingest.config
+    Channels      &quot;MEG&quot; (MEG type AND ChannelFlag == 1, the repo's selection idiom),
+                  another type string, or explicit row indices into the store
+    Store         &quot;default&quot; (recording.mat) | &quot;native&quot; (recording_native.mat)
+    Mask          [nT x 1] logical, true = valid sample; [] = all valid
+    ChannelChunk  channels per reduce call (32)
+    Overwrite     rebuild even if a store exists (false)
+    Verbose       print progress (true)
+  OUTPUT:
+    file  path of the store
+ 
+  See also: rheome.ingest.config, rheome.ingest.reduce, rheome.ingest.rollup, rheome.ingest.totable, rheome.pagedrecording
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.domain.product</title></head><body>
+<h1>rheome.domain.product</h1>
+<p><em>function rheome.domain</em> &mdash; Rheome</p>
+<pre>  DOMAIN.PRODUCT  A joint manifold: a domain crossed with an index line.
+ 
+    d = rheome.domain.product(dCortex, rheome.domain.index(nT, Name=&quot;time&quot;))
+    d = rheome.domain.product(dModes, dFreq, Conventions=struct('half','positive','boundary','ring'))
+ 
+  ⭐ WHY THIS EXISTS. A joint plane -- (cortex x time), (eigenmode x frequency), (time x frequency) --
+  was represented four different and unconnected ways: by juxtaposition in +pipeline (a spatial domain
+  plus a Frames axis carried alongside), by a conjugacy pointer in rheome.domain.index(Of=), by a class-local
+  axes struct in @jointfilterbank with its own equality check, and by a composite key in the tile
+  store. None of them was a TYPE, so &quot;are these two analyses on the same plane&quot; had a different answer
+  in each place. This makes it one descriptor and one equality (rheome.domain.same).
+ 
+  ⭐ THE DESIGN CONSTRAINT THAT MADE IT CHEAP. A product mirrors FACTOR 1's element counts in
+  .nV/.nE/.nF, so every existing shape lambda in rheome.operators.registry -- @(d)[d.nV,d.nV] and the other
+  11 -- keeps working unchanged on a product domain. The product count is reached through
+  rheome.domain.elements(d, 'element') and .nFrames, which nothing older asks for. Adding the kind therefore
+  breaks no arrow: 20 of the 34 are within one manifold and act on the spatial factor, identity on the
+  other, and they cannot tell the difference.
+ 
+  ⚠ FACTOR 2 MUST BE AN INDEX LINE. Every joint plane in this project is (something x a line): time,
+  frequency or modes. A product of two complexes is not supported and errors rather than half-working.
+ 
+  ⚠⚠ CONVENTIONS ARE PART OF THE DOMAIN, and that is the point rather than an extra. Two banks can
+  agree on every count and still be incompatible because one holds the positive half of the spectrum
+  and the other the whole of it, or one treats time as a ring and the other as a path.
+  @jointfilterbank/iscompatible checks .half and .boundary &quot;because a mismatch there is silent and
+  fatal&quot; -- that check now lives in the type, so it is made once and not per class.
+ 
+  INPUTS
+    dA, dB       domain descriptors; dB.kind must be 'index'
+    Conventions  (optional) struct of convention fields compared by rheome.domain.same
+    Name         (optional) a label
+ 
+  OUTPUT
+    d  .kind='product'  .factors={dA,dB}  .nV/.nE/.nF mirroring dA  .nFrames=dB.nV
+       .conventions  .name  .id (hashed from both factors and the conventions)
+ 
+  See also: rheome.domain.same, rheome.domain.elements, rheome.domain.index, rheome.domain.kinds, rheome.selection.registry
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

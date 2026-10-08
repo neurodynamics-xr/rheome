@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.differential.curl</title></head><body>
+<h1>rheome.differential.curl</h1>
+<p><em>function rheome.differential</em> &mdash; Rheome</p>
+<pre>  DIFFERENTIAL.CURL  Surface curl (scalar vorticity) of an ambient source vector field.
+ 
+    vort = rheome.differential.curl(J, S)
+    vort = rheome.differential.curl(J, S, fg)   % reuse a precomputed rheome.operators.face_gradient(S)
+ 
+  On a 2-D surface there is no vector curl: the curl of a field is the SCALAR vorticity
+  (the out-of-plane component). For an ambient R^3 per-vertex field it is (grad x J).n per
+  face, area-weighted to vertices -- faithful to Brainstorm's bst_curl ambient branch.
+  Positive = counter-clockwise rotation seen from outside; a pure gradient (irrotational)
+  field gives ~0. Uses the full 3-vector via rheome.operators.face_gradient.
+ 
+  INPUTS:
+    J  [3nV x nT] ambient vectors, rows [x1,y1,z1, x2,y2,z2, ...]
+    S  surface struct (rheome.io.read.surface / rheome.utils.hemisphere): needs .Vertices, .Faces
+    fg (optional) a precomputed rheome.operators.face_gradient(S.Vertices,S.Faces); pass it to avoid
+       rebuilding the operator per call (e.g. per-frame loops / rheome.detect.operator). S may be [].
+ 
+  OUTPUT:
+    vort  [nV x nT] per-vertex scalar vorticity (CCW +, CW -)
+ 
+  See also: rheome.operators.face_gradient, rheome.differential.divergence, rheome.differential.helmholtz
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

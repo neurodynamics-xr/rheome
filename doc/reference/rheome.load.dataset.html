@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.load.dataset</title></head><body>
+<h1>rheome.load.dataset</h1>
+<p><em>function rheome.load</em> &mdash; Rheome</p>
+<pre>  LOAD.DATASET  Load everything cached for a dataset in one struct.
+ 
+    D = rheome.load.dataset(name)              % surface (+operators), study &amp; dirac if present (tau=0.5,K=400)
+    D = rheome.load.dataset(name, tau, K)
+ 
+  Returns a struct with whatever is cached:
+    .S .L .M .cortexFile   (always -- surface + operators)
+    .dbasis .basis         (if the (tau,K) Dirac eigenbasis is cached; basis = Laplace–Beltrami)
+    .chan .hm .rec .ncov .studyDir .dataName   (if a study is cached)
+    .inverse               (if a Brainstorm inverse kernel is cached; see rheome.import.inverse)
+    .sphere                (the registration-sphere sandbox: operators + eigenmodes; see rheome.import.sphere)
+    .cortex                (the folded-cortex sandbox: operators + eigenmodes; see rheome.import.cortex)
+    .bases                 (per-hemisphere operators + eigenbases, all families; see rheome.import.bases)
+    .connectome            (whole-brain connectome operators + eigenbases; see rheome.import.connectome)
+    .atlas                 (the surface's parcellations -- the ROI axis; see rheome.import.atlas)
+ 
+  Geometry-only datasets simply have no study fields. This is the convenience entry
+  point for demos: import once, then  D = rheome.load.dataset(name)  and go.
+ 
+  See also: rheome.import.dataset, rheome.load.surface, rheome.load.dirac, rheome.load.study
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

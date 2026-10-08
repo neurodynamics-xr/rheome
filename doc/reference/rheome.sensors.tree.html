@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.sensors.tree</title></head><body>
+<h1>rheome.sensors.tree</h1>
+<p><em>function rheome.sensors</em> &mdash; Rheome</p>
+<pre>  SENSORS.TREE  Recursive spectral bisection of a sensor graph: the position pyramid.
+ 
+    T = rheome.sensors.tree(G)
+    T = rheome.sensors.tree(G, MinSize=1)
+ 
+  Splits the array by the sign of the Fiedler vector of each part's own Laplacian, down to
+  single sensors: a binary tree whose root is the whole array and whose leaves are the
+  channels. On the CTF helmet the first cut follows left/right (|r| = 0.91 with the
+  lateral coordinate), the second front/back, the third dorsal/lateral -- hemispheres,
+  then quadrants, then lobe-sized patches of 18-49 sensors -- without being told any of
+  it (docs/2026-09-22-ingest-notes.md).
+ 
+  ⭐ A GROUP'S STATISTICS ARE SUMS AND MAXIMA OVER ITS SENSORS' ROWS, so the tree is a
+  roll-up along the channel axis exactly as the dyadic grid is along time: a parent
+  equals its children merged, and a query prunes down the tree from the root. No
+  transform is involved; this axis is where &quot;which part of the helmet&quot; lives.
+ 
+  ⚠ A disconnected part (Fiedler value ~ 0 with all members on one side) is split along
+  its longest coordinate instead, so every internal node has two non-empty children.
+ 
+  INPUTS:
+    G        rheome.sensors.graph struct (.L, .Vertices)
+    MinSize  stop splitting below this many sensors (1)
+  OUTPUT (table T, one row per node, root first, children after parents, ids in that order):
+    node_id, parent_id (0 for the root), depth (root 0), n_sensors, is_leaf,
+    channel_id (the sensor for a leaf, 0 otherwise), members {row indices into the array},
+    centroid [x y z] m, diameter m, axis (the coordinate the cut followed, '' for leaves)
+ 
+  See also: rheome.sensors.graph, rheome.ingest.groups, rheome.select.tree
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

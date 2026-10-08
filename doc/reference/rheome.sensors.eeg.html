@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.sensors.eeg</title></head><body>
+<h1>rheome.sensors.eeg</h1>
+<p><em>function rheome.sensors</em> &mdash; Rheome</p>
+<pre>  SENSORS.EEG  A scalp-cap array: sparse, quasi-uniform sampling on a curved surface.
+ 
+    arr = rheome.sensors.eeg()                                  % 64 channels, 90 mm, 120 deg cap
+    arr = rheome.sensors.eeg('NumChannels', 128)
+    arr = rheome.sensors.eeg('ChannelFile', f)                  % real positions from a channel file
+ 
+  ⚠ THE BUILT-IN GEOMETRY IS AN IDEALISATION AND NOT A DIGITISED MONTAGE. It is a
+  spherical-Fibonacci sampling of a cap -- quasi-uniform by construction, with generic
+  labels. Nothing in this suite depends on millimetre-accurate electrode placement; what
+  this array contributes is SPARSE SAMPLING ON A CURVED CAP, which the idealisation
+  delivers exactly. Pass 'ChannelFile' when real positions matter.
+ 
+  Quasi-uniformity is the point rather than a convenience: pitch is a single number, and it
+  only means anything if the sampling has no clusters or holes for it to average over.
+ 
+  INPUTS (name-value):
+    'NumChannels'  (default 64)
+    'Radius'       sphere radius, metres (default 0.09)
+    'CapAngle'     cap half-extent from the vertex, degrees (default 120)
+    'ChannelFile'  a Brainstorm channel file; overrides the idealisation
+    'Channel'      an rheome.io.read.channel struct already in hand; overrides the idealisation
+    'Name'         display name
+  OUTPUT:
+    arr  the rheome.sensors.grid array contract, with .Kind 'eeg' and .Dim 2
+ 
+  See also: rheome.sensors.meg, rheome.sensors.grid, rheome.sensors.window
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

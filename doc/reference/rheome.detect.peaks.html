@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.peaks</title></head><body>
+<h1>rheome.detect.peaks</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.PEAKS  Local maxima of a scalar map on a mesh, per frame, with height, width and value.
+ 
+    P = rheome.detect.peaks(X, S)
+    P = rheome.detect.peaks(X, S, MinHeight=0.5, Relative=true, MaxPeaks=8)
+    P = rheome.detect.peaks(X, S, MinSeparation=0.01)      % non-maximum suppression within 10 mm
+    P = rheome.detect.peaks(X, S, Tiles=G)                 % also address each peak to a tile (rheome.geom.tiles)
+ 
+  A peak is a vertex whose value beats every vertex in its one-ring. Ties are broken by vertex
+  index, so a plateau yields exactly one peak rather than none or all of them. That is the whole
+  definition: the map is assumed to be smooth at the scale that matters, and smoothing it is the
+  caller's decision, not this function's.
+ 
+  ⭐ PEAKS ARE FOUND AT VERTICES AND ONLY THEN ADDRESSED TO TILES. The maximum of a map within a
+  tile is not a peak -- if it sits on the tile's boundary it is the flank of a neighbour's peak, and
+  taking one per tile reports a &quot;peak&quot; in every tile in every frame. `Tiles` attaches the address of
+  each true peak; it never selects one.
+ 
+  ⭐ POSITION IS REFINED BELOW THE EDGE LENGTH. `.pos` is the value-weighted centroid of the peak and
+  its one-ring, using only the part of each neighbour above the ring's lowest value. A peak moving
+  at 0.05 m/s and 300 frames/s travels 0.17 mm per frame, a fiftieth of an edge, so a vertex-only
+  position is a staircase and every speed read off it is quantised. `.vertex` keeps the lattice
+  answer for anything that needs an index.
+ 
+  ⚠⚠ ONE-RING MAXIMA SPLIT A FLAT TOP, so `MinSeparation` is not optional in practice. A basis-truncated
+  atom has a plateau with ripples at the mesh's irregularity, and two vertices a few millimetres apart
+  both beat their rings at near-equal height. Measured (plant_track_omega.m, a 25 mm mexhat moving at
+  0.25 m/s, no noise): 20% of frames held two or three peaks 1-5 mm apart, which the tracker turned
+  into four tracks for one object. Suppressing any peak within MinSeparation of a higher one fixes it.
+  Set it to the map's own smoothness scale (the atom width in a plant, r50 = 52 mm on the inverse).
+  ⚠ The suppression radius is EUCLIDEAN, so it also suppresses a peak on the opposite bank of a sulcus
+  that is millimetres away through the fold and far along the sheet. Below the instrument's resolution
+  those two are not separable anyway; for a noiseless map with a small radius it does not arise.
+ 
+  ⚠ WIDTH IS AN AREA, AND IT IS SHARED WHEN PEAKS ARE. `.widthMM` is the equivalent-disc diameter
+  2*sqrt(area/pi) of the connected half-height superlevel set holding the peak -- area from the
+  mass matrix, because Euclidean extent across a folded sheet measures the folding. Two peaks whose
+  half-height regions touch report the same region. Through an instrument this is a rendering width,
+  not a source size (plant_scale_omega.m: ~100 mm recovered whatever was planted below 10 dB).
+ 
+  INPUTS
+    X          [nV x nT] real scalar map (e.g. |curl| of an analytic current)
+    S          surface (.Vertices, .Faces)
+    MinHeight  peaks below this are dropped (0)
+    Relative   true: MinHeight is a fraction of each frame's maximum (false)
+    MaxPeaks   keep at most this many per frame, highest first (Inf)
+    MinSeparation  drop a peak within this Euclidean distance (m) of a higher one (0 = off)
+    Mass       [nV x nV] or [nV x 1] vertex areas for .widthMM; [] = barycentric from S
+    Tiles      a rheome.geom.tiles struct; adds .tile and .node
+ 
+  OUTPUT (struct P)
+    .table      one row per peak: frame vertex pos(1x3) value height widthMM area [tile node]
+    .features   {nT x 1} struct(pos,type,strength) per frame -- rheome.detect.track's frameFeatures
+    .count      [1 x nT] peaks per frame
+    .meanEdge   mean mesh edge length (m)
+ 
+  `height` is value minus the lowest value on the peak's one-ring: a local prominence, cheap and
+  monotone in the true topographic prominence for isolated peaks. `value` is the map at the vertex.
+ 
+  See also: rheome.detect.track, rheome.geom.tiles, rheome.geom.tree, rheome.detect.blobscale
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.synth</title></head><body>
+<h1>rheome.flow.synth</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.SYNTH  Return a joint spectrum to the time axis at ANY output rate.
+ 
+    [c, t] = rheome.flow.synth(C, f, fsOut, dur)
+    [c, t] = rheome.flow.synth(C, f, fsOut, dur, opts)
+ 
+  Evaluates the inverse transform of a band-selected (and optionally demodulated) joint spectrum
+  on a chosen time grid. The output rate is a PARAMETER, not a preprocessing commitment: the
+  band-limiting already happened in frequency, so no aliasing is introduced by a coarse grid.
+ 
+  WHY THE RATE IS FREE. After demodulation the content sits at baseband -- a few Hz wide -- so
+  Nyquist applies to the ENVELOPE bandwidth, not to the carrier. Sampling an alpha envelope at the
+  acquisition rate oversamples it by two orders of magnitude, and the surplus is position jitter
+  with no signal in it (the tracking floor goes as v_floor ~ edgeLength * fsOut).
+ 
+  INPUTS:
+    C      [K x nOmega] complex joint spectrum (from rheome.flow.joint, optionally via rheome.flow.demod)
+    f      [1 x nOmega] bin frequencies (Hz) -- may be negative after demodulation
+    fsOut  output sampling rate (Hz)
+    dur    output duration (s)
+    opts   .t0  start time (default 0)
+ 
+  OUTPUT:
+    c      [K x nT'] complex coefficients on the output grid; abs(c) is the envelope
+    tOut   [1 x nT'] output times (s)
+ 
+  Evaluates the sum directly rather than via ifft, because the retained bins are sparse and the
+  output grid is arbitrary (and generally not commensurate with the original transform length).
+ 
+  See also: rheome.flow.joint, rheome.flow.demod
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.pipeline.then</title></head><body>
+<h1>rheome.pipeline.then</h1>
+<p><em>function rheome.pipeline</em> &mdash; Rheome</p>
+<pre>  PIPELINE.THEN  Append an operator, checking the arrow against the state right now.
+ 
+    p = rheome.pipeline.then(p, &quot;inverse_mne&quot;);
+    p = rheome.pipeline.then(p, &quot;curl&quot;);
+ 
+  ⭐ THE CHECK IS AT BUILD TIME. The registry says what this operator consumes; the pipeline
+  knows what it is holding. A mismatch is refused HERE, naming both types, rather than
+  surfacing as a shape error inside a matrix product three steps later.
+ 
+  ⚠ THE DOMAIN MOVES WITH THE ARROW. A cross-domain operator names which of the
+  environment's domains its output lives on (`target`), so after inverse_mne the pipeline is
+  on the cortex and after lb_forward it is on the mode line -- and the operators offered
+  next are the ones that domain supports.
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

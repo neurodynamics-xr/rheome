@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.connectome.resolve</title></head><body>
+<h1>rheome.connectome.resolve</h1>
+<p><em>function rheome.connectome</em> &mdash; Rheome</p>
+<pre>  CONNECTOME.RESOLVE  Resolve the structural-connectome fiber source for a subject, with provenance.
+ 
+    [subjectFiberEndpoints, provenance] = rheome.connectome.resolve(subjectName, subjectSurface)
+ 
+  Priority:
+    (1) the subject's OWN tractography if present  (+data/&lt;name&gt;/fibers_subject.mat)
+    (2) DEFAULT: the HCP-1065 group average (hcp_template.mat), registered to the subject
+        cortex through the FreeSurfer sphere -- for each fiber endpoint: nearest template-cortex
+        vertex -&gt; its sphere coordinate -&gt; nearest SUBJECT sphere vertex (per hemisphere).
+ 
+  Returns the endpoints in SUBJECT coordinates [numFibers x 2 x 3] plus a provenance struct
+  (fiberSource, registrationMethod, numFibers, templateSource) so the connectome basis is never a
+  black box. Pure MATLAB; the default path needs only the template file, not Brainstorm.
+ 
+  ⚠ The template is NOT part of the toolbox: it is derived from WU-Minn HCP data, which may only be
+  redistributed under the HCP Open Access Data Use Terms, not under the toolbox's MIT licence. Download
+  hcp_template.mat from the release page (https://github.com/neurodynamics-xr/rheome/releases), or build
+  it from your own copy with rheome.connectome.build_hcp_template, and put it at
+  fullfile(rheome.load.root(), 'hcp_template.mat') or point RHEOME_HCP_TEMPLATE at it.
+ 
+  See also: rheome.connectome.build_hcp_template, rheome.operators.connectome, rheome.io.read.fibers
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

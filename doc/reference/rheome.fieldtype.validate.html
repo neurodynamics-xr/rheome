@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.fieldtype.validate</title></head><body>
+<h1>rheome.fieldtype.validate</h1>
+<p><em>function rheome.fieldtype</em> &mdash; Rheome</p>
+<pre>  FIELDTYPE.VALIDATE  Does this array hold a field of this type on this domain?
+ 
+    rheome.fieldtype.validate(J, &quot;ambientVertexWorld&quot;, dCortex)          % throws on a mismatch
+    [ok, why] = rheome.fieldtype.validate(J, &quot;ambientVertexWorld&quot;, dCortex, Throw=false)
+ 
+  ⭐ THE CHECK IS A SCALAR COUNT, NOT A ROW COUNT. A field of type t on domain d has
+  elements(d, t.rank) * components(t) scalars per frame -- an ambient vertex field on 20484
+  vertices is 61452 rows, not 20484, and an [nV x 3] face gradient is 3*nF scalars laid out
+  the other way round. Checking rows alone is what lets a constrained leadfield pass as an
+  unconstrained one; rheome.inverse.mne documents that exact collision, which is why it has to ask
+  for the vertex count separately.
+ 
+  ⚠ THE TRAILING DIMENSION IS FREE BY DEFAULT. Columns are frames (time, trials), which are a separate
+  domain: the type says nothing about how many there are. ⭐ Pass Frames=n -- or a product domain's
+  .nFrames -- to check it too. That is opt-in because the default looseness is what every existing
+  caller relies on, and because turning it on everywhere at once surfaces every sloppy frame count in
+  one pass rather than where someone is ready to fix it.
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

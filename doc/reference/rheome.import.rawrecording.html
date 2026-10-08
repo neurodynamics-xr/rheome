@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.import.rawrecording</title></head><body>
+<h1>rheome.import.rawrecording</h1>
+<p><em>function rheome.import</em> &mdash; Rheome</p>
+<pre>  IMPORT.RAWRECORDING  Native-rate BST-BIN -&gt; the pageable v7.3 store.
+ 
+    file = rheome.import.rawrecording(name, rawMatFile)
+    file = rheome.import.rawrecording(name, rawMatFile, opts)
+ 
+  Writes +data/&lt;name&gt;/recording_native.mat with the sensor matrix as a TOP-LEVEL variable,
+  exactly like rheome.import.recording, but read from the ORIGINAL acquisition rather than the
+  resample cached in study.mat. On the reference CTF data that is 2400 Hz against 600 Hz.
+ 
+  ⭐ WHY THE NATIVE RATE MATTERS. The multirate plan gives each filter 30 samples per cycle
+  of its own frequency, which needs 30*f &lt;= fs. At 600 Hz that ceiling is 20 Hz and 16 of
+  the 60 filters in a [1 60] Hz bank fall short. At 2400 Hz the ceiling is 80 Hz and NONE
+  do. Better still, multirate at 2400 Hz costs LESS per page (0.94 GB) than flat at 600 Hz
+  (1.28 GB) -- full resolution is cheaper than what it replaces.
+ 
+  ⚠ THE SSP PROJECTORS ARE APPLIED, and that is not optional. rheome.io.read.rawbst applies them
+  as Brainstorm does; they carry the cardiac and blink artefact cleaning. Verified against
+  Brainstorm's own import of the same file: WITHOUT them r = 0.80, WITH them r = 0.999993
+  (min 0.999911 over 270 MEG channels).
+ 
+  ⚠ STORED AS single -- and that is LOSSLESS here, unlike the study-cache path. The .bst
+  holds float32, so single is BIT-EXACT and halves the store (1.73 GB per 600 s subject
+  instead of 3.46 GB). rheome.import.recording stores double because its source is double.
+ 
+  ⚠ WRITTEN IN CHUNKS through a matfile handle, so peak memory is one chunk, not the whole
+  record. The default 60 s chunk is ~35 MB at 300 x 2400.
+ 
+  INPUTS:
+    name        cached dataset name (the folder must already exist)
+    rawMatFile  path to the Brainstorm raw descriptor (data_0raw_*.mat)
+    opts .chunkSamples  samples per write (default 60 s worth)
+         .channelFile   override the auto-located channel file
+ 
+  See also: rheome.io.read.rawbst, rheome.import.recording, rheome.pagedrecording
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

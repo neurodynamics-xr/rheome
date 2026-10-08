@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.vortextrack</title></head><body>
+<h1>rheome.flow.vortextrack</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.VORTEXTRACK  A time-resolved PARAMETRIC inverse: vortex parameters as functions of time.
+ 
+    out = rheome.flow.vortextrack(bank, D)
+    out = rheome.flow.vortextrack(bank, D, Cycles=[2 5 15], Stride=0.1)
+ 
+  ⭐⭐ WHAT MAKES THIS AN INVERSE RATHER THAN REPEATED MATCHING. A distributed inverse solves for
+  3nV unknowns per sample and regularises the result into existence. This solves for SIX numbers per
+  time point -- place, scale, duration, amplitude, rotation and fit -- by choosing the atom that best
+  explains the record there. The model is the parameterisation, so the answer is a trajectory of
+  physical quantities rather than a map that still has to be interpreted.
+ 
+  ⚠⚠ Q IS ONLY IDENTIFIABLE WITH A LENGTH PENALTY. Selecting on raw energy returns the LONGEST
+  atom in the list regardless of the truth -- 0 of 6 correct for planted Q of 2 and of 5 at SNR 3.
+  `Penalty` 0.5, dividing by sqrt(support), gets 17 of 18. See the code note.
+ 
+  ⭐ Q IS A FITTED PARAMETER, NOT A SETTING. Section 34.1 measured that no single Q describes the
+  alpha envelope: short atoms give a fast white envelope (tau 0.04 s, chi 0.13) and long ones a slow
+  structured one (tau 0.27, chi 1.33), while the recording needs 0.19 and 0.78 at once. Fitting Q per
+  time point is the parametric form of the mixture that resolves it, and `out.cycles` is then a
+  measurement -- how many cycles the rhythm sustained at that moment -- not a choice.
+ 
+  ⭐ IT COSTS TWO CONVOLUTIONS AND TWO PRODUCTS PER Q. The spatial factors do not depend on the
+  temporal one, so one bank serves every Q. Sliding the atom is a convolution, so
+      U_q = D * conj(a_q),  V_q = D * conj(b_q)         [nCh x nT], by FFT
+      c0  = PA'*U_q + PB'*V_q,  c1 = PB'*U_q - PA'*V_q  [nAtoms x nT]
+  gives the phase-invariant energy of every atom at every instant. Nothing of size [nCh x nT] is
+  formed per atom.
+ 
+  ⚠ THE TRACK IS NOT A DETECTION. `energyFrac` says how much of the record the winning atom
+    explains, not whether a vortex is there: section 32 measured a standing field scoring 0.697
+    against a rotating one's 0.900. Read `icoh` alongside it, which separated the two at every
+    location tested, and treat a high energy with a near-zero icoh as a focal source that is not
+    turning.
+ 
+  INPUTS
+    bank    rheome.flow.vortexbank output          D  [nCh x nT] sensor record, bank.chan order
+    Cycles  Q values to fit ([2 5 15])      Stride  seconds between estimates (0.05)
+    Fc      centre frequency to fit at, [] = the bank's own. The spatial dictionary is
+            band-independent, so one bank tracks every band.
+    Penalty selection divides energy by support^Penalty (0.5; see the note in the code)
+    Icoh    true (default) computes the rotation statistic at each estimate
+ 
+  OUTPUT (struct out)
+    .t [1 x nE] seconds                    .table  one row per estimate
+    .vertex .scaleMM .cycles .energy .energyFrac .momentNAm .icoh   [nE x 1]
+    .energyAll [nAtoms x nCycles x nE] if KeepAll
+ 
+  See also: rheome.flow.vortexbank, rheome.flow.vortexmatch, rheome.flow.vortexatom, rheome.flow.vortexspectrum
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

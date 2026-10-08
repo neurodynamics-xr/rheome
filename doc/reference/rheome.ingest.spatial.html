@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.ingest.spatial</title></head><body>
+<h1>rheome.ingest.spatial</h1>
+<p><em>function rheome.ingest</em> &mdash; Rheome</p>
+<pre>  INGEST.SPATIAL  The wavelength axis: a tight log-itersine frame on the sensor graph, per tile.
+ 
+    [T0, sbands, sframe] = rheome.ingest.spatial(readfcn, G, g, cfg, Mask=[], Chunk=60)
+ 
+  The field on the sensors at every sample is filtered by each member of a
+  rheome.graphfilterbank('logitersine') on the graph's spectrum -- octaves of wavelength, tight
+  (sum of squared gains = 1), with a &quot;longer than the array&quot; member (the low-pass, which
+  holds the spatial mean) and a &quot;shorter than the alias floor&quot; member (the high-pass).
+  Per level-0 tile and channel: the member's coefficient energy over the tile (sum) and
+  the largest coefficient magnitude (max). Both merge across time and across the sensor
+  tree like every other statistic.
+ 
+  ⭐ PARSEVAL ON THE GRAPH: summed over all sensors, the members' energies equal the
+  field's energy exactly (A = B = 1), so at the ROOT of the sensor tree the spatial bands
+  partition sumX2 per tile. Per channel or per group they do not: a spectral filter
+  moves energy between sensors, and tightness is a whole-array property. What a group's
+  spatial energies say is how much of the field's energy at each wavelength its sensors
+  carry.
+ 
+  ⚠ Wavelengths in millimetres come from rheome.sensors.calibrate, which on the CTF helmet
+  agrees between its two routes at only 0.36 and is accurate above ~122 mm. sbands
+  carries both the dimensionless k range (exact) and the calibrated wavelengths.
+ 
+  INPUTS:
+    readfcn  @(a, b) -&gt; [b-a+1 x C] samples a..b, ALL the store's channels
+    G        rheome.sensors.graph on exactly those channels (in the store's channel order)
+    g        rheome.ingest.grid;  cfg  rheome.ingest.config (SpaceVoices)
+    Mask     [nT x 1] logical valid samples;  Chunk  seconds per read (60)
+  OUTPUT:
+    T0      .senergy [K0 x C x nS] double, .senvMax [K0 x C x nS] single
+    sbands  table: sband_id, kind ('longer' | 'octave' | 'shorter'), k_lo, k_hi
+            (dimensionless sqrt(lambda)), k_center, wavelength_lo, wavelength_hi,
+            wavelength_center (m, NaN without calibration), n_modes
+    sframe  .A .B .alpha .agree .lambdaUsable .Q .Lambda
+ 
+  See also: rheome.graphfilterbank, rheome.sensors.modes, rheome.sensors.calibrate, rheome.ingest.reduce
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

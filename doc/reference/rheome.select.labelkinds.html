@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.select.labelkinds</title></head><body>
+<h1>rheome.select.labelkinds</h1>
+<p><em>function rheome.select</em> &mdash; Rheome</p>
+<pre>  SELECT.LABELKINDS  Every label and feature kind, with what it can CLAIM: the calibration registry.
+ 
+    K = rheome.select.labelkinds()            % the whole registry, one row per kind
+    r = rheome.select.labelkinds(&quot;alpha_traj_speedMS&quot;)      % one row (empty if unregistered)
+ 
+  A label is a claim about the brain, and a claim is only as good as its calibration. Each kind here
+  carries the evidence for what it measures THROUGH THIS INSTRUMENT, so a table of labels cannot hold a
+  confident number that a calibration has already shown to be meaningless.
+ 
+  ⭐ rheome.select.measure REFUSES a kind whose calibration is &quot;unmeasurable&quot; and WARNS on an unregistered one.
+  The canonical case: an envelope or blob SIZE. Blobs injected at 63-377 mm read back 147-183 mm
+  through forward and inverse with no noise at all, and 130-144 mm in the recording
+  (alpha_envscale_omega.m; plant_scale_omega.m found the same for single snapshots). Writing a size
+  label would put the instrument's rendering in a column named for the source.
+ 
+  COLUMNS
+    kind          the name written to measure.kind (or a mergeable relation column)
+    relation      &quot;measure&quot; (note: measured where measured, never merges) or &quot;feature_cortex[_space]&quot;
+                  (mergeable: a parent is the sum of its children)
+    scope         &quot;cortex&quot; | &quot;none&quot;
+    unit          physical unit, or &quot;class&quot; / &quot;count&quot;
+    producer      the function that computes it
+    null          what it was judged against
+    calibration   validated | compressed | pending | unmeasurable
+    evidence      where the calibration was measured, with the number
+ 
+  See also: rheome.select.measure, rheome.select.measures, rheome.flow.labelalpha, docs/2026-09-29-alpha-labelling-design.md
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

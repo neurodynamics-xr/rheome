@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.pipeline.compile</title></head><body>
+<h1>rheome.pipeline.compile</h1>
+<p><em>function rheome.pipeline</em> &mdash; Rheome</p>
+<pre>  PIPELINE.COMPILE  Can this plan run in this environment, and as what function?
+ 
+    f = rheome.pipeline.compile(p, e);   Y = f(X);
+    [f, why] = rheome.pipeline.compile(p, e, Throw=false)
+ 
+  ⭐ EVERY REASON IT COULD FAIL, BEFORE IT RUNS. A step whose operator has no applier yet, a
+  cross-domain step whose target domain the environment does not hold, an environment
+  missing the matrix an applier reaches for: all of them are found here, named, and reported
+  together rather than one per run.
+ 
+  The returned handle takes the input field and gives the output field. rheome.pipeline.run wraps
+  it and also returns the record.
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

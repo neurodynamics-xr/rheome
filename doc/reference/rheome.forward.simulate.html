@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.forward.simulate</title></head><body>
+<h1>rheome.forward.simulate</h1>
+<p><em>function rheome.forward</em> &mdash; Rheome</p>
+<pre>  FORWARD.SIMULATE  Seed a Dirac current field at a cortical vertex, forward it through the head
+  model to sensor timeseries, add a REAL empty-room background, and find the detection threshold.
+ 
+    out = rheome.forward.simulate('sub01')
+    out = rheome.forward.simulate(name, Family=&quot;gabor&quot;, Band=[8 16], WavelengthMM=140)
+    out = rheome.forward.simulate(name, Family=&quot;resonator&quot;, MomentNAm=logspace(-1,2,13))
+ 
+  ⭐ ALMOST NOTHING HERE IS NEW MACHINERY. `rheome.filters.impulse(dbasis, vertex, G, domain, nKeep, dir)`
+  already seeds an ORIENTED DIPOLE at a vertex in the Dirac basis and returns [3nV x nT]; the eight
+  families in +filters supply the analytic kernel on whichever axis they live on --
+  `wave`/`dampedwave`/`diffusion`/`kleingordon` on (lambda, t) with domain 'ts', and
+  `travwave`/`resonator`/`gabor`/`stmatern` on (lambda, omega) with domain 'js'. This assembles them
+  with the leadfield and a real noise floor and reports the one number that was missing: the source
+  moment, in nAm, at which the pattern becomes detectable in the sensor timeseries.
+ 
+  ⚠⚠ THE AMPLITUDE NORMALISER IS RSS, NOT THE NET MOMENT, AND THE DIFFERENCE IS NOT COSMETIC. The
+  obvious normaliser is the net dipole moment ||sum_v J(v,t)||, and for a ROTOR that sum is nearly
+  zero by construction -- the field cancels vectorially -- so dividing by it multiplies the pattern
+  by a huge number and the &quot;1 nAm rotor&quot; that comes out is nothing of the kind. `MomentNAm` here is
+  the root-sum-square over all vertices and components at the peak time,
+  max_t sqrt(sum_v |J(v,t)|^2), which is finite and positive for every pattern including a rotor.
+  ⚠ It is therefore NOT comparable to a published &quot;equivalent dipole moment&quot;. Measured here, at the
+  same 1 nAm RSS: a single-vertex dipole gives 1.25e-15 T array RMS, the unfiltered mode-space seed
+  9.52e-15 T and a 140 mm mexhat pattern 3.11e-15 T -- so an extended pattern at fixed RSS is
+  STRONGER at the sensors than a focal dipole of the same RSS, because its net vector moment is
+  larger (2.26 nAm against 1.00). A 140 mm annulus is only 7.9 dB below a focal dipole, not the
+  near-silence one might expect from a zero-mean pattern.
+ 
+  ⚠ THE EMPTY ROOM SETS THE RATE AND THE CHANNEL SET, not the subject. The background is 300 Hz with
+  297 channels; the subject is 600 Hz with 300. Resampling a noise recording to match a simulation
+  changes its spectrum, so the simulation runs at the EMPTY ROOM's rate instead. And the two channel
+  sets are intersected BY NAME -- lining them up by index silently pairs different sensors and gives
+  a noise field with the right statistics on the wrong geometry.
+  ⭐ Measured here: the 270 good MEG channels carry IDENTICAL names in both files, so the intersect
+  is a no-op for them and the index route would in fact have worked. It is kept because the
+  non-MEG channels do NOT match (subject &quot;SCLK01&quot; against background &quot;SCLK01-177&quot;), so the
+  agreement holds only after the MEG restriction and is not a property of the files.
+ 
+  ⚠ Detection is judged against the empty room's OWN distribution over many windows, not against a
+  single noise draw or an analytic formula: the criterion is stated in `.criterion` and is that the
+  in-band array RMS exceed the noise-only 95th percentile.
+ 
+  ⚠ What this cannot tell you: whether a detected pattern can be LOCALISED or SIZED. Detection in the
+  sensor timeseries is a much weaker question than recovery on the cortex -- plant_scale_omega.m
+  recovers location to 43-52 mm and scale not at all below 10 dB. Use this for &quot;is it visible&quot;, and
+  that for &quot;what comes back&quot;.
+ 
+  NAME-VALUE
+    Family       &quot;resonator&quot; (default) | &quot;gabor&quot; | &quot;travwave&quot;   -- on (lambda, omega)
+                 &quot;oscillator&quot; | &quot;wave&quot; | &quot;dampedwave&quot; | &quot;diffusion&quot;  -- on (lambda, t)
+    Band         [f_lo f_hi] Hz, default [8 16]; f0 = sqrt(f_lo*f_hi), Q = f0/(f_hi-f_lo)
+    WavelengthMM spatial scale for &quot;gabor&quot; (k0 = 2*pi/lambda), default 140
+    Vertex       seed vertex (local, left hemisphere); default = the median-depth vertex
+    Dir          [3x1] dipole direction, or &quot;normal&quot; (default) | &quot;tangential&quot;
+    MomentNAm    sweep of source strengths, default logspace(-1, 2, 13)
+    Duration     seconds, default 4
+    NoiseTrials  empty-room windows for the null, default 200
+    Hemi         &quot;L&quot; (default)
+    SpinRate     Hz. With a [3nVh x 2] Pattern the two columns are taken as a QUADRATURE PAIR and the
+                 field ROTATES: J(t) = cos(2*pi*f*t)*P(:,1) + sin(2*pi*f*t)*P(:,2). ⭐ Because a spin
+                 about the normal is multiplication of the complex tangent field by exp(i*theta),
+                 z*exp(i*w*t) = cos(w*t)*z + sin(w*t)*(i*z) -- so a rotating vortex is exactly the
+                 vortex and its pi/2-spun partner (a source) in quadrature, and the forward stays
+                 RANK TWO. Default: the band centre, so the vortex turns once per alpha cycle.
+    Pattern      a prebuilt spatial field [3nVh x 1] (e.g. rheome.flow.seedrotor's .J) used INSTEAD of the
+                 mode-space seed. ⭐ It goes through the VERTEX leadfield (rheome.forward.leadfield), not
+                 Gmode, so nothing is truncated to the 400-mode basis -- which matters for a rotor,
+                 whose fine structure the basis does not hold. The temporal factor is unchanged, so a
+                 Pattern run is directly comparable to a mode-space run of the same family.
+    Context      a struct with any of .H (rheome.load.bases hemisphere), .d (rheome.load.dirac), .st, .er
+                 (rheome.load.study of subject and empty room) so a sweep loads them once. ⚠ 160 calls
+                 reloading these took longer than every forward model in the sweep put together.
+ 
+  OUTPUT (struct out)
+    .threshMomentNAm  ⭐ the detection threshold, solved in closed form (not read off the sweep)
+    .rmsPerNAm        in-band array RMS per nAm -- the whole forward model in one number
+    .moment .snrDB .rmsSignal .rmsNoise .rmsNoiseP95 .detected .threshFromGrid .criterion
+    .B [C x nT] the noiseless sensor timeseries at 1 nAm   .C [nModes x nT] the seed coefficients
+    .Gmode [C x nModes] the leadfield in the Dirac basis -- one column per eigenmode's sensor pattern
+    .channels .fs .vertex .depthMM .family .band .lambdaMM
+ 
+  See also: rheome.filters.impulse, rheome.filters.resonator, rheome.filters.gabor, rheome.forward.reconstruct,
+            rheome.forward.observability, plant_scale_omega, rheome.sensors.generate
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

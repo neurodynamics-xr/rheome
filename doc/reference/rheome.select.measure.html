@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.select.measure</title></head><body>
+<h1>rheome.select.measure</h1>
+<p><em>function rheome.select</em> &mdash; Rheome</p>
+<pre>  SELECT.MEASURE  Write measurements onto pyramid nodes, in one transaction.
+ 
+    t = rheome.select.measure(db, rows, Kind=&quot;vortex_count&quot;)
+    t = rheome.select.measure(db, rows, Kind=&quot;rotation_sense&quot;, Scope=&quot;group&quot;, Source=&quot;flow&quot;)
+        rows  table with level, k and value, optionally unit_id (0 = none) and band_id (0 = none)
+        t     the txn row: txn_id, count, content_hash, created, and .existed
+ 
+  ⭐ THE SECOND BOOKKEEPING MATRIX. The feature relations are dense and mergeable: one row
+  per (unit, tile), a parent exactly the merge of its children, computed once and rolled up.
+  This one is sparse and NOT mergeable: one row per (node, kind), holding whatever was
+  measured where it was measured -- a vortex count, a rotation sense, a fitted slope, a
+  track id. The pyramid is then just a graph to hang things on, which is all it needs to be
+  for labelling, and the two matrices meet again in rheome.select.context.
+ 
+  ⚠ A VALUE HERE SAYS NOTHING ABOUT ITS PARENT. Nothing rolls up, no bound holds, so a query
+  on a measurement scans its level or uses an index; it cannot prune by descending the way
+  rheome.select.frames does on the moments. Two levels carrying the same kind are two independent
+  observations of overlapping spans -- never read one as a summary of the other.
+ 
+  ⚠ ADDRESSED BY SCOPE AND UNIT, unlike `label`, which only knows channels. A measurement on
+  a sensor-tree node (Scope=&quot;group&quot;, unit_id = node id) is the common case for flow, where
+  the thing measured is a pattern over a patch, not a number on one sensor.
+ 
+  ⭐ Scope=&quot;cortex&quot; addresses a rheome.geom.tree node on the far side of the inverse (the cortex_node
+  dimension), which is where a time-averaged magnitude, divergence or curl under a cortical tile
+  belongs. Those are exactly the quantities that do NOT merge -- a curl on a patch is not the sum
+  of the curls of its halves -- so this relation, not a feature relation, is their home.
+  ⚠ A cortical measurement is only as good as the instrument under that node: see
+  plant_scale_omega.m. Location recovers to 43-52 mm and SIZE DOES NOT RECOVER AT ALL below ~20 dB,
+  so write a magnitude or a curl here and do not write a &quot;blob size&quot;.
+ 
+  ⚠ rheome.select.labelkinds is consulted on every write: a kind registered &quot;unmeasurable&quot; (e.g. a blob or
+  envelope size) is REFUSED with its evidence in the message.
+ 
+  Same transaction machinery as rheome.select.label: atomic write, idempotent by content hash,
+  removed by rheome.select.rollback. Labels and measurements share the sidecar file and the
+  transaction log, so one rollback cannot leave half a write behind.
+ 
+  See also: rheome.select.measures, rheome.select.context, rheome.select.label, rheome.select.rollback
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

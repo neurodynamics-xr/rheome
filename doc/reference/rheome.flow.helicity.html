@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.helicity</title></head><body>
+<h1>rheome.flow.helicity</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.HELICITY  Bilinear Gram for total (or scout-weighted) helicity  H = sum_v w.*(J . grad x J).
+    kh = rheome.flow.helicity(ctx [,w])   H(t) = ctx.F(:,t)' * kh.gram * ctx.F(:,t)
+ 
+  Helicity density J.(grad x J) is bilinear in the data, so the region total is a [C x C] form
+  Q = sym(currentKernel' diag(w (x) I3) Wcurlvec). Per-vertex helicity-density maps come from kh.map.
+ 
+  OUTPUT (struct kh): .gram [C x C] symmetric, .w [V x 1], .domain='gram', .out, .chNames,
+    .map (@(F) per-vertex helicity map [V x nT]).
+ 
+  See also: rheome.flow.curlvec, rheome.flow.energy, rheome.flow.enstrophy
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.weak</title></head><body>
+<h1>rheome.flow.weak</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.WEAK  Weak (Galerkin) divergence / rotated-source operators from face_gradient.
+    wk = rheome.flow.weak(ctx)
+ 
+  Builds the [V x 3V] sparse operators that act on an interleaved ambient field J [3V x m]:
+    divw  = wk.Bdiv * J      weak divergence  (Galerkin RHS of the Phi-Poisson)
+    vortw = wk.Brot * J      weak vorticity   (Galerkin RHS of the Psi-Poisson)
+  These are the exact assemblies used inside rheome.differential.helmholtz, re-expressed as matrices
+  so the Helmholtz potentials can be fused into single kernels. The scalar-LBO stiffness that
+  inverts them, K = Gx'AGx + Gy'AGy + Gz'AGz, is the same cotan Laplacian whose (L,M) eigenmodes
+  the potentials expand in -- so K^+ is diagonal (1/lambda) in that basis.
+ 
+  See also: rheome.flow.potential, rheome.flow.stream, rheome.differential.helmholtz, rheome.operators.face_gradient
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

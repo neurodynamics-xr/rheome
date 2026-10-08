@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.directionfield</title></head><body>
+<h1>rheome.flow.directionfield</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.DIRECTIONFIELD  Plant singularities, solve a trivial connection, integrate, rotate, lift.
+ 
+    out = rheome.flow.directionfield('sub01')                        % two +1 poles
+    out = rheome.flow.directionfield(name, Faces=[f1 f2 f3 f4], Charges=[1 -1 1 1])   % a +1/-1 pair, plus chi
+    out = rheome.flow.directionfield(name, Rotate=0)                         % the un-rotated field
+ 
+  ⭐⭐ THE DESIGN ROUTE, which is what geometry-processing-js / Geometry Central do. You do NOT derive
+  a field and then detect what came out; you PRESCRIBE the singularities and solve for the field
+  that has them:
+ 
+    1. choose faces and integer indices k_f, summing to chi        (the singularities)
+    2. solve the TRIVIAL CONNECTION (Crane, Desbrun &amp; Schroeder 2010), rheome.operators.trivial_connection:
+           least-norm 1-form x with  d1*x = 2*pi*k - K,  K_f = wrap(d1*argR)_f  the face curvature
+    3. INTEGRATE the adjusted transport over a spanning tree  -&gt;  phi(v), a unit direction field
+    4. ROTATE by Rotate (default 90 degrees): z = exp(i*(phi + Rotate))
+    5. LIFT to 3 components through the connection's own frames:  J = Re(z)*e1 + Im(z)*e2
+ 
+  ⚠⚠ THE INDICES SUM TO chi, AND AN EARLIER VERSION SAID ZERO. It solved d1*x = 2*pi*k - d1*argR
+  without the wrap; d1*argR = K + 2*pi*n carries integer chart parts n_f (sum -chi), so the budget
+  looked like zero and the field's index was k - n: a &quot;+1/-1 pair&quot; wound on 2560 faces. Its checks
+  passed because they measured the ADJUSTED connection's holonomy, chart parts included, which is
+  exactly what was prescribed; the field's own winding (.check.winding*) said otherwise, and a test
+  pinned that as a detector limitation. It was not: with the wrap the per-face winding of the field
+  is nonzero at exactly the prescribed faces, so detection and prescription now agree.
+ 
+  ⭐ SO A VORTEX/ANTIVORTEX PAIR CAN BE PLANTED -- next to the chi budget, which has to go somewhere:
+  Faces=[a b p q], Charges=[1 -1 1 1] puts the pair at a, b and two +1 poles at p, q. The default,
+  two +1 faces far apart, is the pole frame of rheome.operators.gauge(Method=&quot;trivial&quot;).
+ 
+  ⚠ THE UN-ROTATED FIELD IS NOT LITERALLY IRROTATIONAL, and calling it that is loose. A parallel unit
+  field has zero covariant derivative, so it is as close to constant as the surface allows -- its
+  singularities are the prescribed ones and its curl is whatever the curvature forces. Rotating by 90
+  degrees exchanges the roles of div and curl locally; it does not turn an exactly-curl-free field into
+  an exactly-divergence-free one, because neither is exact on a curved discrete surface.
+ 
+  ⚠ A UNIT FIELD DOES NOT DECAY. |z| = 1 everywhere, so this covers the whole hemisphere. Pass Envelope
+  to localise it; an envelope that is radial about a singularity adds no divergence, because grad(A) is
+  then perpendicular to the rotated field.
+ 
+  NAME-VALUE
+    Faces     [1 x n] face indices for the singularities; default two well-separated faces
+    Charges   [1 x n] integers summing to chi (2 on a closed hemisphere); default [1 1]
+    Rotate    radians added to phi; pi/2 (default) = the rotated/vortex field, 0 = the parallel one
+    Envelope  &quot;none&quot; (default) | &quot;radial&quot;   -- radial decays about the FIRST singularity
+    EnvelopeMM  the radial envelope's scale, default 140
+    Hemi (&quot;L&quot;)   Bases   Check (true)
+ 
+  OUTPUT (struct out)
+    .J [3nV x 1]  .z .phi  .faces .charges  .check: holonomyAtPrescribed, holonomyElsewhereMax
+    (the adjusted connection's index per face, in turns, chart parts removed), transportResidual,
+    windingAtPrescribed, windingSumAll, windingNonzeroCount (the FIELD's own per-face winding),
+    tangentialFrac, curlOverDiv
+ 
+  See also: rheome.operators.trivial_connection, rheome.operators.connection_laplacian, rheome.operators.gauge, rheome.flow.seedvortex, rheome.flow.seedrotor,
+            dirac_gauge_omega, rheome.detect.criticalPoints
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

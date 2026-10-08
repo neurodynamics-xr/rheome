@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.ingest.totable</title></head><body>
+<h1>rheome.ingest.totable</h1>
+<p><em>function rheome.ingest</em> &mdash; Rheome</p>
+<pre>  INGEST.TOTABLE  A store, or part of it, as long-form rows for a database or groupsummary.
+ 
+    R = rheome.ingest.totable(file)                              % top level, every stat
+    R = rheome.ingest.totable(file, Levels=[3 4], Channels=1:10, Bands=[], Stats=[&quot;energy&quot;,&quot;envMax&quot;])
+ 
+  One row per (channel, tile, band, stat). All-pass statistics carry band = 0 and NaN
+  frequency extents. A band appears at a level only from its natural level up (the
+  store's diagonal, grid.bandsAt); rows are keyed by the band's j, never by its slot. The row is the record the production database will hold, and the
+  tile is described by centre + extent on both axes exactly as a query needs it
+  (design §2, §3.10). Reads level variables through matfile, so only the requested levels
+  touch disk.
+ 
+  ⚠ Level 0 of a 600 s record at 270 channels and 15 bands is ~10 M rows per stat.
+  Levels defaults to the TOP level for that reason; ask for finer levels explicitly.
+ 
+  INPUTS:
+    file      store written by rheome.ingest.build
+    Levels    levels to emit ([] = top level only)
+    Channels  indices into the store's channel axis ([] = all)
+    Bands     band indices j ([] = all); all-pass stats are always included as band 0
+    Stats     subset of [&quot;n&quot;,&quot;sumX&quot;,&quot;sumX2&quot;,&quot;absMax&quot;,&quot;min&quot;,&quot;max&quot;,&quot;energy&quot;,&quot;envMax&quot;,&quot;nCoi&quot;]
+  OUTPUT:
+    R  table: recording, channel, level, tCenter, tExtent, band, fCenter, fExtent, stat, value
+ 
+  See also: rheome.ingest.build, rheome.flowfeatures/totable
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

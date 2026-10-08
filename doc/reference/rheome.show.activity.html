@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.show.activity</title></head><body>
+<h1>rheome.show.activity</h1>
+<p><em>function rheome.show</em> &mdash; Rheome</p>
+<pre>  SHOW.ACTIVITY  Where and when vortical activity is strong.
+ 
+    [hFig, info] = rheome.show.activity(surf, c, Psi, t)
+ 
+  Three panels: WHERE (time-averaged amplitude map on the cortex), WHEN (total amplitude over
+  time), and the distribution of instantaneous amplitude. Use it to choose the regions and time
+  windows worth looking at before committing to detection.
+ 
+  The WHEN panel is free. Psi is M-orthonormal, so by Parseval the total vortical energy at time t
+  is just the coefficient norm:  sum_v |Psi c(:,t)|^2  ==  ||c(:,t)||^2 -- no synthesis needed.
+  Only the WHERE panel requires the vertex-space multiply.
+ 
+  INPUTS:
+    surf  surface struct   c [K x nT] complex coefficients   Psi [N x K]   t [1 x nT] times (s)
+  OPTIONS:
+    'Percentile'  mark windows above this percentile of amplitude (default 90)
+    'View','Title','Visible'
+ 
+  OUTPUT:
+    info .whenPower [1 x nT] energy per frame (Parseval)   .peakT time of maximum
+         .windows  [n x 2] start/stop of the runs above the percentile
+         .whereMap [N x 1] time-averaged amplitude
+ 
+  See also: rheome.filters.frame_scalogram, rheome.filters.joint_scalogram
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.select.schema</title></head><body>
+<h1>rheome.select.schema</h1>
+<p><em>function rheome.select</em> &mdash; Rheome</p>
+<pre>  SELECT.SCHEMA  The relational schema the tile store already is: relations, columns, keys.
+ 
+    S = rheome.select.schema()     struct array, one element per relation:
+        .name .columns {1 x n} .types {1 x n} (Postgres) .key {1 x m} .foreign {struct: column -&gt; relation}
+ 
+  Design: docs/2026-09-22-select-design.md §2; the position pyramid (sensor_group and the
+  feature_group relations, internal nodes only -- leaves are the channel rows) is §2b. rheome.select.ddl prints it as Postgres DDL;
+  rheome.select.rows materialises any relation from a MATLAB store.
+ 
+  ⭐ TWO MATRICES OVER THE SAME NODES, and `.kind` says which is which.
+    'mergeable'  dense, one row per (unit, tile), a parent exactly the merge of its
+                 children: the moments, computed once at the finest level and rolled up.
+                 Bounds hold, so a query prunes by descending (rheome.select.frames).
+    'note'       sparse, one row per (node, kind), whatever was measured where it was
+                 measured: labels and measurements. NOTHING here merges -- a value on a
+                 node says nothing about its parent -- so these are scanned or indexed,
+                 never descended, and values at two levels are two observations, not one.
+    'dimension'  the axes themselves: recording, channel, band, tile, sensor_group, space_band,
+                 cortex_node (rheome.geom.tree, the position pyramid on the far side of the inverse).
+  Keeping them in separate relations is the whole discipline: it makes &quot;this number is a
+  summary of its children&quot; and &quot;this number was measured here&quot; impossible to confuse.
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.sensors.sample</title></head><body>
+<h1>rheome.sensors.sample</h1>
+<p><em>function rheome.sensors</em> &mdash; Rheome</p>
+<pre>  SENSORS.SAMPLE  Evaluate an analytic field at the sensor coordinates.
+ 
+    U = rheome.sensors.sample(arr, @(P) cos(k*P(:,1)))
+    U = rheome.sensors.sample(arr, @(P, tj) cos(k*P(:,1) - w*tj), tvec)
+ 
+  The array does not host the field -- it SAMPLES one defined in the surrounding space.
+  Keeping that distinction in the code is what makes the aperture and alias limits mean
+  something: they are properties of the sampling, and the field is indifferent to them.
+ 
+  INPUTS:
+    arr       a rheome.sensors.* array struct
+    fieldFcn  @(P) -&gt; [N x 1], or @(P, tj) -&gt; [N x 1] when t is given
+    t         [1 x nT] times, seconds (optional)
+  OUTPUT:
+    U  [N x nT] (or [N x 1] with no t)
+ 
+  See also: rheome.sensors.calibrate, rheome.sensors.grid
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.kleingordon</title></head><body>
+<h1>rheome.filters.kleingordon</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.KLEINGORDON  Massive (Klein-Gordon) wave kernel (eigenmode x time, 'ts').
+ 
+    G = rheome.filters.kleingordon(lambda, t, alpha, mu, lmax)
+ 
+  g(lambda,t) = cos( alpha * t * acos(1 - 2*(lambda+mu)/lmax) ). A wave with a mass term
+  mu: even the DC mode oscillates (rest frequency ~ sqrt(mu)), and the dispersion is
+  shifted, so wavefronts spread with a frequency floor. Port of
+  bst_eigfilter_design_kleingordon.
+ 
+  INPUTS:
+    lambda [K x 1]   t [1 x N] time-lag axis
+    alpha  speed (default 1)   mu mass (default 0.1)   lmax (default max(lambda))
+  OUTPUT:
+    G      [K x N]
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

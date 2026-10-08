@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.operators.mass</title></head><body>
+<h1>rheome.operators.mass</h1>
+<p><em>function rheome.operators</em> &mdash; Rheome</p>
+<pre>  OPERATORS.MASS  Finite-element mass matrix of a triangle surface mesh.
+ 
+    M = rheome.operators.mass(V, F)              % 'galerkin' (default, matches Brainstorm)
+    M = rheome.operators.mass(V, F, 'galerkin')  % consistent (full) FEM mass
+    M = rheome.operators.mass(V, F, 'lumped')    % barycentric lumped (diagonal) mass
+ 
+  The mass matrix M is the discrete inner product on scalar fields living on the
+  mesh: &lt;f,g&gt; = f' M g. It is what makes the Laplace-Beltrami eigenmodes an
+  M-orthonormal basis (phi_i' M phi_j = delta_ij). Brainstorm's LBO pairs the
+  cotan stiffness with the GALERKIN (consistent) mass, so that is the default here.
+ 
+  For a linear (P1) element on a triangle of area A the local mass matrices are:
+    galerkin : (A/12) * [2 1 1; 1 2 1; 1 1 2]     (consistent; couples neighbours)
+    lumped   : (A/3)  * I3                         (row-sum of galerkin; diagonal)
+  Both assemble to a total mass equal to the surface area (sum(M(:)) == area).
+ 
+  INPUTS:
+    V    [nV x 3] vertex coordinates
+    F    [nF x 3] triangle vertex indices (1-based)
+    type 'galerkin' (default) | 'lumped'
+ 
+  OUTPUT:
+    M    [nV x nV] sparse symmetric positive-definite mass matrix
+ 
+  See also: rheome.operators.laplace_beltrami
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

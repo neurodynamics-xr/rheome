@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.operators.registry</title></head><body>
+<h1>rheome.operators.registry</h1>
+<p><em>function rheome.operators</em> &mdash; Rheome</p>
+<pre>  OPERATORS.REGISTRY  Every operator as a typed arrow: what it takes, what it gives, its shape.
+ 
+    T = rheome.operators.registry()
+    T = rheome.operators.registry(); T(T.in == &quot;ambientVertexWorld&quot;, :)     % what accepts a current
+ 
+  ⭐ THIS IS docs/OPERATOR-REGISTRY.md MADE MACHINE-READABLE. That document is canonical for
+  the NAMES; this table is canonical for the ARROWS. Every row says which field type the
+  operator consumes, which it produces, and the shape of the matrix that does it as a
+  function of the domain's element counts -- so a chain can be checked before it is run, and
+  the shapes can be checked against the code that builds them (tests/tOperatorRegistry.m
+  builds each mesh operator on an icosphere and compares).
+ 
+  ⚠⚠ DIRECTION IS NOT THE SAME AS CONVENTION, and this is where the arrows stop protecting you.
+  Two operators can share `in` and `out` and still not be interchangeable, because one is the
+  ANALYSIS map and the other the SYNTHESIS map for the same pair of spaces. `forward_dirac` and
+  `leadfield_dirac` are both coeffCurrent -&gt; sensorScalar; they differ by a mass weighting of about
+  1/(mean vertex area) = 9e4, measured. Substituting one for the other type-checks, runs, returns
+  tesla and produces the right spatial pattern 100+ dB too small. ⭐ The `notes` column is the only
+  place that distinction lives, so read it before chaining a source-mapping arrow.
+ 
+  ⚠⚠ AND A COEFFICIENT AXIS IS NOT A LENGTH AXIS. `coeffScalar` (Laplace-Beltrami) carries
+  eigenvalues with a calibrated wavelength, lambda = 2*pi/sqrt(eig). `coeffCurrent` (Dirac) does NOT:
+  its spectrum has no metric interpretation, so a filter designed in millimetres --
+  rheome.filters.mexhat(Lambda, (mm/2pi)^2) -- is dimensionally meaningless on it and fails QUIETLY. Measured
+  consequence: a detection sweep returned the same threshold for 267, 189, 140, 95 and 70 mm to three
+  digits, because the filter landed in the same nearly-flat region of an unrelated spectrum every
+  time. ⭐ Calibrate first by projecting each Dirac mode's current part onto the LBO and taking its
+  energy-weighted mean wavenumber; then the filter is on a real length axis. The two field types do
+  not encode this difference, so it cannot be caught by rheome.pipeline.then -- it is a caveat, not a guard.
+ 
+  ⚠ RANK CHANGES ARE THE POINT. face_gradient takes a vertex scalar to a face vector,
+  face_average takes it back, weak_curl takes an ambient vertex field to a vertex scalar.
+  Read the `in`/`out` columns and the direction is never in doubt.
+ 
+  ⚠ THIS TREE HAS NO EDGE OPERATORS. There is no d0, no d1 and no Hodge star here: the
+  discretisation is FEM hat functions on faces, not DEC on a halfedge complex. The edge
+  variants exist in nxr-compute and are marked 'planned' in rheome.fieldtype.registry so the gap
+  is visible rather than surprising.
+ 
+  COLUMNS
+    id       the operator, as called
+    fcn      the function that builds or applies it
+    in, out  field type ids (rheome.fieldtype.registry)
+    dom      which domain the operator is built on: 'mesh' | 'cross' (domain to domain)
+    shape    @(d) [rows cols] against a domain descriptor, or [] when it is not a matrix
+    apply    @(env, X) Y -- applies the operator to a field, given a bound environment
+             (rheome.pipeline.env). Empty where a pipeline cannot run it yet, and rheome.pipeline.compile
+             refuses such a step BY NAME rather than failing at run time.
+    target   which of the environment's domains the output lives on: '' = the same one,
+             else a key into env.domains ('source', 'modes', 'sensors')
+    status   built | planned
+    notes
+    direction   'forward' | 'inverse' | 'endo' (within one manifold) -- which way across manifolds
+    convention  'analysis' | 'synthesis' | '' -- WHICH of the two maps between the same pair of
+                spaces, because direction alone does not determine the operator (see below)
+    adjoint     the paired operator id where the pair is a true adjoint pair, '' otherwise
+ 
+  ⚠ NOT EVERY OPERATOR IS A MATRIX, and the last three rows are the reason the `apply` column
+  exists as a function handle rather than a kernel. rheome.flow.activation takes a modulus and
+  rheome.dynamics.opticalflow_scalar solves a variational problem per frame: both are NONLINEAR in
+  the data, so neither can be fused into the imaging kernel the way rheome.flow.curl is. They also
+  change the frame axis -- optical flow consumes nT frames and returns nT-1 -- which a pure
+  field-type arrow does not express; rheome.pipeline.run checks the shapes, not the frame count.
+ 
+  See also: rheome.fieldtype.registry, rheome.domain.of, rheome.operators.check, docs/OPERATOR-REGISTRY.md
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

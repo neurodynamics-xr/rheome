@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flowpage</title></head><body>
+<h1>rheome.flowpage</h1>
+<p><em>class Classes</em> &mdash; Rheome</p>
+<pre>  FLOWPAGE  One band, one page: the LBO coefficients of the cortical vorticity.
+ 
+    B  = rheome.flowpage.prepare('sub01')          % ~40 s, once per anatomy
+    fp = rheome.flowpage(B, 'Band', [8 13], 'PageIndex', 3)
+    m  = map(fp, iFrame, iScale)                    % [V x 1] cortical map
+ 
+  The data model behind @flowbrowser. Everything heavy -- the flow context, the fused curl
+  kernel, the graph bank, the pager -- is INJECTED as a bundle, so a page costs only its own
+  CWT and the model can be tested against a small synthetic anatomy.
+ 
+  ⭐ WHY SCRUBBING IS INTERACTIVE. Once a page's coefficients C [Ks x nT] exist, a cortical
+  map at any frame and scale is ONE GEMV: Phi * (h_g .* C(:,t)), ~33 MFLOP. The expensive
+  stages -- the CWT and the sensors-&gt;modes GEMM -- are paid once per page, not per frame.
+ 
+  ⭐ ONE GEMM, NOT ONE PER FILTER. The kernel is linear, so summing the in-band CWT
+  coefficients in SENSOR space and applying the kernel once equals applying it per filter and
+  summing: Kc*(sum_m W_m) = sum_m (Kc*W_m). Since C = 270 &lt; Ks = 800 the sum is also done on
+  the smaller index.
+ 
+  ⚠ ONE TIME AXIS PER BAND, and it is DERIVED. Multirate gives each filter its own rate, but
+  a browser needs a single axis to scrub. The band therefore takes one decimation, set by its
+  HIGHEST filter so every member clears SamplesPerCycle:
+        decim = floor(fs / (SamplesPerCycle * max(cf_inband)))
+  Lower filters get more than the target, which is harmless. The rate is a property of the
+  band, never a free parameter.
+ 
+  ⚠ THE ACQUISITION RATE IS A CEILING. spc*f &lt;= fs must hold; above it the recording cannot
+  supply the target and no processing recovers it. The band then falls back to decim = 1 --
+  the full available rate -- rather than decimating below what it already has. At 2400 Hz
+  the ceiling is 80 Hz for 30 samples/cycle, so the whole 1-60 Hz range clears it.
+ 
+  ⚠ THE MARGIN IS NOT THE PAGE. .Core marks the samples this page OWNS; the rest are the
+  wavelet cone's margin and belong to the neighbours too. A browser that lets you scrub into
+  the margin without saying so is showing cone-contaminated frames as data.
+ 
+  PROPERTIES
+    Band  PageIndex  Rate  Time  Core  Coefficients [Ks x nT]  SensorCoefficients [C x nT]
+    ScaleGains [Ks x nScale]  CenterFrequencies  NumFilters  NumScales  GraphBank  Lambda
+ 
+  TWO ROUTES TO THE BAND -- 'Method'
+    'cwt'       sum the in-band wavelets. Exact within the frame and the validated route,
+                but it costs nFilters FULL-SPAN transforms per channel. MEASURED at 36 s
+                per page over five bands: 92% of the whole feature pass, and DELTA is the
+                most expensive band (12.1 s) despite producing the FEWEST output samples,
+                because the transform runs at the acquisition rate whatever the output rate.
+    'bandpass'  decimate to the derived rate, then one declared zero-phase bandpass, then
+                Hilbert. MEASURED ~10-30x faster.
+ 
+  ⚠ THE TWO DIFFER IN ABSOLUTE SCALE. Summing overlapping wavelets is NOT unit gain: the
+  frame contributes its own factor (measured 16.6x in energy for a 7-member alpha band
+  against 2*sum(x^2)). Relative quantities -- scale profiles, fractions, time courses,
+  correlations -- are unaffected; absolute energies are not comparable between methods.
+  Arguably the bandpass is the better-defined object: a declared flat response against an
+  incidental rippled one.
+ 
+  ⚠ DECIMATE BEFORE FILTERING, not after. A narrow band at the acquisition rate needs a
+  ~9900-tap FIR (kaiserord at 2400 Hz for a 0.8 Hz transition), and a low-order IIR there
+  sits at 0.3-0.5% of Nyquist where it is numerically fragile. At the band's own derived
+  rate the same band is a comfortable few percent of Nyquist.
+ 
+  See also: rheome.flowbrowser, rheome.flow.rateplan, rheome.flow.curl, rheome.graphfilterbank, rheome.filters.firbandpass
+ 
+  Author: Diellor Basha, 2026
+
+    Documentation for rheome.flowpage
+       doc rheome.flowpage
+
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

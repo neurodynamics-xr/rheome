@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.inverse.resolution</title></head><body>
+<h1>rheome.inverse.resolution</h1>
+<p><em>function rheome.inverse</em> &mdash; Rheome</p>
+<pre>  INVERSE.RESOLUTION  What an inverse can actually resolve on the cortex, in millimetres.
+ 
+    out = rheome.inverse.resolution(Res.ImagingKernel, Gain, B.L.lbo, Vertices=B.L.S.Vertices, ...
+                             Faces=B.L.S.Faces, GlobalIdx=B.L.gv)
+    out = rheome.inverse.resolution(K, Gain, lbo, ..., NumSeeds=300, Modes=1:1000)
+ 
+  Reduces the resolution matrix R = K*Gain to LENGTHS. Two families of number, because they
+  answer two different questions and they do NOT agree:
+ 
+    LOCALISATION (.r50 .sd .ple .offHemi)   how far a point source's estimate spreads.
+        Bounds &quot;are these two blobs separate&quot; and &quot;how big is this vortex&quot;.
+    SPATIAL FREQUENCY (.mtf .mtfBand)       the gain applied to a periodic cortical pattern.
+        Bounds &quot;can a pattern of this wavelength contribute at all&quot;.
+ 
+  ⚠ MEASURED ON A REFERENCE SUBJECT, 270 CHANNELS, SnrFixed = 3: r50 = 52 mm (51.6, IQR 42.5-76.1;
+  equivalent wavelength 262 mm) against an MTF half-maximum of 99 mm -- a factor of 2.6.
+  ⚠ .mtfHalf itself is unstable -- bimodal across resting cohorts (most subjects 26-44 mm, a
+  minority 57-111 mm, the reference subject among the minority) -- so prefer .mtfCentroid for any
+  comparison. A system can localise badly
+  and still respond to a fine GLOBAL grating, because the grating is a coherent sum over the
+  whole surface while a point source is not. Quote the one that matches the claim being made.
+  Anything about the size, count or separateness of spatial features is a LOCALISATION claim.
+ 
+  ⭐ trace(R) IS THE EFFECTIVE RANK, and it is the same number the regularisation sets.
+  R = VL*diag(g.*s)*VL' with g.*s = Lambda*s^2/(Lambda*s^2+1), so the Wiener gains of
+  rheome.inverse.mne stage 3 ARE the eigenvalues of the resolution matrix: .dof = sum of them.
+  On this array .dof is 48.7 at SnrFixed 2.2, 57.5 at 3 and 113.4 at 15 -- of 270 channels.
+ 
+  ⭐ THE r50 -&gt; WAVELENGTH CONVERSION IS MEASURED, NOT ASSUMED (Calibrate=true, the default).
+  Heat-kernel blobs of known aperture are planted on the same mesh with the same seeds and the
+  same statistic, giving r50 = 0.196*wavelength at R^2 = 0.9993 over 40-350 mm on this cortex.
+  A conversion argued from a Gaussian instead would be a definition; this is a measurement.
+ 
+  ⚠ THE CONVERSION SATURATES WHEN THE APERTURE APPROACHES THE PATCH ITSELF. Geodesic distance
+  on a closed surface stops growing at its own diameter, so r50 stops growing too and the line
+  bends over. Measured: on the reference hemisphere (max geodesic 314 mm) apertures of 40-350 mm
+  give R^2 = 0.999, while on a 70 mm sphere the same range gives 0.80. Keep Apertures well
+  under the geodesic diameter and check .r50R2 before trusting .lambdaLoc.
+ 
+  ⚠ THE MTF LIVES ON A SUBSPACE, AND IT IS A SMALL ONE. The normally oriented modes n*phi_k of
+  ONE hemisphere are orthonormal in the mass metric (|n| = 1) but span nV of 3nV dimensions on
+  half the cortex, and they are WORSE observed than that share suggests: their trace is 5.8 of
+  R's 57.5 at SnrFixed 3, about 10% where the naive share is 17%. A smooth normally oriented
+  pattern flips direction across every gyrus and largely cancels at the sensors. So .mtf is the
+  response to normally oriented cortical patterns, which is the physiological case, not to
+  every current R can see.
+ 
+  ⚠⚠ IT IS NOT MONOTONE, AND .mtfHalf CAN THEREFORE JUMP. On this cortex the 31-62 mm octave
+  is recovered slightly BETTER than 62-125 mm (0.49 against 0.45 of the peak), because the
+  folding itself has a wavelength there: a normally oriented pattern at gyral scale is the one
+  that does not cancel. So .mtfHalf -- the first crossing below half going finer -- sits just
+  above that dip, and any change that lifts the 62-125 octave past 0.5 sends the crossing
+  clean past it to the next octave. MEASURED: raising SnrFixed from 2.2 to 51.3 moves that
+  octave from 0.46 to 0.54, a change of 0.08, and .mtfHalf reports 96 mm then 33 mm -- a
+  threefold &quot;improvement&quot; that is entirely an artefact of reading a threshold off a bumpy
+  curve. ⭐ QUOTE .mtfCentroid INSTEAD when comparing curves; it is the gain-weighted centroid
+  in log wavelength and cannot jump. Read .mtfBand as a curve either way.
+ 
+  ⚠ THE SHAPE OF .mtf BARELY MOVES WITH SnrFixed while .dof more than doubles. Regularisation
+  sets HOW MUCH is recovered, not WHICH wavelengths: the normalised band curve changes by under
+  0.1 between SnrFixed 2.2 and 15. Do not expect a better SNR to buy finer spatial detail.
+ 
+  INPUTS:
+    K       [3V x C] imaging kernel, whitener folded in (rheome.inverse.mne -&gt; .ImagingKernel).
+            ⚠ USE 'amplitude' MEASURE. A dSPM or sLORETA kernel is already divided by a
+            per-vertex noise normaliser, so R = K*Gain is no longer the resolution matrix.
+    Gain    [C x 3V] the SAME channel rows the kernel was built from
+    basis   cached per-hemisphere lbo struct (.Phi [nH x Ks], .Lambda, .Mass) -- rheome.load.bases,
+            NOT an eigensolve
+    opts (name-value):
+      Vertices, Faces   the hemisphere's own surface (rheome.load.bases -&gt; B.L.S)
+      Normals           [nH x 3] vertex normals; pass B.L.S.VertNormals rather than letting
+                        them be rebuilt from the faces
+      GlobalIdx         [1 x nH] this hemisphere's rows in the whole-cortex vertex numbering
+                        (B.L.gv). ⚠ REQUIRED when the kernel covers both hemispheres.
+      NumSeeds          point sources for the localisation family (300); 0 skips it
+      Modes             mode indices for the MTF ([] = all of them); 0 skips it
+      Calibrate         measure the r50 -&gt; wavelength conversion (true)
+      Apertures         planted wavelengths for that calibration, metres
+ 
+  OUTPUT (struct):
+    .r50 .sd .ple .offHemi [nSeeds x 1]   geodesic radius holding half the PSF power; spatial
+            dispersion sqrt(E[d^2]); peak localisation error; fraction of power on the WRONG
+            hemisphere -- all in metres except the last
+    .seeds  local vertex indices    .depth [nSeeds x 1] distance to the nearest given coil, if
+            SensorLoc was passed
+    .r50PerWavelength  the measured conversion c in r50 = c*wavelength, and .r50R2
+    .lambdaLoc         median r50 / c: the localisation floor AS A WAVELENGTH
+    .mtf [nModes x 1]  &lt;n phi_k, R n phi_k&gt;, the per-mode gain     .modeWavelength metres
+    .mtfBand .mtfBandEdges .mtfHalf .mtfPeak .mtfCentroid   octave-averaged curve, its edges,
+            the half-max crossing going finer (⚠ jumpy: see above), the centre of the peak
+            octave, and the gain-weighted centroid in log wavelength (⭐ the robust one)
+    .dofSubspace  sum(.mtf): how much of the rank the tested subspace carries
+ 
+  See also: rheome.inverse.mne, rheome.flow.crosstalk, rheome.flow.sensitivity, rheome.sensors.calibrate, rheome.geom.tree
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

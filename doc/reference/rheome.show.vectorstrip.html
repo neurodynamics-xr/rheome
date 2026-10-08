@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.show.vectorstrip</title></head><body>
+<h1>rheome.show.vectorstrip</h1>
+<p><em>function rheome.show</em> &mdash; Rheome</p>
+<pre>  SHOW.VECTORSTRIP  Cortex quiver snapshots of a space-time VECTOR field at time frames.
+ 
+    rheome.show.vectorstrip(surf, J, frames)
+    rheome.show.vectorstrip(surf, J, frames, name, value, ...)
+ 
+  The vector-field analogue of rheome.show.filmstrip: a row of cortex renders (one per frame)
+  showing the current DIRECTION as arrows and the magnitude as colour, with a SHARED
+  arrow scale and colour range so the evolution of an unconstrained (3-vector) source
+  reads left-to-right. Can place its row into a multi-filter montage grid.
+ 
+  INPUTS:
+    surf   surface struct or file path
+    J      [3nV x nT] vector field, rows [x1,y1,z1, x2,y2,z2, ...]
+    frames vector of frame indices to show
+ 
+  OPTIONS:
+    'Parent'    figure handle to draw into (default: new figure)
+    'Grid'      [nRows nCols] montage layout (default [1 numel(frames)])
+    'Row'       which grid row this strip occupies (default 1)
+    'NumArrows' arrows per panel, at the top-magnitude vertices (default 200)
+    'View'      camera [az el] (default [-90 10])
+    'Colormap'  magnitude colormap (default hot)
+    'RowLabel'  text label for the row
+    'Titles'    {1 x numel(frames)} per-panel titles
+    'Visible'   'on' (default) | 'off'
+ 
+  OUTPUT: hFig figure handle.
+ 
+  See also: rheome.show.vectors, rheome.show.filmstrip, rheome.filters.impulse, rheome.forward.reconstruct
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.utils.hemisphere</title></head><body>
+<h1>rheome.utils.hemisphere</h1>
+<p><em>function rheome.utils</em> &mdash; Rheome</p>
+<pre>  UTILS.HEMISPHERE  Restrict a cortex surface + Dirac basis to ONE hemisphere.
+ 
+    [Sh, dbh] = rheome.utils.hemisphere(S, dbG, h)
+    Sh        = rheome.utils.hemisphere(S, [], h)      % surface only
+ 
+  The relative Dirac is built per hemisphere, so per-hemisphere work is the
+  natural unit. This returns the chosen hemisphere as its OWN surface + basis, re-indexed
+  1..nVh, so downstream seeding / filtering / show.field need no masking.
+ 
+  INPUTS:
+    S   : full-cortex surface (rheome.io.read.surface) -- must carry S.Hemi (Structures-atlas split)
+    dbG : full relative-Dirac eigenbasis (rheome.eigen.dirac_frame), or [] for surface only
+    h   : hemisphere index (1 or 2) OR label ('L' / 'R')
+ 
+  OUTPUTS:
+    Sh  : hemisphere surface (.Vertices/.Faces re-indexed, .VertNormals sliced, .nV/.nF,
+          .GlobalVertices = local-&gt;global map, .Comment tagged with the hemisphere)
+    dbh : Dirac basis restricted to that hemisphere (local vertex indices), B-orthonormal
+ 
+  See also: rheome.io.read.surface, rheome.eigen.dirac_frame, show.field
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

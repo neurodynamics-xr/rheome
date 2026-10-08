@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.ingest.reducepaged</title></head><body>
+<h1>rheome.ingest.reducepaged</h1>
+<p><em>function rheome.ingest</em> &mdash; Rheome</p>
+<pre>  INGEST.REDUCEPAGED  Level-0 statistics computed page by page, one sub-bank per job.
+ 
+    T0 = rheome.ingest.reducepaged(readfcn, C, bands, g, frame, plan)
+    T0 = rheome.ingest.reducepaged(..., Mask=m, Precision=&quot;single&quot;, MaxBytes=2e9)
+ 
+  The paged twin of rheome.ingest.reduce: same output, same definitions, but the record is never
+  transformed whole. For each job of the plan (rheome.ingest.pages) and each page at the job's
+  level, a span of core +/- halo is read through readfcn, a SUB-BANK anchored on the
+  job's top master scale is applied (its scales are the master's to 4e-16), and the
+  band series are reduced over the CORE only -- the halo belongs to the neighbours and is
+  never counted (the same core/span rule @pagedrecording pins). Rows of the level-0
+  arrays are written in place, so the result concatenates across pages without merging.
+ 
+  ⚠ Paged coefficients differ from whole-record ones by the wavelet tail outside the
+  halo. waveletsupport's support is a threshold, not a zero. Measured against the
+  whole-record store, see docs/2026-09-22-ingest-notes.md. The page policy is therefore
+  in the config hash.
+ 
+  ⚠ nCoi is analytic and identical to rheome.ingest.reduce's (rheome.ingest.cone): a page's own edges
+  are covered by its halo and are NOT a cone. Where the halo is clipped by the record
+  edge, the cone count is what says so.
+ 
+  INPUTS:
+    readfcn  @(a, b) -&gt; [b-a+1 x C] samples a..b (1-based, inclusive), any float class
+    C        channels readfcn returns
+    bands, g, frame   from rheome.ingest.bank / rheome.ingest.grid
+    plan     from rheome.ingest.pages
+    Mask, Precision, MaxBytes   as in rheome.ingest.reduce
+  OUTPUT:
+    T0  as rheome.ingest.reduce
+ 
+  See also: rheome.ingest.reduce, rheome.ingest.pages, rheome.ingest.bank, rheome.ingest.cone
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

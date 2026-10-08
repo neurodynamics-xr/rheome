@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.forward.dirac</title></head><body>
+<h1>rheome.forward.dirac</h1>
+<p><em>function rheome.forward</em> &mdash; Rheome</p>
+<pre>  FORWARD.DIRAC  Project an unconstrained leadfield into the Dirac eigenbasis.
+ 
+    Gm = rheome.forward.dirac(Gain, dbasis)
+ 
+  Spectral change-of-basis of the forward model: each per-vertex gain 3-vector is
+  embedded as a pure-imaginary quaternion psi = [0, gx, gy, gz] and projected onto
+  the B-orthonormal Dirac eigenvectors,
+        Gm = Psi' * (B * Phi)         [nCh x nModes],   B = kron(Mass, I4).
+  Faithful port of Brainstorm's bst_dirac TRANSFORM (done whole-brain here; the
+  cortex LBO is block-diagonal across hemispheres, so this equals the per-hemi loop).
+ 
+  INPUTS:
+    Gain    [nCh x 3nV] unconstrained leadfield (columns [gx,gy,gz] per vertex)
+    dbasis  Dirac eigenbasis from rheome.eigen.dirac_frame (.Phi, .Mass, .nVert, .nModes)
+ 
+  OUTPUT:
+    Gm      [nCh x nModes] mode-forward (the &quot;Dirac eigenmode leadfield&quot;)
+ 
+  See also: rheome.eigen.dirac_frame, rheome.forward.reconstruct, rheome.inverse.dirac
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

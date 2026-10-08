@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.firbandpass</title></head><body>
+<h1>rheome.filters.firbandpass</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.FIRBANDPASS  Linear-phase FIR bandpass with a DECLARED transition band.
+ 
+    [y, spec] = rheome.filters.firbandpass(x, Fs, band)
+    [y, spec] = rheome.filters.firbandpass(x, Fs, band, opts)
+    [~, spec] = rheome.filters.firbandpass([], Fs, band)      % design only, no data
+ 
+  Follows the design used by Brainstorm's bst_bandpass_hfilter: order and window from kaiserord /
+  kaiser, coefficients from fir1, applied with fftfilt (or filtfilt for the zero-phase variant).
+  Ripple, stopband attenuation and transition band are PARAMETERS, so the filter is declared
+  rather than implied.
+ 
+  WHY NOT JUST TRUNCATE THE FFT. Keeping a set of bins and discarding the rest IS a bandpass -- with
+  a RECTANGULAR transfer function. Two things follow, and both are avoidable:
+    * a rectangular band is a sinc in time, decaying as 1/t, so its sidelobes are long; and
+    * a whole-record FFT assumes the signal is periodic, so x(T) ~= x(1) puts a discontinuity at
+      the seam whose Gibbs oscillation the retained band picks up.
+  An FIR has FINITE support, so edge effects are confined to the filter length instead of spread
+  across the record, and mirroring or filtfilt handles what remains.
+ 
+  USE IT BEFORE rheome.flow.joint. Filter properly in time first; the joint-domain truncation is then
+  nearly lossless, because everything outside the band has already been pushed into the stopband,
+  and it still buys the full cost saving (the GEMM runs over the retained bins either way).
+ 
+  INPUTS:
+    x     [nChan x nTime] signal, or [] to design only
+    Fs    sampling rate (Hz)
+    band  [f1 f2] passband (Hz); f1 = 0 for low-pass, f2 = 0 or Inf for high-pass
+    opts  .tranBand  transition width (Hz). Default: max(0.1*f1, 0.5) at the low edge
+          .ripple    passband ripple (dB), default 0.05
+          .atten     stopband attenuation (dB), default 60
+          .mode      'fftfilt' (linear phase, group delay removed) | 'filtfilt' (zero phase,
+                     forward-backward -- squares the magnitude response, so the effective
+                     attenuation doubles and the effective passband narrows slightly)
+          .mirror    mirror-pad by the filter length before filtering (default true)
+ 
+  OUTPUT:
+    y     filtered signal, same size as x
+    spec  .b coefficients  .order  .tranBand  .ripple  .atten  .mode  .edgeSamples
+          .edgeSamples is the number of samples at each end that the filter's own support touches
+          -- data within it is not trustworthy and should be guarded or discarded.
+ 
+  See also: rheome.flow.joint, rheome.filters.bandlimit
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

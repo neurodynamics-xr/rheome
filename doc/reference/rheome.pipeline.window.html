@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.pipeline.window</title></head><body>
+<h1>rheome.pipeline.window</h1>
+<p><em>function rheome.pipeline</em> &mdash; Rheome</p>
+<pre>  PIPELINE.WINDOW  Append a selection on the frame axis: the bookkeeping step.
+ 
+    p = rheome.pipeline.window(p, [262 270], Rate=600)        % seconds
+    p = rheome.pipeline.window(p, [1000 5800], Units=&quot;samples&quot;)
+ 
+  ⭐ A SELECTION IS A STEP, NOT A PREAMBLE. Which stretch of the recording an analysis ran
+  on is part of what produced the answer, so it belongs in the plan beside the operators and
+  travels into the record. The field type does not change; the frame domain does, and the
+  new one remembers the span it came from -- which is the same key the tile store labels and
+  measurements use (level, k), so a window chosen by a query and a window chosen by hand are
+  recorded the same way.
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

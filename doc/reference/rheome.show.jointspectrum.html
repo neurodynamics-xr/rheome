@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.show.jointspectrum</title></head><body>
+<h1>rheome.show.jointspectrum</h1>
+<p><em>function rheome.show</em> &mdash; Rheome</p>
+<pre>  SHOW.JOINTSPECTRUM  The joint spectrum |C(lambda,omega)|^2 -- spatial vs temporal frequency.
+ 
+    rheome.show.jointspectrum(C, f, Lambda)
+    hFig = rheome.show.jointspectrum(C, f, Lambda, name, value, ...)
+ 
+  Renders the endpoint of flow mapping: rows are spatial frequency sqrt(lambda), columns temporal
+  frequency. A travelling structure satisfies omega = c*sqrt(lambda) and therefore appears as a
+  DIAGONAL; a standing one as a horizontal band. Marginals are drawn alongside so the spatial and
+  temporal spectra can be read off the same figure.
+ 
+  OPTIONS:
+    'Speed'   overlay omega = c*sqrt(lambda) lines for these speeds (m/s), e.g. [0.1 0.5 1]
+    'Log'     true (default) -- log10 colour scale
+    'Title'   overall title              'Visible' 'on' (default) | 'off'
+ 
+  See also: rheome.flow.joint, rheome.filters.joint_scalogram, rheome.show.jointscalogram
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

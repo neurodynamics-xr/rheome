@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.spectral.gains</title></head><body>
+<h1>rheome.spectral.gains</h1>
+<p><em>function rheome.spectral</em> &mdash; Rheome</p>
+<pre>  SPECTRAL.GAINS  Complementary periodic / aperiodic gains from a fitted background.
+ 
+    [hper, hap] = rheome.spectral.gains(P, Pap)
+ 
+  Returns the pair of real gains that split a field into periodic and aperiodic parts:
+ 
+    hap  = sqrt( Pap ./ P )                 aperiodic share of the AMPLITUDE
+    hper = sqrt( max(0, 1 - Pap./P) )       periodic share  = the residual
+ 
+  so that hper.^2 + hap.^2 == 1 pointwise, and applying them to a complex coefficient array
+  partitions POWER exactly: |C_per|^2 + |C_ap|^2 == |C|^2.
+ 
+  WHY THE RESIDUAL, NOT THE FITTED PEAKS. specparam is additive in LOG power, hence multiplicative
+  in linear power, so sqrt(peaks./P) does not complement sqrt(Pap./P) and the two would not
+  partition. Defining the periodic part as whatever exceeds the background makes the partition
+  exact by construction, and makes the split independent of how well the peaks were fitted.
+ 
+  CLIPPING. Where the fit overshoots (Pap &gt; P) the residual would be negative; it is clipped to
+  zero, which sets hper = 0 and hap = 1 there. This is renormalized so the identity still holds
+  exactly. Clipped bins are reported.
+ 
+  INPUTS:
+    P    [nF x nS] linear power (&gt;= 0)
+    Pap  [nF x nS] fitted aperiodic power, same size (from rheome.spectral.aperiodic)
+ 
+  OUTPUT:
+    hper, hap  [nF x nS] real, in [0,1], with hper.^2 + hap.^2 = 1
+ 
+  See also: rheome.spectral.aperiodic, rheome.spectral.decompose
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

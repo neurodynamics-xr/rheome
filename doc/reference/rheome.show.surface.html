@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.show.surface</title></head><body>
+<h1>rheome.show.surface</h1>
+<p><em>function rheome.show</em> &mdash; Rheome</p>
+<pre>  SHOW.SURFACE  Render a cortical surface, optionally colored by a per-vertex field.
+ 
+    rheome.show.surface(surf)                 % plain gray cortex
+    rheome.show.surface(surf, data)           % cortex colored by a [nV x 1] scalar field
+    rheome.show.surface(file, ...)            % 'file' = path to a Brainstorm surface .mat
+    hAx = rheome.show.surface(..., name,value)
+ 
+  The workhorse viewer for the demo: it draws the mesh once and, when given a
+  per-vertex scalar (an eigenmode, a heat kernel, a realized atom's magnitude),
+  shades the surface by it. Reused by every later visualization.
+ 
+  INPUTS:
+    surf : struct from rheome.io.read.surface, OR a path to a Brainstorm surface .mat,
+           OR a [nV x 3] vertex matrix (then pass faces via the 'Faces' option).
+    data : optional [nV x 1] per-vertex scalar to color the surface. [] = flat gray.
+ 
+  OPTIONS (name/value):
+    'Faces'      [nF x 3] faces, required only if 'surf' is a bare vertex matrix
+    'Colormap'   colormap for the overlay (default: diverging for signed data
+                 (blue-white-red), sequential (parula) for one-signed data)
+    'FaceAlpha'  surface opacity 0..1 (default 1)
+    'EdgeColor'  edge color (default 'none')
+    'View'       [az el] camera view (default [-90 10], left-lateral-ish)
+    'CLim'       [lo hi] color limits for the overlay (default auto, symmetric if signed)
+    'Parent'     axes handle to draw into (default: new figure + axes)
+    'Visible'    'on' (default) | 'off'  (use 'off' for headless rendering/export)
+    'Title'      title string (default: the surface Comment)
+ 
+  OUTPUT:
+    hAx : handle to the axes the surface was drawn into.
+ 
+  See also: rheome.io.read.surface, rheome.operators.laplace_beltrami
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

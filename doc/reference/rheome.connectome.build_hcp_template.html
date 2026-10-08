@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.connectome.build_hcp_template</title></head><body>
+<h1>rheome.connectome.build_hcp_template</h1>
+<p><em>function rheome.connectome</em> &mdash; Rheome</p>
+<pre>  BUILD_HCP_TEMPLATE  One-time extraction of the HCP-1065 template into hcp_template.mat.
+ 
+    rheome.connectome.build_hcp_template(cortexFile, fibersFile, outFile)
+ 
+  The HCP-1065 template is NOT part of stock Brainstorm -- it was manually added to a
+  @default_subject. This script reads that (Brainstorm) template cortex + fibers ONCE and writes
+  a self-contained hcp_template.mat, so rheome.connectome.resolve needs no Brainstorm at runtime.
+  Reuses rheome.io.read.surface / rheome.io.read.fibers for a consistent read. The file is derived
+  from WU-Minn HCP data: share it only under the HCP Open Access Data Use Terms.
+ 
+  INPUTS:
+    cortexFile  a @default_subject cortex .mat WITH a Reg.Sphere, whose surface the fiber endpoints
+                sit on (tess_cortex_pial_low is closest for HCP-1065).
+    fibersFile  the sibling tess_fibers_*hcp1065*.mat
+    outFile     output hcp_template.mat (put it at fullfile(rheome.load.root(), 'hcp_template.mat'))
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.geom.tree</title></head><body>
+<h1>rheome.geom.tree</h1>
+<p><em>function rheome.geom</em> &mdash; Rheome</p>
+<pre>  GEOM.TREE  Recursive spectral bisection of a surface: the cortical position pyramid.
+ 
+    T = rheome.geom.tree(S)
+    T = rheome.geom.tree(S, MinArea=2e-3, MaxDepth=6)
+    T = rheome.geom.tree(S, L=L, M=M)                 % reuse a built Laplace-Beltrami pair
+    B = rheome.load.bases(name);  T = rheome.geom.tree(B.L.S, L=B.L.lbo.L, M=B.L.lbo.M)   % from the cache
+ 
+  The cortical twin of rheome.sensors.tree: split each patch by the sign of its own Fiedler
+  function, down to patches of a chosen size. A NESTED, DISJOINT partition, which is the
+  property that matters -- a parent's members are exactly its two children's, so sums over
+  vertices roll up the tree the way sums over samples roll up the dyadic time grid.
+ 
+  ⭐ WHY THIS IS NOT A DIFFUSION SCALE-SPACE, AND WHY YOU WANT BOTH. Diffused deltas form a
+  partition of UNITY: smooth, overlapping, scale-covariant, and not additive -- a parent
+  window is not the sum of child windows, so nothing merges. This tree is a partition: no
+  smoothness, exact merging. Use the tree for bookkeeping and for apertures you want to
+  compare across sizes; use a diffusion bank (rheome.graphfilterbank.fromOperator) for measurement.
+ 
+  ⚠ THE FIEDLER VECTOR HERE IS THE SURFACE'S, NOT SPACE'S. Two banks of a sulcus are
+  millimetres apart in the volume and far apart on the cortex, so a split on coordinates
+  would cut across the sheet. The second eigenfunction of the patch's own Laplace-Beltrami
+  operator respects the geodesic structure and cuts along it.
+ 
+  ⭐ TAKE L AND M FROM THE CACHE, NOT FROM A REBUILD. rheome.load.bases holds the surface and the
+  solved Laplace-Beltrami pair per hemisphere (B.L.S, B.L.lbo.L, B.L.lbo.M), so nothing here
+  needs rheome.operators.laplace_beltrami again.
+ 
+  ⚠ BUT THE CACHED EIGENVECTORS ONLY COVER THE FIRST SPLIT. The cached Phi(:,2) IS the first
+  cut -- measured on the reference left hemisphere, the sign of the cached Fiedler function and
+  this function's own root split agree on 1.000 of vertices -- and below that they diverge,
+  because a patch's Fiedler function is an eigenfunction of the RESTRICTED operator with a
+  free boundary on the cut, which no global basis contains. The per-patch solves are real
+  work and are kept. They are also cheap: one hemisphere to depth 5 (63 nodes) takes 0.65 s,
+  because every solve is sparse on a shrinking submatrix.
+ 
+  ⚠ THE CORTEX IS TWO COMPONENTS. Its Fiedler value is zero with the two hemispheres on
+  opposite signs, which is the right first cut but a degenerate eigenproblem; a node spanning
+  more than one connected component is therefore split by component before any eigensolve.
+ 
+  ⚠ AREA, NOT EXTENT. A patch's size is the area its vertices carry in the mass matrix, and
+  its diameter is the equivalent disc's, 2*sqrt(area/pi). Euclidean extent across a folded
+  sheet measures the folding, not the patch.
+ 
+  INPUTS
+    S        surface struct (.Vertices, .Faces) or a struct with .L and .M supplied
+    L, M     precomputed rheome.operators.laplace_beltrami output (optional)
+    MinVertices, MinArea, MaxDepth   stopping rules (1, 0, Inf); any one of them stops a node
+ 
+  OUTPUT (table T, root first, children after parents):
+    node_id, parent_id, depth, n_vertices, is_leaf, members {row indices},
+    area m^2, diameter m (equivalent disc), centroid [x y z] m, wavelength_mm (the diameter
+    as a wavelength, for comparison with the instrument's resolution floor)
+ 
+  See also: rheome.sensors.tree, rheome.ingest.groups, rheome.detect.blobscale, rheome.operators.laplace_beltrami
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

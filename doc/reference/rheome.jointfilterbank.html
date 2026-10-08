@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.jointfilterbank</title></head><body>
+<h1>rheome.jointfilterbank</h1>
+<p><em>class Classes</em> &mdash; Rheome</p>
+<pre>  JOINTFILTERBANK  Filterbank on the joint time-vertex plane (lambda, omega).
+ 
+    jfb = rheome.jointfilterbank(gfb,  'SignalLength', N, ...)   % gfb a graphfilterbank
+    jfb = rheome.jointfilterbank(lmax, 'SignalLength', N, ...)   % builds the graph bank for you
+ 
+  Every combination of three factor lists -- GSPBox's dgw composition:
+ 
+    W_i(lambda,omega) = K_k(lambda,omega) * psi_g,g(lambda) * psi_t,t(omega)
+    Nf = Ng * Nt * Nk
+ 
+  ⭐ NOTHING IS MATERIALISED. The class stores HANDLES and an index, never products. A
+  separable member is a rank-1 outer product: storing its factors costs [K]+[nOmega]
+  against [K x nOmega] materialised, a 780x saving at cortex scale. jointfilters(jfb)
+  therefore materialises only on explicit request and refuses above MaxBytes.
+ 
+  REQUIRED: the graph side AND the temporal grid -- neither derives from the other. This
+  is graphfilterbank's required argument plus cwtfilterbank's.
+ 
+  See also: rheome.graphfilterbank, cwtfilterbank, rheome.graphtransform.eigen
+ 
+  Author: Diellor Basha, 2026
+
+    Documentation for rheome.jointfilterbank
+       doc rheome.jointfilterbank
+
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

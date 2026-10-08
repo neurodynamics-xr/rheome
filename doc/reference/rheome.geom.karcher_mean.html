@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.geom.karcher_mean</title></head><body>
+<h1>rheome.geom.karcher_mean</h1>
+<p><em>function rheome.geom</em> &mdash; Rheome</p>
+<pre>  GEOM.KARCHER_MEAN  Intrinsic (geodesic Fréchet) mean of points on the surface.
+ 
+    [centerVertex, centerPos, dispersion] = rheome.geom.karcher_mean(S, points)
+    [...] = rheome.geom.karcher_mean(S, points, opts)
+ 
+  The surface point minimising sum_i w_i * d(p, x_i)^power (geodesic distance) -- the discrete
+  Fréchet mean. power=2 is the Karcher mean; power=1 the geometric median. On a mesh this is an
+  argmin over vertices of a per-vertex objective built from one rheome.geom.geodesic field per source
+  point (the cached solver makes the repeated queries cheap). Faithful to nxr-compute's
+  definition (compute.h: &quot;minimizes sum d(p, source_i)^p&quot;); no log-map / transport port needed.
+  Unlike the ambient (Euclidean) mean, the result stays ON the sheet.
+ 
+  INPUTS:
+    S      surface struct (.Vertices [nV x 3], .Faces)
+    points [n x 3] positions (snapped to nearest vertex) OR [n x 1] vertex indices
+    opts   .weights [n x 1] (default ones)  .power (default 2)  .solver (reuse rheome.geom.geodesic)
+ 
+  OUTPUT:
+    centerVertex  index of the minimiser vertex
+    centerPos     [1 x 3] its position
+    dispersion    ( weighted-mean geodesic d^power )^(1/power) = intrinsic spread (metres)
+ 
+  See also: rheome.geom.geodesic
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

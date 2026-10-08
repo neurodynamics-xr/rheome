@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.forward.sensoratom</title></head><body>
+<h1>rheome.forward.sensoratom</h1>
+<p><em>function rheome.forward</em> &mdash; Rheome</p>
+<pre>  FORWARD.SENSORATOM  Fit each sensor's sensitivity as a GRAPH WAVELET on the cortex.
+ 
+    out = rheome.forward.sensoratom(G, dbasis)
+    out = rheome.forward.sensoratom(G, dbasis, struct('Surface',S,'Candidates',300,'NAtoms',3))
+ 
+  ⭐⭐ A DICTIONARY DERIVED FROM THE INSTRUMENT INSTEAD OF ASSUMED. rheome.flow.vortexbank is a bank of
+  atoms chosen by hand, and §38 measured the consequence: the parametric inverse beats MNE only when
+  the source happens to match that choice, and is 44 mm wrong when it does not. The atoms fitted here
+  are whatever the leadfield actually is, so the dictionary carries no prior about source shape.
+ 
+  THE FORM, which falls straight out of the mode representation. A graph wavelet centred at vertex v
+  with spectral profile g has mode coefficients g(lambda_k)*d_v(k), where d_v is the delta at v
+  expanded in the basis. So a sensor row's coefficients y are fitted by choosing v, choosing g from a
+  kernel family, and solving for the three orientation weights in closed form -- the atom at a vertex
+  spans a 3-D subspace, one per Cartesian component of the delta.
+ 
+  ⭐ MEASURED, ON REAL MEG (270 sensors, 400 Dirac modes, docs section 40):
+      one atom     var explained  0.688     three atoms  0.789 - 0.827
+      a VORTEX atom, for contrast   0.087   five vortices 0.104
+    So a sensor IS a wavelet over the eigenmodes, and it is not a vortex: the same row that a vortex
+    explains 9% of, a plain graph wavelet explains 69% of.
+ 
+  ⚠⚠ THE CENTRE IS NOT UNDER THE SENSOR. Median distance from the fitted centre to the cortical
+    vertex directly beneath the sensor is 56 mm at a 12 mm candidate spacing. That is physics rather
+    than misfit: MEG is blind to radial sources and the cortex directly beneath a sensor is radial
+    there, so peak sensitivity sits on the flanks. Do not read `vertex` as &quot;the sensor's location&quot;.
+ 
+  ⚠ Refining the candidate grid from 24 mm to 12 mm moves one atom from 0.647 to 0.688 but moves
+    THREE atoms DOWN, 0.827 to 0.789 -- a finer grid lets the greedy triple pick three near-identical
+    centres. Fit the number of atoms you intend to use.
+ 
+  INPUTS
+    G       [nCh x 3nV] vertex leadfield (rheome.forward.leadfield)
+    dbasis  .Phi [4nV x nModes], .Lambda, .nVert, .nModes -- as rheome.load.dirac restricted to a hemisphere
+    opts    .Surface    the hemisphere surface, needed to pick candidates by farthest point
+            .Candidates count (300) or an explicit vertex vector
+            .Scales     t values for the kernel (25 logarithmic, spanning the spectrum)
+            .Family     &quot;mexhat&quot; (default) | &quot;heat&quot;
+            .NAtoms     atoms per sensor (1)
+            .Verbose    false
+ 
+  OUTPUT (struct out)
+    .table   one row per sensor: sensor, vertex, tau, varExplained
+    .vertex .tau .varExplained  [nCh x NAtoms] / [nCh x 1]
+    .candidates  the vertices searched      .family
+ 
+  See also: rheome.forward.diracgain, rheome.forward.leadfield, rheome.flow.vortexbank, rheome.filters.mexhat, rheome.filters.heat
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.sensors.grid</title></head><body>
+<h1>rheome.sensors.grid</h1>
+<p><em>function rheome.sensors</em> &mdash; Rheome</p>
+<pre>  SENSORS.GRID  A planar lattice: the Utah and ECoG geometries.
+ 
+    arr = rheome.sensors.grid('utah')                        % 10 x 10 at 400 um
+    arr = rheome.sensors.grid('ecog')                        % 8 x 8 at 10 mm
+    arr = rheome.sensors.grid('Size', [10 10], 'Pitch', 400e-6)
+ 
+  The two presets are the same geometry class at pitches two orders of magnitude apart, and
+  they therefore have disjoint measurement windows -- which is the cleanest demonstration in
+  the suite that a window is a property of the instrument, not of the method.
+ 
+  ⚠ APERTURE IS THE DIAGONAL. rheome.sensors.window reports 5.1 mm for the Utah preset, not the
+  3.6 mm side.
+ 
+  INPUTS (name-value, or a preset name as the sole argument):
+    'Size'   [rows cols] (default [10 10])
+    'Pitch'  spacing, metres (default 400e-6)
+    'Name'   display name
+  OUTPUT (the array contract, shared by every rheome.sensors.* constructor):
+    .Name .Kind .Pos [N x 3] metres .Dim .Pitch .Aperture .Labels .nCh
+ 
+  See also: rheome.sensors.linear, rheome.sensors.meg, rheome.sensors.eeg, rheome.sensors.window
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

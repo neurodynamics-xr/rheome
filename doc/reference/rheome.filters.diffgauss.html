@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.diffgauss</title></head><body>
+<h1>rheome.filters.diffgauss</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.DIFFGAUSS  Difference-of-Gaussians band-pass  g(lambda) = exp(-t1*lambda) - exp(-t2*lambda).
+ 
+    g = rheome.filters.diffgauss(lambda, t1, t2)   % t1,t2 scalar -&gt; [K x 1]; equal-length vectors -&gt; [K x n] bank
+ 
+  A difference of two heat kernels (t1 &lt; t2): band-pass and zero at DC (g(0)=0), so applied to a
+  delta it produces a SIGNED atom -- a positive core with a negative surround -- like the mexhat,
+  but built from two Gaussians (the classic DoG, a Ricker/Laplacian-of-Gaussian approximation).
+  The pass band sits between the two scales; larger t = wider, lower-frequency atom. Mirrors
+  Brainstorm's bst_eigfilter_design_diffgauss.
+ 
+  INPUTS:
+    lambda  [K x 1] eigenvalues (basis.Lambda)
+    t1, t2  the two Gaussian scales with t1 &lt; t2; scalars, or equal-length vectors for a bank
+ 
+  OUTPUT:
+    g       [K x n] spectral gains (n = numel(t1)), one column per (t1,t2) pair
+ 
+  See also: rheome.filters.mexhat, rheome.filters.heat, rheome.filters.localize
+ 
+  Author: Diellor Basha, 2026 (port of bst_eigfilter_design_diffgauss)
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

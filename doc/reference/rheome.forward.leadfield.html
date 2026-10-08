@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.forward.leadfield</title></head><body>
+<h1>rheome.forward.leadfield</h1>
+<p><em>function rheome.forward</em> &mdash; Rheome</p>
+<pre>  FORWARD.LEADFIELD  The MEG gain matrix for the good channels: the forward direction of source mapping.
+ 
+    [G, idx, names] = rheome.forward.leadfield(study)
+    [G, idx, names] = rheome.forward.leadfield(study, GlobalVertices=gv)   % one hemisphere's columns
+ 
+  ⭐ THIS EXISTS BECAUSE THE REGISTRY DEMANDED IT. `rheome.operators.registry` requires every arrow to name a
+  resolvable function, and the leadfield -- ambientVertexWorld -&gt; sensorScalar, the forward direction
+  of source mapping -- had no function to point at: it was reached as `study.hm.Gain` inline at each
+  call site, and the whole forward direction was therefore missing from the arrow table while every
+  inverse was present. Naming it makes the chain checkable.
+ 
+  ⚠ The columns are [x1 y1 z1 x2 y2 z2 ...] per vertex, unconstrained, and the units are tesla per
+  A m. A source vector J [3nV x nT] in A m gives B = G*J in tesla.
+ 
+  INPUTS
+    study            rheome.load.study output (.hm.Gain, .chan.Type, .rec.ChannelFlag)
+    GlobalVertices   (optional) vertex indices to keep, e.g. rheome.load.bases hemisphere .gv
+ 
+  OUTPUTS
+    G      [nCh x 3nV] or [nCh x 3numel(gv)]   idx  the channel rows kept   names  their names
+ 
+  See also: rheome.forward.diracgain, rheome.forward.simulate, rheome.operators.registry, rheome.inverse.mne
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

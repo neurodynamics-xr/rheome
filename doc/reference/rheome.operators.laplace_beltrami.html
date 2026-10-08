@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.operators.laplace_beltrami</title></head><body>
+<h1>rheome.operators.laplace_beltrami</h1>
+<p><em>function rheome.operators</em> &mdash; Rheome</p>
+<pre>  OPERATORS.LAPLACE_BELTRAMI  Cotangent Laplace-Beltrami stiffness (and mass).
+ 
+    [L, M] = rheome.operators.laplace_beltrami(V, F)
+    [L, M] = rheome.operators.laplace_beltrami(V, F, massType)   % 'galerkin' (default) | 'lumped'
+ 
+  Builds the discrete Laplace-Beltrami operator using the classic COTANGENT weights
+  -- the same &quot;cotan Laplacian&quot; Brainstorm computes (tess_operators -&gt;
+  nxr_compute('operators', h, 'laplacian', 'cotan')), reproduced here in pure MATLAB
+  so the demo needs no compiled plugin.
+ 
+  CONVENTION (positive-semidefinite &quot;stiffness&quot; / Poisson form):
+    For an interior edge (i,j) with the two opposite triangle angles alpha, beta,
+    the edge weight is  w_ij = (cot(alpha) + cot(beta)) / 2.
+    The stiffness is    L = D - W,  where W is the symmetric weight matrix and
+    D = diag(sum(W,2)). Hence L is symmetric PSD, each row sums to zero, the
+    constant vector is the null mode (lambda_0 = 0), and the smooth eigenmodes
+    solve the generalized problem  L phi = lambda M phi.
+ 
+  Sign note: this returns the PSD stiffness (positive diagonal, negative
+  off-diagonal), matching Brainstorm's cotanL used as the operator A in
+  eigs(A, M, k, 'smallestabs'). This is the negative of the &quot;geometric Laplacian&quot;
+  div-grad; the eigenvalues lambda &gt;= 0 are the ones the atom filters act on.
+ 
+  INPUTS:
+    V        [nV x 3] vertex coordinates
+    F        [nF x 3] triangle vertex indices (1-based)
+    massType mass matrix pairing for the second output: 'galerkin' (default) | 'lumped'
+ 
+  OUTPUTS:
+    L  [nV x nV] sparse symmetric PSD cotan stiffness
+    M  [nV x nV] sparse mass matrix (companion for the eigenproblem L phi = lambda M phi)
+ 
+  See also: rheome.operators.mass, rheome.eigen.modes
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.diffusion</title></head><body>
+<h1>rheome.filters.diffusion</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.DIFFUSION  Physical-time heat kernel (eigenmode x time, 'ts' domain).
+ 
+    G = rheome.filters.diffusion(lambda, t, tau, lmax)
+ 
+  g(lambda,t) = exp(-tau * (lambda/lmax) * |t|). The Green's function of diffusion as a
+  function of elapsed time t: applied to a delta it spreads into a widening positive
+  bump. Port of bst_eigfilter_design_diffusion (separable, low-pass).
+ 
+  INPUTS:
+    lambda [K x 1] eigenvalues       t [1 x N] time-lag axis
+    tau    diffusion rate (default 1)   lmax spectral normalizer (default max(lambda))
+  OUTPUT:
+    G      [K x N] gains g(lambda_k, t_n)
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

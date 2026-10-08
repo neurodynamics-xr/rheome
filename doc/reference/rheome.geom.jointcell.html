@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.geom.jointcell</title></head><body>
+<h1>rheome.geom.jointcell</h1>
+<p><em>function rheome.geom</em> &mdash; Rheome</p>
+<pre>  GEOM.JOINTCELL  Pick the observation window for a measurement from the joint ladder.
+ 
+    row = rheome.geom.jointcell(L, SigmaMM=25, Hz=10, SpeedMS=0.25)                   % envelope / group
+    row = rheome.geom.jointcell(L, SigmaMM=25, Hz=10, SpeedMS=0.25, Measure=&quot;phase&quot;)  % at the carrier
+    [row, why] = rheome.geom.jointcell(...)          % why: a sentence per decision, or the refusal
+    row = rheome.geom.jointcell(L, SigmaMM=25, Hz=10, SpeedMS=0.5, SnrDB=10, PathMM=120)   % + detectability
+ 
+  L is rheome.geom.jointladder. The pick is three decisions, each taken as COARSE as the question allows,
+  because a coarser window pools more samples -- more averaging, fewer tiles, fewer frames:
+ 
+    octave   the one holding Hz
+    depth    the COARSEST depth whose tile still holds the feature: sigmaMinMM &lt;= SigmaMM, i.e.
+             tileMM &lt;= TileSigma * SigmaMM with the ladder's own TileSigma (rheome.geom.jointladder)
+    level    Measure=&quot;envelope&quot; (default): the COARSEST frame level whose speedTrackMS still
+             covers SpeedMS -- the roll-up -- AND that still holds MinFrames frames per window.
+             Measure=&quot;phase&quot;: the carrier level, whatever the speed, because a phase is only
+             defined at ~SamplesPerCycle frames per cycle.
+ 
+  ⚠ MinFrames IS WHAT STOPS A STILL FEATURE ROLLING UP TO NOTHING. Without it SpeedMS = 0 took the
+  coarsest level, ONE frame per window (0.59 frames/s for alpha), where no track or path can exist.
+ 
+  ⚠ A REFUSAL IS AN ANSWER. If no depth is fine enough for the feature, or no level fast enough for
+  the speed, `row` is empty and `why` says which: a sigma-10 mm peak on a depth-8 tree (finest tile
+  23 mm &gt; 14 mm) is refused, and plant_tiletrack_omega.m found it untrackable at every depth.
+ 
+  ⚠ SpeedMS must also exceed the window's speedMinMS to be told from stationary; below it the
+  cell is still returned but `why` says the motion is below one tile per window.
+ 
+  ⭐⭐ DETECTABILITY IS A PROPERTY OF THE EVENT, NOT OF THE WINDOW. Given SnrDB, the row gains
+      eventS   = min(PathMM / SpeedMS, windowS)     how long the event exists in the window
+      nTau     = eventS / TauS                       independent noise samples it spans
+      evidence = 10^(SnrDB/10) * nTau                what track-before-detect can accumulate
+      detectable = evidence &gt;= EvidenceMin
+  TauS defaults to the octave's envelope correlation time 1/(fHi - fLo) (0.125 s for alpha).
+  EvidenceMin = 45.6 is where rheome.detect.tilepath's hit rate reaches 0.8: fitted on one planted run
+  (seed 13) and CHECKED on an independent one (seed 29) -- cells predicted detectable hit 0.99, the
+  rest 0.38 (ladder_rules_omega.m). At 10 dB that is 4.6 correlation times (~0.57 s of alpha); at
+  20 dB 0.46. A fast mover over a short path is brief, and no rate or tile rescues a brief event:
+  frame rate moved the hit rate by &lt;= 0.2 at 10 dB. ⚠ SnrDB is the planted tests' FIELD SNR (peak
+  over noise RMS of the pooled-to-be map), and EvidenceMin holds for their smooth, one-cycle noise;
+  recalibrate both on real data.
+ 
+  See also: rheome.geom.jointladder, rheome.geom.tiles, rheome.detect.tilepath, rheome.detect.tiletrack
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

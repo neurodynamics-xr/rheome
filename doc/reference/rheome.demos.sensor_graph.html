@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.demos.sensor_graph</title></head><body>
+<h1>rheome.demos.sensor_graph</h1>
+<p><em>function rheome.demos</em> &mdash; Rheome</p>
+<pre>  DEMOS.SENSOR_GRAPH  From sensor coordinates to a calibrated operator, in five figures.
+ 
+    rheome.demos.sensor_graph()
+    out = rheome.demos.sensor_graph('_figures')     % also export the figures as PNGs
+ 
+    1 geometry     five arrays: probe, Utah, ECoG, MEG helmet, EEG cap
+    2 graph        weights, degrees, and the readout triangulation
+    3 spectrum     lambda and the low eigenmodes
+    4 calibration  alpha by two routes, and the departure that is the resolution floor
+    5 routes       Chebyshev against the exact eigenbasis on the same operator
+ 
+  ⭐ WHAT THIS DEMO EARNS. A Gaussian-kernel graph Laplacian has dimensionless lambda, so on
+  its own it cannot report a wavelength in millimetres or a speed in metres per second.
+  Figure 4 recovers alpha in lambda ~ alpha k^2 by two independent routes -- a closed form
+  and a regression -- and their agreement is what puts units on everything downstream.
+ 
+  ⭐ THE DEPARTURE IS THE MEASUREMENT. In figure 4, lambda_hat(k) leaves alpha*k^2 as the
+  wavelength approaches twice the pitch. That is not error: it is the array's resolution
+  floor, read off a curve rather than quoted from a rule of thumb.
+ 
+  ⚠ EVERYTHING HERE IS SENSOR SPACE. Lengths are millimetres of separation between sensors.
+  Nothing in this demo is a claim about what produced the signal.
+ 
+  INPUTS:
+    outDir  '' to show figures on screen, or a folder to export PNGs
+  OUTPUT:
+    out  .ok .checks .arrays .cal .alphaAgree .regular .hasWindow .handled .chebErr
+ 
+  See also: rheome.demos.sensor_limits, rheome.sensors.calibrate, rheome.sensors.window
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

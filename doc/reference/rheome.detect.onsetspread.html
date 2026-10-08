@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.onsetspread</title></head><body>
+<h1>rheome.detect.onsetspread</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.ONSETSPREAD  How a burst's ONSET spreads across tiles: slowness from half-rise times.
+ 
+    R = rheome.detect.onsetspread(Y, G, fs, seed, tPeak)
+    R = rheome.detect.onsetspread(Y, G, fs, seed, tPeak, Radius=0.12, Pre=1, Post=0.5, Centres=xyz)
+ 
+  Y is a tile envelope [nTile x nT] at fs (rheome.geom.tilemean of |J^|), G is rheome.geom.tiles WITH a Ruler (.D),
+  and (seed, tPeak) is one burst: its tile and the time (s) it peaks there. Each tile within Radius of
+  the seed that takes part in the burst gets an onset time, and the onsets are regressed on distance.
+ 
+  ⭐ ONSET IS THE HALF-RISE TIME, NOT A THRESHOLD CROSSING. A fixed threshold is crossed EARLIER by a
+  louder tile even when every tile rises at the same instant, which manufactures propagation from
+  strong tiles to weak ones. t50 is when a tile's envelope reaches halfway from its own pre-peak floor
+  to its own peak inside the window: invariant to each tile's amplitude, so a simultaneous rise reads
+  as simultaneous whatever the amplitudes.
+ 
+  ⭐ SLOWNESS, NOT SPEED. The slope of t50 on geodesic distance from the seed is in s/m: 0 is a
+  simultaneous rise (standing, or faster than the timing resolves), positive spreads OUTWARD from the
+  seed, negative converges on it. Speed is 1/slowness and is infinite exactly where nothing propagates,
+  so it is the wrong quantity to average. The origin is the burst's PEAK tile, not its earliest one:
+  choosing the earliest tile as origin would make every slope positive by selection.
+ 
+  A planar fit t50 = a + s . x, with x the participating tile centres in their own two principal
+  directions (Centres required), gives a slowness VECTOR: |s| and a direction, for a front that
+  crosses the region rather than spreading from its peak.
+ 
+  INPUTS
+    Y        [nTile x nT] envelope     G  rheome.geom.tiles with Ruler (.D; .centre for Centres)
+    fs       frames per second         seed, tPeak  the event
+    Radius   tiles within this geodesic distance of the seed (0.12 m)
+    Pre/Post window before / after tPeak searched for each tile's rise and peak (1, 0.5 s)
+    Smooth   moving mean applied first, symmetric so it shifts no tile (0.1 s)
+    MinRise  a tile participates if its rise is &gt;= MinRise x the seed's (0.5)
+    MinTiles fewer participating tiles -&gt; no fit (5)
+    Centres  [nTile x 3] tile centre coordinates, for the planar fit ([] = skip)
+ 
+  OUTPUT (struct R)
+    .tiles .t50 (s, relative to tPeak) .dist (m) .rise   participating tiles
+    .slowness (s/m, Theil-Sen)  .slownessLS  .r2  .spreadS (range of t50)  .n
+    .planar  slowness vector magnitude (s/m)  .planarDir  unit direction  .planarR2
+    .ok      false if too few tiles took part
+ 
+  See also: rheome.detect.spindle, rheome.geom.tiles, alpha_burstspread_omega
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

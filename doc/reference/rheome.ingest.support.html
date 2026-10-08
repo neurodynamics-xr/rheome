@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.ingest.support</title></head><body>
+<h1>rheome.ingest.support</h1>
+<p><em>function rheome.ingest</em> &mdash; Rheome</p>
+<pre>  INGEST.SUPPORT  Which bands a window of a given length can resolve.
+ 
+    T = rheome.ingest.support(2)                       % a 2 s window
+    T = rheome.ingest.support([2 16 64], Voices=4)     % several, at the bank's voices
+    [~] = rheome.ingest.support(2, Anchor=1)
+ 
+  ⭐ A WINDOW LENGTH IS A STATEMENT ABOUT FREQUENCY. Constant Q ties a band's time support to
+  its centre frequency: support = k / f, with k fixed by the bank's voices (measured on
+  @timefilterbank: support*fc = 4.8, 8.0, 11.5, 15.0, 22.4, 37.1 at 1, 2, 3, 4, 6, 10
+  voices). So a window of W seconds resolves everything above k / W and nothing below it.
+  Choosing a stretch in a preview therefore already chooses the analysis that fits in it,
+  which is why the explorer prints this next to the window.
+ 
+  Returns one row per window: the lowest frequency it supports, the lowest OCTAVE band fully
+  inside it (anchored the way the store's bands are), and how many cycles of that band the
+  window holds.
+ 
+  ⚠ THIS IS THE BANK'S SUPPORT, NOT A DISPLAY LIMIT. A shorter window still SHOWS low
+  frequencies; it cannot separate them, because the kernel that would do it is longer than
+  the window. The store's own tile for a band (rheome.select.ladder) is the first dyadic level at
+  least this long.
+ 
+  See also: rheome.select.ladder, rheome.ingest.preview, rheome.timefilterbank
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

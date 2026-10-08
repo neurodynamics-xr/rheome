@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.scatter</title></head><body>
+<h1>rheome.filters.scatter</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.SCATTER  Graph wavelet scattering: |W| cascaded through the frame, then pooled.
+ 
+    S = rheome.filters.scatter(basis, F, frame)
+    S = rheome.filters.scatter(basis, F, frame, opts)
+ 
+  The scattering transform (Mallat 2012) is a convolutional network whose filters are
+  FIXED to wavelets: convolve, take the modulus, convolve again, average. It has NO
+  trainable parameters, which is what makes it usable on a handful of subjects where a
+  learned network cannot be fit at all.
+ 
+    S0(t)       = &lt; F &gt;                              the pooled field
+    S1(m1,t)    = &lt; |g_m1(L) F| &gt;                    one modulus
+    S2(m1,m2,t) = &lt; |g_m2(L) |g_m1(L) F|| &gt;          two
+ 
+  &lt;.&gt; is the mass-weighted spatial average, so every coefficient is a NUMBER per frame,
+  not a map: the output is [M] and [M x M] wide rather than [nV]. That collapse is the
+  point -- it buys invariance to where on the cortex the structure sat, and it is what
+  makes the coefficient count small enough to do statistics on.
+ 
+  ⭐ WHY THE SECOND ORDER IS THE WHOLE REASON TO BUILD THIS. A phase-randomised surrogate
+  preserves the power spectrum EXACTLY and sets every higher-order statistic to its
+  Gaussian value. S1 is, to leading order, a spectral readout -- pooled band energy --
+  so a real recording and its surrogate agree on S1 BY CONSTRUCTION and S1 can never
+  discriminate them. S2 measures cross-scale envelope co-modulation, which the power
+  spectrum does not determine. Any real-vs-surrogate difference must therefore appear at
+  second order or not at all. That makes &quot;S1 matches, S2 matches too&quot; a far stronger null
+  than a list of hand-chosen statistics: it is a claim about a whole function class.
+ 
+  ⭐ PASS THE ANALYTIC SIGNAL. On a graph there is no Hilbert transform, so a real mexhat
+  coefficient oscillates and |.| RECTIFIES it (doubling the spatial frequency) instead of
+  returning an envelope -- the known weak point of graph scattering. Here that is dodged
+  for free: F is already complex when it comes from the temporal Hilbert transform
+  (rheome.flowpage.complexmaps, rheome.flow.demod), so |.| is a genuine envelope. Feeding a real field
+  still runs, but S1 then mixes in the rectification artefact.
+ 
+  ⭐ THE SECOND WAVELET MUST BE COARSER. |g_m1(L) F| is a smooth envelope whose energy
+  lies BELOW m1's band, so a finer m2 sees essentially nothing -- Mallat's lambda2 &lt;
+  lambda1 rule. Pairs with sigma(m2) &lt;= sigma(m1) are left NaN rather than computed,
+  which is also what keeps the second order affordable (roughly half of M^2).
+ 
+  ⭐ S1's MEMBER INDEX IS A CALIBRATED SCALE READOUT -- INSIDE THE BAND. Plant an atom
+  built from member m and S1 peaks on m exactly, but only for members between the basis
+  floor (frame.SigmaFloor) and roughly 0.6 x the domain radius; outside that the peak
+  slides by one, because the basis cannot resolve the fine end and the coarse members
+  saturate against the surface's own size. Note it is the POOLED MODULUS that is matched:
+  over the same band the L2 energy sum|g_m c|^2 peaks one member FINER, so do not
+  substitute a spectral-energy proxy for S1 and expect the same scale. See tScatter.
+ 
+  ⚠ MEMORY IS BOUNDED BY CONSTRUCTION, NOT BY HOPE. The modulus has to be taken at
+  VERTICES (|Phi c| ~= Phi |c|), so an [nV x nT] intermediate is unavoidable -- at cortex
+  scale that is hundreds of MB per member, and there are M of them. This function
+  therefore processes TIME IN BLOCKS sized from opts.MaxBytes and never holds more than
+  one member's field at once, so peak memory is set by the budget and NOT by nT. The
+  block size is reported in S.BlockSize; the answer is identical for any of them.
+ 
+  INPUTS:
+    basis  struct with .Phi [nV x K], .Lambda [K x 1], .Mass [nV x nV]
+    F      [nV x nT] field, real or complex (complex strongly preferred -- see above)
+    frame  from rheome.filters.frame (needs .g and .Sigma)
+    opts   .Order     1 | 2                        (default 2)
+           .MaxBytes  peak array budget in bytes   (default 5e8 = 500 MB)
+           .Pool      [nV x nR] pooling weights    (default [] = mass-weighted global mean)
+ 
+  OUTPUT (struct S):
+    .S0 [nR x nT]          pooled field (complex if F is)
+    .S1 [M x nR x nT]      first order, real and &gt;= 0
+    .S2 [M x M x nR x nT]  second order, NaN where the coarser-second rule excludes the pair
+    .Sigma [1 x M]         member spatial scale in metres (Inf for a low-pass member)
+    .Pairs [P x 2]         the (m1,m2) pairs actually computed
+    .Order .BlockSize .NumBlocks .PeakBytes .MaxBytes
+ 
+  With the default pooling nR = 1, so squeeze(S.S1) is [M x nT].
+ 
+  See also: rheome.filters.frame, rheome.filters.frame_analysis, rheome.filters.localize, rheome.jointfilterbank
+ 
+  Author: Diellor Basha, 2026 (after Mallat 2012; Bruna &amp; Mallat 2013)
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

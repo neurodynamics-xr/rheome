@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.demos.filterbank_joint</title></head><body>
+<h1>rheome.demos.filterbank_joint</h1>
+<p><em>function rheome.demos</em> &mdash; Rheome</p>
+<pre>  DEMOS.FILTERBANK_JOINT  jointfilterbank, in the same five figures as the other two.
+ 
+    rheome.demos.filterbank_joint()
+    out = rheome.demos.filterbank_joint(outDir)     % also export figures as PNGs
+ 
+    1 design      Bands / JointKernels / speedkernel -- what the joint parameters change
+    2 properties  centres on both axes, frame bounds, and what materialising would cost
+    3 field       a rigidly rotating pattern and a standing oscillation
+    4 decompose   joint spectrum, scalogram, energy per bin
+    5 recovery    fitted speed vs planted, and the clipped-band failure mode
+ 
+  ⭐ GROUND TRUTH. Sectoral harmonics of degree l rotating rigidly at Omega put energy at
+  temporal frequency omega_l = l*Omega and wavenumber k_l = sqrt(l(l+1))/R, so the locus
+  of those points has a slope known BEFORE the fit runs. Measured here: -1.7% error with
+  R^2 = 1.0000.
+ 
+  ⚠ THE BAND MUST SPAN THE DIAGONAL. Fig 5 runs the SAME field through a spanning and a
+  deliberately clipped frequency retention, so the failure mode .fSupport exists to warn
+  about is visible rather than theoretical.
+ 
+  ⭐ VOCABULARY. Both axes appear here and each takes its own correct word:
+  centerWavenumbers is rad/m on the graph axis, centerFrequencies is Hz on the time axis.
+  &quot;Frequency&quot; was wrong for lambda; on omega it is exactly right.
+ 
+  See also: rheome.demos.filterbank_cwt, rheome.demos.filterbank_graph, rheome.jointfilterbank
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

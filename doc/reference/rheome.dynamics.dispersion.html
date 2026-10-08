@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.dynamics.dispersion</title></head><body>
+<h1>rheome.dynamics.dispersion</h1>
+<p><em>function rheome.dynamics</em> &mdash; Rheome</p>
+<pre>  DYNAMICS.DISPERSION  Empirical dispersion relation omega(lambda) from a DMD result.
+ 
+    relation = rheome.dynamics.dispersion(dmdResult, lambdaPerMode)
+ 
+  For each DMD mode, pairs its temporal angular frequency omega = 2*pi*|f| with its dominant SPATIAL
+  scale (the eigenvalue lambda at which the mode's spatial power concentrates), giving the empirical
+  dispersion relation of the cortical dynamics. A linear ridge omega = c*sqrt(lambda) is a traveling
+  WAVE of phase speed c; omega proportional to lambda is DIFFUSION. The model with the better fit is
+  reported, with the wave-speed estimate.
+ 
+  INPUTS:
+    dmdResult      output of rheome.dynamics.dmd (.modes [K x r], .frequency [r x 1])
+    lambdaPerMode  [K x 1] spatial eigenvalue of each basis mode (coeff.lambda)
+  OUTPUT (struct relation):
+    .omega .lambda   the (omega, lambda) points used
+    .speedFit        fitted wave speed c from omega = c*sqrt(lambda)   (position-units / s)
+    .modelType       'wave' | 'diffusion' (whichever fits better)
+    .rWave .rDiff    fit quality (R^2) of each model
+ 
+  See also: rheome.dynamics.dmd, rheome.filters.travwave
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

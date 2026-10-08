@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.geom.ladder</title></head><body>
+<h1>rheome.geom.ladder</h1>
+<p><em>function rheome.geom</em> &mdash; Rheome</p>
+<pre>  GEOM.LADDER  The spatial ladder: which eigenvalue range each cortical tile level corresponds to.
+ 
+    L = rheome.geom.ladder('sub01')
+    L = rheome.geom.ladder(name, MaxDepth=6, Cycles=2)
+ 
+  The cortical twin of `rheome.select.ladder`. That one answers &quot;at this frequency band, how long is a tile,
+  how many cycles is that, and at what rate does the band arrive?&quot; and finds the two invariants that
+  make the time-frequency plane work: cycles per tile is the same in every octave (22.6 on the reference
+  bank) and samples per tile is too. This answers the same question on the spatial axes, and the
+  structure is the same with one factor of two that has to be got right.
+ 
+  ⭐⭐ ONE SPATIAL OCTAVE IS **TWO** TREE DEPTHS, NOT ONE. `rheome.geom.tree` bisects by AREA, so area halves
+  every depth and DIAMETER falls by sqrt(2). Measured on this cortex: 278 / 196 / 139 / 98 mm at
+  depths 1-4, ratios 1.42 / 1.41 / 1.42. A factor of two in wavelength therefore costs two levels of
+  the position pyramid, where a factor of two in period costs one level of the time pyramid. Treating
+  the two axes as level-for-level is off by a factor of two per octave and compounds.
+ 
+  ⭐ THE INVARIANT THAT MIRRORS CONSTANT-Q. By Weyl's law the number of eigenvalues below k on a
+  surface of area A is N(k) = A k^2 / (4 pi), so an octave [k, 2k] holds 3 A k^2 / (16 pi) modes --
+  a factor of 4 per octave. A node at depth D has area A0 / 2^D. So the modes that fit inside one
+  node in one octave go as 2^-D k^2, which is CONSTANT exactly when D increases by 2 per octave.
+  Follow that diagonal and every (tile, octave) cell holds the same number of modes, just as every
+  (tile, band) cell holds the same number of cycles. That is what makes the cell a unit of
+  information rather than an arbitrary intersection.
+ 
+  ⚠⚠ THE OFF-DIAGONAL IS NOT SYMMETRIC. Above the diagonal (node much larger than the wavelength) a
+  cell is merely coarse: many modes averaged, no localisation gained, still a valid measurement.
+  BELOW it (node smaller than the wavelength) the cell is not a measurement at all -- a mode whose
+  wavelength exceeds the patch does not complete a cycle inside it, so its &quot;energy in this patch&quot; is
+  an artefact of where the patch was drawn. `.forbidden` marks those.
+ 
+  ⚠⚠ WHAT MAY BE RECORDED IN SUCH A CELL, AND WHAT MAY NOT.
+    ⭐ DO record band-limited energy: filter the current to the octave (linear and exact in the
+      Dirac or LB basis), then integrate |J|^2 over the node. Well defined, and it rolls up over
+      nodes within a fixed octave.
+    ⚠ DO NOT record &quot;eigenmode bandpower of this node&quot; in the sense of apportioning global modes to
+      patches. An eigenmode has support over the whole hemisphere; &quot;how much of mode m lives in node
+      n&quot; has no answer without a convention, and different conventions disagree. Global eigenmode
+      bandpower (summed over the hemisphere) IS well defined -- that is the `space_band` /
+      feature_space pattern the schema already uses on the sensor graph -- but it has no node index.
+    ⚠ DO NOT record a SIZE. plant_scale_omega.m planted 70-267 mm through the leadfield, noise and
+      inverse: recovered ~100 mm regardless, slope +0.02, R^2 0.002 below 10 dB. The octave index
+      says which filter responded, never how big the source was.
+ 
+  ⚠ `Cycles` is the spatial twin of cycles-per-tile and its value is NOT assumed: the default 2 is a
+  starting point and the table reports the achieved ratio per row so it can be read off, exactly as
+  rheome.select.ladder reports 22.6 rather than asserting it.
+ 
+  OUTPUT (table L, one row per spatial octave)
+    sband, wavelengthLoMM/HiMM/CenterMM, kLo/kHi/kCenter, nModes (counted), nModesWeyl (predicted),
+    naturalDepth, nodeDiameterMM, nNodes, cyclesPerTile, modesPerCell, nodeAdmissible,
+    waveAdmissible, forbidden
+ 
+  ⚠⚠ TWO SEPARATE ADMISSIBILITY QUESTIONS, and conflating them overstates what the plane supports.
+    nodeAdmissible  is the TILE bigger than 2*r50 = 104 mm? -- can this patch be told from its
+                    neighbour at all (rheome.inverse.resolution, 300 seeds)
+    waveAdmissible  is the WAVELENGTH above 104 mm? -- a separate and stricter question, since
+                    plant_scale_omega.m recovers ~100 mm whatever is planted below 10 dB
+  A cell needs BOTH, plus `~forbidden`. ⭐⭐ MEASURED ON THIS CORTEX, AT Cycles=2, NOTHING QUALIFIES,
+  and the way it fails is the result. The only candidate is the 94-189 mm octave (centre 134 mm),
+  which wants a tile of 2 x 133.7 = 267.4 mm; the largest tile on the hemisphere is 267.2 mm. It
+  misses by 0.2 mm, or 0.1%. Every other octave fails on the wavelength floor instead.
+ 
+  So the answer to &quot;does a cortical tile have a corresponding eigenvalue range&quot; is YES, exactly and
+  structurally -- and with this array the (position x spatial-frequency) plane collapses to AT MOST
+  ONE cell, sitting exactly on its own boundary. Whether it counts is decided by `Cycles`, a
+  convention nobody has measured. That is not a defect in the ladder; it is the same fact as
+  trace(R) = 48-113 of 270 channels and r50 = 52 mm, seen on a different pair of axes.
+ 
+  ⭐ THE CONTRAST WITH TIME IS THE POINT. rheome.select.ladder gets 22.6 CYCLES per time tile in every
+  octave. The spatial axis manages about 2 diameters per wavelength before running out of cortex --
+  an order of magnitude poorer. The time-frequency plane is rich and the space-wavenumber plane is
+  barely one cell, and that asymmetry should be read off this table rather than assumed away.
+ 
+  ⚠ `forbidden` is also TRUE for the coarsest octave, and that is correct rather than a bug: the
+  189-378 mm octave needs a tile of 2 x 267 = 534 mm, larger than the 378 mm hemisphere. The largest
+  spatial octave therefore has no tile at all and exists only as a whole-hemisphere number.
+ 
+  See also: rheome.select.ladder, rheome.geom.tree, rheome.flow.sweep, plant_scale_omega,
+            docs/2026-09-26-feature-table-design.md
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

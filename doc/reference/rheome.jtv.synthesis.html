@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.jtv.synthesis</title></head><body>
+<h1>rheome.jtv.synthesis</h1>
+<p><em>function rheome.jtv</em> &mdash; Rheome</p>
+<pre>  JTV.SYNTHESIS  Reconstruct a joint spectrum from filterbank coefficients.
+ 
+    C = rheome.jtv.synthesis(Y, Gd)
+ 
+  With Gd the canonical dual of the analysing bank, C = sum_i gd_i .* Y_i recovers the original
+  exactly wherever the bank covers.
+ 
+  INPUTS:  Y [K x nOmega x Nf] coefficients;  Gd [K x nOmega x Nf] dual gains
+  OUTPUT:  C [K x nOmega]
+ 
+  See also: rheome.jtv.analysis, rheome.jtv.dual
+ 
+  Author: Diellor Basha, 2026 (after F. Grassi, GSPBox)
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

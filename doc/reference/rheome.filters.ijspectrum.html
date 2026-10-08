@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.ijspectrum</title></head><body>
+<h1>rheome.filters.ijspectrum</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.IJSPECTRUM  Inverse joint transform: joint coefficients -&gt; mode series.
+ 
+    c = rheome.filters.ijspectrum(chat)
+    c = rheome.filters.ijspectrum(chat, nKeep)
+ 
+  Inverts rheome.filters.jspectrum along time:  c = ifft(chat, [], 2) * sqrt(NFFT), then keeps
+  the first nKeep samples (to un-pad). Returns the real part -- for a real field filtered
+  by an even-in-frequency kernel the imaginary part is numerical noise. Same convention
+  as manifold_ijft (temporal half).
+ 
+  INPUTS:
+    chat   [nModes x NFFT] (filtered) joint spectral coefficients
+    nKeep  keep the first nKeep time samples (default NFFT)
+ 
+  OUTPUT:
+    c      [nModes x nKeep] mode-coefficient time series
+ 
+  See also: rheome.filters.jspectrum, rheome.forward.reconstruct
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

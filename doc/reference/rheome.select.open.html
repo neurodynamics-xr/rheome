@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.select.open</title></head><body>
+<h1>rheome.select.open</h1>
+<p><em>function rheome.select</em> &mdash; Rheome</p>
+<pre>  SELECT.OPEN  A handle on a tile store: metadata, a matfile, a level cache and cost counters.
+ 
+    db = rheome.select.open(file)
+ 
+  Reads go through rheome.select.level so they can be counted: .cost is a containers.Map (a
+  handle, so it accumulates through a value struct) with 'bytes' (array bytes loaded
+  from disk), 'reads' (matfile reads) and 'tiles' (tile rows examined by executors).
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

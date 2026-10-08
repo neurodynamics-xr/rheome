@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.load.connectome</title></head><body>
+<h1>rheome.load.connectome</h1>
+<p><em>function rheome.load</em> &mdash; Rheome</p>
+<pre>  LOAD.CONNECTOME  Load the cached whole-brain connectome operators &amp; eigenbases.
+ 
+    C = rheome.load.connectome(name)
+ 
+  Returns the struct cached by rheome.import.connectome:
+    .meta        Kc, SmoothHops, EdgeThr, gamma, builtFrom
+    .W .keep     vertex connectome weights + largest-connected-component indices
+    .laplacian   struct(.A .B .N  .Phi .Lambda .Reproducible=true)   Connectome Laplacian
+    .lb          struct(.A .B .gamma .Phi .Lambda .Reproducible=false) LB-Connectome
+ 
+  For the Dirac-Connectome vector basis, lift the LB-Connectome basis on demand:
+    dc = rheome.eigen.lift(C.lb.Phi, C.lb.Lambda, C.lb.B);   % quaternion basis (inherits lb's instability)
+ 
+  See also: rheome.import.connectome, rheome.eigen.lift, rheome.filters.frame
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.demos.wavelet</title></head><body>
+<h1>rheome.demos.wavelet</h1>
+<p><em>function rheome.demos</em> &mdash; Rheome</p>
+<pre>  DEMOS.WAVELET  Localize spectral filters as atoms on the cortical surface.
+ 
+    rheome.demos.wavelet(SurfaceFile)
+    rheome.demos.wavelet(SurfaceFile, outDir)     % also export figures as PNGs to outDir
+    out = rheome.demos.wavelet(SurfaceFile, outDir, K)
+ 
+  The cortical-surface analogue of GSPBox's gsp_demo_wavelet: instead of a graph we
+  use the Laplace-Beltrami eigenbasis of a real cortex, and instead of a Kronecker on
+  a graph vertex we drop a delta on a cortical vertex and filter it. Two experiments,
+  mirroring the reference demo:
+ 
+    1. HEAT DIFFUSION -- a heat/low-pass kernel localized at one vertex, at four
+       diffusion times. Each atom is a smooth positive bump that widens with t.
+    2. MEXICAN-HAT WAVELETS -- a band-pass wavelet filterbank localized at the same
+       vertex, at four scales. Each atom is a signed core-plus-surround at its own
+       spatial scale (a cortical wavelet atom).
+ 
+  Because a whole cortex is two disconnected hemispheres, an atom seeded on one
+  hemisphere stays entirely on that hemisphere -- the diffusion cannot cross the gap,
+  which is exactly the anatomy-respecting behaviour we want.
+ 
+  INPUTS:
+    SurfaceFile : path to a Brainstorm cortex .mat
+    outDir      : optional folder; if given, each figure is exported as a PNG
+    K           : number of eigenmodes (default 500). More modes -&gt; sharper atoms.
+ 
+  OUTPUT (optional struct out): basis, seed vertex, the two gain banks, the atoms.
+ 
+  Uses: rheome.io.read.surface, rheome.operators.laplace_beltrami, rheome.eigen.modes,
+        rheome.filters.heat, rheome.filters.mexhat, rheome.filters.localize, rheome.show.surface
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

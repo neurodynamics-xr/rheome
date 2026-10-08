@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.forward.project</title></head><body>
+<h1>rheome.forward.project</h1>
+<p><em>function rheome.forward</em> &mdash; Rheome</p>
+<pre>  FORWARD.PROJECT  Band-limit a per-vertex 3-vector field onto the Dirac eigenbasis.
+ 
+    Jproj      = rheome.forward.project(J, dbasis)
+    [Jproj, C] = rheome.forward.project(J, dbasis)
+ 
+  Analysis then synthesis: embeds the current as a pure-imaginary quaternion field,
+  takes its Dirac-mode coefficients under the mass (L²) inner product, and reconstructs.
+  The result is the B-orthogonal projection of J onto the span of the kept modes -- i.e.
+  the SAME field expressed in the Dirac eigenbasis (smoothed / band-limited, per-vertex
+  scale preserved). Use it to represent an external reconstruction (e.g. a Brainstorm MNE
+  current) in the module's eigenbasis, isolating the basis effect from the inverse operator.
+ 
+  INPUTS:
+    J       [3nV x m] per-vertex 3-vectors, rows [x1,y1,z1, x2,...]  (m columns = frames)
+    dbasis  Dirac eigenbasis from rheome.eigen.dirac_frame (.Phi, .Mass, .nVert, .nModes)
+ 
+  OUTPUTS:
+    Jproj   [3nV x m] the band-limited field (Phi * C, quaternion vector part)
+    C       [nModes x m] the mode coefficients (analysis: C = Phi' * B * embed(J))
+ 
+  See also: rheome.forward.dirac, rheome.forward.reconstruct
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

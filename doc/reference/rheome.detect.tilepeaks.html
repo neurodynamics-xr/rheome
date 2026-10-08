@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.tilepeaks</title></head><body>
+<h1>rheome.detect.tilepeaks</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.TILEPEAKS  Peaks of a tile-level field: tiles whose value beats every adjacent tile.
+ 
+    P = rheome.detect.tilepeaks(Y, G)
+    P = rheome.detect.tilepeaks(Y, G, MinHeight=0.5, Relative=true)
+ 
+  The tile twin of rheome.detect.peaks. Y is a field already pooled over tiles (rheome.geom.tilemean), so a peak is
+  a whole tile -- many vertices at once -- and &quot;neighbour&quot; means a tile sharing a boundary (G.A &gt; 0),
+  not a mesh edge. Ties are broken by tile index, so a flat pair yields one peak.
+ 
+  ⭐ THE PEAK IS A TILE, SO ITS POSITION IS QUANTISED TO THE TILING ON PURPOSE. The resolution is chosen
+  by the tree depth, as the time resolution is chosen by the dyadic level, rather than imposed by the
+  mesh; a trajectory is then a walk on the tile graph. The same rule as rheome.detect.peaks applies: a tile
+  is a peak only if it beats its neighbours, never merely because it is some region's maximum.
+ 
+  INPUTS
+    Y          [nTile x nT] tile values        G  rheome.geom.tiles struct (.A)
+    MinHeight  drop peaks below this (0)       Relative  true: fraction of each frame's maximum (false)
+ 
+  OUTPUT (struct P)
+    .isPeak [nTile x nT] logical     .count [1 x nT]
+    .tiles  {1 x nT} peak tiles per frame, highest first     .values {1 x nT} their values
+ 
+  See also: rheome.detect.tiletrack, rheome.geom.tilemean, rheome.geom.tiles, rheome.detect.peaks
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

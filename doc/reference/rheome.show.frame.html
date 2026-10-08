@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.show.frame</title></head><body>
+<h1>rheome.show.frame</h1>
+<p><em>function rheome.show</em> &mdash; Rheome</p>
+<pre>  SHOW.FRAME  A spectral-graph wavelet frame: member gains, coverage and scales.
+ 
+    rheome.show.frame(frame, Lambda)
+    hFig = rheome.show.frame(frame, Lambda, name, value, ...)
+ 
+  Three panels that together say whether a filterbank is fit to use: the member gains g_m(lambda);
+  the coverage curve sum_m g_m^2 with the frame bounds A and B marked (A -&gt; 0 means part of the
+  spectrum is uncovered, B/A = 1 means tight); and the member scales sigma_m = sqrt(2 t_m) against
+  the wavenumbers the basis actually spans.
+ 
+  This is the figure that replaces &quot;we chose sigma = [10 15 20 30 40] mm&quot; with a designed bank and
+  a stated coverage.
+ 
+  OPTIONS: 'Title', 'Visible'
+ 
+  See also: rheome.filters.frame, rheome.filters.frame_bounds, rheome.filters.frame_gains
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

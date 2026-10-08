@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.sweep</title></head><body>
+<h1>rheome.flow.sweep</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.SWEEP  Sweep one LEVEL of the store's time tiling, measuring on every axis, and write the
+  results into the database as measurements.
+ 
+    [M, R, T] = rheome.flow.sweep('sub01', Level=3)
+    M = rheome.flow.sweep(name, Level=3, BandIds=6, Kinds=[&quot;meanAct&quot;,&quot;curlRMS&quot;], Write=false)
+ 
+  One pass over the tiles at one level. Three families of measurement come back per tile:
+ 
+    TIME DOMAIN      rms, power, peak, ptp, envMax                 &lt;- ALREADY IN THE STORE
+    FREQUENCY DOMAIN bandPower, share, spectralCentroid/Spread/Entropy/Flatness/Crest,
+                     dominantBand, dominantFreq, residual           &lt;- ALREADY IN THE STORE
+    CORTICAL TILES   meanAct, energy, divRMS, curlRMS, normalShare, nVortex   &lt;- computed here
+    EIGENMODE OCTAVES  spaceOctaveEnergy_sbJ, spaceOctaveShare_sbJ, GLOBAL (Scope=&quot;none&quot;)
+                       &lt;- computed here. ⭐ A mode has no node: its support is the whole hemisphere,
+                       so per-tile eigenmode power needs a convention and has none. Summed over the
+                       hemisphere it is exact, so this is written with unit_id = 0.
+ 
+  ⚠⚠ crest, kurtosis, skewness and the three factor statistics are DELIBERATELY ABSENT. They are
+  only defined per channel, and channel rows start at db.channelLevel (level 6 = 16 s tiles here),
+  so at the 2 s level this sweep targets they do not exist. Computing them from the group moments
+  gives numbers -- crest 0.443-3.027 where absMax/rms is &gt;= 1 by definition, kurtosis to 2.8e262 --
+  and they are meaningless. See the note added to rheome.select.derive.
+ 
+  ⭐⭐ THE FIRST TWO ARE NOT RE-MEASURED AND ARE NOT WRITTEN. They are exact functions of the
+  mergeable moments the store already holds, so `rheome.select.derive` produces them at ANY level for the
+  cost of an array read -- 34 statistics, listed by `rheome.select.derive()` with their formulas. Computing
+  them again from samples would be slower and would give a second, drifting copy of a number the
+  store already defines. This function only *joins* them.
+ 
+  ⭐ ONLY THE CORTICAL MEASUREMENTS ARE NEW, and they go into the `measure` relation rather than a
+  feature relation because they DO NOT MERGE: the curl over a patch is not the sum of the curls of
+  its halves, and a time-averaged magnitude under a node is not a sum either. That is exactly the
+  distinction `rheome.select.schema` draws between its two matrices -- 'mergeable' (dense, a parent is the
+  merge of its children, prunable by descent) and 'note' (sparse, measured where it was measured,
+  never descended). Putting a curl in a feature relation would make it look prunable.
+ 
+  ⭐ THE WINDOWS ARE THE STORE'S OWN TILES. `rheome.select.derive` returns t_lo/t_hi per (level, k) and
+  those spans drive the cortical pass, so every row joins on (level, k) with no interpolation and no
+  second definition of &quot;window&quot;. At level 3 on this store that is 300 tiles of 2 s.
+  ⚠ Level 3 is also the measured sweet spot: the activation decorrelates in ~2 s and adjacent 2 s
+  tiles are already 90% decorrelated, so rows are near-independent. Finer tiles are correlated;
+  coarser ones average the variation away.
+ 
+  ⚠ WHAT IS SAFE TO WRITE. Magnitude, divergence, curl and the gauge split under a cortical node
+  are measurements. A SIZE is not: planting a source of known scale through this chain returns
+  ~100 mm regardless of the truth below ~20 dB (plant_scale_omega.m, slope +0.02, R^2 0.002 over a
+  70-267 mm range), while LOCATION recovers to 43-52 mm. So this writes where and how much, never
+  how big, and `cortex_node.wavelength_mm` carries the admissibility of each node.
+ 
+  ⚠ WRITES GO TO THE SIDECAR, NOT THE INGEST STORE. Labels and measurements share
+  &lt;store&gt;__labels.mat; the ingest file is never modified. The write is one transaction, atomic and
+  idempotent by content hash -- submitting the same rows twice returns the existing txn without
+  writing -- and removable with rheome.select.rollback(db, txn_id). The txn_id is returned in M.
+ 
+  NAME-VALUE
+    Level (3)        the time level to sweep
+    BandIds ([])     the store's band ids to measure; default = every band the level carries in the
+                     4-64 Hz range. ⚠ A level only carries bands whose natural level is at or below
+                     it, so asking for a low-frequency band at a fine level gets nothing.
+    Depth (3)        cortical tree depth; nodes at 1..Depth are measured
+    Kinds            which cortical measurements to write
+    GroupDepth (2)   sensor-tree depth for the derived sensor-side rows
+    Write (true)     write the cortical rows into the database
+    Store (&quot;&quot;)       an explicit store file; default = the frame-bank store for this recording
+ 
+  OUTPUTS
+    M  cortical measurements, long form: recording_id scope unit_id level k band_id kind value
+    R  the sensor-side derived statistics at the same level (time + frequency), from rheome.select.derive
+    T  the wide per-tile cortical table (rheome.flow.windowtable), if you want it before melting
+ 
+  See also: rheome.select.measure, rheome.select.measures, rheome.select.derive, rheome.select.rollback, rheome.flow.windowtable,
+            rheome.select.schema, docs/2026-09-26-feature-table-design.md
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

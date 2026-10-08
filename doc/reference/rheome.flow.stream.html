@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.stream</title></head><body>
+<h1>rheome.flow.stream</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.STREAM  Fused kernel: sensors -&gt; Helmholtz stream function Psi (vortices).
+    ks = rheome.flow.stream(ctx [,opts])
+ 
+  Psi solves  K*Psi = vortw(J)  (vortices = extrema of Psi). Like rheome.flow.potential, the
+  COEFFICIENT kernel is diagonal (1/lambda) in the scalar-LBO eigenbasis:
+    Psi_coeff = Lambda^-1 .* (scalarModes' * (Brot * currentKernel))     [Ks x C]
+  With opts.vertex (default true) the full-rank vertex kernel (rheome.differential.helmholtz Psi)
+  is also returned.
+ 
+  OUTPUT (struct ks): .coeffOperator [Ks x C], .scalarModes [V x Ks], .Lambda [Ks x 1],
+    .vertexOperator [V x C] (if opts.vertex), .domain='coeff', .out, .chNames, .provenance.
+ 
+  See also: rheome.flow.weak, rheome.flow.potential, rheome.differential.helmholtz
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

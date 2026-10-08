@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.import.recording</title></head><body>
+<h1>rheome.import.recording</h1>
+<p><em>function rheome.import</em> &mdash; Rheome</p>
+<pre>  IMPORT.RECORDING  Surface a cached recording as a v7.3, chunk-readable store.
+ 
+    file = rheome.import.recording(name)
+ 
+  Reads +data/&lt;name&gt;/study.mat and writes +data/&lt;name&gt;/recording.mat with the sensor
+  matrix as a TOP-LEVEL variable, so a page can be read without loading the record:
+ 
+    m = matfile(file);   X = m.F(:, a:b);        % a genuine partial read
+ 
+  ⚠ WHY THIS EXISTS AT ALL. study.mat already holds the same numbers, and is already
+  v7.3 -- but as rec.F, NESTED inside a struct. MatFile supports '()' indexing only on
+  TOP-LEVEL variables: `m.rec.F(:, a:b)` errors outright, and `m.rec` pulls the entire
+  977 MB struct into memory. Nesting therefore defeats paging completely. Surfacing F as
+  its own variable is the whole content of this function.
+ 
+  ⚠ WRITTEN -NOCOMPRESSION, DELIBERATELY. Measured on a 300 x 360000 double:
+ 
+      write compressed    14.6 s   833 MB     4 s page read  13 ms   ( 443 MB/s)
+      write nocompression  0.9 s   865 MB     4 s page read   2 ms   (2649 MB/s)
+ 
+  6-12x faster to read and 16x faster to write for 4% more disk. A page store is read far
+  more often than it is written, so the trade is not close.
+ 
+  ⚠ STORED IN DOUBLE, read in single. The store is a faithful cache of the recording, not
+  of any one analysis; pagedrecording casts on read (default 'single'), which is where the
+  precision choice belongs. Costs ~865 MB per 600 s subject, ON TOP of study.mat -- the
+  cache is regenerable, so delete study.mat's copy only if disk actually bites.
+ 
+  See also: rheome.pagedrecording, rheome.import.study, rheome.load.root
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

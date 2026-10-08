@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.ingest.cone</title></head><body>
+<h1>rheome.ingest.cone</h1>
+<p><em>function rheome.ingest</em> &mdash; Rheome</p>
+<pre>  INGEST.CONE  Which samples are inside the cone of influence, per band, analytically.
+ 
+    inside = rheome.ingest.cone(nT, fs, frame, fLowest)     -&gt; [nB x nT] logical
+ 
+  The cone frequency at a sample is coi(t) = min(fmax, supportTimesFc / dist(t)), dist
+  being the seconds to the nearer RECORD edge and supportTimesFc the wavelet's measured
+  support times centre frequency (6.46 for Morse at 10 voices; frame.support.timeTimesFc).
+  A band is inside the cone at t iff its lowest scale is: fLowest(b) &lt; coi(t) -- i.e. the
+  record edge lies within that scale's support of t.
+ 
+  ⚠ THIS IS WIDER THAN MATLAB'S coi (whose constant is 1.65, frame.coiConst) BY DESIGN.
+  Measured on the reference data: a page clipped at the record edge and the whole record extend the
+  signal differently there, and their coefficients differ up to ~one support in from
+  the edge -- well beyond MATLAB's e-folding cone. The label must cover what it names:
+  every tile where the boundary extension shows is inside this cone, and outside it the
+  paged and whole-record stores agree to 1e-6 (tests/tIngestPaged.m, notes).
+ 
+  Because it is a function of the record's edges only, the whole-record and the paged
+  reduce count the same nCoi -- a page's own edges are covered by its halo.
+ 
+  INPUTS:
+    nT, fs    record length and rate
+    frame     from rheome.ingest.bank (.support.timeTimesFc, .fmax)
+    fLowest   [nB x 1] lowest scale centre per band
+  OUTPUT:
+    inside    [nB x nT] logical
+ 
+  See also: rheome.ingest.bank, rheome.ingest.reduce, rheome.ingest.reducepaged
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

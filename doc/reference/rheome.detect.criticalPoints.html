@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.criticalPoints</title></head><body>
+<h1>rheome.detect.criticalPoints</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.CRITICALPOINTS  Classified critical points of an ambient source vector field.
+ 
+    cp = rheome.detect.criticalPoints(J, S)               % all types
+    cp = rheome.detect.criticalPoints(J, S, types)        % only the requested type(s)
+    cp = rheome.detect.criticalPoints(J, S, types, op)    % reuse a precomputed rheome.detect.operator(S)
+ 
+  The Dirac-connection route, chained end to end and per hemisphere:
+    1. rheome.operators.connection_laplacian  -&gt; Levi-Civita connection + vertex tangent frames
+    2. z = (J.e1) + i(J.e2)             -&gt; the complex tangent field
+    3. winding number per triangle      -&gt; integer TOPOLOGICAL CHARGE (Poincare-Hopf exact)
+    4. CLASSIFY each charge with the local divergence &amp; curl (rheome.differential.*): the winding is
+       +1 for a VORTEX and a SOURCE/SINK alike, so only div/curl tells them apart (validated
+       on analytic fields in detect_validate.m).
+ 
+  Type (from charge + local div/curl):
+    charge +1, |curl| &gt;  |div|         -&gt; 'vortex'   (rotation: centre / spiral)
+    charge +1, |curl| &lt;= |div|, div&gt;0  -&gt; 'source'
+    charge +1, |curl| &lt;= |div|, div&lt;0  -&gt; 'sink'
+    charge -1                          -&gt; 'saddle'
+ 
+  INPUTS:
+    J      [3nV x 1] ambient current; S surface (.Vertices, .Faces, .Hemi to split hemispheres)
+    types  which to return: a char ('vortex') or cellstr ({'vortex','saddle'}); also 'all'
+           (default) and 'node' (= source + sink). Case-insensitive.
+  ⚠⚠ THIS LOCALISES SINGULARITIES TO FACES, so it cannot confirm a singularity that was PRESCRIBED AT A
+  VERTEX. Direction-field design (rheome.flow.directionfield, Crane-Desbrun-Schroeder) plants index k_v at
+  vertices; such a singularity has zero winding on every individual triangle around that vertex while
+  carrying index k on the vertex LINK. Measured: with +1 prescribed at two vertices, the vertex-link
+  index reads +1 and 0 while this function puts 42 nonzero faces nowhere near either. ⭐ Validate a
+  DESIGNED field by its holonomy, which is exact; use this for a MEASURED field, which is what it is for.
+  ⚠ It also cannot report |charge| &gt; 1 -- the selection is `find(abs(q) == 1)` -- so a higher-order
+  defect comes back as +-1.
+ 
+    op     (optional) a precomputed rheome.detect.operator(S): the whole-surface face gradient + the
+           per-hemisphere connection Laplacian, built once and reused. Omit -&gt; built internally
+           (identical result). Pass it in per-frame loops to skip rebuilding the operators.
+ 
+  OUTPUT (struct cp, arrays [nc x 1] sorted by DESCENDING strength = max(|curl|,|div|)):
+    .pos [nc x 3]  .charge (+1/-1)  .type {cellstr}  .circulation (|curl|)  .divergence (signed)
+    .strength (max(|curl|,|div|))  .hemi  .chi [1 x nHemi]  (Poincare-Hopf check = Euler chi)
+ 
+  See also: rheome.operators.connection_laplacian, rheome.differential.divergence, rheome.differential.curl, detect_validate
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

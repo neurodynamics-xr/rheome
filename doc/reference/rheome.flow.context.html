@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.context</title></head><body>
+<h1>rheome.flow.context</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.CONTEXT  One-time precompute bundle for the fused flow kernels.
+    ctx = rheome.flow.context(name [,K [,Klbo [,opts]]])
+    ctx = rheome.flow.context(name, [], Klbo, struct('Method','dirac'))
+ 
+  ⭐⭐ THE SOURCE ESTIMATE IS A PLAIN MINIMUM NORM BY DEFAULT (opts.Method = 'mne'). The flow
+  quantities are differential operators applied to a current field, and the most basic current
+  field is the raw whitened minimum-norm estimate on the full unconstrained leadfield. The LBO
+  eigenbasis then enters AFTERWARDS, on the resulting scalar maps, purely as the analysis tool
+  that separates scales and sets the observation aperture. Those are two separate jobs and this
+  function keeps them separate.
+ 
+  ⚠ THIS DEFAULT CHANGED, AND EVERY DOWNSTREAM NUMBER MOVES WITH IT. It used to be the Dirac
+  route unconditionally. That put a SECOND, INVISIBLE band limit ahead of the analysis one:
+  projecting the leadfield onto K Dirac modes truncates the current before the inverse is even
+  solved. Measured on a reference subject at the pipeline defaults (400 modes/hemisphere both sides):
+ 
+      LBO analysis axis reaches   28.5 mm   (frame floor sigma &gt;= 14.0 mm, printed below)
+      Dirac current stops at      90.4 mm
+      -&gt; 3.2x mismatch
+ 
+  ⚠ &quot;STOPS AT&quot; DEPENDS ON THE DEFINITION, and the two in use here differ by 1.7x. The 90.4 mm
+  above was recorded without one; a per-mode calibration of the SAME cached basis
+  (alpha_dirac_scale_omega.m: project each Dirac mode's three ambient current components onto
+  the LBO basis, take the energy-weighted wavenumber centroid) puts the FINEST mode's own scale
+  at 52 mm, with 396 of the 800 modes resolving to one hemisphere and spanning 459 down to
+  52 mm. Those are different quantities -- the finest mode's scale is not the scale at which a
+  RECONSTRUCTION from all of them still carries fidelity, which is coarser and is plausibly
+  what 90.4 mm measured. Quote whichever the claim needs, and say which it is: a mismatch ratio
+  computed against the wrong one is wrong by that 1.7x.
+ 
+  ⚠ AND THE DIRAC SPECTRUM CARRIES NO LENGTH AXIS OF ITS OWN. Its eigenvalues run 0 to 9.5e-6
+  in the relative operator's units, arrive in groups of four (the quaternion structure), and
+  2*pi/sqrt(lambda) returns millions of millimetres; dbasis.Scales is [2 x 2], per-hemisphere
+  normalisation, not per mode. graphfilterbank therefore cannot be pointed at this basis --
+  it assumes the operator's own lambda IS the scale axis. Calibrate first.
+ 
+  so every aperture finer than ~90 mm was filtering structure the source estimate could not
+  represent, and nothing in the pipeline said so. 'mne' has no such hidden floor: the source
+  space is the full 3nV and the only band limit left is the analysis one, which IS reported.
+  Pass opts.Method = 'dirac' for the old behaviour -- it is a legitimate alternative, with a
+  geometry-aware prior, but it is not the baseline and it must be asked for.
+ 
+  ⚠ K IS THE DIRAC MODE COUNT (Method='dirac' only); Klbo IS THE LBO ONE. They are independent,
+  and it is Klbo that sets
+  the lambda axis every scale, size and speed is read off. Leaving Klbo empty takes whatever the
+  richest cached LBO basis happens to be -- fine while exploring, NOT fine for a result, because
+  the thing that changes is sigma and nothing announces it. Pass Klbo to pin it.
+ 
+  Runs the Dirac source mapping in AMPLITUDE measure (physical current A.m, the right
+  quantity for flow), reconstructs the field kernel currentKernel = rheome.forward.reconstruct(diracInverse, dbasis),
+  and assembles the shared operators (face_gradient) and Laplace–Beltrami eigenbasis used by the
+  potentials. The LBO eigenbasis is LOADED from the cached per-hemisphere bases (rheome.load.bases) and
+  assembled block-diagonally -- NO eigensolve. `name` is a cached dataset name (see rheome.import.dataset,
+  rheome.import.bases); the source mapping is loaded/computed via rheome.source.dirac. Build this ONCE and reuse
+  it across the rheome.flow.* builders.
+ 
+  OUTPUT (struct ctx):
+    .currentKernel [3V x C]  the source estimate every flow kernel is built from (amplitude, A.m)
+    .Method  'mne' | 'dirac'                         .ImagingKernel [3V x C] same, as returned
+    .diracInverse [P x C] / .dbasis                  EMPTY unless Method = 'dirac'
+    .S surface   .fg face_gradient bundle            .lbo (.Phi [V x Ks], .Lambda [Ks x 1])
+    .F [C x nT] selected MEG data   .sfreq   .iSel selected channel rows   .chNames {1 x C}
+    .V nVert   .C nChan(sel)   .P nModes   .Ks LBO modes used by the potentials
+ 
+  See also: rheome.source.dirac, rheome.inverse.dirac, rheome.forward.reconstruct, rheome.operators.face_gradient
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

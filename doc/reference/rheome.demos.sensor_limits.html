@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.demos.sensor_limits</title></head><body>
+<h1>rheome.demos.sensor_limits</h1>
+<p><em>function rheome.demos</em> &mdash; Rheome</p>
+<pre>  DEMOS.SENSOR_LIMITS  Which wavelengths does each array admit? Predicted, then verified.
+ 
+    rheome.demos.sensor_limits()
+    out = rheome.demos.sensor_limits('_figures')
+ 
+    1 windows   the admitted band per array, in millimetres of sensor separation
+    2 sweep     planted wavelength against recovered, until measurement fails
+    3 oblique   a wave crossing a probe at angle theta, read as k*cos(theta)
+    4 topology  which arrays carry a winding number at all
+ 
+  ⭐ THE WINDOW IS PREDICTED BEFORE ANY SIGNAL EXISTS. Figure 1 comes from coordinates
+  alone: 2*pitch at the bottom, aperture at the top. Figure 2 then plants waves and sweeps
+  across both edges until recovery breaks, so the bars in figure 1 are TESTED rather than
+  drawn.
+ 
+  ⭐ WAVELENGTH IS RECOVERED SPECTRALLY, WHICH IS WHY THE PROBE APPEARS AT ALL. The route
+  here is lambda_hat -&gt; k = sqrt(lambda_hat/alpha), which needs the operator and nothing
+  else -- no faces, no triangulation. So the probe is measured by the same code as the
+  grids, and where it differs it differs for a stated reason rather than a missing branch.
+ 
+  ⭐ THE PROBE'S TWO LIMITS ARE DIFFERENT IN KIND, and figures 3 and 4 separate them.
+  Figure 3: a wave crossing at theta projects, so the probe reads k*cos(theta) -- a longer
+  apparent wavelength and a faster apparent speed, biased and uncorrectable from the probe
+  alone. Figure 4: a winding number is summed around a face (a 2-cell), and a chain admits
+  no faces, so it is not a hard measurement on it, it is an undefined one.
+ 
+  ⚠ EVERY LENGTH IS SENSOR SEPARATION, and nothing here is a claim about sources.
+ 
+  INPUTS:
+    outDir  '' for screen, or a folder for PNGs
+  OUTPUT:
+    out  .ok .checks .arrays .win .sweep .obliqueK .obliqueTheta
+ 
+  See also: rheome.demos.sensor_graph, rheome.sensors.window, rheome.sensors.calibrate
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

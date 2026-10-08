@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.vortexbank</title></head><body>
+<h1>rheome.flow.vortexbank</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.VORTEXBANK  A dictionary of vortex atoms in SENSOR space, for decomposing a band.
+ 
+    bank = rheome.flow.vortexbank('sub01')
+    bank = rheome.flow.vortexbank(name, Locations=80, Scales=[70 140 267], Band=[8 16])
+ 
+  Forwards a grid of rheome.flow.vortexatom spatial factors through the leadfield once, so that matching
+  a record costs two [nCh x nT] products and no per-atom synthesis. Each atom keeps its rank-two
+  structure: the sensor signature is pA*a(t) + pB*b(t), and rheome.flow.vortexmatch marginalises the
+  temporal phase analytically rather than by searching it.
+ 
+  ⭐⭐ WHAT THIS DICTIONARY CAN AND CANNOT SETTLE, measured at SNR 3 against real empty-room noise
+  (docs/2026-09-26-feature-table-design.md section 32):
+    LOCATION   ⭐ grid-limited, not noise-limited. An off-grid vortex is matched to the nearest
+               atom with 0.0 mm of excess error over the grid's own best, at 31 mm spacing. Refine
+               the grid and the answer refines with it.
+    PRESENCE   ⭐ decisive. Best match energy is 0.90 of the data energy for a planted vortex and
+               0.0001 for empty-room noise alone -- a ratio of 9299.
+    SCALE      ⚠ nearly degenerate. Atoms at ONE location but different scales have mutual
+               coherence 0.840, against 0.211 for different locations at one scale, and a planted
+               100 mm vortex is reported as 70 mm 40% of the time and 140 mm 60%. It brackets; it
+               does not resolve.
+    ROTATION   ⚠⚠ NOT SETTLED BY MATCH ENERGY. Over 40 locations the rotating field scores a very
+               tight 0.900 (range 0.899-0.901) while a STANDING one scores 0.697 with a range of
+               0.232 to 0.885, so the per-location ratio runs 1.02 to 3.87 with a median of 1.29
+               and 28 of 40 locations below 1.5. Any focal alpha field projects heavily onto the
+               nearest atom's two-dimensional span, so high match energy means focal and located,
+               NOT rotating. ⚠ Because the spread is so wide, a single seed proves nothing either
+               way. ⭐ Use rheome.flow.vortexmatch's .icoh, which separated rotating from standing at
+               every one of the 40 locations -- though by less than the headline suggests: worst
+               rotating 0.080 against best standing 0.023.
+ 
+  ⚠ Phase-invariant matching cannot separate a source from a vortex, and this is structural rather
+    than a choice of statistic: at winding 1 an in-plane rotation IS a temporal phase shift
+    (section 30), so the Helmholtz phase and the temporal phase are the same dial. Marginalising
+    one marginalises the other. Only the SIGN of the rotation escapes, which is why .icoh exists.
+  ⚠ And the sign escapes only if the location is pinned: on a coarse grid .icoh's sign is right
+    62% of the time and wrong DETERMINISTICALLY per site, because an off-grid atom's quadrature
+    frame is rotated against the truth's (section 54). Handedness is present in the data -- exact
+    templates classify it 100% at SNR 3, with cos(B+,B-) a median -0.225 -- so what loses it is
+    this dictionary's spatial resolution, not the array.
+ 
+  INPUTS
+    Locations  number of seed vertices by farthest-point sampling, or an explicit vector (40)
+    Scales     wavelengths in mm ([70 140 267])
+    Winding    m (1)                         Band  [8 16]
+    Duration   seconds (4)                   SampleRate  Hz (300)
+    Hemi (&quot;L&quot;)   Bases   Gauge   Study (a rheome.load.study output)   Verbose (true)
+ 
+  OUTPUT (struct bank)
+    .PA .PB  [nCh x N]  the forwarded quadrature pair per atom
+    .a .b    [1 x nT]   the shared temporal factor     .n0 .n1  [N x 1] atom norms
+    .vertex .scaleMM [N x 1]   .fc .band .nT .fs .chan
+ 
+  See also: rheome.flow.vortexmatch, rheome.flow.vortexatom, rheome.flow.seedvortex, rheome.forward.leadfield
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

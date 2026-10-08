@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.operators.lb_connectome</title></head><body>
+<h1>rheome.operators.lb_connectome</h1>
+<p><em>function rheome.operators</em> &mdash; Rheome</p>
+<pre>  OPERATORS.LB_CONNECTOME  Laplace-Beltrami bridged by the structural connectome (whole brain).
+ 
+    [A, B, gamma] = rheome.operators.lb_connectome(S, W, keep)
+ 
+  The combined whole-brain operator: the per-hemisphere cotan Laplace-Beltrami stiffness K
+  (local geometry) bridged across hemispheres by the connectome graph Laplacian D-W (long-range
+  fiber connectivity),
+      A = K + gamma*(D - W),   B = M            (M = LBO Galerkin mass)
+  with gamma chosen scale-portably so the connectome term sits at the K diagonal scale
+      gamma = mean|diag K| / mean|diag(D-W)|.
+  Low eigenmodes (rheome.eigen.modes(A,B,K)) respect BOTH cortical geometry and the connectome; lifting
+  them to quaternions (rheome.eigen.lift) gives the Dirac-Connectome vector basis. Faithful port of
+  tess_operators / local_build_connectome_operator ('LB-Connectome').
+ 
+  INPUTS:
+    S     surface struct (.Vertices .Faces .nV .Hemi) -- the hemisphere split builds block-diagonal K,M
+    W     [nV x nV] connectome weights (rheome.operators.connectome);  keep  its largest-CC indices
+ 
+  OUTPUTS:
+    A     [nV x nV] combined stiffness K + gamma*(D-W)
+    B     [nV x nV] Galerkin mass M (block-diagonal per hemisphere)
+    gamma scalar connectome/LBO balance factor
+ 
+  See also: rheome.operators.connectome, rheome.operators.laplace_beltrami, rheome.eigen.modes, eigen.dirac
+ 
+  Author: Diellor Basha, 2026 (port of tess_operators 'LB-Connectome')
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

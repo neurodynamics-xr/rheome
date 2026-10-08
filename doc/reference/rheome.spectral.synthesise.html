@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.spectral.synthesise</title></head><body>
+<h1>rheome.spectral.synthesise</h1>
+<p><em>function rheome.spectral</em> &mdash; Rheome</p>
+<pre>  SPECTRAL.SYNTHESISE  Synthesise real time series with a prescribed 1/f-like background.
+ 
+    X = rheome.spectral.synthesise(nT, fs, chi)
+    X = rheome.spectral.synthesise(nT, fs, chi, opts)
+ 
+  Draws circular complex white noise, shapes it by the specparam aperiodic model, forces
+  Hermitian symmetry and inverse-transforms. The result is the synthesis counterpart of
+  rheome.spectral.aperiodic: fitting the output reproduces the chi that went in.
+ 
+  MODEL (matching rheome.spectral.aperiodic's knee form)
+    S(f) = 1 / (k + f^chi)                    k = 0 gives the plain power law
+ 
+  INPUTS:
+    nT    scalar   samples per series
+    fs    scalar   sampling rate (Hz)
+    chi   scalar   aperiodic exponent
+    opts  .knee    k (default 0)
+          .nS      number of series, one per ROW of X (default 1)
+          .power   [nS x 1] in-band power to match, or [] to return unit-variance rows
+                   matched EXACTLY, on the realisation, by Parseval -- not in expectation
+          .band    [fmin fmax] the band .power refers to (default [1 fs/2])
+          .shape   [nF x 1] LINEAR power to reproduce, in place of the chi/knee model
+          .shapeF  [nF x 1] the frequencies .shape is given at (Hz, strictly positive)
+ 
+  OUTPUT:
+    X     [nS x nT] real series, rows independent
+ 
+  ⚠ The Hermitian mirror is load-bearing. Without it ifft returns a complex series, and
+    taking real() of an unmirrored draw halves the variance at every non-DC bin -- the
+    spectrum keeps its SHAPE, so chi still fits, and only the power is silently wrong.
+    DC and, for even nT, Nyquist must be real for the same reason.
+ 
+  ⭐⭐ .shape REPRODUCES A MEASURED CURVE INSTEAD OF A MODEL, which is what to use when the model
+    is pinned at a bound. rheome.spectral.aperiodic searches the knee on `[0, 10.^(-2:0.5:3)]`, so a knee
+    of exactly 1000 means the grid ran out rather than the fit converging -- real MEG sensor data
+    does that -- and a background synthesised from those parameters is then not free to match the
+    low end. Passing the fitted curve itself as .shape sidesteps the parameterisation entirely.
+    Interpolation is log-log and the end values are HELD outside [min(shapeF), max(shapeF)], so
+    the shape must span every band that will be read back.
+ 
+  ⚠ .power is the realised in-band power, so it is matched exactly. The inline version in
+    synth_background_omega.m instead set each mode's TOTAL variance to its in-band power,
+    which under-fills the band; prefer this one.
+ 
+  ⭐ Shape and level are set independently: chi and knee fix the shape, opts.power fixes the
+    level. Synthesising a background to sit under planted activity needs both.
+ 
+  See also: rheome.spectral.aperiodic, rheome.spectral.gains, rheome.spectral.decompose
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

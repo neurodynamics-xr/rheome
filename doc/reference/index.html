@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Rheome reference</title></head><body>
+<h1>Rheome reference</h1>
+<h2>Classes</h2>
+<ul>
+<li><a href="rheome.flowbrowser.html">rheome.flowbrowser</a> &mdash; Interactive browser for the band- and scale-resolved cortical flow.</li>
+<li><a href="rheome.flowfeatures.html">rheome.flowfeatures</a> &mdash; Windowed, band- and scale-stratified tabulation of the cortical flow tensor.</li>
+<li><a href="rheome.flowpage.html">rheome.flowpage</a> &mdash; One band, one page: the LBO coefficients of the cortical vorticity.</li>
+<li><a href="rheome.graphfilterbank.html">rheome.graphfilterbank</a> &mdash; Spectral filterbank on a self-adjoint operator.</li>
+<li><a href="rheome.jointfilterbank.html">rheome.jointfilterbank</a> &mdash; Filterbank on the joint time-vertex plane (lambda, omega).</li>
+<li><a href="rheome.pagedrecording.html">rheome.pagedrecording</a> &mdash; A long sensor recording read one time page at a time.</li>
+<li><a href="rheome.recordingbrowser.html">rheome.recordingbrowser</a> &mdash; Look at a stored recording through its pyramid, before loading any of it.</li>
+<li><a href="rheome.timefilterbank.html">rheome.timefilterbank</a> &mdash; A designed constant-Q tight frame on the frequency axis, evaluated per member at its own rate.</li>
+</ul>
+<h2>rheome.connectome</h2>
+<ul>
+<li><a href="rheome.connectome.build_hcp_template.html">rheome.connectome.build_hcp_template</a> &mdash; One-time extraction of the HCP-1065 template into hcp_template.mat.</li>
+<li><a href="rheome.connectome.resolve.html">rheome.connectome.resolve</a> &mdash; CONNECTOME.RESOLVE  Resolve the structural-connectome fiber source for a subject, with provenance.</li>
+</ul>
+<h2>rheome.demos</h2>
+<ul>
+<li><a href="rheome.demos.fbd_selftest.html">rheome.demos.fbd_selftest</a> &mdash; DEMOS.FBD_SELFTEST  Reach the private demo helpers from the test suite.</li>
+<li><a href="rheome.demos.filterbank_cwt.html">rheome.demos.filterbank_cwt</a> &mdash; DEMOS.FILTERBANK_CWT  What a filterbank's parameters do, on MATLAB's validated class.</li>
+<li><a href="rheome.demos.filterbank_graph.html">rheome.demos.filterbank_graph</a> &mdash; DEMOS.FILTERBANK_GRAPH  graphfilterbank, in the same five figures as the CWT demo.</li>
+<li><a href="rheome.demos.filterbank_joint.html">rheome.demos.filterbank_joint</a> &mdash; DEMOS.FILTERBANK_JOINT  jointfilterbank, in the same five figures as the other two.</li>
+<li><a href="rheome.demos.laplace_beltrami.html">rheome.demos.laplace_beltrami</a> &mdash; DEMOS.LAPLACE_BELTRAMI  Read a Brainstorm cortex and build/validate the LBO.</li>
+<li><a href="rheome.demos.sensor_dynamics.html">rheome.demos.sensor_dynamics</a> &mdash; DEMOS.SENSOR_DYNAMICS  What a moving pattern looks like on an array, and in its spectrum.</li>
+<li><a href="rheome.demos.sensor_dynamics_selftest.html">rheome.demos.sensor_dynamics_selftest</a> &mdash; DEMOS.SENSOR_DYNAMICS_SELFTEST  Reach sensor_dynamics's local helpers from the test suite.</li>
+<li><a href="rheome.demos.sensor_graph.html">rheome.demos.sensor_graph</a> &mdash; DEMOS.SENSOR_GRAPH  From sensor coordinates to a calibrated operator, in five figures.</li>
+<li><a href="rheome.demos.sensor_limits.html">rheome.demos.sensor_limits</a> &mdash; DEMOS.SENSOR_LIMITS  Which wavelengths does each array admit? Predicted, then verified.</li>
+<li><a href="rheome.demos.sensor_phase.html">rheome.demos.sensor_phase</a> &mdash; DEMOS.SENSOR_PHASE  Instantaneous phase across an array, and what its gradient measures.</li>
+<li><a href="rheome.demos.sensor_tensor.html">rheome.demos.sensor_tensor</a> &mdash; DEMOS.SENSOR_TENSOR  The joint wavelet tensor: aperture, rate, and dispersion as controls.</li>
+<li><a href="rheome.demos.sensor_topology.html">rheome.demos.sensor_topology</a> &mdash; DEMOS.SENSOR_TOPOLOGY  Divergence and curl of the phase gradient -- and what they classify.</li>
+<li><a href="rheome.demos.sensor_wavelets.html">rheome.demos.sensor_wavelets</a> &mdash; DEMOS.SENSOR_WAVELETS  Scale, rate and speed: three controls, for GENERATION and ANALYSIS.</li>
+<li><a href="rheome.demos.wavelet.html">rheome.demos.wavelet</a> &mdash; DEMOS.WAVELET  Localize spectral filters as atoms on the cortical surface.</li>
+</ul>
+<h2>rheome.detect</h2>
+<ul>
+<li><a href="rheome.detect.blobscale.html">rheome.detect.blobscale</a> &mdash; DETECT.BLOBSCALE  The characteristic SIZE of structure in a cortical field, by scale selection.</li>
+<li><a href="rheome.detect.chargedensity.html">rheome.detect.chargedensity</a> &mdash; DETECT.CHARGEDENSITY  Topological charge of a phase field, at a chosen spatial aperture.</li>
+<li><a href="rheome.detect.chirality.html">rheome.detect.chirality</a> &mdash; DETECT.CHIRALITY  Annotate tracked ridges with the handedness of the field they sit in.</li>
+<li><a href="rheome.detect.criticalPoints.html">rheome.detect.criticalPoints</a> &mdash; DETECT.CRITICALPOINTS  Classified critical points of an ambient source vector field.</li>
+<li><a href="rheome.detect.occupancy.html">rheome.detect.occupancy</a> &mdash; DETECT.OCCUPANCY  A dyadic pyramid of on/off occupancy: how long a state lasts, at every scale.</li>
+<li><a href="rheome.detect.onsetspread.html">rheome.detect.onsetspread</a> &mdash; DETECT.ONSETSPREAD  How a burst's ONSET spreads across tiles: slowness from half-rise times.</li>
+<li><a href="rheome.detect.onstate.html">rheome.detect.onstate</a> &mdash; DETECT.ONSTATE  Binary on/off state of an amplitude series from the bimodality of its log.</li>
+<li><a href="rheome.detect.operator.html">rheome.detect.operator</a> &mdash; DETECT.OPERATOR  Precompute the (mesh-only) operators the detectors reuse across frames.</li>
+<li><a href="rheome.detect.peaks.html">rheome.detect.peaks</a> &mdash; DETECT.PEAKS  Local maxima of a scalar map on a mesh, per frame, with height, width and value.</li>
+<li><a href="rheome.detect.phasesingularity.html">rheome.detect.phasesingularity</a> &mdash; DETECT.PHASESINGULARITY  Topological charge of a complex SCALAR field's phase.</li>
+<li><a href="rheome.detect.ridges.html">rheome.detect.ridges</a> &mdash; DETECT.RIDGES  Scale-space ridge tracking: detection, size and continuity from one volume.</li>
+<li><a href="rheome.detect.risefall.html">rheome.detect.risefall</a> &mdash; DETECT.RISEFALL  Where an amplitude episode switches on and off: a double-sigmoid fit.</li>
+<li><a href="rheome.detect.spindle.html">rheome.detect.spindle</a> &mdash; DETECT.SPINDLE  Sleep spindles from the band envelope, with duration gating.</li>
+<li><a href="rheome.detect.tilepath.html">rheome.detect.tilepath</a> &mdash; DETECT.TILEPATH  Track-before-detect on the tile graph: the best-scoring walk through a window.</li>
+<li><a href="rheome.detect.tilepathnull.html">rheome.detect.tilepathnull</a> &mdash; DETECT.TILEPATHNULL  Baseline and score threshold for rheome.detect.tilepath from null windows.</li>
+<li><a href="rheome.detect.tilepeaks.html">rheome.detect.tilepeaks</a> &mdash; DETECT.TILEPEAKS  Peaks of a tile-level field: tiles whose value beats every adjacent tile.</li>
+<li><a href="rheome.detect.tiletrack.html">rheome.detect.tiletrack</a> &mdash; DETECT.TILETRACK  Link tile peaks across frames into trajectories: walks on the tile graph.</li>
+<li><a href="rheome.detect.track.html">rheome.detect.track</a> &mdash; DETECT.TRACK  Track flow critical points across time into trajectories (Lagrangian view).</li>
+<li><a href="rheome.detect.tracknull.html">rheome.detect.tracknull</a> &mdash; DETECT.TRACKNULL  Selection thresholds from tracks found in NOISE ALONE.</li>
+<li><a href="rheome.detect.trackselect.html">rheome.detect.trackselect</a> &mdash; DETECT.TRACKSELECT  Keep the trajectories that beat the noise-only null.</li>
+<li><a href="rheome.detect.trackstats.html">rheome.detect.trackstats</a> &mdash; DETECT.TRACKSTATS  Per-track features of a tile trajectory: how long, how far, how straight.</li>
+<li><a href="rheome.detect.vortex.html">rheome.detect.vortex</a> &mdash; DETECT.VORTEX  Physical properties of the vortices in a source vector field.</li>
+</ul>
+<h2>rheome.differential</h2>
+<ul>
+<li><a href="rheome.differential.curl.html">rheome.differential.curl</a> &mdash; DIFFERENTIAL.CURL  Surface curl (scalar vorticity) of an ambient source vector field.</li>
+<li><a href="rheome.differential.diracparts.html">rheome.differential.diracparts</a> &mdash; DIFFERENTIAL.DIRACPARTS  Curl, divergence and normal gradient of a field, read off the intrinsic Dirac.</li>
+<li><a href="rheome.differential.divergence.html">rheome.differential.divergence</a> &mdash; DIFFERENTIAL.DIVERGENCE  Surface divergence of an ambient source vector field.</li>
+<li><a href="rheome.differential.helmholtz.html">rheome.differential.helmholtz</a> &mdash; DIFFERENTIAL.HELMHOLTZ  Helmholtz-Hodge decomposition of an ambient source vector field.</li>
+<li><a href="rheome.differential.helmholtzbands.html">rheome.differential.helmholtzbands</a> &mdash; DIFFERENTIAL.HELMHOLTZBANDS  Source and vortex content of a field, band by band, via its potentials.</li>
+<li><a href="rheome.differential.poisson.html">rheome.differential.poisson</a> &mdash; DIFFERENTIAL.POISSON  Solve the surface Poisson equation  K phi = M f  (mean-zero).</li>
+</ul>
+<h2>rheome.domain</h2>
+<ul>
+<li><a href="rheome.domain.elements.html">rheome.domain.elements</a> &mdash; DOMAIN.ELEMENTS  How many elements of a rank a domain has.</li>
+<li><a href="rheome.domain.index.html">rheome.domain.index</a> &mdash; DOMAIN.INDEX  A one-dimensional index domain: time, frequency, or an eigenmode axis.</li>
+<li><a href="rheome.domain.kinds.html">rheome.domain.kinds</a> &mdash; DOMAIN.KINDS  The controlled vocabulary of domains, and which element ranks each has.</li>
+<li><a href="rheome.domain.of.html">rheome.domain.of</a> &mdash; DOMAIN.OF  A domain descriptor for a mesh, a graph or a point set: what it is, how big, whose.</li>
+<li><a href="rheome.domain.product.html">rheome.domain.product</a> &mdash; DOMAIN.PRODUCT  A joint manifold: a domain crossed with an index line.</li>
+<li><a href="rheome.domain.same.html">rheome.domain.same</a> &mdash; DOMAIN.SAME  Are two fields on the same domain? Ids for simple domains, factors and conventions</li>
+</ul>
+<h2>rheome.dynamics</h2>
+<ul>
+<li><a href="rheome.dynamics.dispersion.html">rheome.dynamics.dispersion</a> &mdash; DYNAMICS.DISPERSION  Empirical dispersion relation omega(lambda) from a DMD result.</li>
+<li><a href="rheome.dynamics.dmd.html">rheome.dynamics.dmd</a> &mdash; DYNAMICS.DMD  Reduced-rank Dynamic Mode Decomposition of a coefficient time series.</li>
+<li><a href="rheome.dynamics.flow_readout.html">rheome.dynamics.flow_readout</a> &mdash; DYNAMICS.FLOW_READOUT  GCF readouts of a propagation velocity field.</li>
+<li><a href="rheome.dynamics.mode_coefficients.html">rheome.dynamics.mode_coefficients</a> &mdash; DYNAMICS.MODE_COEFFICIENTS  Reduced-order coefficient time series for the dynamics fits.</li>
+<li><a href="rheome.dynamics.opticalflow_scalar.html">rheome.dynamics.opticalflow_scalar</a> &mdash; DYNAMICS.OPTICALFLOW_SCALAR  Manifold Horn-Schunck optical flow of a scalar activity map.</li>
+<li><a href="rheome.dynamics.opticalflow_vector.html">rheome.dynamics.opticalflow_vector</a> &mdash; DYNAMICS.OPTICALFLOW_VECTOR  Vector optical flow of an unconstrained current field.</li>
+<li><a href="rheome.dynamics.pde_fit.html">rheome.dynamics.pde_fit</a> &mdash; DYNAMICS.PDE_FIT  Fit the per-mode temporal dynamics to candidate PDEs (the model-based law).</li>
+<li><a href="rheome.dynamics.tangent_basis.html">rheome.dynamics.tangent_basis</a> &mdash; DYNAMICS.TANGENT_BASIS  Per-vertex orthonormal tangent frame from the vertex normals.</li>
+</ul>
+<h2>rheome.eigen</h2>
+<ul>
+<li><a href="rheome.eigen.connectome.html">rheome.eigen.connectome</a> &mdash; EIGEN.CONNECTOME  Low eigenmodes of a normalized connectome Laplacian (normalized-adjacency trick).</li>
+<li><a href="rheome.eigen.dirac_frame.html">rheome.eigen.dirac_frame</a> &mdash; EIGEN.DIRAC_FRAME  Per-hemisphere eigenbasis of the relative Dirac.</li>
+<li><a href="rheome.eigen.lift.html">rheome.eigen.lift</a> &mdash; EIGEN.LIFT  Lift a scalar eigenbasis to an ambient (flat) quaternion Dirac basis.</li>
+<li><a href="rheome.eigen.modes.html">rheome.eigen.modes</a> &mdash; EIGEN.MODES  Smallest Laplace-Beltrami eigenmodes as an M-orthonormal basis.</li>
+<li><a href="rheome.eigen.smallest.html">rheome.eigen.smallest</a> &mdash; EIGEN.SMALLEST  k smallest generalized eigenpairs of a (near-)singular symmetric/Hermitian pencil.</li>
+</ul>
+<h2>rheome.fieldtype</h2>
+<ul>
+<li><a href="rheome.fieldtype.components.html">rheome.fieldtype.components</a> &mdash; FIELDTYPE.COMPONENTS  Scalars per element of a field type.</li>
+<li><a href="rheome.fieldtype.describe.html">rheome.fieldtype.describe</a> &mdash; FIELDTYPE.DESCRIBE  One row of the registry, as a struct, by id.</li>
+<li><a href="rheome.fieldtype.matches.html">rheome.fieldtype.matches</a> &mdash; FIELDTYPE.MATCHES  Are two field types structurally the same?</li>
+<li><a href="rheome.fieldtype.registry.html">rheome.fieldtype.registry</a> &mdash; FIELDTYPE.REGISTRY  Every kind of field this system can carry, as data.</li>
+<li><a href="rheome.fieldtype.validate.html">rheome.fieldtype.validate</a> &mdash; FIELDTYPE.VALIDATE  Does this array hold a field of this type on this domain?</li>
+</ul>
+<h2>rheome.filters</h2>
+<ul>
+<li><a href="rheome.filters.apply.html">rheome.filters.apply</a> &mdash; FILTERS.APPLY  Spectral filtering on the surface:  Y = Phi * (g(lambda) .* (Phi' M X)).</li>
+<li><a href="rheome.filters.bandlimit.html">rheome.filters.bandlimit</a> &mdash; FILTERS.BANDLIMIT  Temporal band-pass + rate matching, with a DECLARED transfer function.</li>
+<li><a href="rheome.filters.bandpass.html">rheome.filters.bandpass</a> &mdash; FILTERS.BANDPASS  Gaussian temporal band-pass gain on the joint-frequency axis.</li>
+<li><a href="rheome.filters.dampedwave.html">rheome.filters.dampedwave</a> &mdash; FILTERS.DAMPEDWAVE  Damped wave kernel (eigenmode x time, 'ts' domain).</li>
+<li><a href="rheome.filters.diffgauss.html">rheome.filters.diffgauss</a> &mdash; FILTERS.DIFFGAUSS  Difference-of-Gaussians band-pass  g(lambda) = exp(-t1*lambda) - exp(-t2*lambda).</li>
+<li><a href="rheome.filters.diffusion.html">rheome.filters.diffusion</a> &mdash; FILTERS.DIFFUSION  Physical-time heat kernel (eigenmode x time, 'ts' domain).</li>
+<li><a href="rheome.filters.firbandpass.html">rheome.filters.firbandpass</a> &mdash; FILTERS.FIRBANDPASS  Linear-phase FIR bandpass with a DECLARED transition band.</li>
+<li><a href="rheome.filters.frame.html">rheome.filters.frame</a> &mdash; FILTERS.FRAME  Design a spectral-graph wavelet FRAME (filterbank) that tiles the spectrum.</li>
+<li><a href="rheome.filters.frame_analysis.html">rheome.filters.frame_analysis</a> &mdash; FILTERS.FRAME_ANALYSIS  Wavelet-frame analysis: a field -&gt; its multi-scale coefficients.</li>
+<li><a href="rheome.filters.frame_bounds.html">rheome.filters.frame_bounds</a> &mdash; FILTERS.FRAME_BOUNDS  Frame bounds A, B and tightness B/A over the eigenvalues.</li>
+<li><a href="rheome.filters.frame_gains.html">rheome.filters.frame_gains</a> &mdash; FILTERS.FRAME_GAINS  Evaluate a frame's member gains on eigenvalues -&gt; H [K x M].</li>
+<li><a href="rheome.filters.frame_localize.html">rheome.filters.frame_localize</a> &mdash; FILTERS.FRAME_LOCALIZE  Wavelet-frame analysis starting from COEFFICIENTS, not from a field.</li>
+<li><a href="rheome.filters.frame_scalogram.html">rheome.filters.frame_scalogram</a> &mdash; FILTERS.FRAME_SCALOGRAM  Per-scale energy of a field over time (a spectral-graph scalogram).</li>
+<li><a href="rheome.filters.frame_synthesis.html">rheome.filters.frame_synthesis</a> &mdash; FILTERS.FRAME_SYNTHESIS  Wavelet-frame synthesis: multi-scale coefficients -&gt; field.</li>
+<li><a href="rheome.filters.gabor.html">rheome.filters.gabor</a> &mdash; FILTERS.GABOR  Spatiotemporal Gabor packet (eigenmode x frequency, 'js' domain).</li>
+<li><a href="rheome.filters.heat.html">rheome.filters.heat</a> &mdash; FILTERS.HEAT  Heat / diffusion low-pass kernel  g(lambda) = exp(-t * lambda).</li>
+<li><a href="rheome.filters.ijspectrum.html">rheome.filters.ijspectrum</a> &mdash; FILTERS.IJSPECTRUM  Inverse joint transform: joint coefficients -&gt; mode series.</li>
+<li><a href="rheome.filters.impulse.html">rheome.filters.impulse</a> &mdash; FILTERS.IMPULSE  Space-time impulse response of a joint filter at a vertex delta.</li>
+<li><a href="rheome.filters.joint_scalogram.html">rheome.filters.joint_scalogram</a> &mdash; FILTERS.JOINT_SCALOGRAM  Energy over SPATIAL SCALE x TEMPORAL FREQUENCY.</li>
+<li><a href="rheome.filters.jspectrum.html">rheome.filters.jspectrum</a> &mdash; FILTERS.JSPECTRUM  Joint eigenmode-frequency spectrum of a mode-coefficient series.</li>
+<li><a href="rheome.filters.jtv.html">rheome.filters.jtv</a> &mdash; FILTERS.JTV  Evaluate a kernel into the joint-spectral (eigenmode x frequency) grid.</li>
+<li><a href="rheome.filters.kleingordon.html">rheome.filters.kleingordon</a> &mdash; FILTERS.KLEINGORDON  Massive (Klein-Gordon) wave kernel (eigenmode x time, 'ts').</li>
+<li><a href="rheome.filters.localize.html">rheome.filters.localize</a> &mdash; FILTERS.LOCALIZE  Localize a filter (bank) at cortical vertices -&gt; atoms.</li>
+<li><a href="rheome.filters.mexhat.html">rheome.filters.mexhat</a> &mdash; FILTERS.MEXHAT  Mexican-hat band-pass wavelet  g(lambda) = (t*lambda) .* exp(-t*lambda).</li>
+<li><a href="rheome.filters.psitime.html">rheome.filters.psitime</a> &mdash; FILTERS.PSITIME  The temporal band member psi_time(omega) -- a raised-cosine band-pass.</li>
+<li><a href="rheome.filters.resonator.html">rheome.filters.resonator</a> &mdash; FILTERS.RESONATOR  Damped harmonic resonator (eigenmode x frequency, 'js' domain).</li>
+<li><a href="rheome.filters.scatter.html">rheome.filters.scatter</a> &mdash; FILTERS.SCATTER  Graph wavelet scattering: |W| cascaded through the frame, then pooled.</li>
+<li><a href="rheome.filters.schrodinger.html">rheome.filters.schrodinger</a> &mdash; FILTERS.SCHRODINGER  Free-particle propagator on the graph (eigenmode x time, 'ts' domain).</li>
+<li><a href="rheome.filters.sphere_kernel.html">rheome.filters.sphere_kernel</a> &mdash; FILTERS.SPHERE_KERNEL  Analytic response of a spectral filter on the unit sphere.</li>
+<li><a href="rheome.filters.spin.html">rheome.filters.spin</a> &mdash; FILTERS.SPIN  Rotate a vector field by a POSITION-DEPENDENT quaternion, by conjugation.</li>
+<li><a href="rheome.filters.steer.html">rheome.filters.steer</a> &mdash; FILTERS.STEER  Steer a Dirac quaternion field by RIGHT quaternion multiplication.</li>
+<li><a href="rheome.filters.stmatern.html">rheome.filters.stmatern</a> &mdash; FILTERS.STMATERN  Spatiotemporal Whittle-Matern joint filter (the 1/f background).</li>
+<li><a href="rheome.filters.toquat.html">rheome.filters.toquat</a> &mdash; FILTERS.TOQUAT  Physical 3-vector -&gt; pure quaternion Dirac field (real part w = 0).</li>
+<li><a href="rheome.filters.tovec.html">rheome.filters.tovec</a> &mdash; FILTERS.TOVEC  Full-quaternion Dirac field -&gt; physical 3-vector (drop the real w part).</li>
+<li><a href="rheome.filters.travwave.html">rheome.filters.travwave</a> &mdash; FILTERS.TRAVWAVE  Joint traveling-wave filter: energy on the dispersion ridge.</li>
+<li><a href="rheome.filters.wave.html">rheome.filters.wave</a> &mdash; FILTERS.WAVE  Wave propagation kernel (eigenmode x time, 'ts' domain).</li>
+</ul>
+<h2>rheome.flow</h2>
+<ul>
+<li><a href="rheome.flow.activation.html">rheome.flow.activation</a> &mdash; FLOW.ACTIVATION  A current field reduced to a scalar activation map, for optical flow.</li>
+<li><a href="rheome.flow.alphastates.html">rheome.flow.alphastates</a> &mdash; FLOW.ALPHASTATES  Query the alpha labels: states of one class in one hemisphere, with their episodes.</li>
+<li><a href="rheome.flow.apparent.html">rheome.flow.apparent</a> &mdash; FLOW.APPARENT  Apparent motion of an activation pattern, and its divergence and curl.</li>
+<li><a href="rheome.flow.build.html">rheome.flow.build</a> &mdash; FLOW.BUILD  Assemble all fused flow kernels + a coeff-vs-vertex agreement report.</li>
+<li><a href="rheome.flow.context.html">rheome.flow.context</a> &mdash; FLOW.CONTEXT  One-time precompute bundle for the fused flow kernels.</li>
+<li><a href="rheome.flow.cortexfeatures.html">rheome.flow.cortexfeatures</a> &mdash; FLOW.CORTEXFEATURES  The mergeable cortical features of a recording, written beside its store.</li>
+<li><a href="rheome.flow.critical.html">rheome.flow.critical</a> &mdash; FLOW.CRITICAL  Classified critical points, with topological charge, at selected frames.</li>
+<li><a href="rheome.flow.crosstalk.html">rheome.flow.crosstalk</a> &mdash; FLOW.CROSSTALK  What fraction of an ROI's measured flow actually originates in it.</li>
+<li><a href="rheome.flow.curl.html">rheome.flow.curl</a> &mdash; FLOW.CURL  Fused flow operator: sensors -&gt; curl (scalar vorticity).</li>
+<li><a href="rheome.flow.curlvec.html">rheome.flow.curlvec</a> &mdash; FLOW.CURLVEC  Ambient curl-VECTOR kernel [3V x C]  (the full (grad x J) per vertex).</li>
+<li><a href="rheome.flow.demod.html">rheome.flow.demod</a> &mdash; FLOW.DEMOD  Move the carrier to zero by re-indexing the frequency axis.</li>
+<li><a href="rheome.flow.directionfield.html">rheome.flow.directionfield</a> &mdash; FLOW.DIRECTIONFIELD  Plant singularities, solve a trivial connection, integrate, rotate, lift.</li>
+<li><a href="rheome.flow.divergence.html">rheome.flow.divergence</a> &mdash; FLOW.DIVERGENCE  Fused flow operator: sensors -&gt; divergence (sources/sinks).</li>
+<li><a href="rheome.flow.energy.html">rheome.flow.energy</a> &mdash; FLOW.ENERGY  Bilinear Gram for total (or scout-weighted) field energy  E = sum_v w.*|J|^2.</li>
+<li><a href="rheome.flow.enstrophy.html">rheome.flow.enstrophy</a> &mdash; FLOW.ENSTROPHY  Bilinear Gram for total (or scout-weighted) enstrophy  Omega = sum_v w.*omega^2.</li>
+<li><a href="rheome.flow.envelopemodes.html">rheome.flow.envelopemodes</a> &mdash; FLOW.ENVELOPEMODES  The analytic band envelope of the source estimate, as LB mode coefficients (cached).</li>
+<li><a href="rheome.flow.field.html">rheome.flow.field</a> &mdash; FLOW.FIELD  Root fused kernel: sensors -&gt; per-vertex current 3-vectors.</li>
+<li><a href="rheome.flow.helicity.html">rheome.flow.helicity</a> &mdash; FLOW.HELICITY  Bilinear Gram for total (or scout-weighted) helicity  H = sum_v w.*(J . grad x J).</li>
+<li><a href="rheome.flow.joint.html">rheome.flow.joint</a> &mdash; FLOW.JOINT  Apply a flow kernel in the JOINT (spatial-mode x temporal-frequency) domain.</li>
+<li><a href="rheome.flow.labelalpha.html">rheome.flow.labelalpha</a> &mdash; FLOW.LABELALPHA  Label a recording's alpha with its joint dyadic structure, into the select store.</li>
+<li><a href="rheome.flow.movingpeak.html">rheome.flow.movingpeak</a> &mdash; FLOW.MOVINGPEAK  A scalar peak carried along a path at a constant speed: the planted ground truth.</li>
+<li><a href="rheome.flow.movingvortex.html">rheome.flow.movingvortex</a> &mdash; FLOW.MOVINGVORTEX  A vortex atom whose core TRANVELS, at a chosen speed along a geodesic.</li>
+<li><a href="rheome.flow.observables.html">rheome.flow.observables</a> &mdash; FLOW.OBSERVABLES  The named observables of a flow map, from the joint spectrum.</li>
+<li><a href="rheome.flow.phasebin.html">rheome.flow.phasebin</a> &mdash; FLOW.PHASEBIN  Collapse a coefficient series onto a common PHASE axis.</li>
+<li><a href="rheome.flow.phasegradient.html">rheome.flow.phasegradient</a> &mdash; FLOW.PHASEGRADIENT  Local wavevector, frequency and propagation velocity of a complex field.</li>
+<li><a href="rheome.flow.phaselock.html">rheome.flow.phaselock</a> &mdash; FLOW.PHASELOCK  Is the cortical field reproducibly organised by a reference rhythm's phase?</li>
+<li><a href="rheome.flow.potential.html">rheome.flow.potential</a> &mdash; FLOW.POTENTIAL  Fused kernel: sensors -&gt; Helmholtz scalar potential Phi (sources/sinks).</li>
+<li><a href="rheome.flow.psd.html">rheome.flow.psd</a> &mdash; FLOW.PSD  Welch PSD of flow-kernel mode coefficients (for fitting, not for filtering).</li>
+<li><a href="rheome.flow.rateplan.html">rheome.flow.rateplan</a> &mdash; FLOW.RATEPLAN  Per-filter output rate for a constant-Q bank.</li>
+<li><a href="rheome.flow.seedrotor.html">rheome.flow.seedrotor</a> &mdash; FLOW.SEEDROTOR  Seed a 3-component VORTEX current field of known scale at a cortical vertex.</li>
+<li><a href="rheome.flow.seedvortex.html">rheome.flow.seedvortex</a> &mdash; FLOW.SEEDVORTEX  Seed a 3-component vortex by IMPOSING circulation in the connection frame.</li>
+<li><a href="rheome.flow.sensitivity.html">rheome.flow.sensitivity</a> &mdash; FLOW.SENSITIVITY  What a flow kernel produces from NOISE, per vertex.</li>
+<li><a href="rheome.flow.stream.html">rheome.flow.stream</a> &mdash; FLOW.STREAM  Fused kernel: sensors -&gt; Helmholtz stream function Psi (vortices).</li>
+<li><a href="rheome.flow.sweep.html">rheome.flow.sweep</a> &mdash; FLOW.SWEEP  Sweep one LEVEL of the store's time tiling, measuring on every axis, and write the</li>
+<li><a href="rheome.flow.synth.html">rheome.flow.synth</a> &mdash; FLOW.SYNTH  Return a joint spectrum to the time axis at ANY output rate.</li>
+<li><a href="rheome.flow.vortexatom.html">rheome.flow.vortexatom</a> &mdash; FLOW.VORTEXATOM  A space-time vortex atom: spinning, non-stationary, inside one band.</li>
+<li><a href="rheome.flow.vortexbank.html">rheome.flow.vortexbank</a> &mdash; FLOW.VORTEXBANK  A dictionary of vortex atoms in SENSOR space, for decomposing a band.</li>
+<li><a href="rheome.flow.vortexmatch.html">rheome.flow.vortexmatch</a> &mdash; FLOW.VORTEXMATCH  Match a sensor record against a vortex dictionary, energy AND rotation.</li>
+<li><a href="rheome.flow.vortexpursuit.html">rheome.flow.vortexpursuit</a> &mdash; FLOW.VORTEXPURSUIT  Matching pursuit over the vortex dictionary: the parametric inverse.</li>
+<li><a href="rheome.flow.vortexspectrum.html">rheome.flow.vortexspectrum</a> &mdash; FLOW.VORTEXSPECTRUM  Vortices in several bands on a 1/f background, matched to a real sensor PSD.</li>
+<li><a href="rheome.flow.vortextrack.html">rheome.flow.vortextrack</a> &mdash; FLOW.VORTEXTRACK  A time-resolved PARAMETRIC inverse: vortex parameters as functions of time.</li>
+<li><a href="rheome.flow.weak.html">rheome.flow.weak</a> &mdash; FLOW.WEAK  Weak (Galerkin) divergence / rotated-source operators from face_gradient.</li>
+<li><a href="rheome.flow.windowtable.html">rheome.flow.windowtable</a> &mdash; FLOW.WINDOWTABLE  One table indexed by time window: every measurement under a tile on each axis.</li>
+</ul>
+<h2>rheome.forward</h2>
+<ul>
+<li><a href="rheome.forward.analyticbank.html">rheome.forward.analyticbank</a> &mdash; FORWARD.ANALYTICBANK  The leadfield rewritten in closed form from the spherical forward law.</li>
+<li><a href="rheome.forward.dirac.html">rheome.forward.dirac</a> &mdash; FORWARD.DIRAC  Project an unconstrained leadfield into the Dirac eigenbasis.</li>
+<li><a href="rheome.forward.diracgain.html">rheome.forward.diracgain</a> &mdash; FORWARD.DIRACGAIN  The SYNTHESIS gain: one sensor pattern per Dirac eigenmode, Gmode = G * Phi.</li>
+<li><a href="rheome.forward.leadfield.html">rheome.forward.leadfield</a> &mdash; FORWARD.LEADFIELD  The MEG gain matrix for the good channels: the forward direction of source mapping.</li>
+<li><a href="rheome.forward.measurable.html">rheome.forward.measurable</a> &mdash; FORWARD.MEASURABLE  What fraction of a HYPOTHESISED cortical pattern the array can see.</li>
+<li><a href="rheome.forward.observability.html">rheome.forward.observability</a> &mdash; FORWARD.OBSERVABILITY  How well the sensor array sees each spatial scale.</li>
+<li><a href="rheome.forward.project.html">rheome.forward.project</a> &mdash; FORWARD.PROJECT  Band-limit a per-vertex 3-vector field onto the Dirac eigenbasis.</li>
+<li><a href="rheome.forward.reconstruct.html">rheome.forward.reconstruct</a> &mdash; FORWARD.RECONSTRUCT  Map Dirac mode coefficients back to per-vertex 3-vectors.</li>
+<li><a href="rheome.forward.sensoratom.html">rheome.forward.sensoratom</a> &mdash; FORWARD.SENSORATOM  Fit each sensor's sensitivity as a GRAPH WAVELET on the cortex.</li>
+<li><a href="rheome.forward.sensorbank.html">rheome.forward.sensorbank</a> &mdash; FORWARD.SENSORBANK  A graph-wavelet bank fitted to the sensor patterns of a leadfield.</li>
+<li><a href="rheome.forward.simulate.html">rheome.forward.simulate</a> &mdash; FORWARD.SIMULATE  Seed a Dirac current field at a cortical vertex, forward it through the head</li>
+</ul>
+<h2>rheome.geom</h2>
+<ul>
+<li><a href="rheome.geom.cortexnodes.html">rheome.geom.cortexnodes</a> &mdash; GEOM.CORTEXNODES  One cortical position pyramid for both hemispheres, with whole-cortex node ids.</li>
+<li><a href="rheome.geom.edgegraph.html">rheome.geom.edgegraph</a> &mdash; GEOM.EDGEGRAPH  The mesh as a weighted graph whose shortest paths are a geodesic ruler.</li>
+<li><a href="rheome.geom.geodesic.html">rheome.geom.geodesic</a> &mdash; GEOM.GEODESIC  Single-/multi-source geodesic distance by Crane's heat method.</li>
+<li><a href="rheome.geom.heatdistance.html">rheome.geom.heatdistance</a> &mdash; GEOM.HEATDISTANCE  Geodesic distance on a mesh by the heat method, in the eigenbasis.</li>
+<li><a href="rheome.geom.icosphere.html">rheome.geom.icosphere</a> &mdash; GEOM.ICOSPHERE  Geodesic sphere by recursive icosahedron subdivision (FreeSurfer-style).</li>
+<li><a href="rheome.geom.jointcell.html">rheome.geom.jointcell</a> &mdash; GEOM.JOINTCELL  Pick the observation window for a measurement from the joint ladder.</li>
+<li><a href="rheome.geom.jointladder.html">rheome.geom.jointladder</a> &mdash; GEOM.JOINTLADDER  The joint (space x time) bookkeeping table: one row per observation window.</li>
+<li><a href="rheome.geom.karcher_mean.html">rheome.geom.karcher_mean</a> &mdash; GEOM.KARCHER_MEAN  Intrinsic (geodesic Fréchet) mean of points on the surface.</li>
+<li><a href="rheome.geom.ladder.html">rheome.geom.ladder</a> &mdash; GEOM.LADDER  The spatial ladder: which eigenvalue range each cortical tile level corresponds to.</li>
+<li><a href="rheome.geom.tilemean.html">rheome.geom.tilemean</a> &mdash; GEOM.TILEMEAN  Summarise a vertex map over each tile: the observation a tile makes of a field.</li>
+<li><a href="rheome.geom.tiles.html">rheome.geom.tiles</a> &mdash; GEOM.TILES  The tiles of one rheome.geom.tree depth: vertex lookup, membership and adjacency.</li>
+<li><a href="rheome.geom.tree.html">rheome.geom.tree</a> &mdash; GEOM.TREE  Recursive spectral bisection of a surface: the cortical position pyramid.</li>
+</ul>
+<h2>rheome.graphtransform</h2>
+<ul>
+<li><a href="rheome.graphtransform.chebyshev.html">rheome.graphtransform.chebyshev</a> &mdash; GRAPHTRANSFORM.CHEBYSHEV  Apply g(L) by polynomial recursion -- no eigenvectors.</li>
+<li><a href="rheome.graphtransform.eigen.html">rheome.graphtransform.eigen</a> &mdash; GRAPHTRANSFORM.EIGEN  Exact-eigenbasis transform for a graphfilterbank.</li>
+<li><a href="rheome.graphtransform.validate.html">rheome.graphtransform.validate</a> &mdash; GRAPHTRANSFORM.VALIDATE  Is T a usable graphfilterbank transform?</li>
+</ul>
+<h2>rheome.import</h2>
+<ul>
+<li><a href="rheome.import.atlas.html">rheome.import.atlas</a> &mdash; IMPORT.ATLAS  Read the surface's parcellations and cache them to +data.</li>
+<li><a href="rheome.import.bases.html">rheome.import.bases</a> &mdash; IMPORT.BASES  Precompute + cache PER-HEMISPHERE operators &amp; eigenbases for both hemispheres.</li>
+<li><a href="rheome.import.connectome.html">rheome.import.connectome</a> &mdash; IMPORT.CONNECTOME  Build + cache the whole-brain structural-connectome operators &amp; eigenbases.</li>
+<li><a href="rheome.import.cortex.html">rheome.import.cortex</a> &mdash; IMPORT.CORTEX  Equip a subject's FOLDED cortical hemisphere with every operator + eigenmode.</li>
+<li><a href="rheome.import.dataset.html">rheome.import.dataset</a> &mdash; IMPORT.DATASET  Import a full dataset (surface + study + Dirac eigenbasis) in one call.</li>
+<li><a href="rheome.import.dirac.html">rheome.import.dirac</a> &mdash; IMPORT.DIRAC  Compute + cache the relative-Dirac eigenbasis for a dataset.</li>
+<li><a href="rheome.import.inverse.html">rheome.import.inverse</a> &mdash; IMPORT.INVERSE  Find a Brainstorm kernel-only inverse in a study + cache it to +data.</li>
+<li><a href="rheome.import.rawrecording.html">rheome.import.rawrecording</a> &mdash; IMPORT.RAWRECORDING  Native-rate BST-BIN -&gt; the pageable v7.3 store.</li>
+<li><a href="rheome.import.recording.html">rheome.import.recording</a> &mdash; IMPORT.RECORDING  Surface a cached recording as a v7.3, chunk-readable store.</li>
+<li><a href="rheome.import.sphere.html">rheome.import.sphere</a> &mdash; IMPORT.SPHERE  Equip a subject's FreeSurfer registration sphere with every operator + eigenmode.</li>
+<li><a href="rheome.import.study.html">rheome.import.study</a> &mdash; IMPORT.STUDY  Read the Brainstorm study structures + cache them to +data.</li>
+<li><a href="rheome.import.surface.html">rheome.import.surface</a> &mdash; IMPORT.SURFACE  Read a Brainstorm cortex + compute LBO operators, cache to +data.</li>
+</ul>
+<h2>rheome.ingest</h2>
+<ul>
+<li><a href="rheome.ingest.bank.html">rheome.ingest.bank</a> &mdash; INGEST.BANK  The full-range constant-Q bank of a record, and its scales grouped into octave bands.</li>
+<li><a href="rheome.ingest.bound.html">rheome.ingest.bound</a> &mdash; INGEST.BOUND  Cast an extremum to single ROUNDING OUTWARD, so it stays a bound.</li>
+<li><a href="rheome.ingest.build.html">rheome.ingest.build</a> &mdash; INGEST.BUILD  One recording -&gt; one store of constant-Q tile summaries, in +data/&lt;name&gt;/.</li>
+<li><a href="rheome.ingest.cone.html">rheome.ingest.cone</a> &mdash; INGEST.CONE  Which samples are inside the cone of influence, per band, analytically.</li>
+<li><a href="rheome.ingest.config.html">rheome.ingest.config</a> &mdash; INGEST.CONFIG  Parameters of a constant-Q tile summary, in canonical order, with a hash.</li>
+<li><a href="rheome.ingest.couple.html">rheome.ingest.couple</a> &mdash; INGEST.COUPLE  Phase-amplitude coupling accumulators per tile: sums, so they MERGE.</li>
+<li><a href="rheome.ingest.grid.html">rheome.ingest.grid</a> &mdash; INGEST.GRID  The dyadic frame grid of a record: frames per level, their centres and extents.</li>
+<li><a href="rheome.ingest.groups.html">rheome.ingest.groups</a> &mdash; INGEST.GROUPS  Roll level statistics up the sensor tree: one column per internal node.</li>
+<li><a href="rheome.ingest.pages.html">rheome.ingest.pages</a> &mdash; INGEST.PAGES  The page plan: one grid level per band, bands grouped into jobs.</li>
+<li><a href="rheome.ingest.peaks.html">rheome.ingest.peaks</a> &mdash; INGEST.PEAKS  Per-tile spectral peak of each band, at the band's OWN level, by FFT.</li>
+<li><a href="rheome.ingest.preview.html">rheome.ingest.preview</a> &mdash; INGEST.PREVIEW  A min/max pyramid of a recording, beside it, with no transform at all.</li>
+<li><a href="rheome.ingest.reduce.html">rheome.ingest.reduce</a> &mdash; INGEST.REDUCE  Level-0 tile statistics from samples and from CWT coefficients, under a mask.</li>
+<li><a href="rheome.ingest.reducepaged.html">rheome.ingest.reducepaged</a> &mdash; INGEST.REDUCEPAGED  Level-0 statistics computed page by page, one sub-bank per job.</li>
+<li><a href="rheome.ingest.rollup.html">rheome.ingest.rollup</a> &mdash; INGEST.ROLLUP  Every coarser level from level 0, by pairing rows. No signal needed.</li>
+<li><a href="rheome.ingest.spatial.html">rheome.ingest.spatial</a> &mdash; INGEST.SPATIAL  The wavelength axis: a tight log-itersine frame on the sensor graph, per tile.</li>
+<li><a href="rheome.ingest.support.html">rheome.ingest.support</a> &mdash; INGEST.SUPPORT  Which bands a window of a given length can resolve.</li>
+<li><a href="rheome.ingest.totable.html">rheome.ingest.totable</a> &mdash; INGEST.TOTABLE  A store, or part of it, as long-form rows for a database or groupsummary.</li>
+</ul>
+<h2>rheome.inverse</h2>
+<ul>
+<li><a href="rheome.inverse.analytic.html">rheome.inverse.analytic</a> &mdash; INVERSE.ANALYTIC  Inverse in the leadfield's OWN measurable basis, truncated at the noise floor.</li>
+<li><a href="rheome.inverse.dirac.html">rheome.inverse.dirac</a> &mdash; INVERSE.DIRAC  Whitened minimum-norm inverse in the Dirac eigenmode basis.</li>
+<li><a href="rheome.inverse.mne.html">rheome.inverse.mne</a> &mdash; INVERSE.MNE  Whitened minimum-norm inverse on the RAW unconstrained leadfield.</li>
+<li><a href="rheome.inverse.resolution.html">rheome.inverse.resolution</a> &mdash; INVERSE.RESOLUTION  What an inverse can actually resolve on the cortex, in millimetres.</li>
+</ul>
+<h2>rheome.jtv</h2>
+<ul>
+<li><a href="rheome.jtv.analysis.html">rheome.jtv.analysis</a> &mdash; JTV.ANALYSIS  Apply a joint filterbank to a joint spectrum.</li>
+<li><a href="rheome.jtv.axes.html">rheome.jtv.axes</a> &mdash; JTV.AXES  The axes of a joint time-vertex representation, as a first-class object.</li>
+<li><a href="rheome.jtv.bank.html">rheome.jtv.bank</a> &mdash; JTV.BANK  Build a joint time-vertex filterbank from separable and non-separable kernels.</li>
+<li><a href="rheome.jtv.bounds.html">rheome.jtv.bounds</a> &mdash; JTV.BOUNDS  Frame operator and bounds of a joint time-vertex filterbank.</li>
+<li><a href="rheome.jtv.compatible.html">rheome.jtv.compatible</a> &mdash; JTV.COMPATIBLE  Do two joint representations live on the same axes?</li>
+<li><a href="rheome.jtv.dual.html">rheome.jtv.dual</a> &mdash; JTV.DUAL  Canonical dual of a joint time-vertex filterbank.</li>
+<li><a href="rheome.jtv.synthesis.html">rheome.jtv.synthesis</a> &mdash; JTV.SYNTHESIS  Reconstruct a joint spectrum from filterbank coefficients.</li>
+</ul>
+<h2>rheome.load</h2>
+<ul>
+<li><a href="rheome.load.atlas.html">rheome.load.atlas</a> &mdash; LOAD.ATLAS  Load the cached parcellations (the ROI axis) from +data.</li>
+<li><a href="rheome.load.bases.html">rheome.load.bases</a> &mdash; LOAD.BASES  Load the per-hemisphere operators &amp; eigenbases (all families, both hemispheres).</li>
+<li><a href="rheome.load.connectome.html">rheome.load.connectome</a> &mdash; LOAD.CONNECTOME  Load the cached whole-brain connectome operators &amp; eigenbases.</li>
+<li><a href="rheome.load.cortex.html">rheome.load.cortex</a> &mdash; LOAD.CORTEX  Load the bundled folded-cortex sandbox (operators + eigenmodes).</li>
+<li><a href="rheome.load.dataset.html">rheome.load.dataset</a> &mdash; LOAD.DATASET  Load everything cached for a dataset in one struct.</li>
+<li><a href="rheome.load.dirac.html">rheome.load.dirac</a> &mdash; LOAD.DIRAC  Load a cached relative-Dirac eigenbasis (and Laplace–Beltrami basis) from +data.</li>
+<li><a href="rheome.load.has.html">rheome.load.has</a> &mdash; LOAD.HAS  True if 'name' is a cached dataset (a folder under +data), not a file path.</li>
+<li><a href="rheome.load.inverse.html">rheome.load.inverse</a> &mdash; LOAD.INVERSE  Load a cached Brainstorm inverse kernel from +data ([] if none).</li>
+<li><a href="rheome.load.list.html">rheome.load.list</a> &mdash; LOAD.LIST  Print the cached datasets in +data and what each holds.</li>
+<li><a href="rheome.load.outpath.html">rheome.load.outpath</a> &mdash; LOAD.OUTPATH  Where an analysis output goes: &lt;outroot&gt;/[&lt;subject&gt;/]&lt;analysis&gt;/&lt;file&gt;, folder created.</li>
+<li><a href="rheome.load.outroot.html">rheome.load.outroot</a> &mdash; LOAD.OUTROOT  Absolute path to the ANALYSIS OUTPUT workspace: results, figures, reports.</li>
+<li><a href="rheome.load.root.html">rheome.load.root</a> &mdash; LOAD.ROOT  Absolute path to the +data cache folder (shared by rheome.import.* and rheome.load.*).</li>
+<li><a href="rheome.load.sphere.html">rheome.load.sphere</a> &mdash; LOAD.SPHERE  Load the bundled registration-sphere sandbox (operators + eigenmodes).</li>
+<li><a href="rheome.load.study.html">rheome.load.study</a> &mdash; LOAD.STUDY  Load the cached Brainstorm study structures from +data.</li>
+<li><a href="rheome.load.surface.html">rheome.load.surface</a> &mdash; LOAD.SURFACE  Load a cached cortex surface (and its LBO operators) from +data.</li>
+</ul>
+<h2>rheome.operators</h2>
+<ul>
+<li><a href="rheome.operators.check.html">rheome.operators.check</a> &mdash; OPERATORS.CHECK  Is this field admissible as that operator's input, and what comes back?</li>
+<li><a href="rheome.operators.connection_laplacian.html">rheome.operators.connection_laplacian</a> &mdash; OPERATORS.CONNECTION_LAPLACIAN  Levi-Civita connection Laplacian on the tangent bundle.</li>
+<li><a href="rheome.operators.connectome.html">rheome.operators.connectome</a> &mdash; OPERATORS.CONNECTOME  Vertex-resolution structural connectome from fiber endpoints.</li>
+<li><a href="rheome.operators.connectome_laplacian.html">rheome.operators.connectome_laplacian</a> &mdash; OPERATORS.CONNECTOME_LAPLACIAN  Symmetric normalized graph Laplacian of a connectome.</li>
+<li><a href="rheome.operators.dirac_extrinsic.html">rheome.operators.dirac_extrinsic</a> &mdash; OPERATORS.DIRAC_EXTRINSIC  Relative (extrinsic) Dirac energy block  E = D' *_F D.</li>
+<li><a href="rheome.operators.dirac_frame.html">rheome.operators.dirac_frame</a> &mdash; OPERATORS.DIRAC_FRAME  Relative Dirac operator (Brainstorm production).</li>
+<li><a href="rheome.operators.dirac_intrinsic.html">rheome.operators.dirac_intrinsic</a> &mdash; OPERATORS.DIRAC_INTRINSIC  Crane's intrinsic quaternionic Dirac itself: vertex quaternions -&gt; faces.</li>
+<li><a href="rheome.operators.dirac_intrinsic_sq.html">rheome.operators.dirac_intrinsic_sq</a> &mdash; OPERATORS.DIRAC_INTRINSIC_SQ  Intrinsic (immersion/edge-based) quaternionic Dirac squared.</li>
+<li><a href="rheome.operators.face_gradient.html">rheome.operators.face_gradient</a> &mdash; OPERATORS.FACE_GRADIENT  Per-face constant-gradient operator of a triangle mesh.</li>
+<li><a href="rheome.operators.gauge.html">rheome.operators.gauge</a> &mdash; OPERATORS.GAUGE  A per-vertex tangent FRAME on a surface: a reference direction field.</li>
+<li><a href="rheome.operators.laplace_beltrami.html">rheome.operators.laplace_beltrami</a> &mdash; OPERATORS.LAPLACE_BELTRAMI  Cotangent Laplace-Beltrami stiffness (and mass).</li>
+<li><a href="rheome.operators.lb_connectome.html">rheome.operators.lb_connectome</a> &mdash; OPERATORS.LB_CONNECTOME  Laplace-Beltrami bridged by the structural connectome (whole brain).</li>
+<li><a href="rheome.operators.mass.html">rheome.operators.mass</a> &mdash; OPERATORS.MASS  Finite-element mass matrix of a triangle surface mesh.</li>
+<li><a href="rheome.operators.registry.html">rheome.operators.registry</a> &mdash; OPERATORS.REGISTRY  Every operator as a typed arrow: what it takes, what it gives, its shape.</li>
+<li><a href="rheome.operators.trivial_connection.html">rheome.operators.trivial_connection</a> &mdash; OPERATORS.TRIVIAL_CONNECTION  Crane's trivial connection on the dual complex: a per-vertex frame</li>
+<li><a href="rheome.operators.weak_differential.html">rheome.operators.weak_differential</a> &mdash; OPERATORS.WEAK_DIFFERENTIAL  Weak-form curl and divergence as [nV x 3nV] operators.</li>
+</ul>
+<h2>rheome.pipeline</h2>
+<ul>
+<li><a href="rheome.pipeline.compile.html">rheome.pipeline.compile</a> &mdash; PIPELINE.COMPILE  Can this plan run in this environment, and as what function?</li>
+<li><a href="rheome.pipeline.describe.html">rheome.pipeline.describe</a> &mdash; PIPELINE.DESCRIBE  The plan as a table: every step, its arrow, and where it lands.</li>
+<li><a href="rheome.pipeline.env.html">rheome.pipeline.env</a> &mdash; PIPELINE.ENV  The bound resources a pipeline runs against, and the domains they name.</li>
+<li><a href="rheome.pipeline.run.html">rheome.pipeline.run</a> &mdash; PIPELINE.RUN  Execute a plan and return the result WITH its bookkeeping.</li>
+<li><a href="rheome.pipeline.start.html">rheome.pipeline.start</a> &mdash; PIPELINE.START  Begin a pipeline at a field of a given type on a given domain.</li>
+<li><a href="rheome.pipeline.then.html">rheome.pipeline.then</a> &mdash; PIPELINE.THEN  Append an operator, checking the arrow against the state right now.</li>
+<li><a href="rheome.pipeline.window.html">rheome.pipeline.window</a> &mdash; PIPELINE.WINDOW  Append a selection on the frame axis: the bookkeeping step.</li>
+</ul>
+<h2>rheome.qc</h2>
+<ul>
+<li><a href="rheome.qc.badchannels.html">rheome.qc.badchannels</a> &mdash; Author: Diellor Basha, 2026</li>
+<li><a href="rheome.qc.isemptyroom.html">rheome.qc.isemptyroom</a> &mdash; Author: Diellor Basha, 2026</li>
+</ul>
+<h2>rheome.report</h2>
+<ul>
+<li><a href="rheome.report.article.html">rheome.report.article</a> &mdash; REPORT.ARTICLE  Render a filled rheome.report.template as a mini-article: PDF, HTML or Word.</li>
+<li><a href="rheome.report.provenance.html">rheome.report.provenance</a> &mdash; REPORT.PROVENANCE  Everything needed to reproduce a result, collected rather than typed.</li>
+<li><a href="rheome.report.template.html">rheome.report.template</a> &mdash; REPORT.TEMPLATE  An empty mini-article, with every section present and prompted.</li>
+</ul>
+<h2>rheome.scale</h2>
+<ul>
+<li><a href="rheome.scale.analyses.html">rheome.scale.analyses</a> &mdash; SCALE.ANALYSES  The analyses the scale-up covers, and which of them the driver runs yet.</li>
+<li><a href="rheome.scale.bandsnr.html">rheome.scale.bandsnr</a> &mdash; SCALE.BANDSNR  Per-octave SNR of the rest recording against the subject's own noise run.</li>
+<li><a href="rheome.scale.cleanspan.html">rheome.scale.cleanspan</a> &mdash; SCALE.CLEANSPAN  Where a recording is stationary enough to tile: artefact blocks and trimmed edges.</li>
+<li><a href="rheome.scale.cleanwelch.html">rheome.scale.cleanwelch</a> &mdash; SCALE.CLEANWELCH  Welch PSD of a span, averaging only the segments that touch no artefact block.</li>
+<li><a href="rheome.scale.importsubject.html">rheome.scale.importsubject</a> &mdash; SCALE.IMPORTSUBJECT  One Brainstorm-protocol subject -&gt; the data cache the analyses load from.</li>
+<li><a href="rheome.scale.locate.html">rheome.scale.locate</a> &mdash; SCALE.LOCATE  Find one subject's files inside an unzipped Brainstorm protocol.</li>
+<li><a href="rheome.scale.measure_bandresolution.html">rheome.scale.measure_bandresolution</a> &mdash; SCALE.MEASURE_BANDRESOLUTION  Resolution at each octave's OWN measured SNR, for one subject.</li>
+<li><a href="rheome.scale.measure_grouptrack.html">rheome.scale.measure_grouptrack</a> &mdash; SCALE.MEASURE_GROUPTRACK  Viterbi tile tracking of the alpha envelope, real against the mode-shift surrogate.</li>
+<li><a href="rheome.scale.measure_periodicflow.html">rheome.scale.measure_periodicflow</a> &mdash; SCALE.MEASURE_PERIODICFLOW  Apparent alpha flow on the TOTAL and the PERIODIC envelope, over many tiles.</li>
+<li><a href="rheome.scale.measure_resolution.html">rheome.scale.measure_resolution</a> &mdash; SCALE.MEASURE_RESOLUTION  The resolution report's headline numbers for one subject.</li>
+<li><a href="rheome.scale.reduce.html">rheome.scale.reduce</a> &mdash; SCALE.REDUCE  Per-subject tables -&gt; group distributions, the anchor's place, cohort contrasts.</li>
+<li><a href="rheome.scale.rows.html">rheome.scale.rows</a> &mdash; SCALE.ROWS  Long-format metric rows: one row per (analysis, metric, band).</li>
+<li><a href="rheome.scale.run.html">rheome.scale.run</a> &mdash; SCALE.RUN  One subject, every ported analysis, compact tables out. The per-subject driver.</li>
+<li><a href="rheome.scale.sensors.html">rheome.scale.sensors</a> &mdash; SCALE.SENSORS  The channel selection, leadfield, noise covariance and kernel every measure shares.</li>
+</ul>
+<h2>rheome.select</h2>
+<ul>
+<li><a href="rheome.select.bursts.html">rheome.select.bursts</a> &mdash; SELECT.BURSTS  Two-phase event query: prune on the stored envelope, refine on raw samples.</li>
+<li><a href="rheome.select.catalog.html">rheome.select.catalog</a> &mdash; SELECT.CATALOG  Every tile store under +data (or a folder), one row per store, with what a cohort needs.</li>
+<li><a href="rheome.select.cohort.html">rheome.select.cohort</a> &mdash; SELECT.COHORT  Run a query over every store of a catalogue selection and stack the results.</li>
+<li><a href="rheome.select.context.html">rheome.select.context</a> &mdash; SELECT.CONTEXT  Join measurements to the mergeable matrix: the state each one occurred in.</li>
+<li><a href="rheome.select.cortexfile.html">rheome.select.cortexfile</a> &mdash; SELECT.CORTEXFILE  The cortical feature sidecar of a store: &lt;store&gt;__cortex.mat, beside it.</li>
+<li><a href="rheome.select.coupling.html">rheome.select.coupling</a> &mdash; SELECT.COUPLING  Phase-amplitude coupling per tile, derived from the stored sums.</li>
+<li><a href="rheome.select.ddl.html">rheome.select.ddl</a> &mdash; SELECT.DDL  The schema as Postgres DDL, with the indexes the query plans assume.</li>
+<li><a href="rheome.select.derive.html">rheome.select.derive</a> &mdash; SELECT.DERIVE  Per-tile derived statistics at one level, computed from the stored moments.</li>
+<li><a href="rheome.select.frames.html">rheome.select.frames</a> &mdash; SELECT.FRAMES  The pruned executor: descend the pyramid, discard subtrees the bound rules out.</li>
+<li><a href="rheome.select.label.html">rheome.select.label</a> &mdash; SELECT.LABEL  Append labels to tiles in one transaction: idempotent, atomic, rolled back by id.</li>
+<li><a href="rheome.select.labelkinds.html">rheome.select.labelkinds</a> &mdash; SELECT.LABELKINDS  Every label and feature kind, with what it can CLAIM: the calibration registry.</li>
+<li><a href="rheome.select.labels.html">rheome.select.labels</a> &mdash; SELECT.LABELS  Read labels (and transactions) of a store, filtered.</li>
+<li><a href="rheome.select.ladder.html">rheome.select.ladder</a> &mdash; SELECT.LADDER  The constant-Q ladder of a store: what each band costs in time and in rate.</li>
+<li><a href="rheome.select.level.html">rheome.select.level</a> &mdash; SELECT.LEVEL  One level array from the store, cached, with its bytes counted.</li>
+<li><a href="rheome.select.measure.html">rheome.select.measure</a> &mdash; SELECT.MEASURE  Write measurements onto pyramid nodes, in one transaction.</li>
+<li><a href="rheome.select.measures.html">rheome.select.measures</a> &mdash; SELECT.MEASURES  Read measurements (and their transactions), filtered.</li>
+<li><a href="rheome.select.named.html">rheome.select.named</a> &mdash; SELECT.NAMED  The physiological bands, mapped onto the store's octave bands.</li>
+<li><a href="rheome.select.open.html">rheome.select.open</a> &mdash; SELECT.OPEN  A handle on a tile store: metadata, a matfile, a level cache and cost counters.</li>
+<li><a href="rheome.select.query.html">rheome.select.query</a> &mdash; SELECT.QUERY  A query as a value: stat, operator, threshold, level, scope. Executors interpret it.</li>
+<li><a href="rheome.select.rollback.html">rheome.select.rollback</a> &mdash; SELECT.ROLLBACK  Remove a transaction's rows and its txn row, atomically.</li>
+<li><a href="rheome.select.rollupcortex.html">rheome.select.rollupcortex</a> &mdash; SELECT.ROLLUPCORTEX  Sum finest-cell values up both trees: time by the store's levels, cortex by heap.</li>
+<li><a href="rheome.select.rows.html">rheome.select.rows</a> &mdash; SELECT.ROWS  A relation of the schema, materialised from the store as a MATLAB table.</li>
+<li><a href="rheome.select.scan.html">rheome.select.scan</a> &mdash; SELECT.SCAN  The reference executor: a full scan of the relation at the query's level.</li>
+<li><a href="rheome.select.schema.html">rheome.select.schema</a> &mdash; SELECT.SCHEMA  The relational schema the tile store already is: relations, columns, keys.</li>
+<li><a href="rheome.select.sql.html">rheome.select.sql</a> &mdash; SELECT.SQL  A query as Postgres SQL: the same semi-join descent the MATLAB executor runs.</li>
+<li><a href="rheome.select.tree.html">rheome.select.tree</a> &mdash; SELECT.TREE  Descend the sensor tree from the root, pruning with the bound, to the query's depth.</li>
+</ul>
+<h2>rheome.selection</h2>
+<ul>
+<li><a href="rheome.selection.check.html">rheome.selection.check</a> &mdash; SELECTION.CHECK  Is this selection applicable to this domain, and may a coarser cell be summed?</li>
+<li><a href="rheome.selection.describe.html">rheome.selection.describe</a> &mdash; SELECTION.DESCRIBE  One selection by id, as a struct.</li>
+<li><a href="rheome.selection.registry.html">rheome.selection.registry</a> &mdash; SELECTION.REGISTRY  Every way we index or weigh a manifold's elements, as one type.</li>
+<li><a href="rheome.selection.wavelettile.html">rheome.selection.wavelettile</a> &mdash; SELECTION.WAVELETTILE  Wavelets as a tiling: centre and time SUPPORT where a tile has centre and span.</li>
+</ul>
+<h2>rheome.sensors</h2>
+<ul>
+<li><a href="rheome.sensors.calibrate.html">rheome.sensors.calibrate</a> &mdash; SENSORS.CALIBRATE  Give a dimensionless graph spectrum its length units.</li>
+<li><a href="rheome.sensors.eeg.html">rheome.sensors.eeg</a> &mdash; SENSORS.EEG  A scalp-cap array: sparse, quasi-uniform sampling on a curved surface.</li>
+<li><a href="rheome.sensors.generate.html">rheome.sensors.generate</a> &mdash; SENSORS.GENERATE  A space-time pattern on a sensor array, from a dynamical family.</li>
+<li><a href="rheome.sensors.graph.html">rheome.sensors.graph</a> &mdash; SENSORS.GRAPH  A Gaussian-weighted kNN graph on sensor coordinates -- the GSPBox operator.</li>
+<li><a href="rheome.sensors.grid.html">rheome.sensors.grid</a> &mdash; SENSORS.GRID  A planar lattice: the Utah and ECoG geometries.</li>
+<li><a href="rheome.sensors.linear.html">rheome.sensors.linear</a> &mdash; SENSORS.LINEAR  A laminar probe: N contacts on a line.</li>
+<li><a href="rheome.sensors.meg.html">rheome.sensors.meg</a> &mdash; SENSORS.MEG  MEG sensor positions -- the one array in the suite with real coordinates.</li>
+<li><a href="rheome.sensors.modes.html">rheome.sensors.modes</a> &mdash; SENSORS.MODES  The sensor graph's spectrum, and the two ways to filter with it.</li>
+<li><a href="rheome.sensors.positions.html">rheome.sensors.positions</a> &mdash; SENSORS.POSITIONS  An array from bare coordinates. The general case.</li>
+<li><a href="rheome.sensors.sample.html">rheome.sensors.sample</a> &mdash; SENSORS.SAMPLE  Evaluate an analytic field at the sensor coordinates.</li>
+<li><a href="rheome.sensors.tree.html">rheome.sensors.tree</a> &mdash; SENSORS.TREE  Recursive spectral bisection of a sensor graph: the position pyramid.</li>
+<li><a href="rheome.sensors.window.html">rheome.sensors.window</a> &mdash; SENSORS.WINDOW  Which wavelengths does this array admit? Computed before any signal.</li>
+</ul>
+<h2>rheome.show</h2>
+<ul>
+<li><a href="rheome.show.activity.html">rheome.show.activity</a> &mdash; SHOW.ACTIVITY  Where and when vortical activity is strong.</li>
+<li><a href="rheome.show.critical.html">rheome.show.critical</a> &mdash; SHOW.CRITICAL  Classified critical points on the cortex, with the Poincare-Hopf check.</li>
+<li><a href="rheome.show.filmstrip.html">rheome.show.filmstrip</a> &mdash; SHOW.FILMSTRIP  Cortex snapshots of a space-time field at selected time frames.</li>
+<li><a href="rheome.show.frame.html">rheome.show.frame</a> &mdash; SHOW.FRAME  A spectral-graph wavelet frame: member gains, coverage and scales.</li>
+<li><a href="rheome.show.gif.html">rheome.show.gif</a> &mdash; SHOW.GIF  Write an animated GIF of a space-time field evolving on the cortex.</li>
+<li><a href="rheome.show.jointscalogram.html">rheome.show.jointscalogram</a> &mdash; SHOW.JOINTSCALOGRAM  Energy over spatial scale x temporal frequency, with the speed ridge.</li>
+<li><a href="rheome.show.jointspectrum.html">rheome.show.jointspectrum</a> &mdash; SHOW.JOINTSPECTRUM  The joint spectrum |C(lambda,omega)|^2 -- spatial vs temporal frequency.</li>
+<li><a href="rheome.show.lambdaaxis.html">rheome.show.lambdaaxis</a> &mdash; SHOW.LAMBDAAXIS  Label a mode-index y-axis with the spatial frequencies it corresponds to.</li>
+<li><a href="rheome.show.resolution.html">rheome.show.resolution</a> &mdash; SHOW.RESOLUTION  The spatial scales of the problem on one log ruler, with the cortex above it.</li>
+<li><a href="rheome.show.ridges.html">rheome.show.ridges</a> &mdash; SHOW.RIDGES  Summary figure for scale-space ridge tracking (rheome.detect.ridges).</li>
+<li><a href="rheome.show.ridgestrip.html">rheome.show.ridgestrip</a> &mdash; SHOW.RIDGESTRIP  Filmstrip of a field with tracked ridges overlaid frame by frame.</li>
+<li><a href="rheome.show.specparam.html">rheome.show.specparam</a> &mdash; SHOW.SPECPARAM  Aperiodic fits and the periodic/aperiodic split, per spatial mode.</li>
+<li><a href="rheome.show.spectrum2d.html">rheome.show.spectrum2d</a> &mdash; SHOW.SPECTRUM2D  Joint eigenmode-frequency map: power (or gain) over (sqrt(lambda), Hz).</li>
+<li><a href="rheome.show.surface.html">rheome.show.surface</a> &mdash; SHOW.SURFACE  Render a cortical surface, optionally colored by a per-vertex field.</li>
+<li><a href="rheome.show.vectors.html">rheome.show.vectors</a> &mdash; SHOW.VECTORS  Render a per-vertex 3-vector field on the cortex (magnitude + arrows).</li>
+<li><a href="rheome.show.vectorstrip.html">rheome.show.vectorstrip</a> &mdash; SHOW.VECTORSTRIP  Cortex quiver snapshots of a space-time VECTOR field at time frames.</li>
+</ul>
+<h2>rheome.source</h2>
+<ul>
+<li><a href="rheome.source.dirac.html">rheome.source.dirac</a> &mdash; SOURCE.DIRAC  End-to-end Dirac-eigenmode MEG source mapping (no plotting).</li>
+</ul>
+<h2>rheome.spectral</h2>
+<ul>
+<li><a href="rheome.spectral.aperiodic.html">rheome.spectral.aperiodic</a> &mdash; SPECTRAL.APERIODIC  Fit the aperiodic (1/f-like) background of power spectra.</li>
+<li><a href="rheome.spectral.carrier.html">rheome.spectral.carrier</a> &mdash; SPECTRAL.CARRIER  Carrier frequency, estimated on the PERIODIC component only.</li>
+<li><a href="rheome.spectral.decompose.html">rheome.spectral.decompose</a> &mdash; SPECTRAL.DECOMPOSE  Split a coefficient array into periodic and aperiodic parts.</li>
+<li><a href="rheome.spectral.evaluate.html">rheome.spectral.evaluate</a> &mdash; SPECTRAL.EVALUATE  Evaluate a fitted aperiodic model at arbitrary frequencies.</li>
+<li><a href="rheome.spectral.gains.html">rheome.spectral.gains</a> &mdash; SPECTRAL.GAINS  Complementary periodic / aperiodic gains from a fitted background.</li>
+<li><a href="rheome.spectral.synthesise.html">rheome.spectral.synthesise</a> &mdash; SPECTRAL.SYNTHESISE  Synthesise real time series with a prescribed 1/f-like background.</li>
+</ul>
+<h2>rheome.utils</h2>
+<ul>
+<li><a href="rheome.utils.hemisphere.html">rheome.utils.hemisphere</a> &mdash; UTILS.HEMISPHERE  Restrict a cortex surface + Dirac basis to ONE hemisphere.</li>
+</ul>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference.</small></p>
+</body></html>

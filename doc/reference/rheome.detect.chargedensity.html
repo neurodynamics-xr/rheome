@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.chargedensity</title></head><body>
+<h1>rheome.detect.chargedensity</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.CHARGEDENSITY  Topological charge of a phase field, at a chosen spatial aperture.
+ 
+    out = rheome.detect.chargedensity(z, S, basis, radii)
+ 
+  The per-triangle winding number (rheome.detect.phasesingularity) is the charge at the SMALLEST
+  aperture a mesh admits, and at that aperture a smooth random field already carries a dense
+  population of cores -- measured on real alpha, ~100 per frame, matching a phase-randomised
+  surrogate in count, lifetime AND spatial distribution. A rotor has to be read at the scale
+  it actually occupies, which means integrating the charge over an aperture.
+ 
+  ⭐ NO LOOP INTEGRALS ARE NEEDED, AND THIS IS EXACT, NOT AN APPROXIMATION. By discrete Stokes
+  the winding around any closed contour equals the SUM OF THE PER-FACE CHARGES it encloses --
+  interior edges are traversed once each way and cancel, the same telescoping that forces the
+  closed-surface total to zero. So an aperture-integrated winding is a WEIGHTED SUM of a sparse
+  integer field, and a heat-kernel aperture is simply that field smoothed:
+ 
+        q_tau = Phi * diag(exp(-Lambda*tau)) * Phi' * c          c = charges lumped at vertices
+ 
+  one matvec per aperture in the eigenbasis you already carry. The explicit route -- a contour
+  integral per vertex per timepoint -- is ~82 million loop integrals for a single 10 s page and
+  forces an ROI mask; this runs the WHOLE cortex at every aperture for a few [nV x K] products.
+ 
+  ⚠ CHARGE IS A MEASURE, NOT A FUNCTION, so it is smoothed with Phi*E*Phi' and NOT Phi*E*Phi'*M.
+  Charges are point masses; inserting the mass matrix would weight each by its vertex area and
+  silently make the density depend on mesh refinement.
+ 
+  ⚠ THE APERTURE FLOOR IS SET BY THE TRUNCATION, NOT BY THE REQUEST. With K modes the kernel
+  cannot localise below the finest represented wavelength (~14 mm at K=800 on this cortex); ask
+  for 5 mm and you get the 14 mm kernel back without warning. .resolved reports, per radius,
+  the fraction of spectral weight retained -- below ~0.99 the aperture is truncation-limited.
+ 
+  ⭐ THE APERTURE IS WHAT SEPARATES A ROTOR FROM THE RANDOM-FIELD BACKGROUND, and flatness
+  across apertures is the sharper half of it. Measured on a 60 mm sphere at r = 26/32/40 mm:
+ 
+    planted unit core   q = 0.894  0.929  0.954     flatness 0.937
+    random field        max|q| =  0.96   0.93  0.78  flatness 0.528 (median)
+ 
+  ⚠ NEITHER HALF SEPARATES ALONE AT THE TAIL, so do not threshold on one. Over 20 noise
+  realisations the background's BEST vertex reached |q| = 0.932 against the core's 0.929, and
+  its 99th-percentile flatness reached 0.965 against the core's 0.937. The JOINT criterion is
+  what works -- measured per-vertex false rate, core accepted in every case:
+ 
+      |q| &gt;= 0.8  &amp;  flatness &gt;= 0.85   -&gt;  0.97%        |q| &gt;= 0.7 &amp; flat &gt;= 0.85 -&gt; 1.93%
+      |q| &gt;= 0.8  &amp;  flatness &gt;= 0.90   -&gt;  0.57%   &lt;-- operating point
+      |q| &gt;= 0.8  &amp;  flatness &gt;= 0.95   -&gt;  0.06%   but the real core is REJECTED too
+ 
+  0.57% of 20484 cortical vertices is still ~117 candidates per frame; temporal persistence is
+  what is expected to take that the rest of the way, not a stricter single-frame threshold.
+ 
+  ⚠ THAT SEPARATION DEPENDS ENTIRELY ON Phi BEING MASS-ORTHONORMAL, and it fails silently
+  otherwise. Phi*E*Phi' is the heat kernel only when Phi'*M*Phi = I; normalising columns
+  against lumped row-sums while M is Galerkin leaves cross terms, and two cores placed
+  symmetrically then read 0.29 and 5.10 instead of +-0.9. Check the basis before trusting a
+  number from this function.
+ 
+  INPUTS:
+    z      [nV x nT] complex analytic field       S  surface (.Vertices, .Faces, .VertNormals)
+    basis  struct with .Phi [nV x K], .Lambda [K x 1]   (rheome.flowpage.prepare bundle supplies both)
+    radii  [1 x nR] aperture radii in MM; heat time tau = (r/1000)^2/4
+    'Threshold'  |q| past which an aperture is counted as charged. Default 0.5.
+ 
+  OUTPUT (struct out):
+    .q         [nV x nR x nT]  aperture-enclosed charge (a unit core reads ~1 at every radius)
+    .qmed      [nV x nT]       median over radii
+    .flatness  [nV x nT]       min|q|/max|q| over radii; ~1 = scale-invariant = a real core
+    .stable    [nV x nT]       signed count of radii agreeing past Threshold
+    .perFace   [nF x nT]       the raw integer winding field
+    .radii .tau .resolved .nCore
+ 
+  See also: rheome.detect.phasesingularity, rheome.flow.phasegradient
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

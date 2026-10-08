@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.mexhat</title></head><body>
+<h1>rheome.filters.mexhat</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.MEXHAT  Mexican-hat band-pass wavelet  g(lambda) = (t*lambda) .* exp(-t*lambda).
+ 
+    g = rheome.filters.mexhat(lambda, t)   % t scalar -&gt; [K x 1];  t vector -&gt; [K x numel(t)] bank
+ 
+  The Mexican-hat wavelet is band-pass and zero-mean (g(0)=0), so applied to a delta
+  it produces a SIGNED atom: a positive core ringed by a negative surround, at a
+  spatial scale set by t. Sweeping t gives a wavelet filterbank at multiple scales.
+  Mirrors Brainstorm's bst_eigfilter_design_mexhat.
+ 
+  INPUTS:
+    lambda [K x 1] eigenvalues (basis.Lambda)
+    t      scalar or vector of scales (larger t selects LOWER frequencies -&gt; wider atom)
+ 
+  OUTPUT:
+    g      [K x numel(t)] spectral gains, one column per scale
+ 
+  See also: rheome.filters.heat, rheome.filters.localize
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

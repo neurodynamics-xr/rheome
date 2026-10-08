@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.impulse</title></head><body>
+<h1>rheome.filters.impulse</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.IMPULSE  Space-time impulse response of a joint filter at a vertex delta.
+ 
+    U = rheome.filters.impulse(basis, vertex, G, domain [,nKeep])          % scalar (LBO) basis
+    U = rheome.filters.impulse(dbasis, vertex, G, domain, nKeep, dir)      % Dirac (vector) basis
+ 
+  Seeds a delta at a vertex (with a flat temporal spectrum) and propagates it through a
+  joint filter, giving the filter's space-time impulse response -- the &quot;dynamics&quot; the
+  filter describes. Domain-aware, exactly like bst_eigenfilter('Atom'):
+    'ts'  G = g(lambda,t)      -&gt; coeffs = G .* c0
+    'js'  G = g(lambda,omega)  -&gt; coeffs = real(ifft(G)) .* c0
+  where c0 = Phi' * M * delta are the seed's mode coefficients.
+ 
+  SCALAR basis (rheome.eigen.modes): the seed is a scalar delta at the vertex; returns the
+  scalar field U [nV x nT].
+  DIRAC basis (rheome.eigen.dirac_frame): the seed is an oriented DIPOLE 'dir' [3x1] at the vertex
+  (embedded in the imaginary quaternion slots); returns the decoded VECTOR field
+  [3nV x nT] (rows [x1,y1,z1, x2,...]), via rheome.forward.reconstruct.
+ 
+  INPUTS:
+    basis   eigenbasis (scalar from rheome.eigen.modes, or Dirac from rheome.eigen.dirac_frame)
+    vertex  seed vertex index
+    G       [K x N] kernel evaluated on its native axis (time for 'ts', freq for 'js')
+    domain  'ts' | 'js'
+    nKeep   ('js' only) keep the first nKeep time samples (default N)
+    dir     (Dirac only) [3x1] dipole direction (default [1;0;0])
+ 
+  OUTPUT:
+    U       [nV x nT] scalar field, or [3nV x nT] vector field (Dirac)
+ 
+  See also: rheome.eigen.dirac_frame, rheome.forward.reconstruct, rheome.filters.wave, rheome.show.filmstrip, rheome.show.vectors
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

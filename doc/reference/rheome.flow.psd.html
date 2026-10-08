@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.psd</title></head><body>
+<h1>rheome.flow.psd</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.PSD  Welch PSD of flow-kernel mode coefficients (for fitting, not for filtering).
+ 
+    out = rheome.flow.psd(F, sfreq, coeffOperator)
+    out = rheome.flow.psd(F, sfreq, coeffOperator, opts)
+ 
+  Averages periodograms over overlapping Hamming windows, following bst_psd: demean each window,
+  taper, FFT with no zero-padding, keep the one-sided spectrum, apply the kernel to the FFT
+  coefficients, convert to power, average across windows.
+ 
+  WHY THIS EXISTS SEPARATELY FROM rheome.flow.joint. rheome.flow.joint returns a SINGLE periodogram, because it
+  must stay complex and invertible -- it is what the pipeline filters and synthesises from. A
+  single periodogram is chi-squared with 2 degrees of freedom per bin (~100%% variability), and it
+  does NOT improve with a longer recording: more bins, each just as noisy.
+ 
+  MEASURED, ON subject01, 30 s, 1-45 Hz (800 modes):
+ 
+                  min chi  max chi  med chi   med r2
+    single FFT       0.64     1.49     0.99    0.267
+    Welch (29 win)   0.60     1.37     0.92    0.841
+ 
+  The EXPONENT is barely affected -- IQR 0.147 vs 0.140, no negative values either way. Two
+  reasons: the log-periodogram bias for 2 dof is a CONSTANT (-gamma), so it shifts the fitted
+  offset and leaves the slope alone; and least squares over ~1300 bins already averages the
+  scatter. The regression does the averaging Welch would have done.
+ 
+  What breaks is R^2: 0.267 on the periodogram is not a poor fit, it is chi-squared scatter
+  dominating the residual. Using R^2 as a quality gate on a raw periodogram rejects good fits.
+ 
+  So use this for the FIT (interpretable R^2, 15x fewer bins, faster) and rheome.flow.joint for the
+  FILTERING. Pass as opts.fitPower to rheome.spectral.decompose. Exponents already estimated from a
+  periodogram do not need revisiting.
+ 
+  INPUTS:
+    F              [C x nT] sensor time series
+    sfreq          sampling rate (Hz)
+    coeffOperator  [Ks x C] flow kernel
+    opts  .winLength  window length in SECONDS (default 2)
+          .overlap    fractional overlap (default 0.5)
+          .band       [f1 f2] restrict the returned bins (default: all positive)
+ 
+  OUTPUT (struct out):
+    .P      [Ks x nF] mean power per mode per bin
+    .f      [1 x nF]  bin frequencies (Hz), DC excluded
+    .nWin   windows averaged      .df  bin spacing (Hz)
+    .dof    2*nWin -- the chi-squared degrees of freedom the estimate carries
+ 
+  See also: rheome.flow.joint, rheome.spectral.decompose, rheome.spectral.aperiodic
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

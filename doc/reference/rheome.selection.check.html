@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.selection.check</title></head><body>
+<h1>rheome.selection.check</h1>
+<p><em>function rheome.selection</em> &mdash; Rheome</p>
+<pre>  SELECTION.CHECK  Is this selection applicable to this domain, and may a coarser cell be summed?
+ 
+    [ok, why] = rheome.selection.check(&quot;cortex_tile&quot;, e.domains.source)
+    [ok, why] = rheome.selection.check(&quot;graph_wavelet&quot;, d, Merging=true)
+ 
+  ⭐ THE SECOND QUESTION IS THE USEFUL ONE. Asking whether a selection FITS a domain catches a
+  mismatched axis; asking whether it MERGES catches the mistake that actually happens -- summing a
+  coarser cell from finer ones under a kernel, where the frame bound is not 1 and the sum is not the
+  whole. Pass Merging=true to require it.
+ 
+  ⚠ A true answer here permits merging; it does not make every measurement mergeable. Only
+  quantities linear in the accumulated statistic roll up even under a partition (rheome.flow.windowtable:
+  `energy` does, peak and crest and vortex count do not).
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

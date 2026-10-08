@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.differential.poisson</title></head><body>
+<h1>rheome.differential.poisson</h1>
+<p><em>function rheome.differential</em> &mdash; Rheome</p>
+<pre>  DIFFERENTIAL.POISSON  Solve the surface Poisson equation  K phi = M f  (mean-zero).
+ 
+    phi = rheome.differential.poisson(f, S)
+ 
+  Solves the cortical Poisson problem PER HEMISPHERE: K phi = M f, where K is the cotan
+  Laplace-Beltrami stiffness and M the Galerkin mass (rheome.operators.laplace_beltrami). The
+  constant nullspace is removed by projecting the source to mean-zero (mass metric), pinning
+  one vertex, and recentering -- faithful to Brainstorm's bst_poisson.
+ 
+  INPUTS:
+    f  [nV x nT] per-vertex scalar source
+    S  surface struct: .Vertices, .Faces (and .Hemi for the per-hemisphere nullspace)
+ 
+  OUTPUT:
+    phi  [nV x nT] per-vertex potential (mean-zero per hemisphere)
+ 
+  See also: rheome.operators.laplace_beltrami, rheome.differential.helmholtz, rheome.differential.divergence
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.show.gif</title></head><body>
+<h1>rheome.show.gif</h1>
+<p><em>function rheome.show</em> &mdash; Rheome</p>
+<pre>  SHOW.GIF  Write an animated GIF of a space-time field evolving on the cortex.
+ 
+    rheome.show.gif(surf, U, file)
+    rheome.show.gif(surf, U, file, name, value, ...)
+ 
+  Renders each time frame of U on the cortex (fixed colour scale and camera) and writes
+  an animated GIF -- the true motion of a joint-filter impulse response or a filtered
+  dynamics segment.
+ 
+  INPUTS:
+    surf  surface struct or file path
+    U     [nV x nT] space-time field
+    file  output .gif path
+ 
+  OPTIONS:
+    'Frames'    frame indices (default 1:nT)
+    'CLim'      colour limits (default symmetric from U(:,Frames))
+    'Colormap'  default: diverging (signed) / parula (one-signed)
+    'View'      camera [az el] (default [-90 10])
+    'DelayTime' seconds per frame (default 0.06)
+    'Resolution' export DPI (default 80)
+ 
+  See also: rheome.show.filmstrip, rheome.filters.impulse
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

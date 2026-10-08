@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.report.template</title></head><body>
+<h1>rheome.report.template</h1>
+<p><em>function rheome.report</em> &mdash; Rheome</p>
+<pre>  REPORT.TEMPLATE  An empty mini-article, with every section present and prompted.
+ 
+    spec = rheome.report.template()
+    spec = rheome.report.template(&quot;What the array resolves on the cortex&quot;)
+    spec.Abstract = &quot;...&quot;; spec.Results(1).Figure = &quot;fig.png&quot;; rheome.report.article(spec)
+ 
+  ⭐ THE TEMPLATE IS A VALUE, not a file to copy. Fill the fields, hand it to rheome.report.article,
+  and the same spec can be rebuilt as PDF, single-file HTML or Word without editing anything.
+  Every field starts as a PROMPT: whatever is left unedited appears in the document in a
+  placeholder style, so an unwritten section is visible rather than silently missing.
+ 
+  FIELDS
+    Title, Subtitle, Authors        strings; Authors may be a string array
+    Abstract                        what was done and what came out, in a paragraph
+    Introduction                    why the question was asked and what it bears on
+    Methods                         how it was measured, in enough detail to repeat
+    Results                         [1 x n] struct array, one entry per exhibit:
+                                      .Text    the prose for this result
+                                      .Figure  path to an image, or a figure handle, or []
+                                      .Legend  ⚠ REQUIRED whenever .Figure is set
+                                      .Table   a MATLAB table, or []
+                                      .Caption caption for .Table
+    Conclusion                      what it means and what it forbids
+    Provenance                      rheome.report.provenance(); [] omits the chapter
+    Format                          &quot;pdf&quot; (default) | &quot;html-file&quot; | &quot;docx&quot;
+    OutputPath                      where to write, without the extension
+ 
+  See also: rheome.report.article, rheome.report.provenance
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

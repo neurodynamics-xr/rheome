@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.spectral.decompose</title></head><body>
+<h1>rheome.spectral.decompose</h1>
+<p><em>function rheome.spectral</em> &mdash; Rheome</p>
+<pre>  SPECTRAL.DECOMPOSE  Split a coefficient array into periodic and aperiodic parts.
+ 
+    out = rheome.spectral.decompose(C, f)
+    out = rheome.spectral.decompose(C, f, opts)
+ 
+  The usual entry point: fits the aperiodic background of every ROW of C (one row per spatial
+  mode) and applies the complementary gains, so that
+ 
+    C_per + ... and C_ap  satisfy   |C_per|^2 + |C_ap|^2 = |C|^2   pointwise.
+ 
+  INPUTS:
+    C     [K x nF] complex coefficients, rows = spatial modes, columns = frequency bins
+    f     [nF x 1] frequencies (Hz), strictly positive
+    opts  .fitPower [K x nFb] BROADBAND power to fit the background on (STRONGLY RECOMMENDED)
+          .fitF     [nFb x 1]  its frequencies
+          others passed to rheome.spectral.aperiodic (.knee .nIter .thresh .range)
+ 
+  ⚠ FIT BROADBAND, APPLY NARROW. Without .fitPower the background is fitted on the same bins the
+  split is applied to, which fails whenever those bins are a narrow band -- there is not enough
+  frequency range to identify a 1/f slope.
+ 
+  ⚠⚠ FIT ON A WELCH PSD (rheome.flow.psd), NOT A SINGLE PERIODOGRAM. The log of a 2-dof periodogram is
+  biased LOW by gamma (~0.25 in log10), so the fitted background sits ~1.8x below the truth. That
+  bias is CONSTANT in frequency, so it leaves the exponent alone -- but the split depends on the
+  ABSOLUTE LEVEL of Pap, not its slope, so it inflates the periodic share. Measured on subject01,
+  8-13 Hz: single periodogram -&gt; 77.5%% periodic; Welch (2 s, 50%% overlap) -&gt; 26.4%%. The Welch
+  figure is the correct one, and the difference is not a detail: it is the difference between
+  &quot;alpha-band flow is mostly rhythm&quot; and &quot;alpha-band flow is mostly background&quot;.
+ 
+  ⚠ AND NEVER TAPER A FIT PASS. rheome.flow.joint's edgeTaper removes the lowest bins, which carry most of
+  the leverage on a 1/f slope: a 0.5 Hz taper over [1 45] Hz drove chi to -5.08..-3.76 (negative,
+  i.e. power rising with frequency). rheome.flow.psd has no frequency taper and is the safe route.
+ 
+  OUTPUT (struct out):
+    .Cper .Cap  [K x nF] complex, the two components
+    .hper .hap  [K x nF] real gains
+    .ap         struct from rheome.spectral.aperiodic, with .exponent [1 x K] = chi(lambda)
+    .partition  max |  |Cper|^2 + |Cap|^2 - |C|^2  | / max|C|^2   -- should be ~1e-15
+ 
+  NOTE ON ORIENTATION. C is [modes x frequency] but rheome.spectral.aperiodic fits COLUMNS, so the power
+  is transposed on the way in and the gains transposed back. Handled here so callers need not.
+ 
+  See also: rheome.spectral.aperiodic, rheome.spectral.gains, rheome.spectral.carrier
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

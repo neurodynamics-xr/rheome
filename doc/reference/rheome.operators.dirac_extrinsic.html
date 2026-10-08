@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.operators.dirac_extrinsic</title></head><body>
+<h1>rheome.operators.dirac_extrinsic</h1>
+<p><em>function rheome.operators</em> &mdash; Rheome</p>
+<pre>  OPERATORS.DIRAC_EXTRINSIC  Relative (extrinsic) Dirac energy block  E = D' *_F D.
+ 
+    E = rheome.operators.dirac_extrinsic(V, F)       % vertex normals from geometry
+    E = rheome.operators.dirac_extrinsic(V, F, N)    % supply the Gauss map (e.g. Brainstorm VertNormals)
+ 
+  The Liu-Jacobson-Crane (SGP 2017) relative Dirac operator D_N, assembled from the
+  Gauss map (vertex normals) in the Galerkin/energy form  E = D' (diag(A_f) (x) I4) D,
+  a [4V x 4V] symmetric positive-semidefinite matrix. Per oriented face f = ijk with
+  area A_f the first-order relative Dirac is
+    (D_N psi)_f = -(1/2A_f) * sum_{(p,q,r) in cyc(ijk)}  L_{(N_r - N_q)} * psi_p
+  where L_v is the 4x4 left-multiplication matrix of the imaginary quaternion v=(x,y,z).
+  Quaternion order [w,x,y,z], vertex-interleaved (index 4(v-1)+c). This is the extrinsic
+  (E) block of rheome.operators.dirac_frame; it is pure geometry (no leadfield, no plugin).
+ 
+  INPUTS:
+    V   [nV x 3] vertices        F  [nF x 3] triangle indices (consistent winding)
+    N   [nV x 3] unit vertex normals (optional; default = area-weighted from V,F)
+ 
+  OUTPUT:
+    E   [4nV x 4nV] sparse, symmetric, PSD
+ 
+  See also: rheome.operators.dirac_frame, rheome.operators.dirac_intrinsic_sq, rheome.eigen.dirac_frame
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

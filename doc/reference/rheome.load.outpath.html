@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.load.outpath</title></head><body>
+<h1>rheome.load.outpath</h1>
+<p><em>function rheome.load</em> &mdash; Rheome</p>
+<pre>  LOAD.OUTPATH  Where an analysis output goes: &lt;outroot&gt;/[&lt;subject&gt;/]&lt;analysis&gt;/&lt;file&gt;, folder created.
+ 
+    p = rheome.load.outpath(&quot;alpha_occupancy&quot;, &quot;alpha_occupancy.mat&quot;, &quot;sub01&quot;)
+        -&gt; &lt;outroot&gt;/a reference subject/alpha_occupancy/alpha_occupancy.mat
+    p = rheome.load.outpath(&quot;plant_tilepath&quot;, &quot;plant_tilepath_seed13.csv&quot;, &quot;planted&quot;)
+    p = rheome.load.outpath(&quot;reports&quot;, &quot;grouptrack_article&quot;)                  % -&gt; &lt;outroot&gt;/reports/grouptrack_article
+    p = rheome.load.outpath(&quot;reports/figures&quot;, &quot;&quot;)                           % the folder itself
+ 
+  The SAME call is used to write a file and, in any other script, to read it, so a producer and its
+  consumers cannot disagree about where it lives. The folder is created on every call (cheap, and
+  it means a reader never fails on a missing directory -- only on a missing file, which is the error
+  worth seeing).
+ 
+  INPUTS
+    analysis  the producing analysis (the script's stem without &quot;_omega&quot;); may contain &quot;/&quot;
+    file      the file name, or &quot;&quot; for the folder
+    subject   the dataset name, &quot;planted&quot; for subject-free validation, or omitted for neither
+ 
+  See also: rheome.load.outroot, rheome.load.root
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

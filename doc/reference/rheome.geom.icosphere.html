@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.geom.icosphere</title></head><body>
+<h1>rheome.geom.icosphere</h1>
+<p><em>function rheome.geom</em> &mdash; Rheome</p>
+<pre>  GEOM.ICOSPHERE  Geodesic sphere by recursive icosahedron subdivision (FreeSurfer-style).
+ 
+    [V, F] = rheome.geom.icosphere(nSub)
+ 
+  Builds a near-uniform unit-sphere triangulation by subdividing an icosahedron nSub
+  times (each triangle -&gt; 4, midpoints projected to the sphere). This is exactly the
+  construction FreeSurfer uses for its ico spheres:
+    nSub : 0    1    2    3    4     5(=ico5)  6(=ico7)
+    nV   : 12   42   162  642  2562  10242     40962
+    nF   : 20   80   320  1280 5120  20480     81920
+ 
+  A pristine ico sphere (uniform triangles) makes the LBO eigenfunctions match the
+  spherical harmonics to high accuracy -- the clean reference for the analytic-vs-
+  numerical PDE comparison (unlike the distorted cortical registration sphere).
+ 
+  INPUT:
+    nSub : number of subdivisions (5 for ico5). Default 5.
+  OUTPUTS:
+    V    [nV x 3] unit-sphere vertices
+    F    [nF x 3] triangle indices (1-based)
+ 
+  See also: demos.sphere_pde, rheome.operators.laplace_beltrami
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

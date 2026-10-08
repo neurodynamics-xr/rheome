@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.import.dirac</title></head><body>
+<h1>rheome.import.dirac</h1>
+<p><em>function rheome.import</em> &mdash; Rheome</p>
+<pre>  IMPORT.DIRAC  Compute + cache the relative-Dirac eigenbasis for a dataset.
+ 
+    file = rheome.import.dirac(name)              % tau=0.5, K=400 (defaults)
+    file = rheome.import.dirac(name, tau, K)
+ 
+  Builds the relative-Dirac eigenbasis (rheome.eigen.dirac_frame -- the expensive
+  per-hemisphere eigensolve, ~50 s) from the dataset's cached surface and writes it to
+  +data/&lt;name&gt;/dirac__tau&lt;tau&gt;__K&lt;K&gt;.mat. Requires rheome.import.surface(name, ...) first.
+ 
+  See also: rheome.import.surface, rheome.import.dataset, rheome.eigen.dirac_frame, rheome.load.dirac
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

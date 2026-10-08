@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.field</title></head><body>
+<h1>rheome.flow.field</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.FIELD  Root fused kernel: sensors -&gt; per-vertex current 3-vectors.
+    kf = rheome.flow.field(ctx)   kf.vertexOperator [3V x C];  J(:,t) = kf.vertexOperator * ctx.F(:,t)
+ 
+  Whatever source estimate rheome.flow.context built -- a plain whitened minimum norm by default, or
+  the Dirac-mode inverse if it was asked for. In AMPLITUDE measure this IS the imaging kernel
+  (physical current, A.m), and it is the root every other flow kernel is built from.
+  ctx.Method says which route produced it; the provenance carries it forward.
+ 
+  See also: rheome.flow.context, rheome.flow.divergence, rheome.flow.curl
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

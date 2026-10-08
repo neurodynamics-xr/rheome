@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.differential.helmholtz</title></head><body>
+<h1>rheome.differential.helmholtz</h1>
+<p><em>function rheome.differential</em> &mdash; Rheome</p>
+<pre>  DIFFERENTIAL.HELMHOLTZ  Helmholtz-Hodge decomposition of an ambient source vector field.
+ 
+    H = rheome.differential.helmholtz(J, S)
+ 
+  Splits the ambient (R^3) per-vertex field into orthogonal parts:
+    J  =  grad(Phi)   +   N x grad(Psi)   +   (J.n) n   +   harmonic
+          irrotational     solenoidal          normal        residual
+  Phi is the SCALAR POTENTIAL (maxima = sources, minima = sinks); Psi is the STREAM FUNCTION
+  (extrema = vortices / anti-vortices). The normal component is pulled out, so the source/sink
+  and vortex structure of the TANGENTIAL flow can be read WITHOUT the curvature-coupled normal
+  flux. Faithful port of Brainstorm's process_helmholtz Compute: weak divergence / vorticity
+  sources -&gt; two Poisson solves (rheome.differential.poisson nullspace handling) -&gt; reconstruction.
+ 
+  INPUTS:
+    J  [3nV x nT] ambient vectors, rows [x1,y1,z1, ...]
+    S  surface struct: .Vertices, .Faces, .VertNormals (and .Hemi for the Poisson nullspace)
+ 
+  OUTPUT (struct H):
+    .Phi .Psi          [nV x nT]  scalar potential (sources/sinks) and stream function (vortices)
+    .Div .Curl         [nV x nT]  strong divergence / vorticity (rheome.differential.divergence/curl)
+    .Virr .Vsol .Hresid .Vtot  [3nV x nT]  irrotational / solenoidal / harmonic / total fields
+    .Fmag .Hmag        [nV x nT]  |J| and |harmonic residual| magnitudes
+    .HarmFrac          [1 x nT]   fraction of field energy in the harmonic residual
+ 
+  See also: rheome.differential.divergence, rheome.differential.curl, rheome.differential.poisson, rheome.operators.face_gradient
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

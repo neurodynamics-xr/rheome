@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.demos.sensor_phase</title></head><body>
+<h1>rheome.demos.sensor_phase</h1>
+<p><em>function rheome.demos</em> &mdash; Rheome</p>
+<pre>  DEMOS.SENSOR_PHASE  Instantaneous phase across an array, and what its gradient measures.
+ 
+    rheome.demos.sensor_phase()
+    out = rheome.demos.sensor_phase('_figures')
+ 
+    1 maps      amplitude and phase side by side: travelling ramps, standing steps by pi
+    2 montage   unwrapped phase against position -- a straight line whose slope IS k
+    3 gradient  rheome.flow.phasegradient on the sensor graph: a wavevector per face
+    4 rotor     a rotating wave, and rheome.detect.phasesingularity finding its core and chirality
+    5 lag       phase lag against sensor separation -- and why PLV alone cannot see travel
+ 
+  ⭐ NOTHING HERE IS NEW MACHINERY. rheome.flow.phasegradient and rheome.detect.phasesingularity were
+  written for triangulated surface meshes and are used UNCHANGED, because rheome.sensors.graph
+  returns the same .Vertices/.Faces/.nV shape a mesh does. That was the point of
+  building it that way.
+ 
+  ⭐ THE ANALYTIC SIGNAL COMES FROM THE FFT, NOT FROM hilbert(). Zeroing the negative
+  frequencies and doubling the positive ones IS the Hilbert transform, it needs no toolbox,
+  and it is the same route rheome.flow.joint takes.
+ 
+  ⚠ PHASE IS THE MEASUREMENT, AMPLITUDE IS NOT. Multiply the field by any positive envelope
+  -- a gain change, a source waxing and waning -- and every phase quantity here is untouched
+  while every amplitude one moves. That is why a phase gradient is a more stable readout of
+  propagation than a peak-tracking one.
+ 
+  ⚠ SENSOR SPACE ONLY. k is rad per metre ACROSS THE ARRAY; speed is metres per second
+  across it. Nothing here is a claim about what produced the signal.
+ 
+  INPUTS:
+    outDir  '' for screen, or a folder for PNGs
+  OUTPUT:
+    out  .ok .checks .kFromPhase .kFromGradient .rotor .lagSlope
+ 
+  See also: rheome.demos.sensor_dynamics, rheome.flow.phasegradient, rheome.detect.phasesingularity
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

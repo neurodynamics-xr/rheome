@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.dynamics.opticalflow_scalar</title></head><body>
+<h1>rheome.dynamics.opticalflow_scalar</h1>
+<p><em>function rheome.dynamics</em> &mdash; Rheome</p>
+<pre>  DYNAMICS.OPTICALFLOW_SCALAR  Manifold Horn-Schunck optical flow of a scalar activity map.
+ 
+    velocityField = rheome.dynamics.opticalflow_scalar(activityMap, surface [,opts])
+ 
+  Estimates the propagation velocity field v(x,t) of a SCALAR activity map (e.g. |J|, the source
+  magnitude -- what Brainstorm's bst_opticalflow uses) by the manifold Horn-Schunck variational
+  method: per frame it minimises the brightness-constancy data term plus an isotropic smoothness
+  prior,  min_v  sum_v M_v (dI/dt + v.gradI)^2  +  alpha * (a'Ka + b'Kb),  with v = a*e1 + b*e2 in the
+  tangent frame. Reuses rheome.operators.face_gradient (gradient), rheome.operators.laplace_beltrami (smoothness K,
+  mass M), rheome.dynamics.tangent_basis. This is the scalar BASELINE for comparison against the vector
+  optical flow (rheome.dynamics.opticalflow_vector), which is aperture-free.
+ 
+  INPUTS:
+    activityMap  [nV x nT] scalar activity per vertex per frame
+    surface      struct with .Vertices .Faces .VertNormals .nV
+    opts.alpha   Horn-Schunck smoothness weight (default 1)
+  OUTPUT:
+    velocityField [3nV x (nT-1)] ambient tangent velocity, rows [x1;y1;z1;x2;...] per frame
+ 
+  See also: rheome.dynamics.opticalflow_vector, rheome.dynamics.flow_readout, rheome.dynamics.tangent_basis
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

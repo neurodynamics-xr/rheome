@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,IE=9,chrome=1"><meta name="generator" content="MATLAB 2023b"><title>How to import a Brainstorm study</title><style type="text/css">.rtcContent { padding: 30px; } .S0 { margin: 3px 10px 5px 4px; padding: 0px; line-height: 28.8px; min-height: 0px; white-space: pre-wrap; color: rgb(192, 76, 11); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 24px; font-weight: 400; text-align: left;  }
+.S1 { margin: 2px 10px 9px 4px; padding: 0px; line-height: 21px; min-height: 0px; white-space: pre-wrap; color: rgb(33, 33, 33); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 14px; font-weight: 400; text-align: left;  }
+.S2 { margin: 20px 10px 5px 4px; padding: 0px; line-height: 20px; min-height: 0px; white-space: pre-wrap; color: rgb(33, 33, 33); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 20px; font-weight: 700; text-align: left;  }
+.S3 { margin: 10px 0px 20px; padding-left: 0px; font-family: Helvetica, Arial, sans-serif; font-size: 14px;  }
+.S4 { margin-left: 56px; line-height: 21px; min-height: 0px; text-align: left; white-space: pre-wrap;  }
+.S5 { border-left: 0px none rgb(33, 33, 33); border-right: 0px none rgb(33, 33, 33); border-top: 0px none rgb(33, 33, 33); border-bottom: 0px none rgb(33, 33, 33); border-radius: 0px; padding: 0px; line-height: 15.6px; min-height: 16px; white-space: pre; color: rgb(33, 33, 33); font-family: Menlo, Monaco, Consolas, "Courier New", monospace; font-size: 12px;  }
+.CodeBlock { background-color: #F5F5F5; margin: 10px 0 10px 0; }
+.S6 { border-left: 1px solid rgb(217, 217, 217); border-right: 1px solid rgb(217, 217, 217); border-top: 1px solid rgb(217, 217, 217); border-bottom: 0px none rgb(33, 33, 33); border-radius: 4px 4px 0px 0px; padding: 6px 45px 0px 13px; line-height: 18.004px; min-height: 0px; white-space: nowrap; color: rgb(33, 33, 33); font-family: Menlo, Monaco, Consolas, "Courier New", monospace; font-size: 14px;  }
+.S7 { border-left: 1px solid rgb(217, 217, 217); border-right: 1px solid rgb(217, 217, 217); border-top: 0px none rgb(33, 33, 33); border-bottom: 1px solid rgb(217, 217, 217); border-radius: 0px 0px 4px 4px; padding: 0px 45px 4px 13px; line-height: 18.004px; min-height: 0px; white-space: nowrap; color: rgb(33, 33, 33); font-family: Menlo, Monaco, Consolas, "Courier New", monospace; font-size: 14px;  }
+.S8 { margin: 3px 10px 5px 4px; padding: 0px; line-height: 20px; min-height: 0px; white-space: pre-wrap; color: rgb(33, 33, 33); font-family: Helvetica, Arial, sans-serif; font-style: normal; font-size: 20px; font-weight: 700; text-align: left;  }
+.S9 { border-left: 1px solid rgb(217, 217, 217); border-right: 1px solid rgb(217, 217, 217); border-top: 1px solid rgb(217, 217, 217); border-bottom: 1px solid rgb(217, 217, 217); border-radius: 4px 4px 0px 0px; padding: 6px 45px 4px 13px; line-height: 18.004px; min-height: 0px; white-space: nowrap; color: rgb(33, 33, 33); font-family: Menlo, Monaco, Consolas, "Courier New", monospace; font-size: 14px;  }
+.S10 { color: rgb(33, 33, 33); padding: 10px 0px 6px 17px; background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box; font-family: Menlo, Monaco, Consolas, "Courier New", monospace; font-size: 14px; overflow-x: hidden; line-height: 17.234px;  }
+/* Styling that is common to warnings and errors is in diagnosticOutput.css */.embeddedOutputsErrorElement {    min-height: 18px;    max-height: 550px;}
+.embeddedOutputsErrorElement .diagnosticMessage-errorType {    overflow: auto;}
+.embeddedOutputsErrorElement.inlineElement {}
+.embeddedOutputsErrorElement.rightPaneElement {}
+/* Styling that is common to warnings and errors is in diagnosticOutput.css */.embeddedOutputsWarningElement {    min-height: 18px;    max-height: 550px;}
+.embeddedOutputsWarningElement .diagnosticMessage-warningType {    overflow: auto;}
+.embeddedOutputsWarningElement.inlineElement {}
+.embeddedOutputsWarningElement.rightPaneElement {}
+/* Copyright 2015-2023 The MathWorks, Inc. *//* In this file, styles are not scoped to rtcContainer since they could be in the Dojo Tooltip */.diagnosticMessage-wrapper {    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;    font-size: 12px;}
+.diagnosticMessage-wrapper.diagnosticMessage-warningType {    /*This fallback value will be used for appdesigner warnings*/    color: var(--rtc-warning-output-color, var(--mw-color-matlabWarning));}
+.diagnosticMessage-wrapper.diagnosticMessage-warningType a {    /*This fallback value will be used for appdesigner warnings*/    color: var(--rtc-warning-output-color, var(--mw-color-matlabWarning));    text-decoration: underline;}
+.rtcThemeDefaultOverride .diagnosticMessage-wrapper.diagnosticMessage-warningType,.rtcThemeDefaultOverride .diagnosticMessage-wrapper.diagnosticMessage-warningType a {    color: var(--mw-color-matlabWarning) !important;}
+.diagnosticMessage-wrapper.diagnosticMessage-errorType {    /*This fallback value will be used in appdesigner error tooltip text*/    color: var(--rtc-error-output-color, var(--mw-color-matlabErrors));}
+.diagnosticMessage-wrapper.diagnosticMessage-errorType a {    /*This fallback value will be used in appdesigner error tooltip text*/    color: var(--rtc-error-output-color, var(--mw-color-matlabErrors));    text-decoration: underline;}
+.rtcThemeDefaultOverride .diagnosticMessage-wrapper.diagnosticMessage-errorType,.rtcThemeDefaultOverride .diagnosticMessage-wrapper.diagnosticMessage-errorType a {    color: var(--mw-color-matlabErrors) !important;}
+.diagnosticMessage-wrapper .diagnosticMessage-messagePart,.diagnosticMessage-wrapper .diagnosticMessage-causePart {    white-space: pre-wrap;}
+.diagnosticMessage-wrapper .diagnosticMessage-stackPart {    white-space: pre;}
+.embeddedOutputsTextElement,.embeddedOutputsVariableStringElement {    white-space: pre;    word-wrap:  initial;    min-height: 18px;    max-height: 550px;}
+.embeddedOutputsTextElement .textElement,.embeddedOutputsVariableStringElement .textElement {    overflow: auto;}
+.textElement,.rtcDataTipElement .textElement {    padding-top: 2px;}
+.embeddedOutputsTextElement.inlineElement,.embeddedOutputsVariableStringElement.inlineElement {}
+.inlineElement .textElement {}
+.embeddedOutputsTextElement.rightPaneElement,.embeddedOutputsVariableStringElement.rightPaneElement {    min-height: 16px;}
+.rightPaneElement .textElement {    padding-top: 2px;    padding-left: 9px;}
+.S11 { border-left: 1px solid rgb(217, 217, 217); border-right: 1px solid rgb(217, 217, 217); border-top: 1px solid rgb(217, 217, 217); border-bottom: 1px solid rgb(217, 217, 217); border-radius: 0px; padding: 6px 45px 4px 13px; line-height: 18.004px; min-height: 0px; white-space: nowrap; color: rgb(33, 33, 33); font-family: Menlo, Monaco, Consolas, "Courier New", monospace; font-size: 14px;  }
+.S12 { border-left: 1px solid rgb(217, 217, 217); border-right: 1px solid rgb(217, 217, 217); border-top: 0px none rgb(33, 33, 33); border-bottom: 0px none rgb(33, 33, 33); border-radius: 0px; padding: 0px 45px 0px 13px; line-height: 18.004px; min-height: 0px; white-space: nowrap; color: rgb(33, 33, 33); font-family: Menlo, Monaco, Consolas, "Courier New", monospace; font-size: 14px;  }</style></head><body><div class = rtcContent><h1  class = 'S0'><span>How to import a Brainstorm study</span></h1><div  class = 'S1'><span style=' font-weight: bold;'>How-to guide.</span><span> This guide imports one participant's Brainstorm study into the toolbox's cache, so that</span><span> </span><span style=' font-family: monospace;'>rheome.flow.context</span><span>,</span><span> </span><span style=' font-family: monospace;'>rheome.scale.run</span><span> and the</span><span> </span><span style=' font-family: monospace;'>rheome.load.*</span><span> functions can use it. Brainstorm does not need to be running or installed: its files are read from disk as plain MAT-files.</span></div><h2  class = 'S2'><span>What the study must contain</span></h2><div  class = 'S1'><span>From the subject's anatomy folder:</span></div><ul  class = 'S3'><li  class = 'S4'><span>the cortex surface the leadfield was computed on </span><span>(</span><span style=' font-family: monospace;'>tess</span><span style=' font-style: italic; font-family: monospace;'>c</span><span style=' font-style: italic; font-family: monospace;'>ortex</span><span style=' font-family: monospace;'>*</span><span style=' font-family: monospace;'>.mat</span><span>), with the</span><span> </span><span style=' font-family: monospace;'>Structures</span><span> atlas that splits it into left and right hemispheres.</span></li></ul><div  class = 'S1'><span>From one study (condition) folder:</span></div><ul  class = 'S3'><li  class = 'S4'><span>the channel file </span><span>(</span><span style=' font-family: monospace;'>channel_*.mat</span><span>);</span></li><li  class = 'S4'><span>an</span><span> </span><span style=' font-weight: bold;'>unconstrained</span><span> MEG head model </span><span>(</span><span style=' font-family: monospace;'>headmodel</span><span style=' font-family: monospace;'>_s</span><span style=' font-family: monospace;'>urf_os_meg*.mat</span><span>, overlapping spheres, three orientations per vertex). A constrained head model is refused: the flow kernels need the full three-component current;</span></li><li  class = 'S4'><span>the noise covariance </span><span>(</span><span style=' font-family: monospace;'>noisecov</span><span style=' font-family: monospace;'>_f</span><span style=' font-family: monospace;'>ull.mat</span><span>);</span></li><li  class = 'S4'><span>the recording (a</span><span> </span><span style=' font-family: monospace;'>data_*.mat</span><span> file, imported, not a raw link).</span></li></ul><div  class = 'S1'><span>If the recording was imported into a different condition from the one holding the channel file and the head model, pass its absolute path as the recording name.</span></div><h2  class = 'S2'><span>Choose where the cache goes</span></h2><div  class = 'S1'><span>The cache is</span><span> </span><span style=' font-family: monospace;'>rheome.load.root()</span><span>. For an installed toolbox it is under your</span><span> </span><span style=' font-family: monospace;'>userpath</span><span>; in a clone of the repository it is</span><span> </span><span style=' font-family: monospace;'>+data</span><span> beside the code. To put it elsewhere (a larger disk, node-local scratch), set</span><span> </span><span style=' font-family: monospace;'>RHEOME</span><span style=' font-family: monospace;'>_D</span><span style=' font-family: monospace;'>ATA</span><span> before importing:</span></div><div class = 'preformatted-matlab' style = 'margin: 10px 3px 10px 55px; padding: 10px 10px 10px 5px; '><div  class = 'S5'><span style="white-space: pre"><span >setenv(</span><span style="color: #a709f5;">'RHEOME_DATA'</span><span >, </span><span style="color: #a709f5;">'/path/to/cache'</span><span >)</span></span></div></div><div  class = 'S1'><span>This guide uses the synthetic study that comes with the documentation. Replace</span><span> </span><span style=' font-family: monospace;'>demo.cortexFile</span><span>,</span><span> </span><span style=' font-family: monospace;'>demo.studyDir</span><span> and</span><span> </span><span style=' font-family: monospace;'>demo.dataName</span><span> with your own files.</span></div><div class="CodeBlock"><div class="inlineWrapper"><div  class = 'S6'><span style="white-space: pre"><span >demo = cfdemo_study();</span></span></div></div><div class="inlineWrapper"><div  class = 'S7'><span style="white-space: pre"><span >name = </span><span style="color: #a709f5;">'cfdemo'</span><span >;                       </span><span style="color: #008013;">% the name you will load the participant by</span></span></div></div></div><h2  class = 'S8'><span>Import the cortex, the study and the eigenbases</span></h2><div  class = 'S1'><span>Three calls, in this order:</span></div><div class="CodeBlock"><div class="inlineWrapper outputs"><div  class = 'S9'><span style="white-space: pre"><span >rheome.import.surface(name, demo.cortexFile);             </span><span style="color: #008013;">% surface + Laplace-Beltrami operators</span></span></div><div  class = 'S10'><div class="inlineElement eoOutputWrapper disableDefaultGestureHandling embeddedOutputsTextElement" uid="EEFD49F3" prevent-scroll="true" data-testid="output_0" tabindex="-1" style="width: 1145px; white-space: pre; font-style: normal; color: rgb(33, 33, 33); font-size: 12px;"><div class="textElement eoOutputContent" data-previous-available-width="1108" data-previous-scroll-height="32" data-hashorizontaloverflow="false" style="max-height: 261px; white-space: pre; font-style: normal; color: rgb(33, 33, 33); font-size: 12px;" tabindex="-1">rheome.import.surface[cfdemo]: reading /private/tmp/cfdocs/tmp/cfdemo/tess_cortex_demo.mat
+  cached 5124-vertex surface + LBO operators -&gt; /tmp/cfdocs/data/cfdemo/surface.mat</div></div></div></div><div class="inlineWrapper outputs"><div  class = 'S11'><span style="white-space: pre"><span >rheome.import.study(name, demo.studyDir, demo.dataName);  </span><span style="color: #008013;">% channels, leadfield, recording, noise covariance</span></span></div><div  class = 'S10'><div class="inlineElement eoOutputWrapper disableDefaultGestureHandling embeddedOutputsTextElement" uid="6514DE04" prevent-scroll="true" data-testid="output_1" tabindex="-1" style="width: 1145px; white-space: pre; font-style: normal; color: rgb(33, 33, 33); font-size: 12px;"><div class="textElement eoOutputContent" data-previous-available-width="1108" data-previous-scroll-height="32" data-hashorizontaloverflow="false" style="max-height: 261px; white-space: pre; font-style: normal; color: rgb(33, 33, 33); font-size: 12px;" tabindex="-1">rheome.import.study[cfdemo]: reading channel / leadfield / recording / noisecov
+  cached study (leadfield 150x15372) -&gt; /tmp/cfdocs/data/cfdemo/study.mat</div></div></div></div><div class="inlineWrapper outputs"><div  class = 'S11'><span style="white-space: pre"><span >rheome.import.bases(name, 100, 100, struct(</span><span style="color: #a709f5;">'overwrite'</span><span >, true));   </span><span style="color: #008013;">% 100 eigenmodes per hemisphere</span></span></div><div  class = 'S10'><div class="inlineElement eoOutputWrapper disableDefaultGestureHandling embeddedOutputsTextElement" uid="832E4DC9" prevent-scroll="true" data-testid="output_2" tabindex="-1" style="width: 1145px; white-space: pre; font-style: normal; color: rgb(33, 33, 33); font-size: 12px;"><div class="textElement eoOutputContent" data-previous-available-width="1108" data-previous-scroll-height="91" data-hashorizontaloverflow="false" style="max-height: 261px; white-space: pre; font-style: normal; color: rgb(33, 33, 33); font-size: 12px;" tabindex="-1">rheome.import.bases[cfdemo]: reusing the connection block (Kc=100) from bases__K100__Kc100.mat
+=== rheome.import.bases[cfdemo] (K=100, Kc=100, 2 hemispheres) ===
+  [L] 2562 vertices: LBO(K=100) 0.5s lmax=3.727e+04 vpw=4.6 | connection REUSED (Kc=100)
+  [R] 2562 vertices: LBO(K=100) 0.5s lmax=3.727e+04 vpw=4.6 | connection REUSED (Kc=100)
+lambda_max = 3.727e+04 -&gt; frame usable floor sigma_m &gt;= 16.0 mm
+rheome.import.bases[cfdemo]: per-hemisphere operators + eigenbases -&gt; /tmp/cfdocs/data/cfdemo/bases__K100__Kc100.mat</div></div></div></div></div><div  class = 'S1'><span>Choose the number of eigenmodes per hemisphere (the second argument of</span><span> </span><span style=' font-family: monospace;'>rheome.import.bases</span><span>) for your mesh. It sets the finest scale every later analysis can read, so pin it: the flow analyses of the methods paper use 400 per hemisphere for the fused kernels and 1000 for resolution and Helmholtz bands, on 10,242-vertex hemispheres. If the warning about vertices per half-wavelength appears, the top of the basis is unreliable: choose fewer modes or a finer mesh. Several bases can coexist in the cache; each is stored under its own K.</span></div><div  class = 'S1'><span style=' font-family: monospace;'>rheome.import.dataset</span><span> does the same three steps and also computes the relative-Dirac eigenbasis, which only the alternative</span><span> </span><span style=' font-family: monospace;'>'dirac'</span><span> source estimate needs.</span></div><h2  class = 'S2'><span>Import a noise recording (optional)</span></h2><div  class = 'S1'><span>The per-octave signal-to-noise analysis of</span><span> </span><span style=' font-family: monospace;'>rheome.scale.run</span><span> compares the recording with a noise run (an empty-room recording) from the same channels. Import it under its own name; only the study part is needed:</span></div><div class="CodeBlock"><div class="inlineWrapper outputs"><div  class = 'S9'><span style="white-space: pre"><span >rheome.import.surface(</span><span style="color: #a709f5;">'cfdemo_noise'</span><span >, demo.cortexFile);</span></span></div><div  class = 'S10'><div class="inlineElement eoOutputWrapper disableDefaultGestureHandling embeddedOutputsTextElement" uid="EBF55796" prevent-scroll="true" data-testid="output_3" tabindex="-1" style="width: 1145px; white-space: pre; font-style: normal; color: rgb(33, 33, 33); font-size: 12px;"><div class="textElement eoOutputContent" data-previous-available-width="1108" data-previous-scroll-height="32" data-hashorizontaloverflow="false" style="max-height: 261px; white-space: pre; font-style: normal; color: rgb(33, 33, 33); font-size: 12px;" tabindex="-1">rheome.import.surface[cfdemo_noise]: reading /private/tmp/cfdocs/tmp/cfdemo/tess_cortex_demo.mat
+  cached 5124-vertex surface + LBO operators -&gt; /tmp/cfdocs/data/cfdemo_noise/surface.mat</div></div></div></div><div class="inlineWrapper outputs"><div  class = 'S11'><span style="white-space: pre"><span >rheome.import.study(</span><span style="color: #a709f5;">'cfdemo_noise'</span><span >, demo.studyDir, demo.noiseName);</span></span></div><div  class = 'S10'><div class="inlineElement eoOutputWrapper disableDefaultGestureHandling embeddedOutputsTextElement" uid="7E62FB55" prevent-scroll="true" data-testid="output_4" tabindex="-1" style="width: 1145px; white-space: pre; font-style: normal; color: rgb(33, 33, 33); font-size: 12px;"><div class="textElement eoOutputContent" data-previous-available-width="1108" data-previous-scroll-height="32" data-hashorizontaloverflow="false" style="max-height: 261px; white-space: pre; font-style: normal; color: rgb(33, 33, 33); font-size: 12px;" tabindex="-1">rheome.import.study[cfdemo_noise]: reading channel / leadfield / recording / noisecov
+  cached study (leadfield 150x15372) -&gt; /tmp/cfdocs/data/cfdemo_noise/study.mat</div></div></div></div></div><h2  class = 'S8'><span>Check what was cached</span></h2><div class="CodeBlock"><div class="inlineWrapper outputs"><div  class = 'S9'><span style="white-space: pre"><span >rheome.load.list()</span></span></div><div  class = 'S10'><div class="inlineElement eoOutputWrapper disableDefaultGestureHandling embeddedOutputsTextElement" uid="BF9B0C26" prevent-scroll="true" data-testid="output_5" tabindex="-1" style="width: 1145px; white-space: pre; font-style: normal; color: rgb(33, 33, 33); font-size: 12px;"><div class="textElement eoOutputContent" data-previous-available-width="1108" data-previous-scroll-height="46" data-hashorizontaloverflow="false" style="max-height: 261px; white-space: pre; font-style: normal; color: rgb(33, 33, 33); font-size: 12px;" tabindex="-1">Cached datasets in /tmp/cfdocs/data:
+  cfdemo           [surface, study]  (53 MB)
+  cfdemo_noise     [surface, study]  (39 MB)</div></div></div></div></div><div  class = 'S1'><span style=' font-family: monospace;'>rheome.load.has(name)</span><span> tells a script whether a participant is already cached, so the import can be skipped on the next run:</span></div><div class="CodeBlock"><div class="inlineWrapper"><div  class = 'S6'><span style="white-space: pre"><span >assert(rheome.load.has(name))</span></span></div></div><div class="inlineWrapper"><div  class = 'S12'><span style="white-space: pre"><span >st = rheome.load.study(name);</span></span></div></div><div class="inlineWrapper"><div  class = 'S7'><span style="white-space: pre"><span >assert(size(st.hm.Gain, 2) == 3 * st.hm.nV)    </span><span style="color: #008013;">% unconstrained: three columns per vertex</span></span></div></div></div><h2  class = 'S8'><span>Use your own minimum-norm kernel instead (optional)</span></h2><div  class = 'S1'><span style=' font-family: monospace;'>rheome.flow.context</span><span> computes its own whitened minimum-norm kernel from the leadfield and the noise covariance, so you do not need a Brainstorm inverse. To keep the kernel Brainstorm computed, for comparison,</span><span> </span><span style=' font-family: monospace;'>rheome.import.inverse(name, studyDir)</span><span> caches the study's unconstrained kernel-only result and</span><span> </span><span style=' font-family: monospace;'>rheome.load.inverse(name)</span><span> reads it back.</span></div><h2  class = 'S2'><span>See also</span></h2><div  class = 'S1'><a href = "http://howto_flow_maps.html"><span>How to compute flow maps</span></a><span>,</span><span> </span><a href = "http://howto_scale_run.html"><span>How to run the per-participant measures</span></a><span>,</span><span> </span><a href = "http://reference/index.html"><span>Function reference</span></a><span> </span><span>(</span><span style=' font-family: monospace;'>import</span><span>,</span><span> </span><span style=' font-family: monospace;'>load</span><span>).</span></div><div  class = 'S1'><span style=' font-style: italic;'>Written for Rheome v1.0.0.</span></div>
+<br>
+<!-- 
+##### SOURCE BEGIN #####
+%% How to import a Brainstorm study
+% *How-to guide.* This guide imports one participant's Brainstorm study into 
+% the toolbox's cache, so that |rheome.flow.context|, |rheome.scale.run| and the 
+% |rheome.load.*| functions can use it. Brainstorm does not need to be running 
+% or installed: its files are read from disk as plain MAT-files.
+%% What the study must contain
+% From the subject's anatomy folder:
+%% 
+% * the cortex surface the leadfield was computed on (|tess_cortex_*.mat|), 
+% with the |Structures| atlas that splits it into left and right hemispheres.
+%% 
+% From one study (condition) folder:
+%% 
+% * the channel file (|channel_*.mat|);
+% * an *unconstrained* MEG head model (|headmodel_surf_os_meg*.mat|, overlapping 
+% spheres, three orientations per vertex). A constrained head model is refused: 
+% the flow kernels need the full three-component current;
+% * the noise covariance (|noisecov_full.mat|);
+% * the recording (a |data_*.mat| file, imported, not a raw link).
+%% 
+% If the recording was imported into a different condition from the one holding 
+% the channel file and the head model, pass its absolute path as the recording 
+% name.
+%% Choose where the cache goes
+% The cache is |rheome.load.root()|. For an installed toolbox it is under your 
+% |userpath|; in a clone of the repository it is |+data| beside the code. To put 
+% it elsewhere (a larger disk, node-local scratch), set |RHEOME_DATA| before importing:
+%%
+% 
+%   setenv('RHEOME_DATA', '/path/to/cache')
+%
+%% 
+% This guide uses the synthetic study that comes with the documentation. Replace 
+% |demo.cortexFile|, |demo.studyDir| and |demo.dataName| with your own files.
+
+demo = cfdemo_study();
+name = 'cfdemo';                       % the name you will load the participant by
+%% Import the cortex, the study and the eigenbases
+% Three calls, in this order:
+
+rheome.import.surface(name, demo.cortexFile);             % surface + Laplace-Beltrami operators
+rheome.import.study(name, demo.studyDir, demo.dataName);  % channels, leadfield, recording, noise covariance
+rheome.import.bases(name, 100, 100, struct('overwrite', true));   % 100 eigenmodes per hemisphere
+%% 
+% Choose the number of eigenmodes per hemisphere (the second argument of |rheome.import.bases|) 
+% for your mesh. It sets the finest scale every later analysis can read, so pin 
+% it: the flow analyses of the methods paper use 400 per hemisphere for the fused 
+% kernels and 1000 for resolution and Helmholtz bands, on 10,242-vertex hemispheres. 
+% If the warning about vertices per half-wavelength appears, the top of the basis 
+% is unreliable: choose fewer modes or a finer mesh. Several bases can coexist 
+% in the cache; each is stored under its own K.
+% 
+% |rheome.import.dataset| does the same three steps and also computes the relative-Dirac 
+% eigenbasis, which only the alternative |'dirac'| source estimate needs.
+%% Import a noise recording (optional)
+% The per-octave signal-to-noise analysis of |rheome.scale.run| compares the 
+% recording with a noise run (an empty-room recording) from the same channels. 
+% Import it under its own name; only the study part is needed:
+
+rheome.import.surface('cfdemo_noise', demo.cortexFile);
+rheome.import.study('cfdemo_noise', demo.studyDir, demo.noiseName);
+%% Check what was cached
+
+rheome.load.list()
+%% 
+% |rheome.load.has(name)| tells a script whether a participant is already cached, 
+% so the import can be skipped on the next run:
+
+assert(rheome.load.has(name))
+st = rheome.load.study(name);
+assert(size(st.hm.Gain, 2) == 3 * st.hm.nV)    % unconstrained: three columns per vertex
+%% Use your own minimum-norm kernel instead (optional)
+% |rheome.flow.context| computes its own whitened minimum-norm kernel from the 
+% leadfield and the noise covariance, so you do not need a Brainstorm inverse. 
+% To keep the kernel Brainstorm computed, for comparison, |rheome.import.inverse(name, 
+% studyDir)| caches the study's unconstrained kernel-only result and |rheome.load.inverse(name)| 
+% reads it back.
+%% See also
+% <http://howto_flow_maps.html How to compute flow maps>, <http://howto_scale_run.html 
+% How to run the per-participant measures>, <http://reference/index.html Function 
+% reference> (|import|, |load|).
+% 
+% _Written for Rheome v1.0.0._
+##### SOURCE END #####
+-->
+</div></body></html>

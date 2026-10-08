@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.pipeline.run</title></head><body>
+<h1>rheome.pipeline.run</h1>
+<p><em>function rheome.pipeline</em> &mdash; Rheome</p>
+<pre>  PIPELINE.RUN  Execute a plan and return the result WITH its bookkeeping.
+ 
+    [g, rec] = rheome.pipeline.run(p, e, F);
+ 
+  ⭐ THE RECORD IS THE POINT. What came out is a matrix like any other; what makes it usable
+  a week later is knowing which recording and window it came from, which operators were
+  applied in which order, which domain each intermediate lived on, and what shape it had.
+  `rec.steps` is one row per step with all of that, and `rec.out` is the field type and
+  domain of the answer -- so the result can be validated, stored, or handed to the next
+  pipeline without guessing.
+ 
+  ⚠ EVERY STEP IS VALIDATED AS IT RUNS, not only at the end: the intermediate is checked
+  against the type the registry promised on the domain the environment resolved. A wrong
+  applier shows up at the step that broke the contract, not as a mysterious final shape.
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

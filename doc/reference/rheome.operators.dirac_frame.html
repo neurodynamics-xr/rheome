@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.operators.dirac_frame</title></head><body>
+<h1>rheome.operators.dirac_frame</h1>
+<p><em>function rheome.operators</em> &mdash; Rheome</p>
+<pre>  OPERATORS.DIRAC_FRAME  Relative Dirac operator (Brainstorm production).
+ 
+    [A, B]         = rheome.operators.dirac_frame(V, F, tau)
+    [A, B]         = rheome.operators.dirac_frame(V, F, tau, N)              % supply the Gauss map
+    [A, B]         = rheome.operators.dirac_frame(V, F, tau, N, normalize)   % scale convention
+    [A, B, scales] = rheome.operators.dirac_frame(...)
+ 
+  Faithful standalone port of Brainstorm's tess_operators 'Dirac' variant:
+ 
+    A = (1-tau)*(D_int^2 / sL)  +  tau*(E / sE) ,     B = kron(Mass, I4)
+ 
+  D_int^2 (rheome.operators.dirac_intrinsic_sq) is the INTRINSIC spin-connection / tangent-
+  frame Dirac squared (from the immersion / edge vectors); E (rheome.operators.dirac_extrinsic)
+  is the EXTRINSIC Gauss-map (shape-operator) Dirac squared. Each block is co-normalized
+  to unit largest generalized eigenvalue vs B (sL, sE) so tau is a DIMENSIONLESS dial
+  (tau=0.5 == equal intrinsic/extrinsic frame weight), portable across mesh size/units.
+  BOTH blocks couple the quaternion components (the rotating cortical frame) -- neither
+  presupposes a tangent/normal split. Build per connected component (hemisphere).
+ 
+  NORMALIZE (default true) -- the block co-normalization is only a MAGNITUDE balance (both
+  blocks are already 1/length^2), so dropping it is a pure SCALAR sL on the operator:
+    true  : A = (1-tau)(D^2/sL) + tau(E/sE)         dimensionless, spectrum in [0,1] (Brainstorm)
+    false : A = (1-tau)D^2 + tau(sL/sE)E  ( = sL*A) PHYSICAL units 1/length^2 -&gt; sqrt(lambda) is a
+            wavenumber, calibrated by the mesh's real size. This is EXACTLY sL times the
+            normalized operator, so the EIGENMODES are identical and only the eigenVALUES
+            rescale (lambda_phys = sL*lambda_norm). Use it to read the Dirac spectrum in real mm.
+ 
+  INPUTS:  V,F surface;  tau in [0,1] (0=pure intrinsic, 1=pure extrinsic, 0.5=balanced);
+           N (optional) [V x 3] unit vertex normals for the Gauss map;
+           normalize (optional) true (default) | false (physical eigenvalues, same eigenmodes).
+  OUTPUT:  A [4V x 4V] symmetric;  B [4V x 4V] SPD mass;  scales = [sL, sE].
+ 
+  See also: rheome.operators.dirac_intrinsic_sq, rheome.operators.dirac_extrinsic, rheome.eigen.dirac_frame
+ 
+  Author: Diellor Basha, 2026 (port of Brainstorm tess_operators 'Dirac')
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

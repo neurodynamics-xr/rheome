@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.report.article</title></head><body>
+<h1>rheome.report.article</h1>
+<p><em>function rheome.report</em> &mdash; Rheome</p>
+<pre>  REPORT.ARTICLE  Render a filled rheome.report.template as a mini-article: PDF, HTML or Word.
+ 
+    out = rheome.report.article(spec)
+    spec.Format = &quot;html-file&quot;;  out = rheome.report.article(spec)
+ 
+  Builds the standard shape -- title page, contents, abstract, introduction, methods, results
+  with numbered figures and legends, conclusion, provenance -- from the spec value, using
+  MATLAB Report Generator. Returns the path written.
+ 
+  ⭐ A FIGURE WITHOUT A LEGEND IS AN ERROR, not a warning. An exhibit whose caption says what
+  the reader is looking at is the difference between a report and a slide, and the constraint
+  is worth enforcing where it is cheap. Set .Legend on every result that sets .Figure.
+ 
+  ⚠ A DIRTY WORKING TREE PUTS A BANNER IN THE DOCUMENT. When spec.Provenance reports
+  uncommitted changes the title page carries a warning and the provenance chapter lists the
+  files, because a result built from uncommitted code cannot be reproduced from its commit and
+  the reader cannot discover that anywhere else.
+ 
+  ⚠ FORMAT CHANGES THE FIGURE SIZING, so check the one you will actually circulate. &quot;pdf&quot; lays
+  out to a 6-inch text column; &quot;html-file&quot; is one portable file with images base64-embedded and
+  no width constraint; &quot;docx&quot; is for people who will edit it. The same spec gives all three
+  (measured on the resolution article: pdf 2.1 s / 537 kB, docx 1.1 s / 505 kB, html 0.8 s /
+  735 kB).
+ 
+  ⚠ IN WORD THE FIGURE AND TABLE NUMBERS ARE FIELDS, NOT TEXT. The caption carries
+  &quot;SEQ figure \* ARABIC&quot;, and Word computes the number when it updates fields -- which it does
+  on open or print, but a reader who never triggers an update can see a stale or zero number.
+  Ctrl-A then F9 forces it. The PDF has the numbers baked in and does not have this problem,
+  so send the PDF when the numbering has to be right without the reader doing anything.
+ 
+  ⚠ FIGURE HANDLES ARE CAPTURED AT RENDER TIME, so a handle that has been closed or redrawn
+  since the result was computed reports whatever it holds NOW. Passing a PNG path that the
+  analysis script exported is the reproducible route and is what the example uses.
+ 
+  ⭐ EVERY REPORT IS A SELF-CONTAINED FOLDER. The document goes to spec.OutputPath -- by convention
+  rheome.load.outpath(&quot;reports/&lt;name&gt;&quot;, &quot;&lt;name&gt;&quot;), i.e. results/reports/&lt;name&gt;/&lt;name&gt;.pdf -- and every
+  figure it shows is COLLECTED into &lt;that folder&gt;/figures/: a PNG referenced from anywhere else (an
+  analysis figure under results/&lt;subject&gt;/...) is copied in, and a figure handle is exported there
+  rather than to a throwaway temp file. So a report folder holds the documents and the exact
+  images they embed, and can be moved or circulated as one unit.
+ 
+  INPUT:  spec  from rheome.report.template, with the fields filled in
+  OUTPUT: out   full path of the document written
+ 
+  See also: rheome.report.template, rheome.report.provenance, mlreportgen.report.Report
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.trackselect</title></head><body>
+<h1>rheome.detect.trackselect</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.TRACKSELECT  Keep the trajectories that beat the noise-only null.
+ 
+    [keep, kind] = rheome.detect.trackselect(stats, thr)     % stats = rheome.detect.trackstats, thr = rheome.detect.tracknull
+ 
+  A track is kept if it is PERSISTENT (durationS &gt; thr.durationS) or MOVING (netMM &gt; thr.netMM).
+  `kind` says which, so a still object is reported as present-and-still and a brief fast one as moving,
+  rather than both being ranked on one score.
+ 
+  OUTPUT
+    keep  [nTracks x 1] logical
+    kind  [nTracks x 1] string: &quot;moving&quot;, &quot;persistent&quot;, &quot;both&quot; or &quot;&quot;
+ 
+  See also: rheome.detect.tracknull, rheome.detect.trackstats, rheome.detect.tiletrack
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

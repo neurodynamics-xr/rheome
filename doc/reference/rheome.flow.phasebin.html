@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.phasebin</title></head><body>
+<h1>rheome.flow.phasebin</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.PHASEBIN  Collapse a coefficient series onto a common PHASE axis.
+ 
+    out = rheome.flow.phasebin(A, phase, nBins)
+ 
+  ⭐ THIS IS WHAT MAKES MULTIRATE RECTANGULAR AGAIN. Under a multirate scheme every filter
+  runs at its own sample rate (r_m = samplesPerCycle * f_m), so the TIME axes disagree and
+  the coefficients cannot be stacked into one array. Binning by the reference rhythm's
+  PHASE gives every filter the same nBins per cycle -- and the results stack:
+ 
+      A_m [Ks x nT_m]   (nT_m differs per filter)
+           -&gt; phasebin -&gt;   [Ks x nBins]   (identical for every filter)
+ 
+  At 30 bins, 800 modes and 7 filters that is 1.3 MB against a 1.16 GB full-rate tensor.
+ 
+  ⚠ THE TWO ACCUMULATORS ANSWER DIFFERENT QUESTIONS. Do not substitute one for the other:
+ 
+    .mean    COMPLEX mean per bin. Keeps only what is PHASE-LOCKED to the reference --
+             the cycle-averaged flow map, the thing you animate. Activity not locked to
+             the reference CANCELS, by design.
+    .energy  mean |A|^2 per bin. Keeps ALL power at that phase, locked or not; nothing
+             can cancel. Use it to ask WHEN in the cycle the flow is strongest.
+ 
+  Their ratio, |mean|^2 / energy, is a phase-locking measure in [0,1].
+ 
+  ⚠ EMPTY BINS ARE NaN, NOT ZERO. A bin no sample reached is UNKNOWN. Returning zero would
+  let &quot;no measurement&quot; average into downstream statistics as &quot;no flow&quot; -- silently, and in
+  the direction of weakening any real effect.
+ 
+  ⚠ PHASE IS TAKEN ON (-pi, pi] AND WRAPS. -pi and +pi are the SAME phase and land in the
+  same bin; treating them as distinct creates a phantom bin at the wrap point.
+ 
+  INPUTS:
+    A       [nMode x nT] coefficients (complex; real is accepted)
+    phase   [1 x nT] reference phase per sample, radians
+    nBins   number of phase bins (the multirate samplesPerCycle is the natural choice)
+ 
+  OUTPUT (struct out):
+    .mean    [nMode x nBins] complex   .energy [nMode x nBins] real
+    .count   [1 x nBins]               .phase  [1 x nBins] bin-centre phase (rad)
+    .locking [nMode x nBins] |mean|^2 ./ energy, in [0,1]
+ 
+  See also: rheome.flow.rateplan, rheome.flow.demod, rheome.flow.observables
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

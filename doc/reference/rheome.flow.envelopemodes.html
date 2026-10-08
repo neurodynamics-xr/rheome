@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.envelopemodes</title></head><body>
+<h1>rheome.flow.envelopemodes</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.ENVELOPEMODES  The analytic band envelope of the source estimate, as LB mode coefficients (cached).
+ 
+    E = rheome.flow.envelopemodes('sub01')                   % alpha, 8-16 Hz, 300 frames/s
+    E = rheome.flow.envelopemodes(name, Band=[8 16], Rate=300, Rebuild=false)
+ 
+  Per hemisphere: band-pass and Hilbert AT THE SENSORS (exact, since the inverse is linear -- 270
+  transforms instead of 61 000), the plain minimum-norm kernel, |J^| per vertex (rheome.flow.activation), and
+  the projection onto the hemisphere's Laplace-Beltrami modes, chunk by chunk. The whole recording
+  becomes [K x nFrames] per hemisphere, so every later pass -- data, surrogate, injection -- pools
+  tiles with one [nTile x K] matrix instead of touching vertices again.
+ 
+  CACHE: +data/&lt;name&gt;/alpha_envelope_modes.mat for the 8-16 Hz default (the file the alpha scripts
+  already read), envelope_modes__&lt;lo&gt;-&lt;hi&gt;Hz__&lt;rate&gt;.mat otherwise. Rebuild=true recomputes.
+ 
+  OUTPUT  E.L / E.R: struct(.C single [K x nFrames], .fs, .band)
+ 
+  See also: rheome.flow.activation, rheome.inverse.mne, alpha_grouptrack_omega, alpha_jointstate_omega
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

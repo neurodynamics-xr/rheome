@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.source.dirac</title></head><body>
+<h1>rheome.source.dirac</h1>
+<p><em>function rheome.source</em> &mdash; Rheome</p>
+<pre>  SOURCE.DIRAC  End-to-end Dirac-eigenmode MEG source mapping (no plotting).
+ 
+    out = rheome.source.dirac(studyDir, cortexFile, dataName)      % from Brainstorm files
+    out = rheome.source.dirac(studyDir, cortexFile, dataName, K)
+    out = rheome.source.dirac(datasetName)                         % from a cached dataset (+data)
+    out = rheome.source.dirac(datasetName, [], [], K)
+    out = rheome.source.dirac(..., K, measure)                     % InverseMeasure (see below)
+ 
+  Builds the relative-Dirac eigenbasis (rheome.eigen.dirac_frame, tau=0.5, as
+  Brainstorm's bst_dirac), projects the leadfield, solves the whitened minimum-norm
+  inverse, and returns the result -- including the mode-coefficient time series that
+  later dynamics analysis consumes. Faithful to bst_dirac + bst_inverse_dirac. This is
+  the compute core of the Dirac route (rheome.flow.context, Method=dirac).
+ 
+  INPUTS (two forms):
+    FILE form:    studyDir (channel_*/noisecov_full/headmodel_surf_os_meg*), cortexFile,
+                  dataName -- read + computed fresh.
+    DATASET form: the first argument is a cached dataset NAME (see rheome.import.dataset); the
+                  surface, operators, Dirac + scalar eigenbases and study are LOADED from
+                  +data (no recompute). Detected via rheome.load.has(studyDir).
+    K : Laplace–Beltrami modes / Dirac modes-per-hemisphere (default 400).
+    measure : InverseMeasure for rheome.inverse.dirac -- 'dspm2018' (default, unitless noise-
+              normalized statistic) | 'amplitude' (whitened min-norm CURRENT, physical
+              units A.m -- use this to read/visualize true dipole magnitudes) | 'sloreta'.
+              Note the mode-coefficient series out.c is measure-INDEPENDENT (STAGE 3);
+              only out.Results.ImagingKernel / out.Jframe depend on it.
+ 
+  OUTPUT (struct out):
+    .S surface   .basis Laplace–Beltrami basis   .dbasis relative-Dirac eigenbasis
+    .Results rheome.inverse.dirac output   .c [nModes x nT] mode-coeff series   .F selected data
+    .Time .sfreq .iSel .SurfaceFile   .frame peak-GFP sample   .Jframe [3nV x 1]
+    .studyDir .dataName   (where the Brainstorm study lives -- for rheome.import.inverse / comparison)
+ 
+  See also: rheome.forward.dirac, rheome.inverse.dirac, rheome.import.dataset
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

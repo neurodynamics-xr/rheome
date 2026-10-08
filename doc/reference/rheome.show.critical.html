@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.show.critical</title></head><body>
+<h1>rheome.show.critical</h1>
+<p><em>function rheome.show</em> &mdash; Rheome</p>
+<pre>  SHOW.CRITICAL  Classified critical points on the cortex, with the Poincare-Hopf check.
+ 
+    rheome.show.critical(surf, out)          % out from rheome.flow.critical
+ 
+  Left: the points of one frame on the surface, coloured by type and sized by strength.
+  Middle: counts per type across frames -- how the population changes in time.
+  Right: the index sum per hemisphere against the Euler characteristic. That panel is a TEST of
+  the mesh and the operator, not a finding: sum(index) must equal chi on a closed manifold
+  surface, so a departure means mesh trouble rather than anything about the data.
+ 
+  OPTIONS: 'Frame' which frame to draw (default 1), 'View', 'Title', 'Visible'
+ 
+  See also: rheome.flow.critical, rheome.detect.criticalPoints
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

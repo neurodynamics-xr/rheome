@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.sensors.modes</title></head><body>
+<h1>rheome.sensors.modes</h1>
+<p><em>function rheome.sensors</em> &mdash; Rheome</p>
+<pre>  SENSORS.MODES  The sensor graph's spectrum, and the two ways to filter with it.
+ 
+    M = rheome.sensors.modes(G)                          % exact eigenbasis
+    M = rheome.sensors.modes(G, 'Route', 'chebyshev', 'Order', 40)
+ 
+  ⭐ ON A SENSOR ARRAY THE EXACT ROUTE IS FREE. A few hundred nodes means a dense eig costs
+  milliseconds, so the truncation that a large mesh is forced into does not arise here
+  and the eigenbasis is the default. Chebyshev is carried anyway because it is the route
+  that SCALES, and having both on the same operator is what lets a demo show they agree --
+  which is the claim that transfers to a graph of tens of thousands of nodes, where only
+  one of them is affordable.
+ 
+  INPUTS:
+    G  a rheome.sensors.graph struct
+    'Route'  'eigen' (default) | 'chebyshev'
+    'Order'  Chebyshev order (default 40)
+  OUTPUT:
+    M  .Lambda [N x 1] ascending   .Phi [N x N] orthonormal ([] for chebyshev)
+       .T  a graphtransform struct  .Lmax  .Route
+ 
+  See also: rheome.sensors.graph, rheome.sensors.calibrate, rheome.graphtransform.eigen, rheome.graphtransform.chebyshev
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

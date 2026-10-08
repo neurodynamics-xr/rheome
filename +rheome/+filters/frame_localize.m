@@ -1,0 +1,65 @@
+function W = frame_localize(basis, C, frame)
+% FILTERS.FRAME_LOCALIZE  Wavelet-frame analysis starting from COEFFICIENTS, not from a field.
+%
+%   W = rheome.filters.frame_localize(basis, C, frame)
+%
+% W(:,j,m) = Phi * (g_m(Lambda) .* C(:,j))   -- the field seen through frame member m, localized
+% to vertices, for each column j of C.
+%
+% WHY A SEPARATE ENTRY POINT FROM FRAME_ANALYSIS. rheome.filters.frame_analysis takes a FIELD [nV x nT]
+% and begins by projecting it onto the basis. The whole of pipeline block D lives in coefficients
+% already, so a caller there has to synthesise to vertices first purely to have the projection undone
+% -- building an [nV x nT] array for nothing. This skips that: coefficients in, wavelet volume out.
+%
+% ⭐ IT FILLS THE EMPTY CELL. The pipeline is spectral/localized in TWO variables:
+%
+%                          temporal spectral omega      temporal localized t
+%    spatial spectral      C(lambda,omega)  step 10     c(lambda,t)   step 13
+%    spatial localized     W(v,m,omega)  <- HERE        W(v,m,t)      step 16
+%
+% Passing a joint spectrum C [K x nOmega] gives W(v,m,omega): WHERE on the cortex each temporal
+% frequency sits, at each spatial scale. It costs one synthesis per retained BIN rather than per
+% frame, so with a few tens of in-band bins it is cheaper than the time-domain volume -- and it
+% answers what neither marginal can: whether 9 Hz and 12 Hz vorticity occupy the same cortex, and
+% whether the characteristic spatial scale depends on temporal frequency.
+%
+% Passing time-domain coefficients c [K x nT'] instead gives the usual W(v,m,t) of step 16.
+%
+% INPUTS:
+%   basis  struct with .Phi [nV x K], .Lambda [K x 1]   (.Mass is NOT needed -- C is already
+%          in the basis, so there is no projection to perform)
+%   C      [K x nCol] coefficients: a joint spectrum (columns = frequency bins) or a time series
+%          of coefficients (columns = frames)
+%   frame  from rheome.filters.frame
+%
+% OUTPUT:
+%   W      [nV x nCol x M] complex if C is, one page per frame member
+%
+% ⚠ THIS IS WHERE THE PIPELINE STOPS BEING LINEAR. Everything upstream commutes freely; the |.|
+% that a caller takes of W does not. Take the modulus AFTER this, never before -- |Phi c| is not
+% Phi |c|, which is the whole reason localization cannot be done in coefficients.
+%
+% See also: rheome.filters.frame_analysis, rheome.filters.frame_scalogram, rheome.filters.joint_scalogram, rheome.detect.ridges
+%
+% Author: Diellor Basha, 2026
+
+    if ~isfield(basis,'Phi') || ~isfield(basis,'Lambda')
+        error('filters:frame_localize:basis', 'basis needs .Phi and .Lambda.');
+    end
+    Phi = basis.Phi;
+    if size(C,1) ~= size(Phi,2)
+        error('filters:frame_localize:size', ...
+            'C has %d rows but the basis has %d modes. C must already be in the basis.', ...
+            size(C,1), size(Phi,2));
+    end
+
+    H = rheome.filters.frame_gains(frame, basis.Lambda);        % [K x M]
+    M = size(H,2);  nCol = size(C,2);
+    W = zeros(size(Phi,1), nCol, M);
+    if ~isreal(C) || ~isreal(Phi), W = complex(W); end
+    for m = 1:M
+        W(:,:,m) = Phi * (H(:,m) .* C);
+    end
+end
+
+% Author: Diellor Basha, 2026

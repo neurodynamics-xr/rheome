@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.phasegradient</title></head><body>
+<h1>rheome.flow.phasegradient</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.PHASEGRADIENT  Local wavevector, frequency and propagation velocity of a complex field.
+ 
+    out = rheome.flow.phasegradient(z, S)
+    out = rheome.flow.phasegradient(z, S, 'Rate', fs)
+ 
+  Takes the ANALYTIC field z(v,t) -- the complex curl, or any complex scalar on the mesh --
+  and returns where its phase is heading, in space and in time. Writing z = A*exp(i*phi):
+  k = grad(phi) is the local wavevector, |k| = 2*pi/wavelength, and with omega = d(phi)/dt
+  the pattern's timing sweeps past a vertex at velocity omega*k/|k|^2.
+ 
+  ⭐ EDGE-WRAPPED DIFFERENCES, NOT A DIVIDED DIFFERENCE OF z. Along an edge e the wrapped
+  phase step wrap(phi_j - phi_i) equals k.e EXACTLY for a plane wave, so solving the two
+  independent edge steps of a triangle for the in-plane k is exact -- to machine precision,
+  at any resolution, for any number of cycles across the mesh (tPhaseGradient plants a wave
+  spanning 40 rad and recovers k to 1e-12).
+ 
+  The obvious alternative -- k = Im(grad z / z) with grad z from rheome.operators.face_gradient --
+  is only FIRST ORDER, and biased in a direction that flatters the result: with z on a face
+  taken as the mean of its vertices it returns (2/h)*tan(k*h/2), an OVERestimate of |k|, so
+  wavelengths read SHORT and apparent propagation reads FAST. Measured on a flat mesh, in
+  samples per wavelength: 20 -&gt; +0.6%, 10 -&gt; +2.2%, 8 -&gt; +3.5%, 6 -&gt; +6.3%, 4 -&gt; +14.6%,
+  3 -&gt; +24.1%, against 0.00% for the edge-wrapped form at every one. tPhaseGradient pins it.
+ 
+  ⚠ THE ALIASING LIMIT IS REAL AND IT IS PER EDGE. Wrapping cannot distinguish k.e from
+  k.e + 2*pi, so an edge stepping more than pi is indistinguishable from one stepping
+  backwards. .aliased reports the fraction of faces with any edge step past 0.9*pi -- read it
+  before believing a short wavelength. On a 3 mm cortical mesh this binds below ~6 mm.
+ 
+  k IS PER FACE (a triangle fixes one in-plane vector); omega is per VERTEX (time is a
+  per-vertex axis). .speed and .velocity live on faces, with omega averaged onto them.
+ 
+  WHERE THE DESCRIPTION ITSELF BREAKS DOWN. k is a local wavevector only where phi varies
+  smoothly. At a phase singularity it does not, and |k| diverges as the core is approached.
+  That divergence is the detector, not a defect -- see rheome.detect.phasesingularity.
+ 
+  INPUTS:
+    z  [nV x nT] complex analytic field on the mesh vertices
+    S  surface (.Vertices, .Faces)
+    'Rate'          Hz, required for .omega/.speed/.velocity
+    'MinAmplitude'  relative to the median |z|; below it phase is meaningless -&gt; NaN.
+                    Default 0 (off). Set it for real data, where |z| does reach 0.
+ 
+  OUTPUT (struct out):
+    .k          [nF x 3 x nT]  local wavevector, rad/m, tangent to the face
+    .kmag       [nF x nT]      |k|
+    .wavelength [nF x nT]      2*pi/|k| in MM -- travel this far to be a cycle out of step
+    .ampgrad    [nF x 3 x nT]  grad(log A), 1/m -- the real part of the same decomposition
+    .omega      [nV x nT]      rad/s        (Rate given)
+    .speed      [nF x nT]      |omega|/|k|, m/s
+    .velocity   [nF x 3 x nT]  omega*k/|k|^2
+    .aliased    [1 x nT]       fraction of faces with an edge step past 0.9*pi
+ 
+  See also: rheome.detect.phasesingularity, rheome.operators.face_gradient, rheome.flow.curl
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

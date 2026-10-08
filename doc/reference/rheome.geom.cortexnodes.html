@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.geom.cortexnodes</title></head><body>
+<h1>rheome.geom.cortexnodes</h1>
+<p><em>function rheome.geom</em> &mdash; Rheome</p>
+<pre>  GEOM.CORTEXNODES  One cortical position pyramid for both hemispheres, with whole-cortex node ids.
+ 
+    C = rheome.geom.cortexnodes('sub01')              % MaxDepth 7 per hemisphere
+    C = rheome.geom.cortexnodes(name, MaxDepth=6)
+    C.id(2, 5)                                         % whole-cortex id of left-tree heap node 5
+ 
+  Every analysis builds its tiles per hemisphere (rheome.geom.tree on B.L.S / B.R.S), and a label written into
+  the store needs ONE id per node across the whole cortex. The ids are the heap numbering of a whole-
+  cortex tree: node 1 is the cortex, 2 the left hemisphere, 3 the right, and a node with heap id n at
+  depth d of hemisphere h's own tree gets
+ 
+        id = n + (h - 1) * 2^d,     h = 2 (left), 3 (right)
+ 
+  so parent = floor(id / 2) holds across the whole cortex and a node's hemisphere and depth are
+  recoverable by arithmetic (depth = floor(log2(id)) - 1).
+ 
+  ⚠ THE IDENTITY NEEDS A FULL TREE. Heap numbering holds only if every node splits down to MaxDepth
+  (rheome.geom.tiles' .heap); this errors if either hemisphere's tree is not full, rather than issuing ids a
+  later parent lookup would get wrong.
+  ⚠ rheome.select.measure CANNOT CHECK cortical ids (the tree lives with the surface, not the recording), so
+  this is the one function every writer and reader of cortical labels uses.
+ 
+  OUTPUT (struct C)
+    .nodes   table, one row per node incl. the cortex root: node_id parent_id depth hemi n_vertices
+             is_leaf area diameter wavelength_mm centroid_x centroid_y centroid_z  (rheome.select.schema's
+             cortex_node columns, less recording_id)
+    .id      @(h, n) whole-cortex id of hemisphere h's heap node n (h = 2 left, 3 right)
+    .T       struct .L / .R: the per-hemisphere rheome.geom.tree tables
+    .S       struct .L / .R: the hemisphere surfaces
+ 
+  See also: rheome.geom.tree, rheome.geom.tiles, rheome.select.measure, rheome.flow.labelalpha
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

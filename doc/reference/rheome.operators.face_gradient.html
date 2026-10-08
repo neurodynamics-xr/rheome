@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.operators.face_gradient</title></head><body>
+<h1>rheome.operators.face_gradient</h1>
+<p><em>function rheome.operators</em> &mdash; Rheome</p>
+<pre>  OPERATORS.FACE_GRADIENT  Per-face constant-gradient operator of a triangle mesh.
+ 
+    fg = rheome.operators.face_gradient(V, F)
+ 
+  Builds the discrete surface-gradient primitives shared by the differential operators
+  (divergence, curl, Helmholtz). Inside each triangle a per-vertex scalar is the linear
+  interpolation of its three values, and the gradient of the vertex hat function is a
+  constant tangent vector  grad phi_i = (N x e_i) / (2A). The three ambient components are
+  returned as sparse operators Gx/Gy/Gz [nF x nV], so that for a per-vertex scalar field f,
+  Gx*f is the per-FACE x-component of grad f (and Gx*Jx + Gy*Jy + Gz*Jz is the divergence).
+ 
+  INPUTS:
+    V  [nV x 3] vertices        F  [nF x 3] triangle vertex indices
+ 
+  OUTPUT (struct fg):
+    .Gx .Gy .Gz    [nF x nV] sparse per-face gradient operators (ambient x/y/z components)
+    .FaceNormal    [nF x 3]  unit face normals (from the vertex order)
+    .FaceArea      [nF x 1]  triangle areas
+    .Faces         [nF x 3]  the faces (as passed)
+    .W             [nV x nF] sparse area-weighted face-&gt;vertex average (row-normalized)
+    .nV .nF
+ 
+  See also: rheome.differential.divergence, rheome.differential.curl, rheome.differential.helmholtz
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

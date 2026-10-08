@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.select.rows</title></head><body>
+<h1>rheome.select.rows</h1>
+<p><em>function rheome.select</em> &mdash; Rheome</p>
+<pre>  SELECT.ROWS  A relation of the schema, materialised from the store as a MATLAB table.
+ 
+    R = rheome.select.rows(db, &quot;recording&quot; | &quot;channel&quot; | &quot;band&quot;)
+    R = rheome.select.rows(db, &quot;tile&quot; | &quot;tile_cone&quot; | &quot;feature&quot; | &quot;feature_band&quot;, Level=L)
+    R = rheome.select.rows(db, &quot;sensor_group&quot;)
+    R = rheome.select.rows(db, &quot;feature_group&quot; | &quot;feature_group_band&quot;, Level=L)     % internal nodes
+    R = rheome.select.rows(db, &quot;feature_cortex&quot; | &quot;feature_cortex_space&quot;, Level=L)  % &lt;store&gt;__cortex.mat
+    R = rheome.select.rows(db, &quot;cortex_node&quot;)                                       % likewise, if written
+ 
+  The reference executor's view: exactly the rows a database would hold, in key order.
+  feature_band holds only the bands carried at the level (the diagonal).
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.labelalpha</title></head><body>
+<h1>rheome.flow.labelalpha</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.LABELALPHA  Label a recording's alpha with its joint dyadic structure, into the select store.
+ 
+    L = rheome.flow.labelalpha('sub01')                              % all three families, written
+    L = rheome.flow.labelalpha(name, Families=&quot;class&quot;, Write=false)          % rows only
+ 
+  Three note families, each written through rheome.select.measure (Scope=&quot;cortex&quot;, Source=&quot;rheome.flow.labelalpha&quot;)
+  into the store's label sidecar, one transaction per kind -- idempotent by content, so a rerun returns
+  the existing transactions (.existed), and removable with rheome.select.rollback:
+ 
+    CLASS       node = depth-6 leaf (~47 mm), tile = level 3 (2 s)
+      alpha_onFrac   the leaf's on-occupancy over the tile
+      alpha_class    modal class of the leaf's on-cells (level-0 tiles) inside the tile:
+                     1 focal-brief  2 focal-sustained  3 widespread-brief  4 widespread-sustained
+                     sustained  = the leaf's own occupancy &gt;= Theta over an enclosing tile &gt;= SustainS
+                     widespread = its depth-WideDepth ancestor (~130 mm at 3) has occupancy &gt;= Theta
+                                  in the same level-0 tile
+    EPISODE     node = hemisphere (2 left, 3 right), tile = the level-0 tile holding tOn
+      alpha_episode_tOn _tOff _tauR _tauF _plateauS _r2
+                     rheome.detect.spindle (envelope mode) candidates on the hemisphere's PEAK amplitude
+                     (max over depth-7 tiles after a 0.1 s mean), located by rheome.detect.risefall
+    TRAJECTORY  node = start tile (depth 7, ~33 mm), tile = the level-3 window (2 s)
+      alpha_traj_netMM _speedMS _straight _durS _endNode _score
+                     rheome.detect.tilepath per window at Rate frames/s; baseline and threshold from the
+                     per-mode circular-shift surrogate at Alpha false paths per second
+                     (rheome.detect.tilepathnull); only windows whose best path beats the threshold
+ 
+  ⭐ CLASS IS READ FROM THE MERGEABLE SIDECAR, not recomputed: occupancy at any node and level is
+  on_area_s / area_s of rheome.flow.cortexfeatures' exact roll-up, so the labels and the features cannot
+  disagree. The sidecar is built first if absent.
+  ⚠ ONLY BIMODAL LEAVES ARE CLASSED. A leaf whose envelope has no two states (the sidecar's
+  leafBimodal) has on/off labels that are not a state; it still contributes to its ancestors'
+  occupancy (as in alpha_jointstate_omega.m) but gets no class or onFrac rows of its own.
+  ⚠ &quot;widespread&quot; is registered PENDING: extent through the inverse is not leakage-calibrated, so a
+  class-3/4 label says the ~130 mm node was on, not that the brain's alpha covered 130 mm.
+  ⚠ Trajectory speed is COMPRESSED near the floor (0.02 m/s reads +65%) and a 40 mm amplitude swap
+  reads 0.012-0.024 m/s -- see rheome.select.labelkinds before reading a speed as a velocity.
+ 
+  OUTPUT (struct L)
+    .rows   struct of tables, one per kind (unit_id level k value)
+    .txn    struct of rheome.select.measure results, one per kind (empty when Write=false)
+    .null   per hemisphere: the trajectory null (rheome.detect.tilepathnull)
+ 
+  See also: rheome.flow.cortexfeatures, rheome.select.measure, rheome.select.measures, rheome.select.rollback, rheome.select.labelkinds
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

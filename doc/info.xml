@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<productinfo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="optional">
+  <?xml-stylesheet type="text/xsl" href="optional"?>
+  <!-- On the MATLAB path with this folder (doc/); help_location is relative to this file. -->
+  <matlabrelease>R2023b</matlabrelease>
+  <name>Rheome</name>
+  <type>toolbox</type>
+  <icon></icon>
+  <help_location>.</help_location>
+</productinfo>

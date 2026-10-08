@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.pipeline.start</title></head><body>
+<h1>rheome.pipeline.start</h1>
+<p><em>function rheome.pipeline</em> &mdash; Rheome</p>
+<pre>  PIPELINE.START  Begin a pipeline at a field of a given type on a given domain.
+ 
+    p = rheome.pipeline.start(&quot;sensorScalar&quot;, dSensors, Frames=rheome.domain.index(nT, Name=&quot;time&quot;))
+ 
+  The pipeline is a VALUE: a struct carrying the state it is currently in (field type,
+  spatial domain, frame domain) and the steps taken so far. Nothing is bound and nothing
+  runs until rheome.pipeline.run, so a plan can be built, printed, compared and stored on its own.
+ 
+  See also: rheome.pipeline.then, rheome.pipeline.window, rheome.pipeline.run, rheome.pipeline.describe
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

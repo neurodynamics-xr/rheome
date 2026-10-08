@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.domain.index</title></head><body>
+<h1>rheome.domain.index</h1>
+<p><em>function rheome.domain</em> &mdash; Rheome</p>
+<pre>  DOMAIN.INDEX  A one-dimensional index domain: time, frequency, or an eigenmode axis.
+ 
+    d = rheome.domain.index(360000, Name=&quot;time&quot;, Units=&quot;s&quot;)
+    d = rheome.domain.index(400, Name=&quot;lb_modes&quot;, Of=dCortex)
+ 
+  ⭐ THE SPECTRAL LINE IS A DOMAIN TOO. Eigenmode coefficients are a field on the mode
+  index, not on the cortex -- which is the distinction that lets the flow pipeline work
+  entirely in coefficients and lift to vertices only to draw. `Of` records which domain the
+  line was derived from, so a coefficient field still knows the surface behind it.
+ 
+  See also: rheome.domain.of, rheome.domain.kinds
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

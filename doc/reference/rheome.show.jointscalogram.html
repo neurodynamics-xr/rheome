@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.show.jointscalogram</title></head><body>
+<h1>rheome.show.jointscalogram</h1>
+<p><em>function rheome.show</em> &mdash; Rheome</p>
+<pre>  SHOW.JOINTSCALOGRAM  Energy over spatial scale x temporal frequency, with the speed ridge.
+ 
+    rheome.show.jointscalogram(scal)                 % scal from rheome.filters.joint_scalogram
+    hFig = rheome.show.jointscalogram(scal, name, value, ...)
+ 
+  Left: E(m,omega) -- which spatial scale carries the field at each temporal frequency.
+  Right: the ridge, the energy-weighted mean wavenumber per frequency, with the fitted line
+  omega = c*sqrt(lambda). The fitted speed and its R^2 are printed, together with .fSupport, the
+  frequency interval carrying 90%% of the energy -- if the ridge does not span it, the slope is
+  clipped and should not be believed.
+ 
+  OPTIONS: 'Title', 'Visible'
+ 
+  See also: rheome.filters.joint_scalogram, rheome.show.jointspectrum
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

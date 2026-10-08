@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.demos.sensor_topology</title></head><body>
+<h1>rheome.demos.sensor_topology</h1>
+<p><em>function rheome.demos</em> &mdash; Rheome</p>
+<pre>  DEMOS.SENSOR_TOPOLOGY  Divergence and curl of the phase gradient -- and what they classify.
+ 
+    rheome.demos.sensor_topology()
+    out = rheome.demos.sensor_topology('_figures')
+ 
+    1 field     the wavevector k = grad(phi) for four generators
+    2 div       divergence of k: where wavefronts are born
+    3 curl      curl of k, and the integer winding that is its honest form
+    4 classify  the two invariants, and the four families landing in four quadrants
+ 
+  ⚠ A SCALAR SIGNAL HAS NO DIVERGENCE AND NO CURL. Those operators act on VECTOR fields, and
+  one number per sensor is not one. The vector field that IS available is the local
+  wavevector k = grad(phi) from the analytic phase, and the divergence and curl OF THAT are
+  what this demo measures. Saying &quot;the curl of the signal&quot; is a category error; saying &quot;the
+  curl of its phase gradient&quot; is a measurement.
+ 
+  ⭐ CURL OF A GRADIENT IS ZERO -- WHICH IS EXACTLY WHY IT DETECTS ROTORS. curl(grad(phi))
+  vanishes wherever phi is smooth and single-valued, so a curl map is ~0 everywhere EXCEPT
+  where the phase is multivalued: a singularity. By Stokes the circulation of k around a loop
+  is 2*pi times the winding number, so rheome.detect.phasesingularity's integer IS this curl in its
+  integrated form -- and an integer cannot drift, where a density can.
+ 
+  ⭐ THE TWO INVARIANTS SEPARATE THE FAMILIES, and this is the answer to &quot;can it characterise
+  a spiral&quot;:
+ 
+        generator     winding   divergence      because phi is
+        travelling      0          0            k.x        -- k constant
+        target          0        &gt; 0 at focus   k r        -- k radial, fronts born at a point
+        rotating       +-1         0            m theta    -- k azimuthal, closed fronts
+        spiral         +-1       &gt; 0            m theta + k r
+ 
+  A spiral is precisely the pattern carrying BOTH. Winding alone cannot separate it from a
+  rotor; divergence alone cannot separate it from a target. Together they do.
+ 
+  ⚠ RUN THIS ON A FLAT ARRAY. Divergence of a tangent field on a CURVED array picks up a
+  mean-curvature term (rheome.differential.divergence uses the full 3-vector deliberately), so a
+  helmet reports divergence that is partly its own shape. A planar lattice has none.
+ 
+  ⚠ |k| DIVERGES AT A CORE, so div and curl are ill-conditioned in the few faces around one.
+  The maps are reported away from the core, and the winding -- which is exact there -- is what
+  the core itself is measured with.
+ 
+  INPUTS:
+    outDir  '' for screen, or a folder for PNGs
+  OUTPUT:
+    out  .ok .checks .stats (one row per generator: winding, peak divergence)
+ 
+  See also: rheome.demos.sensor_phase, rheome.flow.phasegradient, rheome.detect.phasesingularity,
+            rheome.differential.divergence, rheome.differential.curl
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

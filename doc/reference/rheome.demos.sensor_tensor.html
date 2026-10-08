@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.demos.sensor_tensor</title></head><body>
+<h1>rheome.demos.sensor_tensor</h1>
+<p><em>function rheome.demos</em> &mdash; Rheome</p>
+<pre>  DEMOS.SENSOR_TENSOR  The joint wavelet tensor: aperture, rate, and dispersion as controls.
+ 
+    rheome.demos.sensor_tensor()
+    out = rheome.demos.sensor_tensor('_figures')
+ 
+    1 ladder     the graph wavelet bank as a ladder of APERTURES, in millimetres
+    2 atoms      the same members localized at chosen sensors -- where the aperture sits
+    3 tiling     the joint (wavelength, rate) tensor the two banks span together
+    4 separate   two patterns differing in size AND rate, pulled apart into their own cells
+    5 dispersion two trains sharing a rectangle but not a diagonal -- what only a
+                 non-separable member can do
+ 
+  ⭐ WHAT THE TENSOR IS FOR. A bandpass in time answers &quot;how fast&quot;; a graph wavelet answers
+  &quot;how big&quot;; neither alone answers &quot;how big AND how fast&quot;, and no sequence of the two answers
+  &quot;how fast RELATIVE to how big&quot; -- which is a speed. The joint bank carries all three because
+  its members are functions of (lambda, omega) together, and the ones that matter most are
+  precisely the ones that do NOT factor.
+ 
+  ⭐ APERTURE IS A LENGTH HERE, NOT AN INDEX. Every member's scale converts to millimetres
+  through the calibration constant: k = sqrt(lambda/alpha), so wavelength = 2*pi*sqrt(alpha)
+  over the member's centre. Without rheome.sensors.calibrate a filterbank on a graph is a ladder of
+  dimensionless numbers; with it, it is a ladder of apertures you can compare to the array.
+ 
+  ⚠ A SPEED KERNEL'S c IS IN GRAPH UNITS. speedkernel selects omega = c*sqrt(lambda), and
+  lambda here is dimensionless, so a physical speed c_phys enters as c = c_phys/sqrt(alpha).
+  Passing metres per second directly selects the wrong diagonal by a factor of sqrt(alpha).
+ 
+  ⚠ SENSOR SPACE ONLY. Every length is millimetres of sensor separation and every speed is
+  metres per second across the array.
+ 
+  INPUTS:
+    outDir  '' for screen, or a folder for PNGs
+  OUTPUT:
+    out  .ok .checks .bank .atoms .separated .speedSel
+ 
+  See also: rheome.graphfilterbank, rheome.jointfilterbank, rheome.sensors.calibrate, rheome.demos.sensor_dynamics
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

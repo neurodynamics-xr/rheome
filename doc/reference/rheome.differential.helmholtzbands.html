@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.differential.helmholtzbands</title></head><body>
+<h1>rheome.differential.helmholtzbands</h1>
+<p><em>function rheome.differential</em> &mdash; Rheome</p>
+<pre>  DIFFERENTIAL.HELMHOLTZBANDS  Source and vortex content of a field, band by band, via its potentials.
+ 
+    B = rheome.differential.helmholtzbands(J, S, lbo)                     % logitersine, 2 voices per octave
+    B = rheome.differential.helmholtzbands(J, S, lbo, Voices=1, Maps=true, H=Hprecomputed)
+        J    [3nV x nT] ambient vectors (rows x1,y1,z1,...)
+        S    surface: .Vertices .Faces .VertNormals (.Hemi)
+        lbo  Laplace-Beltrami basis on the SAME surface: .Phi [nV x K] .Lambda [K x 1] .Mass .L
+ 
+  The route that separates rotation from divergence on a real cortex:
+    1. rheome.differential.helmholtz  J = grad(Phi) + N x grad(Psi) + (J.n) n + harmonic
+       two Poisson solves -- a scalar potential Phi (sources +, sinks -) and a stream function Psi
+       (vortices at its extrema)
+    2. both scalars filtered by a TIGHT scalar Laplace-Beltrami bank (graphfilterbank on lbo.Lambda,
+       sum_m g_m^2 = 1): Phi_m = lbo.Phi * (g_m .* c_Phi), likewise Psi_m
+ 
+  ⭐ THE BAND ENERGIES ARE EXACT. The field energies are the potentials' Dirichlet energies --
+  ||grad Phi||^2 = Phi' K Phi and ||N x grad Psi||^2 = Psi' K Psi, with K the cotan stiffness helmholtz
+  solves with, which IS lbo.L (1.5e-16 on a reference subject) -- so in the eigenbasis
+        E_irr(m) = sum_k lambda_k g_m(lambda_k)^2 c_Phi,k^2,    E_sol(m) likewise from c_Psi
+  and sum_m E(m) = the projected Dirichlet energy, by tightness. .capture says how much of each
+  potential's energy the K modes hold (1000 modes reach 17 mm wavelengths on this cortex).
+  ⭐ WHY NOT POINTWISE CURL AND DIV. On a reference subject neighbouring normals differ by ~30 deg and a pure
+  source reads curl/div energy 0.13-0.30 per vertex (dirac_parts_omega.m); helmholtz separates the same
+  atoms at 91% / 0.7%, because its sources are WEAK (integrated against hat gradients) and the potentials
+  are smooth. The filtering is then on scalars, where the tight bank's exactness holds.
+ 
+  ⭐ MEASURED (helmholtz_bands_omega.m): planted bands 315-23 mm recovered exactly on the cortex, 0.4-0.8%
+  cross-leak, a mixed source + vortex split with both peaks within 3 mm. ⚠ Through MEG + MNE the limit
+  is SCALE (helmholtz_noise_omega.m): sources and vortices at &gt;= 130 mm are located to 7-20 mm down to
+  -5 dB, vortices hold to 92 mm above 0 dB, nothing below 65 mm is located even noise-free; a source's
+  max-energy band is 3 bands too fine, so choose its band in advance.
+ 
+  OUTPUT (struct B)
+    .Eirr .Esol     [M x nT]  band energies of grad(Phi) and N x grad(Psi)
+    .irrTotal .solTotal [1 x nT]  Phi'K Phi and Psi'K Psi (unprojected)
+    .capture        [2 x nT]  projected / unprojected Dirichlet energy, Phi and Psi
+    .cPhi .cPsi     [K x nT]  mode coefficients of the potentials
+    .G [K x M] gains    .wavelengthMM [1 x M] band centres (graphfilterbank wavelengths)
+    .normalFrac .harmFrac [1 x nT]  energy shares of the normal and harmonic parts (lumped area)
+    .PhiBand .PsiBand [nV x M x nT]  band-limited potentials, when Maps=true
+    .H              the helmholtz struct
+ 
+  See also: rheome.differential.helmholtz, rheome.graphfilterbank, rheome.differential.diracparts
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

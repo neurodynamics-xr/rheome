@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.spectral.aperiodic</title></head><body>
+<h1>rheome.spectral.aperiodic</h1>
+<p><em>function rheome.spectral</em> &mdash; Rheome</p>
+<pre>  SPECTRAL.APERIODIC  Fit the aperiodic (1/f-like) background of power spectra.
+ 
+    ap = rheome.spectral.aperiodic(P, f)
+    ap = rheome.spectral.aperiodic(P, f, opts)
+ 
+  Fits the specparam / FOOOF aperiodic model (Donoghue et al. 2020) to each COLUMN of P by
+  iteratively down-weighting the points that sit above the current fit -- i.e. the peaks -- and
+  refitting on what remains. The peaks themselves are never fitted: only the background is, which
+  is all rheome.spectral.gains needs.
+ 
+  MODEL (log10 power vs log10 frequency):
+    no knee   L(f) = b - chi*log10(f)                   a line in log-log
+    knee      L(f) = b - log10(k + f^chi)               flattens below f ~ k^(1/chi)
+ 
+  INPUTS:
+    P     [nF x nS] LINEAR power, one spectrum per column (nS spectra; e.g. one per mode)
+    f     [nF x 1]  frequencies (Hz), strictly positive -- DC must be excluded by the caller
+    opts  .knee     false (default) | true      fit the knee term
+          .nIter    peak-rejection iterations (default 3)
+          .thresh   reject points above fit + thresh*sd of the residual (default 2)
+          .range    [fmin fmax] restrict the fit (default: all of f)
+ 
+  OUTPUT (struct ap):
+    .Pap      [nF x nS] fitted aperiodic power, LINEAR units, evaluated at every f
+    .exponent [1 x nS]  chi
+    .offset   [1 x nS]  b
+    .knee     [1 x nS]  k (zero when opts.knee is false)
+    .r2       [1 x nS]  goodness of fit in log space, on the retained points
+    .nUsed    [1 x nS]  points retained after peak rejection
+ 
+  The exponent returned per column is chi(lambda) when the columns are spatial modes.
+ 
+  See also: rheome.spectral.gains, rheome.spectral.decompose, rheome.spectral.carrier
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

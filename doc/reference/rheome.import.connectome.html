@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.import.connectome</title></head><body>
+<h1>rheome.import.connectome</h1>
+<p><em>function rheome.import</em> &mdash; Rheome</p>
+<pre>  IMPORT.CONNECTOME  Build + cache the whole-brain structural-connectome operators &amp; eigenbases.
+ 
+    file = rheome.import.connectome(name)              % Kc = 400, SmoothHops = 3, EdgeThr = 1e-4
+    file = rheome.import.connectome(name, Kc, opts)    % opts.SmoothHops, opts.EdgeThr
+ 
+  Reads the cached (registered) fiber endpoints (rheome.io.read.fibers), builds the vertex connectome W
+  (rheome.operators.connectome), assembles the two whole-brain connectome operators and their
+  eigenbases, and caches everything to +data/&lt;name&gt;/connectome.mat:
+    'Connectome Laplacian'  A = I - D^-1/2 W D^-1/2, B = I   -- eigen = normalized-adjacency trick
+    'LB-Connectome'         A = K + gamma*(D-W),   B = M     -- eigen = generalized eigs(A,B)
+  The Dirac-Connectome vector basis is NOT cached (it is the LB-Connectome basis lifted on demand
+  by rheome.eigen.lift). See rheome.load.connectome.
+ 
+  NUMERICAL NOTE: the LB-Connectome pencil spans ~14 orders of magnitude (near-null low mode),
+  so it MUST be solved with the negative-sigma shift (rheome.eigen.smallest = bst_eigs_smallest) -- the
+  naive eigs 'smallestabs' returns wrong low modes. Via rheome.eigen.modes it is now correct and
+  reproducible (conn.lb.Reproducible = true), as is the Connectome-Laplacian basis.
+ 
+  See also: rheome.io.read.fibers, rheome.operators.connectome, rheome.operators.connectome_laplacian,
+            rheome.operators.lb_connectome, rheome.eigen.connectome, rheome.eigen.modes, rheome.load.connectome
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

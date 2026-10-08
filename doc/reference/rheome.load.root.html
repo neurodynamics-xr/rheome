@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.load.root</title></head><body>
+<h1>rheome.load.root</h1>
+<p><em>function rheome.load</em> &mdash; Rheome</p>
+<pre>  LOAD.ROOT  Absolute path to the +data cache folder (shared by rheome.import.* and rheome.load.*).
+ 
+    d = rheome.load.root()          % $RHEOME_DATA if set, else &lt;repo&gt;/+data in a git clone,
+                             % else &lt;userpath&gt;/rheome/data for the installed toolbox
+ 
+  Set RHEOME_DATA (setenv, or the shell) to cache a subject somewhere else -- on a cluster node
+  that is node-local disk, so a per-subject job imports into node-local disk and never writes into
+  the checkout. Mirrors rheome.load.outroot / RHEOME_OUT for the output side.
+ 
+  See also: rheome.load.list, rheome.load.outroot, rheome.import.dataset, rheome.scale.run
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

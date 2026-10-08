@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.recordingbrowser</title></head><body>
+<h1>rheome.recordingbrowser</h1>
+<p><em>class Classes</em> &mdash; Rheome</p>
+<pre>  RECORDINGBROWSER  Look at a stored recording through its pyramid, before loading any of it.
+ 
+    app = rheome.recordingbrowser('sub01')                        % the best pyramid it has
+    app = rheome.recordingbrowser('sub01', 'Store', 'preview')    % the min/max pyramid
+    app = rheome.recordingbrowser(storeFile, 'Units', 1:16)               % those channels, stacked
+    app = rheome.recordingbrowser(db, 'View', 'detail', 'Unit', 'MLO32')  % one channel, in full
+ 
+  ⭐ WHAT IT IS. A stored recording is a matrix too big to draw. The pyramid holds, for every
+  channel and every tile, the minimum and the maximum of the samples under it -- and those
+  two merge by extremum, so the pair at any level BOUNDS every sample it covers. Drawing them
+  as a band is therefore an exact picture of the matrix at any zoom: too wide at worst, never
+  too narrow, and no transient can hide between the drawn columns. That is the whole app.
+  The channels view stacks those bands, one row per channel, so you can see where in the
+  recording and in which sensors something happens, and only then read samples.
+ 
+  ⭐ IT BROWSES A RECORDING, NOT A FILE. A recording usually carries more than one pyramid:
+  the tile store with bands and moments from 0.25 s up, and a preview store (rheome.ingest.preview)
+  with min and max alone but reaching far finer. 'Store' picks; the default takes the richer
+  one; the header names the file that is open and the recording it came from.
+ 
+  ⭐ A TILE IS A PLACE TO PUT THINGS. Click a row to focus a channel and select the tile
+  under the pointer, then app.measure(&quot;amplitude&quot;, v) writes that number onto that tile,
+  keyed by (recording, scope, unit, level, k) -- the pyramid's own key. It lands in the
+  second bookkeeping matrix (rheome.select.measure), which is sparse and does NOT merge, so it can
+  hold anything a moment cannot: a vortex count, a rotation sense, a hand-read amplitude.
+  Marks for what is stored are drawn on the rows, and rheome.select.context joins them back to the
+  statistics of their tile and of any ancestor.
+ 
+  ⚠ RAW SAMPLES ARE LOADED ON REQUEST, NEVER BY ZOOMING. The load button (key l) reads the
+  current window for the focused channel and the samples stay until you ask again; nothing
+  about panning or zooming touches the recording. A read pulls every channel's hyperslab, so
+  it is the one expensive thing here and it is the one thing that is explicit.
+ 
+  ⚠ THE DIAGONAL IS A FLOOR. A store keeps per-channel min and max down to
+  grid.envelopeLevel and its other columns only from grid.channelLevel; below those the view
+  stops refining and the readout says which constraint bit.
+ 
+  VIEWS
+    'channels'  the stack: one min/max band per selected channel, on a shared scale, with
+                the channel list beside it. This is the explorer.
+    'detail'    one channel in full: a statistic or its envelope, the constant-Q band strip,
+                and the raw trace. This is the analysis view, and it needs a tile store.
+ 
+  CONTROLS  the channel list, View, Store-driven statistic and band menus, Level (Auto or
+            pinned), zoom / pan / full extent, load, Snapshot.
+            Keyboard: left/right pan, +/- zoom, 0 full extent, l load, r raw panel,
+            v switch view, e envelope, s strip mode, [ ] step band, a auto.
+ 
+  THE CALLBACKS ARE THE API. setWindow/setLevel/setUnits/setView/loadRaw are ordinary methods
+  the controls call, so a script or a test drives the browser without synthesising UI events.
+ 
+  See also: rheome.select.derive, rheome.select.open, rheome.select.frames, rheome.ingest.build, rheome.flowbrowser
+ 
+  Author: Diellor Basha, 2026
+
+    Documentation for rheome.recordingbrowser
+       doc rheome.recordingbrowser
+
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.schrodinger</title></head><body>
+<h1>rheome.filters.schrodinger</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.SCHRODINGER  Free-particle propagator on the graph (eigenmode x time, 'ts' domain).
+ 
+    G = rheome.filters.schrodinger(lambda, t, hbar, lmax)
+ 
+  g(lambda,t) = exp(-1i * (lambda/lmax) * t / hbar). The member the propagator family was
+  missing: diffusion is exp(-lambda*t), this is exp(-1i*lambda*t). Same operator, imaginary
+  time -- which is the whole content of the Wick rotation, and the reason a heat kernel
+  spreads while this one only turns.
+ 
+  ⭐⭐ IT IS THE ONLY MEMBER THAT IS UNITARY. |g| = 1 for every mode and every lag, so it
+  transports amplitude without gaining or losing any: diffusion is a contraction, wave and
+  kleingordon are real and so mix each mode with its own conjugate, and this one is a pure
+  phase rotation per mode. That makes it the natural evolution for a COMPLEX field whose
+  magnitude is a density and whose argument is a phase -- which is what the connection
+  frame's z = A(d)exp(i(m*theta + phase)) already is, vortices included: a phase singularity
+  with winding m is a quantised vortex in the same sense.
+ 
+  ⚠⚠ AND IT DOES NOT DESCRIBE RESTING MEG, measured rather than assumed. Every propagator in
+  this family is fixed by its dispersion relation, so they are separable by measuring
+  omega(lambda) on real data. On 364 Dirac modes of a 60 s resting recording, fitting each
+  mode's periodic peak:
+      measured exponent  0.000  (r = +0.071)     omega 10.11 Hz, IQR 9.96-10.25
+      top/bottom lambda quintile ratio  1.01     wave needs 3.1, this needs 9.9
+  Resting alpha is DISPERSIONLESS: every spatial scale oscillates at one frequency. So this
+  propagator is ruled out by an order of magnitude, and so is the wave equation.
+  ⚠ One confound is not excluded: leakage from a single dominant alpha generator would impose
+  a common frequency on every mode and look identical. The inverse itself cannot be the cause,
+  since a fixed linear kernel mixes modes spatially but cannot shift a frequency.
+  See docs/2026-09-26-feature-table-design.md section 37.
+ 
+  ⭐ IN THE JOINT PLANE IT IS A STRAIGHT RIDGE. Each mode carries frequency omega = lambda/hbar,
+  so on (lambda, omega) the propagator is supported on a line through the origin -- exactly the
+  object jointfilterbank and rheome.dynamics.dispersion are built to fit. Representing it needs no new
+  machinery: it is a joint kernel concentrated on the diagonal.
+ 
+  INPUTS:
+    lambda [K x 1] eigenvalues       t [1 x N] time-lag axis
+    hbar   rate (default 1)          lmax spectral normalizer (default max(lambda))
+  OUTPUT:
+    G      [K x N] COMPLEX gains g(lambda_k, t_n), |G| = 1 everywhere
+ 
+  See also: rheome.filters.diffusion, rheome.filters.wave, rheome.filters.kleingordon, rheome.filters.travwave,
+            rheome.dynamics.dispersion, jointfilterbank
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

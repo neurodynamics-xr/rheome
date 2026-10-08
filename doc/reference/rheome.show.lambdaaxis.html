@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.show.lambdaaxis</title></head><body>
+<h1>rheome.show.lambdaaxis</h1>
+<p><em>function rheome.show</em> &mdash; Rheome</p>
+<pre>  SHOW.LAMBDAAXIS  Label a mode-index y-axis with the spatial frequencies it corresponds to.
+ 
+    ord = rheome.show.lambdaaxis(ax, Lambda)          % after imagesc(ax, x, 1:K, Z(ord,:))
+ 
+  WHY THIS EXISTS. An eigenbasis assembled per hemisphere is a CONCATENATION: Lambda runs
+  0 -&gt; lambda_max for the left hemisphere and then restarts for the right. Passing that vector
+  to imagesc as a y coordinate is wrong twice over -- imagesc uses only its first and last
+  entries and spaces rows uniformly, so rows are drawn at positions they do not occupy, and the
+  restart appears as a spurious horizontal discontinuity partway up the axis.
+ 
+  Even after sorting, sqrt(lambda) is not uniformly spaced (Weyl: lambda_k ~ k, so sqrt(lambda_k)
+  ~ sqrt(k)), so a uniform y coordinate still misplaces rows. The honest rendering is therefore
+  ROW INDEX on the axis with sqrt(lambda) on the tick labels: no interpolation is implied and
+  every row sits where it belongs.
+ 
+  USAGE: sort your rows first --  [~,ord] = sort(Lambda);  imagesc(ax, x, 1:K, Z(ord,:));
+  then call this to place the ticks.
+ 
+  INPUTS:  ax handle;  Lambda [K x 1] eigenvalues (unsorted is fine);  nTick (default 8)
+  OUTPUT:  ax
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

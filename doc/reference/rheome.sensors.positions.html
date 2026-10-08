@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.sensors.positions</title></head><body>
+<h1>rheome.sensors.positions</h1>
+<p><em>function rheome.sensors</em> &mdash; Rheome</p>
+<pre>  SENSORS.POSITIONS  An array from bare coordinates. The general case.
+ 
+    arr = rheome.sensors.positions('MEG helmet', P)          % P [N x 3] or [N x 2], metres
+    arr = rheome.sensors.positions(name, P, 'Dim', 2, 'Kind', 'meg', 'Labels', lab)
+ 
+  rheome.sensors.linear, .grid, .meg and .eeg each KNOW where their coordinates come from. This
+  one does not: it takes them as given and measures the same pitch and aperture from them,
+  so everything downstream -- rheome.sensors.graph, .modes, .calibrate, .window -- accepts the
+  result unchanged.
+ 
+  ⭐ FOR COORDINATES THAT ALREADY EXIST. Reach for this when the positions are a record
+  rather than a construction: a projected plane a figure was drawn in, an array read from
+  somewhere with no constructor, a geometry recovered from a published result. It is what
+  lets an array be analysed on exactly the coordinates it was previously DISPLAYED on.
+ 
+  ⚠ TWO COLUMNS MEANS A PLANE, AND A PLANE MAY BE A PROJECTION. Padding z with zeros is
+  correct for a flat array and is an ORTHOGRAPHIC APPROXIMATION for a curved one: on a
+  helmet, separations near the rim come back short. That is a real distortion and it is
+  the caller's to declare -- but it is the SAME distortion any analysis of those projected
+  coordinates already carries, so it is consistent rather than new.
+ 
+  Dim is inferred from the RANK of the centred coordinates, not from axis alignment: a
+  probe inserted obliquely has spread on all three axes and is still a chain.
+ 
+  INPUTS:
+    name     char, display name
+    P        [N x 3] or [N x 2] coordinates in METRES
+    'Dim'    1 or 2; default inferred
+    'Kind'   default 'custom'
+    'Labels' cellstr; default S001..SNNN
+  OUTPUT:
+    arr  .Name .Kind .Pos .Dim .Pitch .Aperture .Labels .nCh
+ 
+  See also: rheome.sensors.linear, rheome.sensors.grid, rheome.sensors.meg, rheome.sensors.eeg, rheome.sensors.graph
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

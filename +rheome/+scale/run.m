@@ -1,0 +1,146 @@
+function R = run(name, opts)
+% SCALE.RUN  One subject, every ported analysis, compact tables out. The per-subject driver.
+%
+%   R = rheome.scale.run('sub02', ProtoDir='/path/to/protocol', Cohort="norm", Dataset="mydata")
+%   R = rheome.scale.run('sub01')                       % already cached: skip the import
+%   R = rheome.scale.run(name, ..., Analyses=["resolution" "bandresolution"], OutDir=...)
+%
+% Writes to OutDir/<name>/ (default rheome.load.outroot()/scale/<name>):
+%   metrics.csv       long format: subject, cohort, dataset, analysis, metric, band, value, unit
+%   bandsnr.csv       the per-octave SNR the band analyses used
+%   flowtiles.csv     periodicflow: one row per tile x (total, periodic)
+%   grouptrack.csv    grouptrack: one row per hemisphere x depth x frame rate
+%   timing.csv        analysis, seconds, peak_rss_GB, status, message
+%   provenance.json   commit (+ dirty flag), MATLAB release, host, options, located inputs, the
+%                     kernels the protocol ships, import durations
+% No figures. An analysis that errors is recorded as status "error" with its message and the
+% others still run, so one bad subject never costs the array its other numbers.
+%
+% ⭐ On a cluster, set RHEOME_DATA to node-local disk before calling: the import writes the
+% subject's cache there (rheome.load.root), and nothing lands in the checkout.
+%
+% Ported analyses (the reports' names): resolution, bandsnr, bandresolution, periodicflow
+% (apparent flow of the total and the periodic alpha envelope over FlowTiles tiles; its "total"
+% rows are the flowmap pipeline's speed, curl and div), grouptrack. The others --
+% flowmap (div/curl maps), inject, vortex, sensorwavelet -- are listed in
+% rheome.scale.analyses with status "not_ported" until each has a figure-free measure.
+%
+% See also: rheome.scale.importsubject, rheome.scale.measure_resolution, rheome.scale.reduce, rheome.scale.analyses
+%
+% Author: Diellor Basha, 2026
+
+    arguments
+        name (1,:) char
+        opts.ProtoDir char = ''
+        opts.Sub char = ''
+        opts.Cohort string = ""
+        opts.Dataset string = ""
+        opts.Analyses string = rheome.scale.analyses("ported")
+        opts.OutDir char = ''
+        opts.DurationS (1,1) double = 300
+        opts.NoiseStudy char = ''      % a cached study whose .rec is the noise (e.g. 'emptyroom')
+        opts.FlowTiles (1,1) double = 12   % periodicflow: evenly spaced 2 s tiles per subject
+    end
+    if isempty(opts.OutDir), opts.OutDir = fullfile(rheome.load.outroot(), 'scale'); end
+    od = fullfile(opts.OutDir, name);  if ~exist(od, 'dir'), mkdir(od); end
+    P = struct('subject', name, 'cohort', opts.Cohort, 'dataset', opts.Dataset, ...
+               'started', char(datetime('now','TimeZone','UTC','Format','yyyy-MM-dd''T''HH:mm:ss''Z''')), ...
+               'commit', i_git('rev-parse HEAD'), 'dirty', ~isempty(i_git('status --porcelain --untracked-files=no')), ...
+               'branch', i_git('rev-parse --abbrev-ref HEAD'), 'matlab', version, 'host', i_host(), ...
+               'dataRoot', rheome.load.root(), 'options', opts);
+
+    tim = table('Size',[0 5],'VariableTypes',{'string','double','double','string','string'}, ...
+                'VariableNames',{'analysis','seconds','peak_rss_GB','status','message'});
+    if ~isempty(opts.ProtoDir)
+        t0 = tic;
+        try
+            P.import = rheome.scale.importsubject(name, opts.ProtoDir, DurationS=opts.DurationS, Sub=opts.Sub);
+            tim = [tim; {"import", toc(t0), i_rss(), "ok", ""}];
+        catch e
+            tim = [tim; {"import", toc(t0), i_rss(), "error", string(e.message)}];
+            i_write(od, P, table(), tim, table());  R = struct('provenance', P, 'timing', tim);  return
+        end
+    end
+
+    M = table();  snr = table();  S = [];  X = struct();
+    for a = opts.Analyses(:)'
+        t0 = tic;  msg = "";  st = "ok";
+        try
+            if isempty(S) && a ~= "bandsnr", S = rheome.scale.sensors(name); end
+            switch a
+                case "resolution",     M = [M; rheome.scale.measure_resolution(name, S)]; %#ok<AGROW>
+                case "bandsnr"
+                    if isempty(opts.NoiseStudy), snr = rheome.scale.bandsnr(name);
+                    else, nz = rheome.load.study(opts.NoiseStudy); snr = rheome.scale.bandsnr(name, i_noiserec(nz)); end
+                    M = [M; rheome.scale.rows("bandsnr", repmat("snr_dB",height(snr),1), snr.snr_dB, "dB", snr.band)]; %#ok<AGROW>
+                case "bandresolution"
+                    if isempty(snr), error('scale:run:order', 'bandresolution needs bandsnr first'); end
+                    M = [M; rheome.scale.measure_bandresolution(name, S, snr)]; %#ok<AGROW>
+                case "periodicflow"
+                    [Tf, Xf] = rheome.scale.measure_periodicflow(name, S, NumTiles=opts.FlowTiles);
+                    M = [M; Tf];  X.flowtiles = Xf; %#ok<AGROW>
+                case "grouptrack"
+                    [Tg, Xg] = rheome.scale.measure_grouptrack(name, S);
+                    M = [M; Tg];  X.grouptrack = Xg; %#ok<AGROW>
+                otherwise, st = "not_ported";
+            end
+        catch e
+            st = "error";  msg = string(e.identifier) + ": " + string(e.message);
+        end
+        tim = [tim; {a, toc(t0), i_rss(), st, msg}]; %#ok<AGROW>
+        fprintf('[rheome.scale.run %s] %-16s %-10s %7.1f s  %s\n', name, a, st, toc(t0), msg);
+    end
+    if ~isempty(M)
+        n = height(M);
+        M = [table(repmat(string(name),n,1), repmat(opts.Cohort,n,1), repmat(opts.Dataset,n,1), ...
+                   'VariableNames', {'subject','cohort','dataset'}), M];
+    end
+    P.finished = char(datetime('now','TimeZone','UTC','Format','yyyy-MM-dd''T''HH:mm:ss''Z'''));
+    i_write(od, P, M, tim, snr, X);
+    R = struct('provenance', P, 'metrics', M, 'timing', tim, 'bandsnr', snr, 'tables', X);
+end
+
+function rec = i_noiserec(nz)
+% a cached noise study -> the rec struct rheome.scale.bandsnr expects (channel names from its chan)
+    rec = nz.rec;
+    if ~isfield(rec, 'ChannelName') || isempty(rec.ChannelName)
+        rec.ChannelName = cellstr(nz.chan.Name);          % rheome.io.read.channel and the ER cache both carry .Name
+    end
+    if ~isfield(rec, 'sfreq') || isempty(rec.sfreq), rec.sfreq = 1/mean(diff(rec.Time)); end
+end
+
+function i_write(od, P, M, tim, snr, X)
+    if nargin < 6, X = struct(); end
+    if ~isempty(M), writetable(M, fullfile(od, 'metrics.csv')); end
+    for f = string(fieldnames(X))'                  % flowtiles.csv, grouptrack.csv
+        if ~isempty(X.(f)), writetable(X.(f), fullfile(od, f + ".csv")); end
+    end
+    if ~isempty(snr), writetable(snr, fullfile(od, 'bandsnr.csv')); end
+    writetable(tim, fullfile(od, 'timing.csv'));
+    fid = fopen(fullfile(od, 'provenance.json'), 'w');
+    fprintf(fid, '%s', jsonencode(P, PrettyPrint=true));  fclose(fid);
+end
+
+function s = i_git(args)
+    here = fileparts(fileparts(mfilename('fullpath')));
+    [rc, s] = system(sprintf('git -C "%s" %s', here, args));
+    s = strtrim(s);  if rc ~= 0, s = ''; end
+end
+
+function h = i_host()
+    [~, h] = system('hostname');  h = strtrim(h);
+end
+
+function g = i_rss()
+% peak resident set of this MATLAB, GB (VmHWM on Linux; ps on macOS gives the current RSS)
+    g = NaN;
+    if isfile('/proc/self/status')
+        t = fileread('/proc/self/status');  k = regexp(t, 'VmHWM:\s*(\d+)', 'tokens', 'once');
+        if ~isempty(k), g = str2double(k{1}) / 1048576; end
+    else
+        [rc, s] = system(sprintf('ps -o rss= -p %d', feature('getpid')));
+        if rc == 0, g = str2double(strtrim(s)) / 1048576; end
+    end
+end
+
+% Author: Diellor Basha, 2026

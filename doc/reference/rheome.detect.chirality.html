@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.chirality</title></head><body>
+<h1>rheome.detect.chirality</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.CHIRALITY  Annotate tracked ridges with the handedness of the field they sit in.
+ 
+    out = rheome.detect.chirality(out, vorticity)
+ 
+  Detection runs on |W|, which discards sign, so a ridge knows where and how big a motif is but
+  not which way it turns. This samples the SIGNED vorticity at each ridge's own (vertex, frame)
+  and attaches the result, so handedness is carried rather than recovered later.
+ 
+  Per ridge it adds:
+    .chirality      [nFrames x 1]  +1 counter-clockwise, -1 clockwise, at each step of the ridge
+    .chiralityMean  mean over the ridge, in [-1 1]
+    .nFlips         sign changes along the ridge
+    .halfCycles     nFlips + 1 -- how many half cycles the ridge spans
+ 
+  ⚠ READ .nFlips BEFORE .chiralityMean. A ridge tracked on the ENVELOPE persists across sign
+  reversals by design, so it spans several half cycles and its mean handedness tends to zero --
+  that is the envelope working, not an absence of chirality. A ridge with nFlips = 0 is
+  single-handed; one with nFlips = 5 has turned both ways three times and its mean says little.
+ 
+  INPUTS:
+    out        from rheome.detect.ridges
+    vorticity  [nVert x nT] SIGNED field on the same grid the ridges were tracked on
+               (e.g. obs.vorticity from rheome.flow.observables)
+ 
+  See also: rheome.detect.ridges, rheome.flow.observables
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

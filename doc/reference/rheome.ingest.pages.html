@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.ingest.pages</title></head><body>
+<h1>rheome.ingest.pages</h1>
+<p><em>function rheome.ingest</em> &mdash; Rheome</p>
+<pre>  INGEST.PAGES  The page plan: one grid level per band, bands grouped into jobs.
+ 
+    plan = rheome.ingest.pages(g, bands, cfg)
+ 
+  A PAGE IS A TILE AT A CHOSEN LEVEL, and its halo is the band's time support (design
+  §3.12). Each band gets the smallest level whose frame is at least
+  2*tSupport/PageOverhead long (so the halo costs at most PageOverhead of the core), but
+  not below MinPageLength and not above Lmax. A band at Lmax runs on the whole record with
+  no halo -- its edges are the record's edges, which the cone count already labels.
+ 
+  Bands that share a level and are contiguous in scale form one JOB: one sub-bank per
+  page, anchored on the job's top master scale, so every coefficient is the master's.
+  A job whose per-channel working set (5x scales x longest span x bytes) would exceed MaxBytes is split
+  band by band; a single band that still exceeds it errors with the number.
+ 
+  INPUTS:
+    g      rheome.ingest.grid       bands  rheome.ingest.bank       cfg  rheome.ingest.config
+  OUTPUT:
+    plan  table, one row per job: job, level, bands {j...}, scales [top bottom] master
+          indices, haloSamples, coreSamples, nPages, spanMax, bufferBytes (working set)
+ 
+  See also: rheome.ingest.reducepaged, rheome.ingest.build
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

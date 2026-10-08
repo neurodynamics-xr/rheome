@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.geom.edgegraph</title></head><body>
+<h1>rheome.geom.edgegraph</h1>
+<p><em>function rheome.geom</em> &mdash; Rheome</p>
+<pre>  GEOM.EDGEGRAPH  The mesh as a weighted graph whose shortest paths are a geodesic ruler.
+ 
+    g = rheome.geom.edgegraph(S)                     % edges + intrinsic diagonals (default)
+    g = rheome.geom.edgegraph(S, Diagonals=false)    % mesh edges only
+    d = distances(g, a, b);                   % metres, symmetric, any range
+ 
+  Dijkstra on the mesh edges is intrinsic, symmetric and never catastrophically wrong, but a path
+  confined to edges zig-zags: on a head-sized icosphere it overestimates the analytic great-circle
+  distance by 3-13%. Adding, across every pair of triangles sharing an edge, the straight segment
+  between their two opposite vertices -- measured in the UNFOLDED pair, so intrinsic, and only where
+  that segment stays inside the pair -- straightens the path. See the measured table below.
+ 
+  ⭐⭐ WHY THIS EXISTS WHEN rheome.geom.geodesic DOES. The heat method is the better ruler at short range and
+  the worse one at long range, and on this cortex long range starts sooner than you would think.
+  Measured 2026-09-29 (scratch diag_geo.m, 40 random pairs each):
+    icosphere-5, R = 70 mm, edge 2.64 mm: heat error -0.5..-2.7% out to 130 mm, then it SATURATES --
+      every pair beyond reads 128.4 mm (truth 151-203 mm, error -15..-37%). That is ~49 edges, where
+      the backward-Euler heat kernel (t = h^2, decay ~exp(-d/h)) falls below 1e-16 of its peak and
+      the gradient direction is roundoff.
+    reference left hemisphere, edge 3.85 mm: d(a-&gt;b) and d(b-&gt;a) DISAGREE -- by 2-11% typically and by
+      67% at 98 mm (87.6 vs 43.7 mm) and 75% at 153 mm (121.1 vs 55.0 mm). An irregular mesh has
+      obtuse cotan weights, the heat solution goes negative, and the direction field flips.
+  So a SPEED, which divides a distance of 50-150 mm by a time, must not be read off rheome.geom.geodesic on
+  this cortex. rheome.inverse.resolution already uses Dijkstra for r50 and is unaffected.
+ 
+  ⚠ Diagonals can still UNDER-estimate on a sharply folded pair: the unfolded segment is intrinsic,
+  but the check that it crosses the shared edge uses the two triangles alone, so across a crease it
+  is exact for the pair and nothing more. Paths are built from these, so the bias stays local.
+ 
+  INPUTS
+    S          surface (.Vertices, .Faces)
+    Diagonals  add the intrinsic diagonals of adjacent triangle pairs (true)
+ 
+  OUTPUT
+    g          MATLAB graph, Weight = length in metres (mesh units)
+ 
+  See also: rheome.geom.geodesic, rheome.inverse.resolution, rheome.geom.tiles
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.enstrophy</title></head><body>
+<h1>rheome.flow.enstrophy</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.ENSTROPHY  Bilinear Gram for total (or scout-weighted) enstrophy  Omega = sum_v w.*omega^2.
+    ken = rheome.flow.enstrophy(ctx [,w])   Omega(t) = ctx.F(:,t)' * ken.gram * ctx.F(:,t)
+ 
+  omega = scalar vorticity (rheome.flow.curl). Enstrophy is quadratic in the data, so the region
+  total is a single [C x C] form Q = Wcurl' diag(w) Wcurl. Per-vertex omega^2 maps come from
+  ken.map on the fly.
+ 
+  OUTPUT (struct ken): .gram [C x C], .w [V x 1], .domain='gram', .out, .chNames,
+    .map (@(F) per-vertex enstrophy map [V x nT]).
+ 
+  See also: rheome.flow.curl, rheome.flow.energy, rheome.flow.helicity
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

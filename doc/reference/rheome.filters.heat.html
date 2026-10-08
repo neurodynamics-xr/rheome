@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.heat</title></head><body>
+<h1>rheome.filters.heat</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.HEAT  Heat / diffusion low-pass kernel  g(lambda) = exp(-t * lambda).
+ 
+    g = rheome.filters.heat(lambda, t)          % t scalar -&gt; [K x 1];  t vector -&gt; [K x numel(t)]
+    g = rheome.filters.heat(lambda, t, lmax)    % normalized spectrum: exp(-t * lambda / lmax)
+ 
+  The heat kernel is the Green's function of diffusion on the surface: applied to a
+  delta it spreads it into a smooth, strictly positive bump whose width grows with t.
+  Low-pass (attenuates high lambda), prior-admissible (g(0)=1). Mirrors Brainstorm's
+  bst_eigfilter_design_heat.
+ 
+  INPUTS:
+    lambda [K x 1] eigenvalues (basis.Lambda)
+    t      scalar or vector of diffusion times (larger t = wider, smoother)
+    lmax   optional spectral normalization constant (e.g. max(lambda))
+ 
+  OUTPUT:
+    g      [K x numel(t)] spectral gains, one column per scale
+ 
+  See also: rheome.filters.mexhat, rheome.filters.localize
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

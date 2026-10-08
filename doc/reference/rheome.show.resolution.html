@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.show.resolution</title></head><body>
+<h1>rheome.show.resolution</h1>
+<p><em>function rheome.show</em> &mdash; Rheome</p>
+<pre>  SHOW.RESOLUTION  The spatial scales of the problem on one log ruler, with the cortex above it.
+ 
+    rheome.show.resolution(marks)
+    rheome.show.resolution(marks, 'Surface', S, 'Patches', P, 'PatchTitles', t)
+    rheome.show.resolution(marks, ..., 'Fields', X, 'FieldTitles', t2, 'Bands', bands)
+ 
+  Renders what `rheome.inverse.resolution` measures next to what the analysis wants to measure, so the
+  gap is visible rather than tabulated: a row of nested pyramid patches, a row of blobs drawn on
+  the SAME mesh with the SAME camera (a real point-spread function beside a real atlas scout),
+  and underneath them a logarithmic ruler carrying every length with the floors marked.
+ 
+  ⭐ THE POINT OF THE SHARED CAMERA. A point-spread function and a Desikan-Killiany scout are
+  usually shown in different figures at different zooms, which is exactly how a 52 mm PSF and a
+  53 mm scout come to look like different orders of magnitude. Drawn on one mesh at one camera
+  they are the same size, which is the finding.
+ 
+  ⚠ THIS FUNCTION COMPUTES NOTHING. It takes lengths and fields that were measured elsewhere
+  (rheome.inverse.resolution, rheome.geom.tree, rheome.load.atlas) exactly as +show always has. If a number here
+  disagrees with a docstring, the docstring is the record.
+ 
+  INPUTS:
+    marks  table with .name (string), .mm (double), .kind (string). `kind` selects the marker
+           and the row the label sits on; the conventional set is &quot;instrument&quot;, &quot;pyramid&quot;,
+           &quot;atlas&quot;, &quot;floor&quot;. Order does not matter, it is sorted by .mm.
+ 
+  OPTIONS (name/value):
+    'Surface'      surface struct (.Vertices, .Faces) for the cortex rows; [] draws the ruler alone
+    'Patches'      {1 x nP} vertex index vectors, drawn as filled patches in row 1
+    'PatchTitles'  {1 x nP} titles
+    'Fields'       [nV x nF] per-vertex scalars, drawn in row 2 with a SHARED colour scale
+                   after each column is normalised to its own peak
+    'FieldTitles'  {1 x nF} titles
+    'FieldColormaps' {1 x nF} colormap per field panel (default hot for all). ⚠ A BINARY
+                   INDICATOR UNDER 'hot' IS INVISIBLE -- zero is black and the panel reads as
+                   empty. Pass a sequential map for set-valued panels (an atlas scout) and keep
+                   hot for graded ones (a point-spread function).
+    'Bands'        {lo hi label} per row: shaded regions of the ruler (mm)
+    'View'         camera [az el] for every cortex panel (default [-90 10], left lateral)
+    'XLim'         ruler limits in mm (default from the marks, padded)
+    'Title'        figure title
+    'Visible'      'on' (default) | 'off' for headless export
+ 
+  OUTPUT: hFig figure handle.
+ 
+  See also: rheome.inverse.resolution, rheome.geom.tree, rheome.show.surface, rheome.show.filmstrip
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

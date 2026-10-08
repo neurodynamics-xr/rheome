@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.dynamics.dmd</title></head><body>
+<h1>rheome.dynamics.dmd</h1>
+<p><em>function rheome.dynamics</em> &mdash; Rheome</p>
+<pre>  DYNAMICS.DMD  Reduced-rank Dynamic Mode Decomposition of a coefficient time series.
+ 
+    result = rheome.dynamics.dmd(C [,opts])
+ 
+  Fits the linear propagator A in C(:,t+1) = A C(:,t) via a truncated-SVD (reduced-rank) DMD, and
+  returns its eigenvalues/modes -- the effective dynamical operator of the (reduced-order) cortical
+  activity. No transport/advection assumption: a traveling wave appears as a complex mode with a
+  spatial phase gradient. Each DMD eigenvalue mu gives a temporal frequency and growth/decay rate.
+ 
+  INPUTS:
+    C     [K x T] coefficient time series (real or complex; from rheome.dynamics.mode_coefficients)
+    opts.dt      sampling interval (s), default 1
+    opts.rank    SVD truncation rank; default = 99%-energy knee (&gt;=2)
+    opts.delays  time-delay (Hankel) embedding depth, default 1 (none). Use &gt;1 to resolve REAL
+                 standing oscillations into their +/-omega pairs (needed for real-valued MEG).
+  OUTPUT (struct result):
+    .eigenvalues [r x 1]  DMD eigenvalues mu_k
+    .frequency   [r x 1]  temporal frequency f_k = angle(mu_k)/(2*pi*dt)   (Hz)
+    .growth      [r x 1]  growth/decay g_k = log|mu_k|/dt                  (1/s; &lt;0 = decaying)
+    .modes       [K x r]  DMD modes in coefficient space (reconstruct to cortex via the basis)
+    .amplitude   [r x 1]  mode amplitudes (projection of the initial state)
+    .rank        scalar   truncation rank used
+ 
+  See also: rheome.dynamics.mode_coefficients, rheome.dynamics.dispersion, rheome.dynamics.pde_fit
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

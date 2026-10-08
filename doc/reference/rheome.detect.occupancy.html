@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.occupancy</title></head><body>
+<h1>rheome.detect.occupancy</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.OCCUPANCY  A dyadic pyramid of on/off occupancy: how long a state lasts, at every scale.
+ 
+    O = rheome.detect.occupancy(on, dt)                 % on [nCh x n] logical at the finest tile length dt (s)
+    O = rheome.detect.occupancy(on, dt, Levels=10, Theta=0.75)
+ 
+  Level 0 holds the binary state of each finest time tile. Level L holds, for each tile of 2^L finest
+  tiles, its OCCUPANCY: the fraction of them that are on. Occupancy is a mean, so it rolls up EXACTLY
+  (a parent is the mean of its two children), and a tile is ON at its level when occupancy &gt;= Theta.
+ 
+  ⭐ WHY A PYRAMID AND NOT ONE DETECTOR. An episode lasting tens of seconds with brief dips is, to a
+  single-resolution detector, a string of sub-second bursts -- which is how the alpha envelope first
+  measured 0.3-1.3 s. In the pyramid the dips stay visible at level 0 and are absorbed at the levels
+  where they no longer matter, so duration becomes a function of SCALE rather than of one threshold:
+    .runs{L}   maximal runs of consecutive ON tiles at level L, in seconds -- episode durations at
+               that resolution
+    .depth     for every finest tile that is on, the LONGEST enclosing dyadic tile that is still on
+               (in seconds): how long the state lasts around that moment, tolerant to short gaps
+ 
+  ⚠ Tiles are ALIGNED to the dyadic grid, so an episode straddling a boundary is held by two tiles of
+  the level below. .depth therefore understates a straddling episode by up to one level; .runs, which
+  concatenates adjacent on-tiles, does not.
+ 
+  INPUTS
+    b       [nCh x n] logical, finest-level state (e.g. rheome.detect.onstate(...).on per channel)
+    dt      finest tile length (s)
+    Levels  number of coarser levels (default: as many as fit)
+    Theta   occupancy for a tile to count as on (0.75)
+ 
+  OUTPUT (struct O)
+    .occ {1 x Levels+1}  [nCh x n/2^L] occupancy per level      .tileS [1 x Levels+1] tile lengths (s)
+    .runs {1 x Levels+1} {nCh x 1} run durations (s)            .depth [nCh x n] (s; NaN where off)
+ 
+  See also: rheome.detect.onstate, alpha_occupancy_omega, rheome.ingest.rollup
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

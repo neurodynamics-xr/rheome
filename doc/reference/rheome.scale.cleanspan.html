@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.cleanspan</title></head><body>
+<h1>rheome.scale.cleanspan</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.CLEANSPAN  Where a recording is stationary enough to tile: artefact blocks and trimmed edges.
+ 
+    C = rheome.scale.cleanspan(F, fs)
+    C = rheome.scale.cleanspan(F, fs, BlockS=0.5, Factor=3, EdgeS=10, Dilate=1, LowHz=4)
+ 
+  Cuts the recording into BlockS blocks, takes the MEDIAN over channels of each block's RMS about
+  the channel's recording median, and calls a block bad when that exceeds Factor x its median over blocks --
+  measured twice, broadband and below LowHz, and a block is bad if either level says so.
+  Bad blocks are dilated by Dilate blocks on each side. A bad block inside the first or last
+  EdgeS seconds moves the usable start (end) past it, so tiles are never placed on a recording
+  edge; a bad block further in is left in .mask for the caller to reject the tile that touches it.
+ 
+  ⚠ WHY THIS EXISTS. About 3% of the subjects of a resting cohort failed the periodicflow measure
+  with spectral:decompose:scale on their LAST tile, whose window ends on the last
+  sample. On one of them the final ~3.5 s carry a common-mode artefact (first PC 96% of the variance,
+  against 18% mid-recording) at 150x-340000x the mid-recording power from 300 Hz down to 1 Hz,
+  and the first 0.5 s sits at 10x. It is data, not units: on clean tiles the data-derived |C|^2/PSD
+  scale equals the analytic fs*nT/2 to 0.88-1.13. The same edges bias the subjects that passed: tile 12
+  read &gt; 60% background-above-observed in ~5% of them (&lt;1% for any other tile) and tile 1's median
+  was 13.6% against 27% for every other tile.
+ 
+  ⚠ THE BROADBAND LEVEL ALONE SEES AN ARTEFACT 2.5 s LATE. Broadband std is dominated by the high
+  frequencies; that subject's end artefact is red, and its sub-1 Hz level rises at 120.5 s while the
+  broadband level first crosses 3x at 123 s. Below the fit band is not harmless: periodicflow's
+  unwindowed tile FFT leaks it into 1-45 Hz, and a tile ending at 122.5 s read 3.5x the recording's
+  power. Hence the second, low-passed level. On the 600 Hz cache the start shows the same thing:
+  1-4 Hz at 204x / 41x / 8x in the first three blocks, broadband 7x / 1.3x / 1.0x.
+ 
+  INPUTS:
+    F   [nCh x N] recording, channels in rows
+    fs  sampling rate (Hz)
+  OUTPUT (struct C):
+    .first .last   usable sample range [first, last] after edge trimming (1-based, inclusive)
+    .mask          [1 x N] logical, true on samples of a (dilated) bad block
+    .ratio         [1 x nB] block level / median block level, the larger of broadband and &lt; LowHz
+    .bad           [1 x nB] logical, the dilated bad blocks
+    .blockS .typical .nTrimStart .nTrimEnd   (trims in samples)
+ 
+  See also: rheome.scale.measure_periodicflow
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

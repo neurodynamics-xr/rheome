@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.demos.laplace_beltrami</title></head><body>
+<h1>rheome.demos.laplace_beltrami</h1>
+<p><em>function rheome.demos</em> &mdash; Rheome</p>
+<pre>  DEMOS.LAPLACE_BELTRAMI  Read a Brainstorm cortex and build/validate the LBO.
+ 
+    rheome.demos.laplace_beltrami(SurfaceFile)
+ 
+  Step 1 of the atom-design demo. Loads a Brainstorm cortical surface .mat, builds
+  the mass matrix and the cotangent Laplace-Beltrami stiffness in pure MATLAB, and
+  runs a set of algebraic sanity checks that any correct LBO must pass. Nothing here
+  touches the Brainstorm environment beyond reading the surface file from disk.
+ 
+  Needs the toolbox on the path (installed .mltbx, or addpath(genpath(&lt;clone&gt;))); it does
+  not edit the path itself.
+ 
+  INPUT:
+    SurfaceFile : path to a Brainstorm surface .mat (e.g. a tess_cortex_*_low.mat).
+ 
+  Uses: rheome.io.read.surface, rheome.operators.mass, rheome.operators.laplace_beltrami
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

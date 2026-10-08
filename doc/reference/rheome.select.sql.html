@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.select.sql</title></head><body>
+<h1>rheome.select.sql</h1>
+<p><em>function rheome.select</em> &mdash; Rheome</p>
+<pre>  SELECT.SQL  A query as Postgres SQL: the same semi-join descent the MATLAB executor runs.
+ 
+    txt = rheome.select.sql(q)          levels from :top down to q.level (parameters :rec, :top)
+    txt = rheome.select.sql(q, db)      with the store's recording id and top level filled in
+ 
+  Renders, in order: a threshold CTE (percentile_cont or a literal), one survivor CTE per
+  level from the top down (a semi-join on the parent key (k - 1) / 2 + 1), the final
+  SELECT at q.level joined to tile for centre and extent, and for MinDuration a
+  gaps-and-islands wrapper. A planner with an index on the column may replace the chain
+  by an index scan; the result is the same relation.
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

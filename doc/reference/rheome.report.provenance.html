@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.report.provenance</title></head><body>
+<h1>rheome.report.provenance</h1>
+<p><em>function rheome.report</em> &mdash; Rheome</p>
+<pre>  REPORT.PROVENANCE  Everything needed to reproduce a result, collected rather than typed.
+ 
+    P = rheome.report.provenance()
+    P = rheome.report.provenance(Script=&quot;resolution_scales_omega.m&quot;, Data=[&quot;...bases.mat&quot;])
+    P = rheome.report.provenance(..., Hash=&quot;sha256&quot;)     % read every data file and digest it
+ 
+  ⭐ PROVENANCE THAT IS TYPED BY HAND IS PROVENANCE THAT IS WRONG. The commit a figure was
+  made from, whether the tree was dirty at the time, and which cached file supplied the data
+  are all knowable at run time, so none of them belongs in prose. This returns them as a value
+  that rheome.report.article renders into a chapter.
+ 
+  ⚠ A DIRTY TREE IS RECORDED, NOT HIDDEN. .clean is false whenever `git status --porcelain`
+  has any output, and .dirtyFiles lists what. rheome.report.article prints a banner in the document
+  when this happens, because a result built from uncommitted code cannot be reproduced from
+  the SHA alone and a reader has no other way to find that out.
+ 
+  ⚠ HASHING IS OFF BY DEFAULT and that is deliberate on this project: the cached bases are
+  297 MB and digesting them costs seconds per report. Hash=&quot;fingerprint&quot; (the default) records
+  size and modification time, which detects a changed file but does not prove two files are
+  identical. Hash=&quot;sha256&quot; proves it. Hash=&quot;none&quot; records only the path.
+ 
+  INPUTS (name-value):
+    Script    the script or function that produced the result; defaults to the caller's file
+    Data      string array of data file paths (rheome.load.root() entries, caches, raw recordings)
+    Extra     further source files to pin (helpers the script depends on)
+    Hash      &quot;fingerprint&quot; (default) | &quot;sha256&quot; | &quot;none&quot;
+    Repo      repository root; defaults to the working directory
+ 
+  OUTPUT (struct P):
+    .git      .branch .sha .shaShort .clean .dirtyFiles .subject .commitDate .remote
+    .code     table: file, role (&quot;script&quot;|&quot;extra&quot;), bytes, modified (formatted string), digest
+    .data     table: file, bytes, modified, digest, exists
+    .env      .matlab .release .os .host .user .toolboxes (table: name, version)
+    .when     datetime the report was generated
+    .table    the whole thing flattened to one [key value] table, for a document
+ 
+  See also: rheome.report.article, rheome.report.template
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

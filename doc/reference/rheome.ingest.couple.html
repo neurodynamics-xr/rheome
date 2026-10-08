@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.ingest.couple</title></head><body>
+<h1>rheome.ingest.couple</h1>
+<p><em>function rheome.ingest</em> &mdash; Rheome</p>
+<pre>  INGEST.COUPLE  Phase-amplitude coupling accumulators per tile: sums, so they MERGE.
+ 
+    [P, pairs] = rheome.ingest.couple(x, fb, bands, g)
+    P = rheome.ingest.couple(x, fb, bands, g, Pairs=[7 3], PhaseBins=18)
+ 
+  ⭐ COUPLING IS A SUM, AND THAT CHANGES EVERYTHING. The loudest frequency of a tile does not
+  merge; the coupling of two bands does, because every quantity it needs is additive:
+ 
+      vec(tile) = sum over the tile of  A_fast * exp(i * phi_slow)      (complex)
+      amp(tile) = sum over the tile of  A_fast
+      hist(tile, bin) = the same amplitude sum, split by slow-phase bin
+ 
+  A parent's sums are its children's sums, so the vector length |vec|/amp (Canolty's mean
+  vector length), the preferred phase angle(vec) and Tort's modulation index from the
+  histogram are all DERIVED at read time, at any level, exactly. Coarser levels give more
+  cycles and less variance for nothing.
+ 
+  ⭐ THE SLOW BAND PICKS THE WINDOW. Coupling is estimated over slow cycles, so a pair is
+  accumulated at the SLOW band's own level -- where the constant-Q tiling gives 22.6 cycles
+  of it, the same number in every band. A fixed window would give 181 cycles at 90 Hz and 1
+  at 0.35 Hz, and the estimator's bias would differ by two orders of magnitude across the
+  ladder. This is the measurement the tiling was made for.
+ 
+  ⚠ THE FAST BAND PICKS THE RATE. A_fast * exp(i phi_slow) is a real envelope modulated at
+  the slow frequency, so the product must be formed at twice the slow band's TOP edge, not
+  at the slow band's own rate. Both bands are therefore evaluated on ONE grid -- the fast
+  band's -- which on this bank carries every pair two octaves apart or more (measured: 1.2x
+  margin at exactly two octaves). Adjacent octaves are refused by name.
+ 
+  ⚠ AND THE PHASE MUST BE RE-MODULATED. The sub-band inverse FFT places a band's bins at the
+  start of a short array, which demodulates it by its first bin: the phase that comes back
+  rotates against the true one at that frequency, and a sum of phasors built from it is
+  destroyed rather than merely offset. Each band is multiplied back by exp(i 2 pi f0 t)
+  before any phase is taken.
+ 
+  INPUTS
+    x      [nT x 1] one channel
+    fb     the timefilterbank the store was built with
+    bands  the band table          g  the grid
+    Pairs  [nP x 2] band ids (slow, fast), or &quot;auto&quot; (every octave pair &gt;= 2 octaves apart)
+    PhaseBins  bins of the slow phase for the modulogram (0 = do not accumulate one)
+ 
+  OUTPUT (struct array P), one entry per SLOW level:
+    .level .pairs [nP x 2] .vec [K x nP] complex .amp [K x nP] .hist [K x nP x nBins]
+ 
+  See also: rheome.ingest.peaks, rheome.select.derive, rheome.ingest.bank
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

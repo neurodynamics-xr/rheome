@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.graphtransform.chebyshev</title></head><body>
+<h1>rheome.graphtransform.chebyshev</h1>
+<p><em>function rheome.graphtransform</em> &mdash; Rheome</p>
+<pre>  GRAPHTRANSFORM.CHEBYSHEV  Apply g(L) by polynomial recursion -- no eigenvectors.
+ 
+    T = rheome.graphtransform.chebyshev(L)                 % lmax estimated by Lanczos
+    T = rheome.graphtransform.chebyshev(L, lmax)
+    T = rheome.graphtransform.chebyshev(L, lmax, 'Order', 40, 'Mass', M)
+ 
+  This is why graphfilterbank requires only a spectral RANGE and not an eigenvalue
+  vector: on a large graph you never compute the spectrum. g(lambda) is expanded in
+  Chebyshev polynomials on [0, lmax] and evaluated by Clenshaw recursion in L.
+ 
+  For a generalized pencil L phi = lambda M phi, pass 'Mass' and the recursion runs on
+  M\L, whose spectrum is lambda.
+ 
+  ⚠ lmax MUST BOUND THE OPERATOR'S WHOLE SPECTRUM, and it is NOT the lambda_max of a
+  truncated eigenbasis. The shifted operator L/a - I maps [0, lmax] onto [-1, 1]; any
+  true eigenvalue beyond lmax lands outside, where T_k grows like (2x)^k and the
+  recursion diverges silently to 1e31 and then to NaN. Measured on an ico4 sphere: the
+  top of a 100-mode basis is 9.3e3 while the operator's true lambda_max is 4.7e5, a
+  factor of 50 -- so reusing a basis lambda_max here is catastrophic, not merely
+  inaccurate. Omit lmax (it is then estimated by Lanczos) or use
+  rheome.graphfilterbank.fromOperator, which does that for you. A supplied lmax is
+  cross-checked against a cheap power iteration and a warning is raised if it is low.
+ 
+  Supplies a fifth handle, .filter(g, X), which graphfilterbank prefers over the
+  forward/inverse sandwich: a polynomial route has no coefficient space at all.
+ 
+  ⚠ THE LOW-PASS MEMBER IS THIS METHOD'S WEAK SPOT. A mexhat bank's scaling function
+  is a QUARTIC roll-off near lambda ~ 0.4*lambda_min, and when the operator's true
+  lambda_max is orders of magnitude larger, that feature occupies a vanishing fraction
+  of the fitted interval. Measured on an ico4 sphere (roll-off at 186, fit over
+  [0, 4.7e5], i.e. 0.04% of the range): 35% error at order 160, 5.6% at order 320,
+  while every WAVELET member is already exact to three decimals at order 160. It
+  converges, but slowly -- use rheome.graphtransform.eigen when the low-pass band matters.
+ 
+  See also: rheome.graphtransform.eigen, rheome.graphfilterbank.fromOperator
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

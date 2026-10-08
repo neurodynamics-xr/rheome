@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.bandsnr</title></head><body>
+<h1>rheome.scale.bandsnr</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.BANDSNR  Per-octave SNR of the rest recording against the subject's own noise run.
+ 
+    T = rheome.scale.bandsnr(name)                 % noise from rheome.load.root()/&lt;name&gt;/noise.mat
+    T = rheome.scale.bandsnr(name, nrec)           % or a rec struct (.F .sfreq .ChannelName)
+ 
+  The ten octaves of band_resolution_omega.m (0.125-0.25 ... 64-128 Hz). For each: Welch power
+  of every good MEG channel in the band, the ratio rest/noise per channel, and the MEDIAN over
+  channels, in dB of power. Channels are matched by name.
+ 
+  ⚠ A DIFFERENT ROUTE TO THE SAME QUANTITY. The median band power over the tiles of a constant-Q
+  store is another; this takes Welch band power over the whole record. Both are a median power
+  ratio at the sensors; they are not bit-identical.
+  ⚠ Octaves above the noise run's Nyquist are NaN, never extrapolated.
+ 
+  Returns a table: band, fLo, fHi, snr_dB, nChannels.
+ 
+  See also: rheome.scale.measure_bandresolution, noise_floor_omega
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

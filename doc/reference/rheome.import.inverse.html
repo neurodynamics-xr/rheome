@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.import.inverse</title></head><body>
+<h1>rheome.import.inverse</h1>
+<p><em>function rheome.import</em> &mdash; Rheome</p>
+<pre>  IMPORT.INVERSE  Find a Brainstorm kernel-only inverse in a study + cache it to +data.
+ 
+    file = rheome.import.inverse(name, studyDir)             % auto: the unconstrained MN kernel
+    file = rheome.import.inverse(name, studyDir, pattern)    % e.g. 'results_dSPM*KERNEL*.mat'
+ 
+  Globs the study folder for a Brainstorm results_*_KERNEL_*.mat, PREFERS an unconstrained
+  (nComponents == 3) match -- so it compares like-for-like with the module's unconstrained
+  Dirac field -- reads it via rheome.io.read.inverse, and writes +data/&lt;name&gt;/inverse_bst.mat.
+  Read back through rheome.load.inverse.
+ 
+  See also: rheome.io.read.inverse, rheome.load.inverse, rheome.import.study
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

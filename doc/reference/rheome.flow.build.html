@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.build</title></head><body>
+<h1>rheome.flow.build</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.BUILD  Assemble all fused flow kernels + a coeff-vs-vertex agreement report.
+    K = rheome.flow.build(ctx [,opts])
+ 
+  Returns a struct of every kernel (each from its dedicated rheome.flow.* builder) plus a report:
+    K.field K.divergence K.curl K.potential K.stream K.energy K.enstrophy K.helicity
+    K.report .Ks .C .V .phiCorr .psiCorr   (coeff-vs-vertex correlation of the potentials)
+ 
+  Apply linear kernels as  q(:,t) = K.&lt;name&gt;.vertexOperator * ctx.F(:,t)  (potentials: coeff via
+  K.potential.scalarModes * (K.potential.coeffOperator * F), or full-rank K.potential.vertexOperator * F).
+  Grams as  scalar(t) = ctx.F(:,t)' * K.&lt;name&gt;.gram * ctx.F(:,t).
+ 
+  See also: rheome.flow.context, rheome.flow.field, rheome.flow.divergence, rheome.flow.curl, rheome.flow.potential, rheome.flow.stream
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

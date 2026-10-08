@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.geom.geodesic</title></head><body>
+<h1>rheome.geom.geodesic</h1>
+<p><em>function rheome.geom</em> &mdash; Rheome</p>
+<pre>  GEOM.GEODESIC  Single-/multi-source geodesic distance by Crane's heat method.
+ 
+    [distance, solver] = rheome.geom.geodesic(S, sourceVertices)          % builds the solver
+    [distance, solver] = rheome.geom.geodesic(S, sourceVertices, solver)  % reuse cached factors
+ 
+  Distance ON THE SURFACE (not the ambient embedding) from a set of source vertices, via the
+  heat method (Crane, Weischedel &amp; Wardetzky 2013): diffuse a heat spike briefly, march down
+  the normalised heat gradient, and integrate. Built entirely from the module's cotan stiffness
+  + mass (rheome.operators.laplace_beltrami) and per-face gradient (rheome.operators.face_gradient). Ported
+  from nxr-compute/src/geodesic.cpp (geometry-central HeatMethodDistanceSolver).
+ 
+  The returned solver caches the two Cholesky factorisations; pass it back for repeated source
+  queries on the same surface (e.g. rheome.geom.karcher_mean), which is where the cost lives.
+ 
+  INPUTS:
+    S              surface struct with .Vertices [nV x 3], .Faces [nF x 3]
+    sourceVertices [k x 1] vertex indices of the source set (distance 0 there)
+    solver         (optional) a solver returned by a previous call on the same S
+ 
+  OUTPUT:
+    distance [nV x 1] geodesic distance (source ~ 0, increasing away), metres (mesh units)
+    solver   cached factorisations for reuse
+ 
+  See also: rheome.geom.karcher_mean, rheome.operators.laplace_beltrami, rheome.operators.face_gradient
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

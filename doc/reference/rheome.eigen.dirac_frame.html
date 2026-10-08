@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.eigen.dirac_frame</title></head><body>
+<h1>rheome.eigen.dirac_frame</h1>
+<p><em>function rheome.eigen</em> &mdash; Rheome</p>
+<pre>  EIGEN.DIRAC_FRAME  Per-hemisphere eigenbasis of the relative Dirac.
+ 
+    dbasis = rheome.eigen.dirac_frame(V, F, tau, nModes)
+    dbasis = rheome.eigen.dirac_frame(V, F, tau, nModes, N)          % supply the Gauss map
+    dbasis = rheome.eigen.dirac_frame(V, F, tau, nModes, N, hemis)   % supply the hemisphere split
+    dbasis = rheome.eigen.dirac_frame(..., hemis, normalize)         % normalize=false -&gt; physical eigenvalues
+ 
+  Reproduces Brainstorm bst_dirac's basis: split the cortex into hemispheres, build the
+  relative Dirac (default: the (1-tau)*intrinsic + tau*extrinsic blend)
+  A_h = (1-tau)(D_int^2/sL)+tau(E/sE) per hemisphere
+  (rheome.operators.dirac_frame), solve  A_h phi = lambda B_h phi  for nModes each (rheome.eigen.modes;
+  M-orthonormalization is the Rayleigh-Ritz step for the quaternion degeneracy), and stack
+  the per-hemisphere modes -- matching bst_dirac's [L~_L, L~_R]. Returns the module's Dirac
+  dbasis shape, so rheome.filters.impulse / rheome.forward.reconstruct consume it unchanged. This is THE
+  Dirac basis of the standalone module -- the proper curvature-aware operator, matching
+  Brainstorm; there is no flat-Dirac alternative.
+ 
+  HEMISPHERE SPLIT: pass 'hemis' = {leftVerts, rightVerts} (rheome.io.read.surface .Hemi, from the
+  Structures atlas Cortex L/R scouts) -- the AUTHORITATIVE split. Only when it is not given
+  does this fall back to connected components (fine for synthetic meshes, fragile on real
+  cortex with non-manifold edges).
+ 
+  INPUTS:  V,F surface;  tau in [0,1] (default caller passes 0.5, as Brainstorm);
+           nModes modes PER hemisphere;  N (optional) unit vertex normals;
+           hemis (optional) cell of per-hemisphere vertex-index lists.
+  OUTPUT (struct dbasis):
+    .Phi [4V x M] B-orthonormal (M = nModes summed over hemispheres), .Lambda [M x 1],
+    .Mass = kron(Mass_full, I4), .nVert, .nModes = M, .Tau, .Hemisphere [M x 1],
+    .Normalize (the scale convention), .Scales [nComp x 2] = [sL sE] per hemisphere. To read
+    the spectrum in PHYSICAL units without rebuilding:  Lambda_phys = Lambda .* Scales(Hemisphere,1).
+ 
+  See also: rheome.io.read.surface, rheome.operators.dirac_frame, rheome.operators.dirac_intrinsic_sq, bst_dirac
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

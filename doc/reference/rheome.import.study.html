@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.import.study</title></head><body>
+<h1>rheome.import.study</h1>
+<p><em>function rheome.import</em> &mdash; Rheome</p>
+<pre>  IMPORT.STUDY  Read the Brainstorm study structures + cache them to +data.
+ 
+    file = rheome.import.study(name, studyDir, dataName)
+ 
+  Reads the channel file, the unconstrained MEG leadfield (headmodel_surf_os_meg*),
+  the recording, and the noise covariance (rheome.io.read.*), and writes them to
+  +data/&lt;name&gt;/study.mat. This caches the (large) leadfield/recording locally so the
+  source demos never re-read the external volume.
+ 
+  dataName may be a bare filename (joined to studyDir) OR an ABSOLUTE PATH. The absolute form
+  is what you need when the recording and the geometry live in different Brainstorm conditions
+  -- e.g. a continuous recording imported into its own condition while the channel file and
+  leadfield stay in the original @raw condition, which is the normal layout for a raw study
+  that was imported afterwards.
+ 
+  See also: rheome.import.surface, rheome.import.dirac, rheome.import.dataset, rheome.load.study, rheome.source.dirac
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

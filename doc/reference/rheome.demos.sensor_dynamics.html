@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.demos.sensor_dynamics</title></head><body>
+<h1>rheome.demos.sensor_dynamics</h1>
+<p><em>function rheome.demos</em> &mdash; Rheome</p>
+<pre>  DEMOS.SENSOR_DYNAMICS  What a moving pattern looks like on an array, and in its spectrum.
+ 
+    rheome.demos.sensor_dynamics()
+    out = rheome.demos.sensor_dynamics('_figures')     % also export PNGs and the web JSON
+ 
+    1 structure  one travelling wave: snapshots, sensor traces, carpet, joint spectrum
+    2 instruments the SAME wave through four geometries -- what each one sees
+    3 families   travelling / rotating / standing / diffusing, side by side
+    4 the claim  travelling vs standing: identical per-channel, opposite in the spectrum
+    5 dispersion a wave train of one speed -&gt; a ridge -&gt; the speed back out
+ 
+  ⭐ WHY FIGURE 4 IS THE ARGUMENT. A travelling wave and a standing wave put their energy at
+  the SAME (lambda, omega) point -- same spatial scale, same frequency -- and produce nearly
+  the same trace at any single sensor. Nothing in a per-channel analysis separates them. What
+  separates them is the COMPLEX SPATIAL PATTERN at that frequency: standing collapses every
+  sensor onto one line through the origin (a common phase), travelling spreads them around a
+  circle (a phase that advances with position). That is a property of the field across the
+  array, which is exactly what a graph-spectral method sees and a channel-by-channel one
+  cannot.
+ 
+  ⚠ EVERY WAVE IS PLANTED AT A WAVELENGTH THAT ARRAY CAN ACTUALLY SEE. Each geometry gets a
+  wave at the geometric centre of its own usable band (rheome.sensors.calibrate). Planting one
+  physical wavelength across all four would be measuring the instruments' windows, which
+  rheome.demos.sensor_limits already does, rather than their dynamics.
+ 
+  ⚠ SENSOR SPACE ONLY. Speeds are metres per second ACROSS THE ARRAY and wavelengths are
+  millimetres of SENSOR SEPARATION. Nothing here is a claim about what produced a signal.
+ 
+  INPUTS:
+    outDir  '' for screen, or a folder for PNGs + sensor_dynamics.json
+  OUTPUT:
+    out  .ok .checks .structure .families .standingIndex .speedFit
+ 
+  See also: rheome.demos.sensor_graph, rheome.demos.sensor_limits, rheome.sensors.calibrate
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

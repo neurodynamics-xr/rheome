@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.operators.connectome</title></head><body>
+<h1>rheome.operators.connectome</h1>
+<p><em>function rheome.operators</em> &mdash; Rheome</p>
+<pre>  OPERATORS.CONNECTOME  Vertex-resolution structural connectome from fiber endpoints.
+ 
+    [W, keep] = rheome.operators.connectome(V, F, endPts)
+    [W, keep] = rheome.operators.connectome(V, F, endPts, opts)   % opts.SmoothHops, opts.EdgeThr
+ 
+  Builds a vertex x vertex structural connectome on a cortical mesh from tractography fiber
+  endpoints -- faithful port of Brainstorm's tess_connectome vertex branch. Each fiber's two
+  endpoints are snapped to their nearest vertices; the raw endpoint graph leaves ~46% of
+  vertices isolated (sulcal walls carry no endpoints), so a continuous-kernel MESH SMOOTHING
+  W = S^p * Wraw * S^p' (S = row-normalized one-hop mesh averaging) bridges the gaps before the
+  largest connected component is returned. The result is the weight matrix consumed by
+  rheome.operators.connectome_laplacian and rheome.operators.lb_connectome.
+ 
+  INPUTS:
+    V       [nV x 3] vertices;  F [nF x 3] triangles
+    endPts  [nFib x 2 x 3] the two endpoints of each fiber (rheome.io.read.fibers), in V's coordinates
+    opts    (optional) struct: .SmoothHops (default 3, ~10mm) .EdgeThr (default 1e-4 of max)
+ 
+  OUTPUTS:
+    W       [nV x nV] sparse symmetric connectome weights (zero diagonal)
+    keep    indices of the largest connected component of W&gt;0
+ 
+  See also: rheome.io.read.fibers, rheome.operators.connectome_laplacian, rheome.operators.lb_connectome, rheome.eigen.connectome, rheome.eigen.lift
+ 
+  Author: Diellor Basha, 2026 (port of tess_connectome / local_vertex_connectome)
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

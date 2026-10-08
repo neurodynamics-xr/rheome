@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.tracknull</title></head><body>
+<h1>rheome.detect.tracknull</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.TRACKNULL  Selection thresholds from tracks found in NOISE ALONE.
+ 
+    thr = rheome.detect.tracknull(nullStats, nullSeconds)              % Alpha = 0.1 per second
+    thr = rheome.detect.tracknull(nullStats, nullSeconds, Alpha=0.05)
+ 
+  nullStats is rheome.detect.trackstats pooled over noise-only records totalling nullSeconds. A track is
+  worth reporting if it is PERSISTENT (lasts longer than noise tracks do) or MOVING (gets further than
+  noise tracks do). Each rule gets half of Alpha, a false-trajectory RATE in tracks per second of
+  record: the threshold is the smallest value that fewer than Alpha/2 * nullSeconds noise tracks
+  exceed.
+ 
+  ⭐ WHY TWO RULES AND A UNION. A still object is persistent and goes nowhere; a fast one over a short
+  path is brief and goes far -- plant_tiletrack_omega.m's 1 m/s mover lived 0.12 s, no longer than a
+  noise bump, so a duration-only rule (the &quot;longest track&quot;) picked noise. Neither rule alone keeps
+  both; the union does, at a false rate of at most Alpha.
+ 
+  ⭐ A RATE, NOT A PER-TRACK p-VALUE. Noise produces tens of tracks per second at 10 dB, so a per-track
+  5% would pass several false trajectories every second. What a reader of a trajectory map needs is
+  how many of the reported trajectories per second are noise, and that is what Alpha sets.
+ 
+  ⚠ If the null holds too few tracks to reach Alpha/2 (a short null, or a clean one), the threshold is
+  the null's maximum and `.saturated` says so: the false rate is then bounded only by 1/nullSeconds.
+ 
+  OUTPUT (struct thr)
+    .durationS  .netMM       the two thresholds (a track passes on value &gt; threshold)
+    .alpha  .nullSeconds  .nNull   .saturated  [1 x 2] (duration, net)
+ 
+  See also: rheome.detect.trackselect, rheome.detect.trackstats
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

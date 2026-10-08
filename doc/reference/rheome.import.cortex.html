@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.import.cortex</title></head><body>
+<h1>rheome.import.cortex</h1>
+<p><em>function rheome.import</em> &mdash; Rheome</p>
+<pre>  IMPORT.CORTEX  Equip a subject's FOLDED cortical hemisphere with every operator + eigenmode.
+ 
+    file = rheome.import.cortex(name)                 % hemi 'L', K=800 Dirac, Kc=1000 connection
+    file = rheome.import.cortex(name, hemi, K, Kc)
+ 
+  The folded-metric TWIN of rheome.import.sphere. Same mesh, real cortical embedding: it takes one
+  hemisphere of the subject's cortex (the actual folded 3-D vertex positions) and computes on
+  it the cotan LBO (L,M), the relative-Dirac eigenbasis, the Laplace–Beltrami eigenbasis, and
+  the connection-Laplacian operator + eigenmodes -- exactly the operators sphere.mat holds, but
+  on the FOLDED metric instead of the 100 mm sphere. Bundled into one struct 'cortex' and cached
+  to +data/&lt;name&gt;/cortex.mat, so rheome.load.cortex(name) returns the whole thing instantly.
+ 
+  Because the sphere and cortex share connectivity (identical faces, identity vertex map via
+  rheome.load.sphere.globalVertices), the two bundles are the SAME mesh in two embeddings -- the basis
+  for matched-vs-mismatched filtering (the sphere-vs-cortex comparison, since removed). Named 'cortex' (not 'eigen') to
+  avoid shadowing the rheome.eigen.* package.
+ 
+  INPUTS:
+    name  subject cache name (needs rheome.import.surface first);  hemi 'L' (default) or 'R'
+    K     Dirac modes (default 800);  Kc  connection modes (default 1000)
+ 
+  OUTPUT struct 'cortex' (saved in cortex.mat):
+    .S       surface struct on the FOLDED cortex (.Vertices in m, .Faces, .nV, .VertNormals, .Hemi={})
+    .L .M    LBO stiffness + mass            .basis  Laplace–Beltrami eigenbasis
+    .dirac   relative-Dirac eigenbasis (dbasis)
+    .conn    struct: .C (connection operator A,B,e1,e2,normal,Rt) .Psi .Lambda (eigenmodes)
+    .globalVertices  index of each vertex into the subject's full cortex (== sphere's, same order)
+    .hemi .source .meta   provenance
+ 
+  See also: rheome.import.sphere, rheome.operators.connection_laplacian, rheome.eigen.dirac_frame, rheome.load.cortex
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

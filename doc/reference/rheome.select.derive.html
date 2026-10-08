@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.select.derive</title></head><body>
+<h1>rheome.select.derive</h1>
+<p><em>function rheome.select</em> &mdash; Rheome</p>
+<pre>  SELECT.DERIVE  Per-tile derived statistics at one level, computed from the stored moments.
+ 
+    V = rheome.select.derive()                                    % the vocabulary, as a table
+    R = rheome.select.derive(db, Level=4)                         % every scalar statistic, all channels
+    R = rheome.select.derive(db, Level=4, Channels=7, Stats=[&quot;rms&quot;,&quot;spectralCentroid&quot;])
+    R = rheome.select.derive(db, Level=6, Scope=&quot;group&quot;, Depth=2, Stats=&quot;all&quot;)
+    R = rheome.select.derive(db, Level=4, Window=[120 180], Stats=[&quot;share&quot;,&quot;bandPower&quot;])
+ 
+  One row per (unit, tile), in key order, with the requested statistics as columns. NOTHING
+  here is stored: every column is a function of the tile's mergeable moments (n, sumX,
+  sumX2, absMax, min, max) or of its band-energy vector (energy_j, envMax_j, nCoi_j). This
+  is the &quot;scalarization&quot; layer -- what MATLAB's feature extractors compute per frame, except
+  that here the frame can be any level of the pyramid and the moments were merged, not
+  recomputed. Band-resolved columns (bandPower, share, bandEnergy, bandEnvMax) are
+  [nRows x nBands] matrix variables; R.Properties.CustomProperties.bands names their order.
+ 
+  ⚠ A NODE IS A SUM, NOT AN AVERAGE. In Scope=&quot;group&quot; every moment is the exact sum (or
+  maximum) over the node's member channels, so `energy` is the patch's total energy and
+  `rms` is sqrt(n_sensors) times a typical channel's. The `n_sensors` column comes back with
+  the rows for that reason; `share`, `spectralEntropy` and the other SPECTRAL shape statistics
+  are ratios of band energies -- all sums over the same channels -- and are unaffected.
+ 
+  ⚠⚠ BUT THE TIME-DOMAIN SHAPE STATISTICS ARE NOT, and being ratios does not save them: they
+  divide a MAXIMUM over channels by a SUM over channels, which is not a ratio of like things.
+  Measured on the reference frame store at level 3, Depth=2:
+      crest     0.443 - 3.027   &lt;- absMax/rms is &gt;= 1 BY DEFINITION; below 1 is proof it is broken
+      kurtosis  -1.1e264 - 2.8e262     skewness  -3.4e272
+  The kurtosis and skewness blow-ups are catastrophic cancellation: sumX3 and sumX4 are summed
+  over channels while the centre they are referred to is the sum of the channel means, which is
+  not the patch's mean of anything.
+  ⭐ VALID IN GROUP SCOPE: mean power rms energy envMax min max ptp bandEnergy bandEnvMax
+    bandPower share residual coneFrac spectralEntropy spectralFlatness spectralCrest
+    spectralCentroid spectralSpread dominantBand dominantFreq peakFreq peakAmp fftPower.
+  ⚠ NOT VALID IN GROUP SCOPE: crest kurtosis skewness shapeFactor impulseFactor
+    clearanceFactor std var meanAbs -- use Scope=&quot;channel&quot;, which needs level &gt;= channelLevel.
+    Asking for &quot;all&quot; in group scope returns them anyway; this is a caveat, not a guard, because
+    the right subset depends on what a patch is being taken to mean.
+ 
+  ⚠ A PREVIEW STORE HOLDS ONLY min AND max (rheome.ingest.preview: no bank, no bands, no sums), so
+  only min, max and ptp can be derived from it. &quot;all&quot; quietly narrows to those three there;
+  naming any other statistic says what the store is instead of failing on a missing array.
+ 
+  ⚠ BELOW THE CHANNEL FLOOR ONLY min, max AND ptp EXIST PER CHANNEL. Those three come from
+  the min/max mipmap (rheome.ingest.config ChannelEnvelope), which reaches every level because the
+  pair merges by extremum; asking for rms or a band statistic there says so and names the
+  floor. Group scope has no floor at all.
+ 
+  ⚠ A LEVEL CARRIES ONLY THE BANDS ON ITS SIDE OF THE DIAGONAL. The spectral statistics are
+  computed over the bands the level actually carries, so spectralEntropy at level 2 and at
+  level 8 are entropies of different-length vectors -- comparable down a column, not across
+  levels. `nBands` is returned so a caller can see it, and `residual` says how much of the
+  tile's power the carried bands miss.
+ 
+  ⚠ RESIDUAL CAN BE NEGATIVE ON ONE TILE. The frame is tight over the WHOLE record, so the
+  bands account for sumX2 exactly when summed over every tile and every band; within one
+  tile a transient's wavelet response spreads across the tile edge, so a tile can hold more
+  band energy than time-domain energy. Read it as &quot;power not carried here&quot;, signed.
+ 
+  ⚠ WINDOW KEEPS TILES THAT INTERSECT IT, not tiles inside it. A 64 s tile overlapping a 10 s
+  window is the tile that covers that window; dropping it would leave the window empty.
+ 
+  OPTIONS
+    Level     (required) pyramid level
+    Stats     names, or &quot;all&quot; (every scalar), &quot;time&quot;, &quot;spectral&quot;, &quot;band&quot;, &quot;fft&quot;
+    Scope     &quot;channel&quot; (default) | &quot;group&quot; (sensor-tree nodes)
+    Channels  channel_ids ([] = all)          Groups/Depth  as in rheome.select.query
+    Bands     band_ids for the band-resolved and spectral columns ([] = all carried)
+    Window    [t0 t1] seconds ([] = whole record)
+ 
+  See also: rheome.select.query, rheome.select.rows, rheome.select.frames, rheome.recordingbrowser
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

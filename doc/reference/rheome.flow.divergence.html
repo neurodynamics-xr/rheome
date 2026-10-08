@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.divergence</title></head><body>
+<h1>rheome.flow.divergence</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.DIVERGENCE  Fused flow operator: sensors -&gt; divergence (sources/sinks).
+    kd = rheome.flow.divergence(ctx)
+ 
+  CANONICAL (eigenbasis): the Laplace-Beltrami coefficients of the divergence, straight from
+  sensors -- no per-vertex field materialized:
+    g_div(:,t) = kd.coeffOperator * ctx.F(:,t)          coeffOperator [Ks x C]  (= Phi_LB' M div reconstruct)
+  FALLBACK (vertex, for maps/validation only):
+    div(:,t)   = kd.vertexOperator * ctx.F(:,t)          vertexOperator [V x C]
+    or reconstruct from coeffs: kd.scalarModes * (kd.coeffOperator * F).
+ 
+  Exact by linearity: div(reconstruct(diracInverse*F)) = rheome.differential.divergence(currentKernel,S,fg) * F, and its
+  Laplace-Beltrami coefficients are Phi_LB' * M * (that vertex kernel). Positive = source, negative = sink.
+ 
+  See also: rheome.flow.field, rheome.flow.curl, rheome.flow.potential, rheome.differential.divergence, OPERATOR-REGISTRY.md
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

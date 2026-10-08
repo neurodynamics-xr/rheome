@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.alphastates</title></head><body>
+<h1>rheome.flow.alphastates</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.ALPHASTATES  Query the alpha labels: states of one class in one hemisphere, with their episodes.
+ 
+    Q = rheome.flow.alphastates('sub01')                          % class 4 (widespread-sustained), R
+    Q = rheome.flow.alphastates(name, Class=[2 4], Hemi=&quot;L&quot;, Export=false)
+ 
+  Reads what rheome.flow.labelalpha wrote (rheome.select.measures, Source &quot;rheome.flow.labelalpha&quot;) and joins it on the
+  store's own (level, k) -- no interpolation:
+    STATE     a run of consecutive level-3 tiles (2 s) in which one depth-6 leaf's alpha_class is in
+              Class; its span is the tiles' span, its onFrac the mean alpha_onFrac over them
+    EPISODE   an alpha_episode_* row of the same hemisphere (unit 2 / 3) whose level-0 tile (the one
+              holding tOn) falls inside a state's level-3 tiles: level-0 tile k0 is inside level-3
+              tile floor((k0-1)/8)+1
+ 
+  ⚠ A STATE IS PER LEAF. Neighbouring leaves on at once give overlapping states; .union merges them
+  into the hemisphere's time line of &quot;some leaf in Class&quot; runs, which is the one to count durations on.
+  ⚠ The classes inherit rheome.select.labelkinds' calibration: &quot;widespread&quot; (3, 4) is PENDING a leakage
+  calibration, so a class-4 state is &quot;the ~130 mm ancestor was on&quot;, not &quot;alpha covered 130 mm&quot;.
+ 
+  OUTPUT (struct Q)
+    .states    table: state_id node_id hemi k_start k_end t_start t_end dur_s on_frac n_episodes
+    .episodes  table: state_id t_on t_off tau_r tau_f plateau_s r2 (one row per state x episode)
+    .union     table: k_start k_end t_start t_end dur_s n_leaves (hemisphere time line)
+    .files     exported CSVs under results/&lt;subject&gt;/labels/ (Export=true)
+ 
+  See also: rheome.flow.labelalpha, rheome.select.measures, rheome.select.labelkinds, rheome.load.outpath
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

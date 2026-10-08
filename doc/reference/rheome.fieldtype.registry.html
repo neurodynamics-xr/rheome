@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.fieldtype.registry</title></head><body>
+<h1>rheome.fieldtype.registry</h1>
+<p><em>function rheome.fieldtype</em> &mdash; Rheome</p>
+<pre>  FIELDTYPE.REGISTRY  Every kind of field this system can carry, as data.
+ 
+    T = rheome.fieldtype.registry()
+ 
+  ⭐ A FIELD IS A TYPED PAYLOAD OVER A DOMAIN, and its type is four things: the element
+  RANK it sits on, the BUNDLE (what each element carries), the number FIELD (real, complex,
+  quaternion) and, for differential forms, the DEGREE. Those four decide the scalar count,
+  decide whether an operator accepts it, and are what an operator's arrow is written in.
+ 
+  ⚠ THE NAMES MIRROR nxr-compute/include/nxr/field_registry.h DELIBERATELY. The C++ side
+  already catalogues these variants with the same ids and the same enum spellings; keeping
+  them identical means a future binding needs no translation table, and it means this
+  registry can be checked against that one. `status` says which variants this MATLAB tree
+  actually produces or consumes today, so the table stays honest about the gap.
+ 
+  ⚠ NO TIME AXIS, BY DESIGN. A field type is spatial. A [nV x nT] matrix is nT fields of
+  type scalarVertex, and the time axis is a separate domain (rheome.domain.index) that composes
+  over this one -- which is why the same type serves one frame and a whole recording.
+ 
+  COLUMNS
+    id            the variant name, identical to the C++ registry where one exists
+    domain_kind   which domain kinds can carry it
+    rank          vertex | edge | face | element
+    bundle        scalar | tangent | ambient | immersion
+    field         real | complex | quaternion
+    n_form        na | zero | one | two           (differential degree, when it is a form)
+    repr          na | world | local_frame | intrinsic_complex | quaternion_interleaved
+    components    scalars per element
+    status        built (this tree makes or takes it) | planned (C++ has it, here it does not)
+    notes         where it turns up
+ 
+  See also: rheome.fieldtype.describe, rheome.fieldtype.validate, rheome.operators.registry, rheome.domain.of
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

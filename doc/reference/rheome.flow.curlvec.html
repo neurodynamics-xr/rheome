@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.curlvec</title></head><body>
+<h1>rheome.flow.curlvec</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.CURLVEC  Ambient curl-VECTOR kernel [3V x C]  (the full (grad x J) per vertex).
+    Wcv = rheome.flow.curlvec(ctx)
+ 
+  Unlike rheome.flow.curl (which projects the curl onto the surface normal to give scalar vorticity),
+  this keeps the full ambient 3-vector curl, area-weighted to vertices, interleaved
+  [x1 y1 z1 x2 ...]. Used by rheome.flow.helicity (J . (grad x J)).
+ 
+  See also: rheome.flow.curl, rheome.flow.helicity
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

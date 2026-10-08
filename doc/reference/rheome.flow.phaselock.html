@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.phaselock</title></head><body>
+<h1>rheome.flow.phaselock</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.PHASELOCK  Is the cortical field reproducibly organised by a reference rhythm's phase?
+ 
+    out = rheome.flow.phaselock(z, refPhase, nBins)
+ 
+  Pools a complex cortical field over many cycles of an external reference -- the sensor-space
+  alpha phase -- and asks whether the cycle-averaged spatial map is REAL, in the only sense
+  that can be checked from data: whether it reproduces on cycles it was not built from.
+ 
+  ⭐ THE OPERATOR IS COMMON-MODE HERE, WHICH IS WHY THIS WORKS WHERE A CORE CENSUS DOES NOT.
+  The inverse smooths every frame identically, so it cannot manufacture a DIFFERENCE between
+  one reference phase and another. Anything that varies with reference phase survived the
+  operator rather than being made by it. Absolute spatial quantities -- wavelength, core
+  count, propagation speed -- do NOT have this property: measured on real alpha they matched
+  a phase-randomised surrogate to within a few percent, because the operator sets them.
+ 
+  ⚠ PLV IS BIASED UPWARD BY FINITE SAMPLE SIZE, so it must not be the headline. With C cycles
+  and no locking whatsoever, E|PLV| ~ 1/sqrt(C): at 20 cycles that is 0.22 of apparent
+  locking from nothing at all. .splitHalf is built from disjoint halves of the cycles and has
+  no such bias -- it is ~0 under the null however few cycles there are. Report it, and use
+  .plv only for the spatial pattern once .splitHalf says there is one.
+ 
+  ⚠ STANDING vs TRAVELLING IS NOT A RANK QUESTION, and reading it off the binned map's
+  singular values is simply wrong. At one frequency z(v,t) = w(v)*exp(i*omega*t), so the
+  binned map is ONE complex spatial pattern times ONE phase function -- rank 1 BY
+  CONSTRUCTION, however the pattern travels. Measured: a deliberately planted travelling
+  rotor drove the binned map's &quot;travel index&quot; DOWN, 0.114 -&gt; 0.023, as its amplitude rose.
+  The travelling structure lives in the spatially-varying PHASE of w, so .standing is the
+  eigenvalue split of the [nV x 2] real matrix [Re w, Im w]: all vertices on one line
+  through the origin means one common phase and a standing pattern.
+ 
+  ⚠ CYCLES, NOT SAMPLES, ARE THE UNIT OF EVIDENCE. Neighbouring samples within one cycle are
+  not independent, so splitting by sample would put near-duplicates on both sides and inflate
+  the reproducibility toward 1. Splitting alternates whole CYCLES.
+ 
+  INPUTS:
+    z         [nV x nT] complex cortical field (the analytic curl)
+    refPhase  [1 x nT]  reference phase per sample, radians, on (-pi, pi]
+    nBins     phase bins per cycle (30 is the project's standard)
+    'MinCycle'  cycles shorter than this fraction of the median are dropped as phase-slips.
+                Default 0.5.
+ 
+  OUTPUT (struct out):
+    .splitHalf  [nV x 1]  complex coherence between odd- and even-cycle binned maps, per
+                          vertex, real part. ~0 under the null at ANY number of cycles.
+    .global     scalar    the same coherence taken over all vertices at once
+    .plv        [nV x 1]  |mean|/sqrt(energy) pooled over all cycles (BIASED -- see above)
+    .pref       [nV x 1]  preferred reference phase, radians
+    .binned     [nV x nBins] complex cycle-averaged map
+    .locked     [nV x 1]  the phase-locked COMPLEX pattern (first Fourier mode over bins)
+    .standing   scalar in [0.5, 1]: 1 = every vertex peaks at the same reference phase
+                          (a standing pattern), 0.5 = phases spread over the full plane
+                          (a travelling / rotating one)
+    .nCycle .cycleStart
+ 
+  See also: rheome.flow.phasebin, rheome.flow.phasegradient, rheome.detect.chargedensity
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.geom.tiles</title></head><body>
+<h1>rheome.geom.tiles</h1>
+<p><em>function rheome.geom</em> &mdash; Rheome</p>
+<pre>  GEOM.TILES  The tiles of one rheome.geom.tree depth: vertex lookup, membership and adjacency.
+ 
+    G = rheome.geom.tiles(T, S, depth)
+    T = rheome.geom.tree(S, L=L, M=M, MaxDepth=3);  G = rheome.geom.tiles(T, S, 3);
+    G.A(G.tileOf(v1), G.tileOf(v2))          % &gt; 0 iff the two vertices sit in touching tiles
+    G = rheome.geom.tiles(T, S, 3, Ruler=rheome.geom.edgegraph(S))   % also tile centres and the distances between
+ 
+  A tile is a node of the position pyramid. This turns one level of it into a graph: the tiles are
+  its nodes, and two tiles are adjacent when a mesh edge crosses between them. The adjacency is one
+  sparse product, Atile = P' * A * P, with P the vertex-to-tile membership and A the mesh adjacency.
+ 
+  ⭐ WHAT IT IS FOR IN TRACKING: AN EXACT CANDIDATE PRUNING. A tracker gated at `maxStep` smaller than
+  a tile can only move a feature into its own tile or an adjacent one, so the adjacency lists every
+  legal destination without computing a distance. The tile sequence of a track is then a coarse
+  trajectory that can be queried -- derived from the fine track, never a substitute for it: at depth 3
+  a 133 mm tile takes a 0.1 m/s peak over a second to cross, and a vertex-level peak within ~50 mm of a
+  boundary (the localisation error at the pipeline's SNR) will flicker across it.
+ 
+  ⭐ `.A` COUNTS CUT EDGES, not 0/1. The count is a discrete length of shared boundary, so a pair of
+  tiles touching along a whole sulcus is distinguishable from a pair meeting at a corner. `.A &gt; 0` is
+  the plain adjacency.
+ 
+  ⚠ THE NODE ARITHMETIC IS CONDITIONAL. rheome.geom.tree numbers nodes breadth-first, so the children of node
+  k are 2k and 2k+1 -- and a tile's ancestor at any depth is floor(k / 2^steps) -- ONLY if every node
+  down to this depth split. One early MinArea or MinVertices stop shifts every later id. `.heap` says
+  whether the identity holds on this tree; check it before indexing by arithmetic.
+ 
+  ⚠ Tiles are taken at EXACTLY `depth`. A leaf that stopped shallower is carried as its own tile at
+  its own depth (`.depth` says which), so the tiles still partition every vertex.
+ 
+  ⚠ The whole cortex is two components: tiles in different hemispheres are never adjacent. A feature
+  that changes hemisphere between frames has jumped, not moved.
+ 
+  ⭐ A TRAJECTORY ON TILES IS MEASURED BETWEEN TILE CENTRES. `.centre` is the member vertex nearest
+  the tile's centroid (a centroid of a folded patch can sit off the sheet), and `.D` the Ruler's
+  distance between every pair of centres -- so a track's displacement and path length are read on
+  the same ruler as the planted truth (rheome.geom.edgegraph, +1.4% against the analytic geodesic).
+ 
+  INPUTS
+    T      rheome.geom.tree table            S  the surface T was built on (.Faces, .Vertices)
+    depth  tree depth to tile at
+    Ruler  (optional) a graph on the vertices, e.g. rheome.geom.edgegraph(S); enables .centre and .D
+ 
+  OUTPUT (struct G)
+    .node_id [nTile x 1]   .depth [nTile x 1]   .diameterMM [nTile x 1]   .centroid [nTile x 3]
+    .tileOf  [nV x 1] tile index (1..nTile) of every vertex
+    .P       [nV x nTile] sparse logical membership
+    .A       [nTile x nTile] sparse, cut-edge count between tiles, zero diagonal
+    .heap    true iff parent_id == floor(node_id/2) for every node of T
+    .centre  [nTile x 1] centre vertex; .D [nTile x nTile] Ruler distance between centres (m)
+             (both [] without a Ruler)
+ 
+  See also: rheome.geom.tree, rheome.detect.peaks, rheome.detect.track
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

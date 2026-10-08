@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.jtv</title></head><body>
+<h1>rheome.filters.jtv</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.JTV  Evaluate a kernel into the joint-spectral (eigenmode x frequency) grid.
+ 
+    Gjs = rheome.filters.jtv(G, domain [,NFFT])
+ 
+  Puts any joint kernel on the common (lambda, omega) axes so its shape can be shown or
+  multiplied against rheome.filters.jspectrum output. An eigen-TIME kernel g(lambda,t) ('ts')
+  is FFT'd along time into the joint spectrum; an eigen-FREQUENCY kernel g(lambda,omega)
+  ('js') is already there. Port of bst_eigfilter_jtv_evaluate.
+ 
+  INPUTS:
+    G       [K x N] the kernel already evaluated on its native axis:
+              'ts' -&gt; G = g(lambda, t)      (time-lag axis)
+              'js' -&gt; G = g(lambda, omega)  (frequency axis)
+    domain  'ts' | 'js'
+    NFFT    temporal bins (default size(G,2)); the 1/sqrt(NFFT) matches manifold_jft
+ 
+  OUTPUT:
+    Gjs     [K x NFFT] joint-spectral gains (multiply rheome.filters.jspectrum output elementwise)
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

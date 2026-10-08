@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.forward.sensorbank</title></head><body>
+<h1>rheome.forward.sensorbank</h1>
+<p><em>function rheome.forward</em> &mdash; Rheome</p>
+<pre>  FORWARD.SENSORBANK  A graph-wavelet bank fitted to the sensor patterns of a leadfield.
+ 
+    out = rheome.forward.sensorbank(G, S, lbo)
+    out = rheome.forward.sensorbank(G, S, lbo, struct('NAtoms',10,'Candidates',200))
+ 
+  ⭐⭐ THE THREE FAMILIES ARE THE HELMHOLTZ PARTS, AND THEY SPAN THE AMBIENT 3-VECTOR. A leadfield
+  row is an ambient field, three components per vertex, and at each vertex those three split into
+  two tangential and one normal. Applied to a SCALAR graph wavelet w, the triple
+        grad(w)        n x grad(w)        w*n
+  supplies exactly those three, so the bank is complete for smooth fields by construction. ⭐ This
+  is what the Dirac operator is for elsewhere in the repo -- carrying a 3-vector on the surface --
+  reached here through the Helmholtz potentials instead, which matters because a VECTOR atom has
+  orientation freedom that degenerates (§41: rank 2 of 3, and a random vertex scored 0.079 against a
+  fitted 0.104) while a SCALAR potential has none.
+ 
+  ⭐⭐ THE SEARCH COSTS THREE SCALAR CORRELATIONS, NOT A VECTOR ONE. In the weak form
+        &lt;L, grad(w)&gt;   = -&lt;div L, w&gt;       &lt;L, n x grad(w)&gt; = &lt;curl L, w&gt;       &lt;L, w*n&gt; = &lt;L.n, w&gt;
+  so the divergence, the curl and the normal component of the row -- three scalars on the cortex,
+  each estimable directly from the standard leadfield -- score every atom by a scalar inner product.
+  Only the handful of SELECTED atoms is ever materialised as a [3nV x 1] field.
+ 
+  ⚠⚠ FIT THE FIELD, NOT THE POTENTIAL. Fitting Psi as a scalar and then differentiating loses a
+  quarter: measured, a stream function fitted to 0.913 generates a solenoidal field fitted to only
+  0.664, because the gradient amplifies whatever the scalar fit left behind. This selects on the
+  scalar correlation but re-solves every amplitude by least squares IN THE FIELD DOMAIN at each step,
+  so the objective is always the row itself.
+ 
+  INPUTS
+    G     [nCh x 3nV] leadfield        S  surface (.Vertices .Faces .VertNormals)
+    lbo   .Phi .Lambda .Mass           the scalar basis the wavelets are built on
+    opts  .NAtoms (10)  .Candidates (200 or a vertex vector)  .Scales (16)
+          .Sensors (all)  .Verbose (false)
+ 
+  OUTPUT (struct out)
+    .atoms  table: sensor, iter, family, vertex, scale, coef, veField
+    .ve .curlCorr .dirCorr  [nCh x 1] against the standard leadfield row
+    .Bhat   [nCh x 3nV] the reconstructed leadfield, if opts.Reconstruct
+ 
+  See also: rheome.differential.helmholtz, rheome.differential.curl, rheome.differential.divergence, rheome.forward.leadfield
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

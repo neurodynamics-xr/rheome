@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.potential</title></head><body>
+<h1>rheome.flow.potential</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.POTENTIAL  Fused kernel: sensors -&gt; Helmholtz scalar potential Phi (sources/sinks).
+    kp = rheome.flow.potential(ctx [,opts])
+ 
+  Phi solves the Poisson problem  K*Phi = divw(J)  (sources = maxima, sinks = minima). In the
+  scalar-LBO eigenbasis K^+ is diagonal (1/lambda), so the COEFFICIENT kernel is a single
+  matrix, band-limited to Ks modes:
+    Phi_coeff = Lambda^-1 .* (scalarModes' * (Bdiv * currentKernel))     [Ks x C]   (near-null modes zeroed)
+  With opts.vertex (default true) the full-rank VERTEX kernel is also returned, pre-solved for
+  all C channel columns via rheome.differential.helmholtz (still one matvec at runtime).
+ 
+  OUTPUT (struct kp): .coeffOperator [Ks x C], .scalarModes [V x Ks], .Lambda [Ks x 1],
+    .vertexOperator [V x C] (if opts.vertex), .domain='coeff', .out, .chNames, .provenance.
+    Vertex field for display:  Phi(:,t) = kp.scalarModes * (kp.coeffOperator * ctx.F(:,t))   (coeff)
+                        or      Phi(:,t) = kp.vertexOperator * ctx.F(:,t)              (full-rank)
+ 
+  See also: rheome.flow.weak, rheome.flow.stream, rheome.differential.helmholtz
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

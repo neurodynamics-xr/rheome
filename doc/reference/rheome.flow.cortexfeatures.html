@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.cortexfeatures</title></head><body>
+<h1>rheome.flow.cortexfeatures</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.CORTEXFEATURES  The mergeable cortical features of a recording, written beside its store.
+ 
+    F = rheome.flow.cortexfeatures('sub01')                 % alpha (store band 6), depth-6 leaves
+    F = rheome.flow.cortexfeatures(name, BandId=6, Depth=6, Voices=2, Write=true)
+ 
+  Per finest cell -- a depth-D cortical node (~47 mm at D=6) x a level-0 store tile (0.25 s) -- four
+  SUMS, then everything coarser by rheome.select.rollupcortex (exact, both axes):
+    area_s       node area x tile length (m^2 s): the denominator
+    on_area_s    the same, counted only while the node is ON (rheome.detect.onstate on its tile-mean envelope)
+                 -&gt; occupancy = on_area_s / area_s at any node and level
+                 ⚠ a leaf whose envelope is not bimodal (F.leafBimodal false) still gets labels, but
+                 they are not a state; they are summed in all the same, as rheome.detect.onstate warns
+    energy       integral of envelope^2 over the node's area and the tile ((A m)^2 m^2 s)
+    energy_cb&lt;m&gt;  integral of (g_m * envelope)^2 per member m of a tight, log-spaced spatial bank
+                 (logitersine, Voices per octave; sum_m g_m^2 = 1)
+ 
+  ⭐ SUMS, SO A PARENT IS ITS CHILDREN. Occupancy is stored as its numerator and denominator because a
+  mean does not add; everything here does, over nodes (area) and tiles (time).
+  ⚠ the cband energies partition the envelope's energy only GLOBALLY: a filter spreads across node
+  boundaries, so per node the octave energies need not sum to energy. And it is a FILTERED VIEW per
+  octave, never a size (rheome.select.labelkinds).
+  ⭐ ONE BANK FOR BOTH HEMISPHERES. The bank is designed on the union of the two hemispheres' spectral
+  ranges and evaluated on each hemisphere's own eigenvalues, so cband m means the same octave on both
+  sides (separate banks gave 11 and 12 members).
+  ⚠ The envelope is averaged over the 0.25 s tile before squaring: these are energies of the level-0
+  envelope, which is what removes the band's beating (the 8-16 Hz envelope varies up to ~4 Hz).
+ 
+  Writes &lt;store&gt;__cortex.mat beside the ingest store (never the store itself): the cortex_node rows, and
+  per level the four stats over every node. rheome.select.rows(db, &quot;feature_cortex&quot; | &quot;feature_cortex_space&quot; |
+  &quot;cortex_node&quot;, Level=L) reads it.
+ 
+  See also: rheome.select.rollupcortex, rheome.geom.cortexnodes, rheome.flow.envelopemodes, rheome.detect.onstate, rheome.select.rows
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

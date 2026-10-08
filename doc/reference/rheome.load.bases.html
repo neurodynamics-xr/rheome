@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.load.bases</title></head><body>
+<h1>rheome.load.bases</h1>
+<p><em>function rheome.load</em> &mdash; Rheome</p>
+<pre>  LOAD.BASES  Load the per-hemisphere operators &amp; eigenbases (all families, both hemispheres).
+ 
+    B = rheome.load.bases(name)                    % Dirac slice for (tau,K)=(0.5,400); richest LBO cache
+    B = rheome.load.bases(name, tau, K)            % choose which cached DIRAC eigenbasis to slice
+    B = rheome.load.bases(name, tau, K, Klbo)      % REQUIRE an LBO basis with Klbo modes per hemisphere
+    [B, info] = rheome.load.bases(...)             % info: which file, which K, lambda_max, sigma floor
+ 
+  Returns the struct cached by rheome.import.bases, and -- for a unified per-hemisphere view across ALL
+  THREE operator families -- attaches the Dirac eigenbasis of each hemisphere by slicing the
+  whole-cortex Dirac cache (rheome.utils.hemisphere), so it is not duplicated on disk:
+    B.(L|R).lbo    struct(.L .M  .Phi .Lambda .Mass)     Laplace–Beltrami
+    B.(L|R).conn   struct(.C  .Psi .Lambda)              complex Connection Laplacian
+    B.(L|R).dirac  relative-Dirac eigenbasis (if the (tau,K) Dirac cache exists)
+    B.(L|R).gv .S  global vertices + slim hemisphere surface
+ 
+  ⚠ K AND Klbo ARE DIFFERENT THINGS. K selects which DIRAC cache file to slice; Klbo is how many
+  LBO modes per hemisphere the returned basis must have. The old signature conflated them: a caller
+  asking for K = 400 got whatever LBO K happened to be on disk, silently. Pass Klbo whenever the
+  lambda axis matters -- which is whenever a scale, a size or a speed will be read off it -- and a
+  mismatch becomes an ERROR rather than a different answer.
+ 
+  RESOLUTION ORDER for the LBO cache:
+    1. bases__K&lt;Klbo&gt;__Kc*.mat        if Klbo was requested
+    2. the keyed file with the LARGEST K, if Klbo was not requested
+    3. legacy unkeyed bases.mat
+ 
+  See also: rheome.import.bases, rheome.load.dirac, rheome.utils.hemisphere
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

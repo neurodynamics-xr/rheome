@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.operator</title></head><body>
+<h1>rheome.detect.operator</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.OPERATOR  Precompute the (mesh-only) operators the detectors reuse across frames.
+ 
+    op = rheome.detect.operator(S)             % build the operators from the mesh
+    op = rheome.detect.operator(S, bases)      % reuse the cached connection from rheome.load.bases (no rebuild)
+ 
+  Every detect function needs the same J-INDEPENDENT operators: the whole-surface face gradient
+  (for divergence / curl) and, per hemisphere, the Levi-Civita CONNECTION LAPLACIAN (tangent
+  frames + parallel-transport rotations, for the winding number). rheome.detect.criticalPoints /
+  rheome.detect.vortex rebuild these on every call; over a time series that repeats the SAME
+  full-resolution factorisation for each frame. Build it ONCE here and pass op into the
+  detectors -- e.g.
+        op = rheome.detect.operator(S, D.bases);
+        for t = 1:nT,  v(t) = rheome.detect.vortex(J(:,t), S, 'size', op);  end
+ 
+  If a cached 'bases' (rheome.load.bases / D.bases) is supplied, each hemisphere's connection operator
+  is taken from it (matched by global vertex set) instead of rebuilt -- the high-resolution,
+  pre-computed operator. Missing / unmatched hemispheres fall back to a fresh build (identical
+  result -- the connection Laplacian is deterministic, verified bit-for-bit against the cache).
+ 
+  INPUT:
+    S      full-cortex OR single-hemisphere surface (rheome.io.read.surface / rheome.utils.hemisphere): needs
+           .Vertices, .Faces, .nV, .Hemi for the split (absent -&gt; whole surface). A single-
+           hemisphere S should carry .GlobalVertices so it can be matched to the cache.
+    bases  (optional) rheome.load.bases(name) / D.bases -- per-hemisphere cached operators &amp; eigenbases.
+ 
+  OUTPUT (struct op):
+    .fg        rheome.operators.face_gradient(S) -- whole-surface gradient (divergence / curl)
+    .nH        number of hemispheres detected
+    .gv  {nH}  vertex indices of each hemisphere INTO the field J (global for a whole cortex,
+               1..nVh for a single-hemisphere S)
+    .Sh  {nH}  each hemisphere's surface (.Vertices/.Faces; centroids for the winding)
+    .C   {nH}  rheome.operators.connection_laplacian of each hemisphere (.e1 .e2 .Rt ...), cached or fresh
+    .nV        S.nV (guards J against a mismatched surface)
+    .cached [1 x nH] logical -- was this hemisphere's connection taken from the cache?
+ 
+  See also: rheome.detect.criticalPoints, rheome.detect.vortex, rheome.load.bases, rheome.operators.connection_laplacian
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

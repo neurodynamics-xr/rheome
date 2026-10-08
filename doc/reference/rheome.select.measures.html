@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.select.measures</title></head><body>
+<h1>rheome.select.measures</h1>
+<p><em>function rheome.select</em> &mdash; Rheome</p>
+<pre>  SELECT.MEASURES  Read measurements (and their transactions), filtered.
+ 
+    M = rheome.select.measures(db)
+    [M, T] = rheome.select.measures(db, Kind=&quot;vortex_count&quot;, Level=3, Scope=&quot;group&quot;, Units=[2 3])
+    M = rheome.select.measures(db, Kind=&quot;vortex_count&quot;, Min=2, Window=[120 180])
+ 
+  Window filters on the node's own span, so a measurement on a coarse node is returned for
+  any window it overlaps -- the same rule rheome.select.derive uses, for the same reason.
+ 
+  See also: rheome.select.measure, rheome.select.context
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

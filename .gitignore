@@ -1,0 +1,15 @@
+# local data cache and analysis outputs (load.root / load.outroot in a clone)
++data/
+results/
+
+# toolbox builds (build/build_toolbox.m)
+build/out/
+
+# MATLAB scratch
+*.asv
+*.m~
+*.mat~
+
+# OS
+.DS_Store
+._*

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.inverse.dirac</title></head><body>
+<h1>rheome.inverse.dirac</h1>
+<p><em>function rheome.inverse</em> &mdash; Rheome</p>
+<pre>  INVERSE.DIRAC  Whitened minimum-norm inverse in the Dirac eigenmode basis.
+ 
+    R = rheome.inverse.dirac(Gm, dbasis, NoiseCovMat)
+    R = rheome.inverse.dirac(Gm, dbasis, NoiseCovMat, opts)
+ 
+  Faithful port of Brainstorm's bst_inverse_dirac (which re-implements the whitened
+  minimum-norm of bst_inverse_linear_2018 with the source side in the Dirac
+  eigenbasis). Five stages:
+    1. Noise-covariance regularization + whitener iW           (reg/diag/none/median/shrink)
+    2. Observability SVD  iW*Gm = UL*S*VL'  + SNR -&gt; Lambda
+    3. Wiener spectral window g(s) = Lambda*s / (Lambda*s^2 + 1)
+    4. Vertex resolution modes  Wres = Phi*VL ; whitened kernel Wres*diag(g)*UL'
+    5. Source normalization (amplitude / dspm2018 / sloreta) + fold in whitener
+ 
+  INPUTS:
+    Gm           [nCh x nModes] mode-forward from rheome.forward.dirac
+    dbasis       Dirac eigenbasis from rheome.eigen.dirac_frame (needed for STAGE 4 reconstruct)
+    NoiseCovMat  struct with .NoiseCov [nCh x nCh] (and .FourthMoment/.nSamples for shrink)
+    opts (all optional):
+      .NoiseMethod   'reg'(default) | 'diag' | 'none' | 'median' | 'shrink'
+      .NoiseReg      ridge fraction for 'reg' (default 0.1)
+      .ChannelTypes  {1 x nCh} type per row (default all 'MEG'); whitened per modality
+      .SnrFixed      assumed SNR (amplitude ratio, default 3 -&gt; SNR^2 = 9)
+      .InverseMeasure 'amplitude'(default) | 'dspm2018' | 'sloreta'
+ 
+  OUTPUT (struct R):
+    .ImagingKernel      [3nV x nCh]   J = ImagingKernel * F  (source 3-vectors from raw data)
+    .ImagingKernelMode  [nModes x nCh] c = ImagingKernelMode * F  (mode coeffs from raw data)
+    .Whitener [nCh x nCh], .UL, .SL, .Lambda, .SNR, .NoiseRankKept, .RankLeadfield
+ 
+  See also: rheome.forward.dirac, rheome.forward.reconstruct
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

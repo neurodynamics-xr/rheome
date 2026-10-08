@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.jtv.bank</title></head><body>
+<h1>rheome.jtv.bank</h1>
+<p><em>function rheome.jtv</em> &mdash; Rheome</p>
+<pre>  JTV.BANK  Build a joint time-vertex filterbank from separable and non-separable kernels.
+ 
+    [G, info] = rheome.jtv.bank(Lambda, f, psiGraph, psiTime)
+    [G, info] = rheome.jtv.bank(Lambda, f, psiGraph, psiTime, K)
+    [G, info] = rheome.jtv.bank(..., 'type','js', 'axes',ax, 'labels',{...})
+ 
+  Follows GSPBox's gsp_jtv_design_dgw:
+ 
+    W(lambda,omega) = K(lambda,omega) .* psi_graph(lambda) .* psi_time(omega)
+ 
+  and forms every combination, so a bank of Ng graph kernels, Nt time kernels and Nk joint kernels
+  has Ng*Nt*Nk members. The separable case is K = 1; a speed-selective filter is a non-separable K,
+  e.g. @(l,w) exp(-(w - c*sqrt(l)).^2 / (2*d^2)).
+ 
+  FILTER TYPE -- 'js' vs 'ts'. GSPBox distinguishes filters defined in (lambda,omega) from those
+  defined in (lambda,t), and the distinction is not cosmetic: a 'ts' kernel must be transformed
+  along the time axis before it can multiply a joint SPECTRUM, and applying it as though it were
+  'js' filters the wrong axis while looking entirely plausible. This bank is built and applied in
+  (lambda,omega), so 'js' is the only type it evaluates; 'ts' is REFUSED rather than quietly
+  mishandled. The field is recorded on info so a caller storing banks can tell them apart.
+ 
+  THE AXES ARE FIRST CLASS. Pass 'axes' (a rheome.jtv.axes) and the bank carries the axes it was designed
+  on; rheome.jtv.analysis then checks the spectrum it is handed against them. This catches the failure a
+  bare size check does NOT: two different bands can retain the same number of bins, so [K x nOmega]
+  agreeing proves nothing about the two representations belonging together.
+ 
+  INPUTS:
+    Lambda    [K x 1] eigenvalues
+    f         [1 x nOmega] frequencies (Hz); omega = 2*pi*f is passed to the kernels
+    psiGraph  function handle or cell array, each @(lambda) -&gt; gain  (default {@(l) ones(size(l))})
+    psiTime   function handle or cell array, each @(omega) -&gt; gain   (default {@(w) ones(size(w))})
+    K         function handle or cell array, each @(lambda,omega) -&gt; gain (default {@(l,w) 1})
+ 
+  NAME-VALUE:
+    'type'    'js' (default, (lambda,omega)) | 'ts' ((lambda,t) -- REFUSED, see above)
+    'axes'    a rheome.jtv.axes struct; recorded on info and checked by rheome.jtv.analysis
+    'labels'  {1 x Nf} cellstr naming the members, for figures and tables
+ 
+  OUTPUTS:
+    G     [K x nOmega x Nf] gains
+    info  .Nf .Ng .Nt .Nk  .index [Nf x 3] giving (ig, it, ik) per member
+          .type  'js'      .axes  the axes the bank was designed on ([] if not supplied)
+          .labels {1 x Nf} .separable  true iff every joint kernel K is identically 1
+ 
+  ⚠ A BANK IS NOT USEFUL UNTIL IT COVERS. Check rheome.jtv.bounds before rheome.jtv.dual: the dual divides by
+  the frame operator, so any uncovered region of the (lambda,omega) plane is unreconstructable.
+ 
+  See also: rheome.jtv.bounds, rheome.jtv.dual, rheome.jtv.axes, rheome.jtv.analysis, rheome.filters.frame, rheome.filters.psitime
+ 
+  Author: Diellor Basha, 2026 (after F. Grassi, GSPBox)
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

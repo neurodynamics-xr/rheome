@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.ingest.reduce</title></head><body>
+<h1>rheome.ingest.reduce</h1>
+<p><em>function rheome.ingest</em> &mdash; Rheome</p>
+<pre>  INGEST.REDUCE  Level-0 tile statistics from samples and from CWT coefficients, under a mask.
+ 
+    T0 = rheome.ingest.reduce(X, fb, bands, g, frame)
+    T0 = rheome.ingest.reduce(X, fb, bands, g, frame, Mask=m, Precision=&quot;single&quot;, MaxBytes=2e9)
+ 
+  The only function that touches samples. Per channel: the whole record goes through the
+  bank ONCE (wt), per-sample band series are formed from the band's scales, and every
+  series is reshaped into level-0 frames and reduced. With a timefilterbank (the default,
+  design docs/2026-09-22-timefilterbank-design.md) each member arrives at its OWN rate
+  and is framed by its instants: energy is sum |coef|^2 * weight per frame (Parseval),
+  envMax the max over the member's instants; a masked instant is one whose nearest
+  record sample is masked. 7x faster than the full-rate path, no paging. Every output is a sum, a count, a
+  max or a min over samples, so rheome.ingest.rollup can form every coarser level from this one
+  without the signal (design §2, §3.1).
+ 
+  ⚠ THE MASK ACTS HERE, NOT BEFORE THE TRANSFORM. The CWT sees the record as stored;
+  masked samples are then excluded from every sum and count. Zeroing samples before the
+  transform would inject a step at every mask edge into every band (design §3.7).
+  Coefficients near a masked run are therefore computed from the unmasked signal.
+ 
+  ⚠ Statistics that depend only on the mask and the grid are stored ONCE per record, not
+  per channel: .n and .nCoi are [K0 x 1] and [K0 x nB]. They gain a channel axis the day a
+  per-channel mask exists.
+ 
+  ⚠ Hand-rolled on purpose. Measured on 600 s x 270 channels at level 0:
+  signalTimeFeatureExtractor 17.1 s, this reshape-and-reduce 0.08 s, identical results;
+  and the extractor rejects any non-finite sample, so it cannot honour a mask. It remains
+  the ORACLE in tests/tIngestReduce.m (inventory §3, design §3.3).
+ 
+  Cone of influence: analytic, from the record's edges (rheome.ingest.cone). Band j is inside the
+  cone at t iff its lowest scale is below coi(t) = min(fmax, coiConst/dist(t)). nCoi counts
+  the valid samples of a frame for which that holds. wt's own coi agrees with the analytic
+  one to the fit's 3e-4; the analytic form is used so that the paged path counts the same.
+ 
+  INPUTS:
+    X      [nT x C] samples (any float class; the transform runs at Precision)
+    fb     cwtfilterbank from rheome.ingest.bank (SignalLength must equal nT)
+    bands  band table from rheome.ingest.bank
+    g      grid from rheome.ingest.grid
+    frame  frame constants from rheome.ingest.bank (for the cone)
+    Mask   [nT x 1] logical, true = valid sample (default all true)
+    Precision  &quot;single&quot; | &quot;double&quot; for the CWT buffer (sums are always double)
+    MaxBytes   byte guard on the per-channel CWT buffer -&gt; error ingest:reduce:bytes
+  OUTPUT (struct T0, level 0, K0 frames):
+    .n      [K0 x 1] uint32         valid samples per frame
+    .sumX   [K0 x C] double         sum x
+    .sumX2  [K0 x C] double         sum x^2
+    .absMax [K0 x C] single         max |x|        (0 on an empty frame)
+    .min    [K0 x C] single         min x          (+Inf on an empty frame)
+    .max    [K0 x C] single         max x          (-Inf on an empty frame)
+    .energy [K0 x C x nB] double    sum_t sum_{m in band} |W_m(t)|^2
+    .envMax [K0 x C x nB] single    max_t max_{m in band} |W_m(t)|
+    .nCoi   [K0 x nB] uint32        valid samples inside the cone of influence
+    .level = 0, .K = K0
+ 
+  See also: rheome.ingest.bank, rheome.ingest.grid, rheome.ingest.rollup, cwtfilterbank/wt
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

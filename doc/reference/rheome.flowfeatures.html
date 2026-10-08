@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flowfeatures</title></head><body>
+<h1>rheome.flowfeatures</h1>
+<p><em>class Classes</em> &mdash; Rheome</p>
+<pre>  FLOWFEATURES  Windowed, band- and scale-stratified tabulation of the cortical flow tensor.
+ 
+    fe  = rheome.flowfeatures(B)
+    fe  = rheome.flowfeatures(B, 'Bands', {'alpha','beta'}, 'WindowSec', 1)
+    out = extract(fe, pageIndex)
+    T   = totable(fe, out)
+ 
+  The bookkeeping layer: one row per (time window, band, spatial scale, cortical ROI). This
+  is the &quot;integrate&quot; step -- features from every cell of the joint space, tabulated and
+  indexed, so that state labelling, recurrence and law fitting become analyses OF THE TABLE
+  rather than three separate pipelines over the recording.
+ 
+  ⭐ THE COEFFICIENT COVARIANCE IS A SUFFICIENT STATISTIC. Every quantity here is a quadratic
+  form, and a quadratic form commutes with summation over a window:
+ 
+      sum_{t in win} c* Q c  =  trace( Q * sum_{t in win} c c* )  =  trace( Q * Gwin )
+ 
+  So Gwin [Ks x Ks] is formed once per (window, band) and every ROI x scale energy is a
+  single inner product against it. MEASURED: ~0.7 s per page against ~7.6 s for the route
+  that materialises vertex maps per frame -- about 50x, and exact rather than approximate.
+ 
+  ⚠ THIS IS THE OPPOSITE VERDICT TO THE PER-FRAME CASE, and the difference is the window.
+  Evaluating a form frame by frame, an ROI Gram costs Ks^2 PER ROI against V*Ks once, so the
+  vertex route wins. Aggregating over a window, Gwin is formed ONCE and each ROI is then one
+  inner product, so the Gram route wins by the length of the window. Same algebra, opposite
+  answer, decided by where the summation sits.
+ 
+  ⚠ WHAT IS NOT AVAILABLE THIS WAY. Only quadratic quantities. Peak amplitude within a
+  window, envelope shape, phase-locking and anything non-quadratic need the per-frame series
+  and are a separate, ~50x more expensive pass. Do not add them here.
+ 
+  ⚠ NORMALISERS ARE CARRIED, NOT APPLIED. Raw energy is not comparable across subjects --
+  head position, sensor coverage, individual anatomy -- but which normalisation is right
+  depends on the question, and a table that has already divided cannot be undivided.
+  TotalEnergy, ScaleEnergy, ROIArea and WindowSamples travel with the data.
+ 
+  ⚠ WindowSamples DIFFERS BETWEEN BANDS. Multirate gives each band its own derived rate, so
+  a one-second window holds a different number of samples per band. Comparing summed energy
+  across bands without dividing by it compares sample counts, not physiology. `Density` does
+  the division (per sample and per unit area).
+ 
+  PROPERTIES
+    Bundle  Bands  BandLimits  WindowSec  Atlas  NumScales
+ 
+  See also: rheome.flowpage, rheome.flowbrowser, docs/2026-08-24-flow-descriptors-design.md
+ 
+  Author: Diellor Basha, 2026
+
+    Documentation for rheome.flowfeatures
+       doc rheome.flowfeatures
+
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.select.context</title></head><body>
+<h1>rheome.select.context</h1>
+<p><em>function rheome.select</em> &mdash; Rheome</p>
+<pre>  SELECT.CONTEXT  Join measurements to the mergeable matrix: the state each one occurred in.
+ 
+    C = rheome.select.context(db, M)
+    C = rheome.select.context(db, M, Stats=[&quot;rms&quot;,&quot;share&quot;], Ancestors=[0 2 4])
+ 
+  M is a measurement table from rheome.select.measures (or any table with level, k and, for a unit
+  scope, unit_id). Each row comes back with the derived statistics of ITS OWN node, and, for
+  each offset in Ancestors, of the node that many levels above it. Columns from an ancestor
+  are suffixed `_upN`.
+ 
+  ⭐ THIS IS WHERE THE TWO MATRICES MEET. The measurement says what happened and where; the
+  moments say what the signal was doing there, at that scale and at any coarser one. So
+  &quot;group the vortices by the alpha amplitude they occurred in&quot; is a join, not a second pass
+  over the data, and &quot;...and by the state of the minute around them&quot; is the same join at
+  Ancestors = 4.
+ 
+  ⚠ ONLY THE CONTEXT CROSSES LEVELS, NEVER THE MEASUREMENT. The ancestor's statistics are
+  merged quantities and are exact at that level; the measurement itself stays where it was
+  made. Nothing here implies a measurement could be rolled up.
+ 
+  A row whose band_id is set picks that band's column out of a per-band statistic (share,
+  bandPower), so a vortex found in one band is scored against its own band by default.
+ 
+  ⚠ NaN MEANS THE CONTEXT DOES NOT EXIST, NOT THAT IT IS ZERO. A band below its natural
+  level at that node, or a channel below the store's channel floor, has no row to join to;
+  the column is left NaN rather than filled from a neighbouring band or level. Raising the
+  Ancestors offset is usually what makes it appear.
+ 
+  See also: rheome.select.measures, rheome.select.derive, rheome.select.ladder
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

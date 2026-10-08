@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.operators.check</title></head><body>
+<h1>rheome.operators.check</h1>
+<p><em>function rheome.operators</em> &mdash; Rheome</p>
+<pre>  OPERATORS.CHECK  Is this field admissible as that operator's input, and what comes back?
+ 
+    [outType, op] = rheome.operators.check(&quot;weak_curl&quot;, J, dCortex)
+    outType = rheome.operators.check(&quot;weak_curl&quot;, [], dCortex)        % just ask for the arrow
+ 
+  ⭐ THE QUESTION AN ANALYSIS KEEPS ASKING. Given a field and an operator, does it fit, and
+  what am I holding afterwards? The answer is the registry's arrow, checked against the
+  field's scalar count on this domain, so a chain can be assembled and verified before any
+  of it runs.
+ 
+  Returns the OUTPUT field type id, and the operator's registry row.
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

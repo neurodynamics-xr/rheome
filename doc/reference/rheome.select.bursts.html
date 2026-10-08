@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.select.bursts</title></head><body>
+<h1>rheome.select.bursts</h1>
+<p><em>function rheome.select</em> &mdash; Rheome</p>
+<pre>  SELECT.BURSTS  Two-phase event query: prune on the stored envelope, refine on raw samples.
+ 
+    [E, cost] = rheome.select.bursts(db, Band=j, Threshold=theta, MinDuration=0.3, Channels=[], Margin=1.2, Halo=[])
+ 
+  Phase 1 (atlas only): rheome.select.frames on envMax at the band's natural level with the
+  threshold divided by Margin, keeping runs of MinDuration. The stored envMax is the max
+  over the member's decimated instants (oversample 2), which can sit below the full-rate
+  envelope's peak; Margin covers that gap so no event is lost (design §3.5; measured in
+  tests/tSelectBursts.m against a brute-force scan).
+  Phase 2 (raw): for each run, read the channel's samples over the run plus a halo of
+  the band's support on each side, evaluate THE SAME MEMBERS of THE SAME BANK on that
+  span at full rate (a timefilterbank at the span's length has the same members: the grid
+  is anchored at an absolute frequency), take the envelope as the max over the band's
+  members, and apply theta and MinDuration at sample resolution.
+ 
+  OUTPUT E: recording_id, channel_id, band_id, t_on, t_off, duration, peak, t_peak, censored
+         (censored: within the band's support of the record edge)
+         cost: phase-1 cost, raw samples read, their fraction of a full scan of the queried
+         channels (spans are merged per channel, so it never exceeds 1), seconds
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.select.query</title></head><body>
+<h1>rheome.select.query</h1>
+<p><em>function rheome.select</em> &mdash; Rheome</p>
+<pre>  SELECT.QUERY  A query as a value: stat, operator, threshold, level, scope. Executors interpret it.
+ 
+    q = rheome.select.query(Stat=&quot;envMax&quot;, Op=&quot;&gt;&quot;, Threshold=&quot;p95&quot;, Level=3, Band=9, Channels=[], MinDuration=0)
+ 
+  Stats: energy, envMax (feature_band, need Band); sumX2, absMax, min, max (feature);
+  spaceEnergy, spaceEnvMax (feature_space: Band names a SPATIAL band, sband_id);
+  derived: mean = sum_x/n, rms = sqrt(sum_x2/n), bandPower = energy/n.
+  Threshold: a number, &quot;pNN&quot; (percentile of the stat over the query's scope at its
+  level, resolved per recording), or &quot;a*median&quot;.
+  Band: one band_id, or [] for every band carried at the level (band stats only).
+  Channels: channel_ids, or [] for all. MinDuration in seconds (0 = none).
+  Scope: &quot;channel&quot; (rows per channel) | &quot;group&quot; (rows per sensor-tree node, the position
+  pyramid); Groups: node ids ([] = all internal nodes), Depth: only nodes at that tree depth.
+ 
+  The struct carries the relation and the pruning rule (design §3.2):
+    .bound  the parent test: 'ge' (parent &gt;= theta), 'le' (parent &lt;= theta), 'none',
+            or a proxy stat with its rule, e.g. rms -&gt; absMax 'ge'
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

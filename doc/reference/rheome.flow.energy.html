@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.energy</title></head><body>
+<h1>rheome.flow.energy</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.ENERGY  Bilinear Gram for total (or scout-weighted) field energy  E = sum_v w.*|J|^2.
+    ke = rheome.flow.energy(ctx [,w])   E(t) = ctx.F(:,t)' * ke.gram * ctx.F(:,t)
+ 
+  |J|^2 is quadratic in the data, so the whole-brain (or region) energy is a single [C x C]
+  quadratic form Q = currentKernel' diag(w (x) I3) currentKernel -- precomputed once, evaluated per frame as
+  F' Q F. w [V x 1] is a spatial weight (default = lumped vertex area). Per-VERTEX energy maps
+  are nonlinear (a stored per-vertex Q is V*C*C ~ infeasible), so ke.map returns them on the fly.
+ 
+  OUTPUT (struct ke): .gram [C x C] symmetric PSD, .w [V x 1], .domain='gram', .out, .chNames,
+    .map (@(F) per-vertex energy map [V x nT]).
+ 
+  See also: rheome.flow.enstrophy, rheome.flow.helicity, rheome.flow.field
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

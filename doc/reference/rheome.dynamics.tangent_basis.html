@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.dynamics.tangent_basis</title></head><body>
+<h1>rheome.dynamics.tangent_basis</h1>
+<p><em>function rheome.dynamics</em> &mdash; Rheome</p>
+<pre>  DYNAMICS.TANGENT_BASIS  Per-vertex orthonormal tangent frame from the vertex normals.
+ 
+    tb = rheome.dynamics.tangent_basis(surface)   % surface needs .VertNormals
+ 
+  Returns tb.e1, tb.e2 [nV x 3] -- an orthonormal basis of each vertex's tangent plane -- plus
+  tb.normal (unit vertex normal). e2 = normal x e1. Same construction as Brainstorm's optical-flow
+  basis_vertices (the &quot;[z-y x-z y-x]&quot; trick), with a fallback for near-[1 1 1] normals. Used to
+  express a tangent velocity field v = a*e1 + b*e2 by its two scalar coordinates (a,b).
+ 
+  See also: rheome.dynamics.opticalflow_scalar, rheome.dynamics.opticalflow_vector
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

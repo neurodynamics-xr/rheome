@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.graphfilterbank</title></head><body>
+<h1>rheome.graphfilterbank</h1>
+<p><em>class Classes</em> &mdash; Rheome</p>
+<pre>  GRAPHFILTERBANK  Spectral filterbank on a self-adjoint operator.
+ 
+    gfb = rheome.graphfilterbank(SpectralRange)
+    gfb = rheome.graphfilterbank(SpectralRange, 'Name', value, ...)
+ 
+  A set of M spectral multipliers g_m(L) plus the frame structure S = sum |g_m|^2 they
+  induce. Modelled on cwtfilterbank. Owns the SPECTRAL RANGE and the filter shapes; it
+  does not own the operator, the eigenvectors, the graph, the vertex count, or the data.
+ 
+  SpectralRange -- the SignalLength analogue -- in any of three forms:
+    lmax scalar     lambda_min derived as lambda_max/LPFactor
+    [lmin lmax]     explicit range
+    Lambda vector   takes max, AND retains the exact spectrum for exact frame bounds
+ 
+  See also: cwtfilterbank, rheome.graphtransform.eigen, rheome.graphtransform.chebyshev
+ 
+  Author: Diellor Basha, 2026
+
+    Documentation for rheome.graphfilterbank
+       doc rheome.graphfilterbank
+
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

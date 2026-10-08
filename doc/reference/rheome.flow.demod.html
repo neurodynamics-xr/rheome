@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.demod</title></head><body>
+<h1>rheome.flow.demod</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.DEMOD  Move the carrier to zero by re-indexing the frequency axis.
+ 
+    [Cd, fd] = rheome.flow.demod(C, f, w0)
+ 
+  Demodulation multiplies by exp(-i*2*pi*w0*t) in time, which in frequency is C(omega) -&gt;
+  C(omega + w0): the coefficients are untouched and only the axis moves.
+ 
+  ⚠ WHAT THIS DOES **NOT** DO. exp(-i*2*pi*w0*t) has UNIT MODULUS, so it cannot change any
+  magnitude: |Psi*c| is identical with and without it (measured 1.8e-14 on subject01), and
+  ridge tracking is bit-identical -- 702 ridges either way. The long ridges come from forming the
+  ANALYTIC SIGNAL at rheome.flow.joint (retaining positive frequencies only), not from this shift. On the
+  same data the real oscillating field gives 17 ridges and the analytic signal 702, with or
+  without demodulation.
+ 
+  WHAT IT IS FOR. The PHASE. angle(c) after the shift is measured relative to the carrier, so it
+  is interpretable: equal phases mean co-rotating, a difference of pi means counter-rotating, and
+  the instantaneous sign of the vorticity is Re(c*exp(i*w0*t)). Without the shift the phase
+  carries a w0*t ramp that swamps all of it. Chirality lives here -- and is currently discarded,
+  because detection takes abs() and never looks at the angle.
+ 
+  w0 should come from rheome.spectral.carrier applied to the PERIODIC component: estimated on total
+  power the carrier depends on where the band edges were put (see spectral/carrier.m).
+ 
+  INPUTS:  C [K x nOmega], f [1 x nOmega] (Hz), w0 carrier (Hz)
+  OUTPUT:  Cd == C (unchanged), fd = f - w0
+ 
+  See also: rheome.flow.joint, rheome.flow.synth, rheome.spectral.carrier
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

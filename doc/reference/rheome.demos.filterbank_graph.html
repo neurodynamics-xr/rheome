@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.demos.filterbank_graph</title></head><body>
+<h1>rheome.demos.filterbank_graph</h1>
+<p><em>function rheome.demos</em> &mdash; Rheome</p>
+<pre>  DEMOS.FILTERBANK_GRAPH  graphfilterbank, in the same five figures as the CWT demo.
+ 
+    rheome.demos.filterbank_graph()
+    out = rheome.demos.filterbank_graph(outDir)     % also export figures as PNGs
+ 
+  Read alongside rheome.demos.filterbank_cwt: the figure order is identical, so each panel has a
+  counterpart there.
+ 
+    1 design      VoicesPerOctave / Wavelet / SizeLimits -- the FrequencyLimits analogue
+    2 properties  widths, centre WAVENUMBERS, bandwidths, Q, AND frame bounds
+    3 field       Gaussian bumps of known width, plus a spatial chirp
+    4 decompose   wt + vertexSpectrum + scaleSpectrum + an atom
+    5 recovery    planted vs recovered width, with PASS/FAIL
+ 
+  ⭐ GROUND TRUTH, DERIVED FOR THE QUANTITY ACTUALLY MEASURED. vertexSpectrum returns
+  ENERGY, ||g_m .* c||^2, so the relevant integral is of the SQUARED gain. A Gaussian bump
+  of geodesic width sigma has spectrum exp(-lambda*sigma^2/2); against a mexhat member
+  t*lambda*exp(-t*lambda), with the mode density uniform in lambda (Weyl's law on a
+  surface),
+ 
+    E(t) = int (t*lam*e^{-t*lam})^2 (e^{-lam*sigma^2/2})^2 dlam = 2t^2 / (2t + sigma^2)^3
+ 
+  which is maximised at t = sigma^2, so the peak member's width is
+ 
+    sigma_m = sqrt(2t) = sqrt(2) * sigma.
+ 
+  ⚠ THREE DIFFERENT CALIBRATIONS LIVE IN THIS CODEBASE AND CONFUSING THEM IS THE WHOLE
+  POINT OF STATING THEM:
+    sqrt(2)      -- THIS one: a Gaussian bump read off an ENERGY marginal
+    1            -- a Gaussian bump matched by a LINEAR response (no squaring)
+    1/sqrt(2)    -- rheome.filters.frame's Gamma: a VORTEX, whose vorticity spectrum carries an
+                    extra factor of lambda, moving the maximum to t = sigma^2/4
+  Measured here: +8.9%, -10.8%, -2.6% against sqrt(2)*sigma, i.e. inside one member
+  spacing. Assuming the wrong one is a 2x error that still looks like a measurement.
+ 
+  ⭐ FIG 2 DIVERGES FROM THE CWT DELIBERATELY. framebounds and MassLost/Usable have no CWT
+  counterpart: a CWT is complete and constant-Q by construction, ours is neither, and
+  whether a bank inverts is a question the user must be able to ask.
+ 
+  See also: rheome.demos.filterbank_cwt, rheome.demos.filterbank_joint, rheome.graphfilterbank
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

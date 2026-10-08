@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.vortexspectrum</title></head><body>
+<h1>rheome.flow.vortexspectrum</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.VORTEXSPECTRUM  Vortices in several bands on a 1/f background, matched to a real sensor PSD.
+ 
+    out = rheome.flow.vortexspectrum('sub01')
+    out = rheome.flow.vortexspectrum(name, Bands=[2 4; 8 16; 16 32], Duration=20)
+ 
+  ⭐⭐ THE AMPLITUDE IS SOLVED, NOT GUESSED. The forward is linear, so a band's sensor power scales
+  as the square of the source moment. Measuring the band's power at unit moment and dividing once
+  gives the moment that reproduces the measured PERIODIC power exactly -- no sweep, no fitting. That
+  is the whole answer to &quot;how do we get a spectral signature matching the data&quot;: do not set source
+  amplitudes and hope, invert the forward on the band powers.
+ 
+  THE CONSTRUCTION, in two pieces that add at the sensors:
+    background  synthesised IN the Dirac mode basis at the fitted exponent (rheome.spectral.synthesise), so
+                it is in the span by construction, and forwarded as Gmode*c_ap
+    rhythms     one TRAIN of rheome.flow.vortexatom per band, at the tile stride, each with a random phase
+  ⭐ A single atom cannot carry a band's power: it is time-localised, and the real rhythm runs the
+  whole record. A train at strideSelect = supportSec is the tiling that fills the band -- the same
+  lattice rheome.selection.wavelettile navigates -- so the band is continuously occupied by rotating
+  sources rather than by one burst.
+ 
+  ⭐⭐ THE BACKGROUND MATCHES; THE RHYTHMS ARE WHAT COST ACCURACY. Split by region, the
+  channel-averaged log-PSD correlation is +0.96 OUTSIDE the banded range, where only the background
+  acts, and +0.63 INSIDE 2-32 Hz where the atoms live (0.110 against 0.241 decades). A constant-Q
+  atom delivers its band's power as one octave-wide bump at fc, which is not the data's within-band
+  shape, so adding rhythms to a good background makes the curve worse while making the BAND POWERS
+  right: 1.021 / 1.020 / 1.020 / 0.994 over delta / theta / alpha / beta. ⚠ Decide which you need.
+  A background alone reproduces the spectrum better and attributes nothing; this attributes each
+  band's power to a rotating source and pays for it in spectral detail.
+ 
+  ⚠ WHAT IS MATCHED AND WHAT IS NOT. The channel-averaged PSD shape and the per-band power are
+  matched. The SPATIAL distribution is not: the background is synthesised with equal power per mode,
+  which is white across the Dirac spectrum and is not the brain's spatial covariance, and each band's
+  rhythm sits at ONE location. So this reproduces a spectral signature, not a full recording. ⭐ It
+  is the right object for asking whether a band's measured power is consistent with a rotating
+  source of a given scale; it is the wrong object for spatial-covariance work.
+ 
+  ⚠ LOW BANDS NEED LONG RECORDS. An atom's support is 15.05/fc, so delta at 2.83 Hz supports 5.3 s
+  and needs several times that. Bands whose support exceeds a third of Duration are skipped with a
+  warning rather than silently truncated.
+ 
+  INPUTS
+    Bands      [nB x 2] Hz, default [2 4; 4 8; 8 16; 16 32]
+    Duration   seconds (20)             FitRange  [1 45] for the aperiodic fit
+    WavelengthMM (140)                  Vertices  one seed per band, or [] to spread them
+    Hemi (&quot;L&quot;)  Bases  Gauge  Study  Dirac  Verbose
+ 
+  OUTPUT (struct out)
+    .B        [nCh x nT] the synthesised sensor record       .Breal the real one, same window
+    .f .Psim .Preal   channel-averaged Welch spectra
+    .bands    table: band, fLo, fHi, fc, periodicFrac, momentNAm, nAtoms, supportSec, used
+    .chi .knee  the fitted aperiodic parameters of the REAL data
+    .check    logCorr, medianAbsLogRatio, chiReal, chiSim, bandPowerRatio
+ 
+  See also: rheome.spectral.aperiodic, rheome.spectral.synthesise, rheome.flow.vortexatom, rheome.forward.diracgain,
+            rheome.selection.wavelettile
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

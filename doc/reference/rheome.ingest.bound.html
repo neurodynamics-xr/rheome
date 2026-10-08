@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.ingest.bound</title></head><body>
+<h1>rheome.ingest.bound</h1>
+<p><em>function rheome.ingest</em> &mdash; Rheome</p>
+<pre>  INGEST.BOUND  Cast an extremum to single ROUNDING OUTWARD, so it stays a bound.
+ 
+    y = rheome.ingest.bound(x, 'down')     y &lt;= x, in single
+    y = rheome.ingest.bound(x, 'up')       y &gt;= x, in single
+ 
+  ⚠ WHY ROUND-TO-NEAREST IS WRONG HERE. single(x) can land above a minimum or below a
+  maximum by one ulp, and a stored extremum that is not a bound is not an extremum: the
+  min/max envelope drawn from it excludes samples it covers, and a pruning descent that
+  trusts &quot;parent &gt;= child&quot; can drop a subtree that should have survived. Measured on the
+  test fixture before this existed: every tile at every level failed to contain its samples,
+  and the raw trace fell outside the drawn band.
+ 
+  The slip is one ulp, 6e-8 relative, so no number visibly changes -- but the GUARANTEE
+  does, and the guarantee is what makes the store readable at a glance. Monotone rounding
+  also keeps the roll-up exact: max over children of up(x) equals up of max over children.
+ 
+  Infinities (a fully masked tile carries +/-Inf) are left alone: they are already exact,
+  and eps(Inf) is Inf, so nudging would give NaN.
+ 
+  See also: rheome.ingest.reduce, rheome.ingest.rollup
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

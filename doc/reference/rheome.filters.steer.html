@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.steer</title></head><body>
+<h1>rheome.filters.steer</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.STEER  Steer a Dirac quaternion field by RIGHT quaternion multiplication.
+ 
+    Wq = rheome.filters.steer(W, q0)   % W [4*nV x ...], q0 [4x1] unit quaternion -&gt; steered field
+ 
+  The 4-fold multiplicity of the Dirac eigenmodes IS the orientation freedom of the current:
+  right-multiplying the full-quaternion field by a unit quaternion q0 rigidly rotates every
+  dipole (a global re-aiming of the seed/source direction) while leaving the spatial pattern
+  intact. Operates on the quaternion field directly (real w retained) so it composes exactly
+  with rheome.filters.frame_analysis / rheome.filters.frame_synthesis on a Dirac basis; project to a
+  3-vector afterwards with rheome.filters.tovec. Port of bst_eigenwavelet('Steer').
+ 
+  ⚠⚠ THIS IS A SINGLE GLOBAL ROTATION AND CANNOT PRODUCE CIRCULATION. Right multiplication by one unit
+  quaternion is right-H-linearity -- the symmetry that makes the Dirac spectrum 4-fold degenerate -- so
+  every vector in the field turns the same way. A vortex needs the direction to rotate WITH POSITION.
+  ⭐ For that use rheome.filters.spin, which CONJUGATES by a quaternion FIELD, q(v) V conj(q(v)); with the axis
+  set to the surface normal it turns the in-plane part by any per-vertex angle and leaves the normal
+  component exactly unchanged.
+ 
+  INPUTS:
+    W   [4*nV x ...] full-quaternion Dirac field   q0  [4x1] steering quaternion (auto-normalised)
+ 
+  OUTPUT:
+    Wq  [4*nV x ...] steered quaternion field (same size as W)
+ 
+  See also: rheome.filters.tovec, rheome.filters.toquat, rheome.filters.frame_analysis
+ 
+  Author: Diellor Basha, 2026 (port of bst_eigenwavelet('Steer'))
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

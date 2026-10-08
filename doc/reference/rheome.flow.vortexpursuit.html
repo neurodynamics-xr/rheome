@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.vortexpursuit</title></head><body>
+<h1>rheome.flow.vortexpursuit</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.VORTEXPURSUIT  Matching pursuit over the vortex dictionary: the parametric inverse.
+ 
+    out = rheome.flow.vortexpursuit(bank, D, NAtoms=40)
+    out = rheome.flow.vortexpursuit(bank, D, NAtoms=40, Source=true, Name=&quot;sub01&quot;)
+ 
+  Greedy: fit the best atom over all (place, scale, duration, time), subtract its least-squares
+  projection, repeat. The result is a list of atoms with parameters attached and a reconstruction
+  built from them, which is the parametric counterpart of a distributed inverse's current map.
+ 
+  ⭐ THE COMPARISON WITH A DISTRIBUTED INVERSE IS ABOUT PARAMETER COUNT. rheome.inverse.mne solves 3nV
+  unknowns per sample under a norm penalty; this solves 6 per atom for a handful of atoms. A
+  sensor-space goodness-of-fit therefore CANNOT compare them -- MNE fits the sensors almost exactly
+  by construction and would win every time without that meaning anything. ⭐⭐ The honest test is
+  prediction of data the fit never saw: hold out channels, fit both on the rest, and compare the
+  predicted field at the held-out sensors. `Channels` does exactly that.
+ 
+  ⚠ IT IS A BURST MODEL. Measured on 30 s of real alpha, 40 atoms explain 24.6% of band variance
+  but the estimated-to-observed GFP ratio is 0.43 in the loudest quartile and 0.04 in the quietest,
+  and 88 of 270 channels come out WORSE than predicting zero, the worst at -133%. Matching pursuit
+  minimises TOTAL residual energy, which does not imply per-channel improvement. See
+  docs/2026-09-26-feature-table-design.md section 36.1.
+ 
+  INPUTS
+    bank     rheome.flow.vortexbank output        D  [nCh x nT]
+    NAtoms   how many to fit (40)          Cycles  Q values ([2 5 15])   Fc  centre ([] = bank.fc)
+    Stride   seconds between candidate positions (0.5)
+    Channels rows of D to FIT on; the rest are left for prediction ([] = all)
+    Source   true also returns the [3nV x nT] source estimate (false; needs Name)
+    Name     dataset, required when Source is true
+    Bases, Gauge, Hemi   passed through when regenerating source fields
+ 
+  OUTPUT (struct out)
+    .atoms   table: iter, t, vertex, scaleMM, cycles, c0, c1, residFrac
+    .Bhat    [nCh x nT] sensor reconstruction (all channels, including any held out)
+    .resid   [1 x NAtoms] residual energy fraction after each atom
+    .J       [3nV x nT] source estimate, when Source is true
+ 
+  See also: rheome.flow.vortexbank, rheome.flow.vortextrack, rheome.flow.vortexmatch, rheome.inverse.mne
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

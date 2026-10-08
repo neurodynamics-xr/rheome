@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.timefilterbank</title></head><body>
+<h1>rheome.timefilterbank</h1>
+<p><em>class Classes</em> &mdash; Rheome</p>
+<pre>  TIMEFILTERBANK  A designed constant-Q tight frame on the frequency axis, evaluated per member at its own rate.
+ 
+    tfb = rheome.timefilterbank(SignalLength, 'SamplingFrequency', fs)
+    tfb = rheome.timefilterbank(SignalLength, 'SamplingFrequency', fs, 'VoicesPerOctave', 4, ...
+                         'Anchor', 1, 'FrequencyLimits', [], 'Oversample', 2)
+ 
+  Analytic kernels g_m(f) on the one-sided DFT grid of a record, itersine windows of two
+  voices' width on xi = V*log2(f/Anchor), member k centred at xi = k, plus a low-pass and
+  a high-pass member completing the frame so that S(f) = sum_m |g_m|^2 = 2 on the whole
+  axis (0, fs/2): a TIGHT frame in the analytic gain-2 convention, under which
+  sum_m ||w_m||^2 = sum x^2 for a real signal up to the DC and Nyquist bins.
+ 
+  wt(tfb, x) returns each member's coefficients at the member's OWN rate: the inverse FFT
+  of its bins alone, at Oversample x the bin count. Magnitudes are exact at those instants.
+  This is the non-stationary Gabor transform in its constant-Q form, in this repo's
+  vocabulary. Modelled on graphfilterbank; owns the range, the anchor and the shapes; not
+  the data. Design: docs/2026-09-22-timefilterbank-design.md.
+ 
+  ⚠ The grid is ANCHORED AT AN ABSOLUTE FREQUENCY (Anchor, 1 Hz): member k sits at
+  Anchor*2^(k/V) for every record and every rate, so all records share scales.
+  cwtfilterbank anchors at its top scale and shares only across power-of-two rates.
+ 
+  ⚠ No Nyquist cap is needed: every kernel is compactly supported inside [0, fs/2], so it
+  is band-limited on the grid by construction -- the property Morse's top scales lacked.
+ 
+  ⚠ Periodic boundary: the record's ends meet. Coefficients within a member's support of
+  either end are edge-conditioned; the support cone labels them (rheome.ingest.cone).
+ 
+  ⚠ VOICES COST TIME LOCALISATION HERE. A member is two voices wide and compactly
+  supported in frequency, so its time support (99.9 % of |psi|^2) grows with voices:
+  support*fc = 4.8, 8.0, 11.5, 15.0, 22.4, 37.1 at 1, 2, 3, 4, 6, 10 voices, against 2.9
+  for Morse at ten under the same definition (Q 1.4 ... 14.5; Morse 4.6). The default
+  of four gives Q ~ 6 and keeps an 8 Hz band inside 2 s tiles. The transform's cost does
+  not depend on voices (total coefficients = the axis's bandwidth x duration).
+ 
+  rates(tfb) gives those per-member rates from the design alone, without transforming
+  anything: on the reference bank every band member runs at 0.7*fc, so a tile of an octave
+  costs the same number of the band's own samples wherever the octave sits (rheome.select.ladder).
+ 
+  See also: rates, wt, cwtfilterbank, rheome.graphfilterbank, rheome.jointfilterbank, rheome.ingest.bank
+ 
+  Author: Diellor Basha, 2026
+
+    Documentation for rheome.timefilterbank
+       doc rheome.timefilterbank
+
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

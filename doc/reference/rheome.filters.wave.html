@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.wave</title></head><body>
+<h1>rheome.filters.wave</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.WAVE  Wave propagation kernel (eigenmode x time, 'ts' domain).
+ 
+    G = rheome.filters.wave(lambda, t, alpha, lmax)
+ 
+  g(lambda,t) = cos( alpha * t * acos(1 - 2*lambda/lmax) ). The d'Alembert wave
+  propagator: each mode oscillates at frequency omega_k = alpha*acos(1-2*lambda_k/lmax),
+  so a delta launches an expanding wavefront at speed ~alpha. Port of
+  bst_eigfilter_design_wave (non-separable, the dispersion is cortex geometry).
+ 
+  INPUTS:
+    lambda [K x 1]   t [1 x N] time-lag axis
+    alpha  wave speed (default 1)   lmax spectral normalizer (default max(lambda))
+  OUTPUT:
+    G      [K x N]
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

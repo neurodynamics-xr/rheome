@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.operators.trivial_connection</title></head><body>
+<h1>rheome.operators.trivial_connection</h1>
+<p><em>function rheome.operators</em> &mdash; Rheome</p>
+<pre>  OPERATORS.TRIVIAL_CONNECTION  Crane's trivial connection on the dual complex: a per-vertex frame
+  that is exactly parallel except at prescribed faces, where its index is the prescribed integer.
+ 
+    T = rheome.operators.trivial_connection(V, F, C, faces, charges)
+        V [nV x 3], F [nF x 3], C = rheome.operators.connection_laplacian(V,F),
+        faces [n x 1] face indices, charges [n x 1] integers with sum(charges) = chi.
+ 
+  THE EQUATION (Crane, Desbrun &amp; Schroeder 2010, &quot;Trivial connections on discrete surfaces&quot;):
+  find the least-norm edge 1-form x with, on every face f,
+ 
+        (d1 * x)_f  =  2*pi*k_f  -  K_f,         K_f = wrap( (d1 * argE)_f )  in (-pi, pi]
+ 
+  where argE is the Levi-Civita transport of C on each edge and K_f is the face's holonomy, i.e.
+  the discrete Gaussian curvature carried by that face. sum_f K_f = 2*pi*chi (Gauss-Bonnet), so
+  the system is consistent exactly when sum(k) = chi -- the Poincare-Hopf budget.
+  nxr-compute (src/direction_field.cpp, computeTrivialConnection) solves the same equation on the
+  PRIMAL complex -- a face field with vertex singularities, rhs -K_v + 2*pi*sigma_v. This is its
+  dual: the toolbox's frames live on vertices, so the singularities live on faces. Measured on the
+  ico5 sphere with both at the poles: the two agree to 0.31 deg median (evidence b5e810fb).
+ 
+  ⚠⚠ THE WRAP IS THE WHOLE POINT. d1*argE is NOT the curvature: C's charts give each edge a
+  principal-value transport, so (d1*argE)_f = K_f + 2*pi*n_f with integer chart parts n_f
+  (nonzero on 4020 cortex faces, sum -chi) and sum_f (d1*argE)_f = 0 identically. An earlier version
+  solved d1*x = 2*pi*k - d1*argE, which prescribes index k_f - n_f: with k = [+1 -1] the frame
+  wound on 2560 faces (55.4 deg between neighbours) and the &quot;budget is zero, not chi&quot; note was this
+  artefact. With the wrap, k = [+1 +1] at two faces gives exactly two +1 singularities there.
+ 
+  OUTPUT (struct T)
+    .phase [nV x 1]  frame angle in C's charts (integrated over a spanning tree; path-independent)
+    .Ax    [nV x nV] sparse, the adjusted transport angle on each edge (antisymmetric)
+    .x     [nE x 1]  the least-norm adjustment     .E [nE x 2]  .d1 [nF x nE]  .argE [nE x 1]
+    .K     [nF x 1]  face holonomy (curvature), radians     .n [nF x 1] chart integer parts
+    .k     [nF x 1]  the prescribed index per face           .chi
+ 
+  See also: rheome.operators.gauge, rheome.flow.directionfield, rheome.operators.connection_laplacian
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

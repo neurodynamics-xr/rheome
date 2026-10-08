@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.spindle</title></head><body>
+<h1>rheome.detect.spindle</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.SPINDLE  Sleep spindles from the band envelope, with duration gating.
+ 
+    E = rheome.detect.spindle(X, fs)
+    E = rheome.detect.spindle(X, fs, opts)
+ 
+  X is [nChan x nTime] (a row vector is one channel). Returns a TABLE, one row per event:
+    channel  startSample  endSample  startSec  durationSec  peakAmp  peakFreq
+  Sample indices are in the ORIGINAL sampling grid, whatever rate the detection ran at.
+ 
+  METHOD -- the conventional envelope detector. Band-pass to the spindle band, take the
+  analytic envelope, smooth it, and mark excursions above a HIGH threshold, extended out to
+  where they fall below a LOW one; then gate on duration and merge near neighbours. The two
+  thresholds matter: a single one makes the measured duration a function of where the
+  threshold sits, because the envelope's flanks are shallow.
+ 
+  ⚠ THE THRESHOLD IS A ROBUST BASELINE, NOT A PERCENTILE, and that was a real bug. A
+  percentile fails whenever events are SPARSE: in a minute of signal holding one 1 s spindle,
+  the 90th percentile of the envelope is a NOISE level, so the detector fires continuously and
+  reports plausible-looking events made entirely of background. Thresholds are therefore
+  median + k * robust SD (MAD-based), which does not move when the event rate changes.
+ 
+  ⚠ THE BASELINE IS GLOBAL, AND THIS DECIDES WHETHER STAGE CONTRAST SURVIVES. It is taken
+  over the whole input (or opts.baseline), never per segment. Thresholding each segment
+  against ITSELF finds &quot;spindles&quot; in wake at the same rate as in N2, because wake's own
+  background is low -- the detector then measures its own threshold rather than the data.
+  Pass the same recording, or an explicit baseline mask, for every stage you intend to compare.
+ 
+  ⚠ THE BOUNDARY THRESHOLD GOVERNS THE FALSE-POSITIVE RATE, NOT THE DETECTION ONE -- which
+  is not the intuitive way round. MEASURED on 5 minutes of narrowband noise plus 21 planted
+  spindles at 2.5x background:
+ 
+      hiSD  loSD | hits/21 | false per min on noise
+       3.0   1.5 |   21    |   0.40
+       3.0   2.5 |   21    |   0.00
+       6.0   1.5 |   21    |   0.00 ... but 5.0/1.5 still gave 0.20
+ 
+  Raising hiSD barely helps because a noise excursion that touches it is still EXTENDED down
+  to loSD, and it is that extension which carries the run past the duration gate. Lowering
+  loSD lengthens noise events into acceptance. Sensitivity was 21/21 at every setting tried,
+  so loSD is the parameter with a cost, and 2.5 is the default for that reason.
+ 
+  ⚠ REPORTED DURATION IS AMPLITUDE-DEPENDENT near the gate. Smoothing the envelope and
+  extending each event down to the boundary threshold WIDENS it, and the wider the louder:
+  measured, a 0.2 s burst at 109 robust-SD above baseline stays above the boundary for 2.4 s
+  and is reported as a 0.80 s event. At realistic spindle amplitudes (~2.5x background) the
+  gate behaves; do not read a duration off a very high-amplitude event.
+ 
+  ⚠ IT WILL FIRE ON ARTEFACT AND LOOK FINE DOING IT. Eye movement and muscle produce
+  envelope excursions of spindle-like duration. The check that catches it is TOPOGRAPHY, not
+  the event list: real spindles are central-parietal, blinks are frontopolar. Always look at
+  where the detections are before believing how many there are.
+ 
+  ⚠ DECIMATES INTERNALLY. A 11-16 Hz band at 1000 Hz sits at 2-3% of Nyquist where a
+  low-order IIR is poorly conditioned, and filtering 28 million samples per channel is slow
+  for no benefit. The signal is resampled to opts.workRate (default 100 Hz, ample for a
+  16 Hz band) and every reported index is mapped back to the original grid.
+ 
+  INPUTS
+    opts .band       [11 16] Hz          .minDur   0.5 s     .maxDur  3.0 s
+         .hiSD       3.0 detection threshold, median + k*robustSD
+         .loSD       2.5 boundary threshold, same units
+         .mergeGap   0.1 s  merge events closer than this
+         .smoothSec  0.2 s  envelope smoothing
+         .workRate   100 Hz internal detection rate
+         .baseline   logical [1 x nTime] samples used for the percentiles (default: all)
+         .envelope   false; true = X IS ALREADY AN ENVELOPE (e.g. a source-space |J^| pooled over
+                     a tile): the band-pass and Hilbert are skipped, everything after them --
+                     smoothing, the two robust thresholds, extension, merging, gating -- is the
+                     same, and peakFreq is NaN (there is no carrier left to read it from).
+                     ⚠ .band is then only a label; the envelope's own band was set upstream.
+ 
+  See also: rheome.detect.vortex, rheome.detect.track, rheome.filters.firbandpass
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

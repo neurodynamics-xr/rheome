@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.vortex</title></head><body>
+<h1>rheome.detect.vortex</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.VORTEX  Physical properties of the vortices in a source vector field.
+ 
+    v = rheome.detect.vortex(J, S)             % all properties
+    v = rheome.detect.vortex(J, S, props)      % only the requested properties
+    v = rheome.detect.vortex(J, S, props, op)  % reuse a precomputed rheome.detect.operator(S)
+ 
+  Finds the vortex critical points (rheome.detect.criticalPoints -- the Dirac-connection route) and
+  MEASURES each one's physical properties on the cortical surface, in real units:
+    position   [nc x 3]  core location (m, ambient)
+    size       [nc x 1]  characteristic radius in MM: geodesic distance from the core at which
+                         the tangential flow speed peaks (= sigma of a Gaussian-stream vortex)
+    chirality  [nc x 1]  rotation sense (r x v).n_outward: +1 counter-clockwise, -1 clockwise
+                         (viewed from OUTSIDE the surface; robust to mesh face-winding)
+    strength   [nc x 1]  circulation magnitude (|curl| at the core, field units / m)
+ 
+  props selects which to compute/return: a char ('size'), cellstr ({'size','chirality'}), or
+  'all' (default = every property). 'position' is always returned (the anchor). Case-insensitive.
+ 
+  The sphere (rheome.import.sphere) is the CALIBRATION STANDARD: plant an analytic vortex of known
+  sigma and handedness and confirm size/chirality read back correctly (see detect_validate.m).
+ 
+  INPUTS:
+    J   [3nV x 1] ambient current;  S surface (.Vertices, .Faces, .VertNormals, .Hemi)
+    op  (optional) a precomputed rheome.detect.operator(S), reused across frames (see rheome.detect.operator).
+ 
+  OUTPUT (struct v):
+    .pos .nVortex .hemi .chi  (always) + .size .chirality .strength (as requested)
+ 
+  See also: rheome.detect.criticalPoints, rheome.differential.curl, rheome.operators.connection_laplacian
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

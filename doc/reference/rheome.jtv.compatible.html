@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.jtv.compatible</title></head><body>
+<h1>rheome.jtv.compatible</h1>
+<p><em>function rheome.jtv</em> &mdash; Rheome</p>
+<pre>  JTV.COMPATIBLE  Do two joint representations live on the same axes?
+ 
+    [ok, why] = rheome.jtv.compatible(axA, axB)
+ 
+  Checks the eigenvalue axis, the frequency axis, and the conventions that make two
+  representations combinable at all. Call it before composing, comparing or reconstructing across
+  two analyses -- particularly across BANDS, since a per-band run truncates to its own bins and two
+  such runs do NOT share a frequency axis even though both are called &quot;the joint spectrum&quot;.
+ 
+  ⚠ .half and .boundary are checked because a mismatch there is silent and fatal. A positive-half
+  (analytic, complex) representation and a full-axis (real) one cannot be combined; nor can a
+  ring-boundary and a path-boundary one, whose implied extensions differ.
+ 
+  INPUTS:  a, b  axes structs (rheome.jtv.axes)   opts .tol relative tolerance (default 1e-10)
+  OUTPUT:  ok    logical                   why  cellstr of the mismatches found
+ 
+  See also: rheome.jtv.axes
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

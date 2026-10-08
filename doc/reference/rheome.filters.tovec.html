@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.tovec</title></head><body>
+<h1>rheome.filters.tovec</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.TOVEC  Full-quaternion Dirac field -&gt; physical 3-vector (drop the real w part).
+ 
+    V = rheome.filters.tovec(W)   % W [4*nV x ...]  -&gt;  V [3*nV x ...]
+ 
+  The Dirac basis carries a full quaternion [w x y z] per vertex; the physical current
+  dipole is the imaginary 3-vector (x,y,z). Use this to project a quaternion field (e.g. the
+  output of rheome.filters.frame_analysis / rheome.filters.frame_synthesis on a Dirac basis) back to a
+  3-vector for display or geometry. Inverse of rheome.filters.toquat. Port of bst_eigenwavelet('ToVec').
+ 
+  See also: rheome.filters.toquat, rheome.filters.steer, rheome.filters.frame_analysis
+ 
+  Author: Diellor Basha, 2026 (port of bst_eigenwavelet('ToVec'))
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

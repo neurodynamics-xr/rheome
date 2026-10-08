@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.track</title></head><body>
+<h1>rheome.detect.track</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.TRACK  Track flow critical points across time into trajectories (Lagrangian view).
+ 
+    out = rheome.detect.track(J, S, opts)
+ 
+  Per frame, rheome.detect.criticalPoints finds the classified critical points (vortex/source/sink/
+  saddle) of the ambient current; this links them across frames into trajectories and measures
+  each trajectory's velocity, lifetime, straightness and intrinsic home location
+  (rheome.geom.karcher_mean). The Lagrangian complement to the Eulerian velocity field: it follows the
+  FEATURES of the flow, not the field.
+ 
+  ASSOCIATION — ByteTrack-style two-stage lifecycle. Ported from the sibling repo
+    nxr-tracking (tracking/meshByteTrack.ts, tracking/meshAssociation.ts; N. colleague, 2026),
+  which adapts ByteTrack [Zhang et al., &quot;ByteTrack: Multi-Object Tracking by Associating Every
+  Detection Box&quot;, ECCV 2022] to a cortical mesh. The idea: do not throw weak detections away —
+  match STRONG detections first, then RECOVER still-open tracks from the WEAK ones, and keep a
+  missed track &quot;lost&quot; for a few frames before ending it. This turns the flickering, short-lived
+  detections of spontaneous data into fewer, longer, coherent trajectories, and it flags
+  merge/split events (for flow singularities, pair annihilation/bifurcation). Specialised here to
+  point features: the mesh-region cost terms of the source (support Jaccard, footprint size) are
+  dropped; the cost is the on-surface distance, with same critical-point TYPE as a hard gate.
+ 
+  INPUTS:
+    J    [3nV x nWin] ambient current over a window
+    S    surface struct (.Vertices, .Faces, .Hemi)
+    opts .types {'vortex','source','sink','saddle'}
+         .minStrength (activation; detections below are ignored; default 0.5*median frame-max)
+         .highStrength (HIGH band; default 1.5*minStrength) | .maxStep (max m/frame; default 5*edge)
+         .metric 'euclidean'(default)|'geodesic' | .dt (s; default 1)
+         .lostTrackBuffer (frames a confirmed track survives while missed; default 2)
+         .minimumConsecutiveFrames (tentative-&gt;confirmed; default 2)
+         .minLifetimeFrames (drop tracks with fewer samples; default 3)
+ 
+  OUTPUT (struct out):
+    .tracks  struct array (one per trajectory), fields: type frames pos strength velocity speed
+             lifetime pathLength netDisplacement straightness birthFrame deathFrame state
+             missedFrames lowRecoveryCount splitCount mergeCount centerVertex centerPos.
+             Sorted by lifetime*mean(strength) descending.
+    .summary counts per type + per state + lifetime/speed vectors + nSplit/nMerge/nRecovered
+ 
+  See also: rheome.detect.criticalPoints, rheome.geom.geodesic, rheome.geom.karcher_mean
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

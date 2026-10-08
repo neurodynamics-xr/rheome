@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.select.named</title></head><body>
+<h1>rheome.select.named</h1>
+<p><em>function rheome.select</em> &mdash; Rheome</p>
+<pre>  SELECT.NAMED  The physiological bands, mapped onto the store's octave bands.
+ 
+    T = rheome.select.named(db)
+    T = rheome.select.named(db, Bands=struct('alpha', [8 13], 'beta', [13 30]))
+ 
+  ⭐ WHAT THIS IS AND IS NOT. The store's bands are OCTAVES on an absolute grid anchored at
+  1 Hz, because that is what makes them constant-Q, mergeable and comparable across
+  subjects and sampling rates. Delta, theta, alpha, beta and gamma are conventions with
+  ragged edges that no dyadic grid can hit. This table says, for each name, which stored
+  bands cover it, how well, and at which level they live -- so a query can say &quot;alpha&quot; and
+  get an answer whose approximation is on the record instead of in someone's head.
+ 
+  ⚠ READ `covered` BEFORE QUOTING A NUMBER. alpha 8-13 Hz is covered by the 8-16 Hz octave,
+  which is 1.6x too wide: 62 % of the octave's width is alpha. beta 13-30 Hz straddles two
+  octaves and is covered to 89 %. Where the fit is poor, the honest answer is the octave's
+  own edges, which is why they are in the table too.
+ 
+  COLUMNS
+    name, f_lo, f_hi       the convention
+    band_ids               the stored octave bands that overlap it
+    band_lo, band_hi       what those octaves actually span
+    covered                the fraction of the octave span that is inside the convention
+    natural_level, tile_s  where those bands live, and their tile length
+    peak_level             the level whose stored spectral peak covers this name
+ 
+  See also: rheome.select.ladder, rheome.select.derive, rheome.ingest.peaks
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

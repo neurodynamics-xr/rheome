@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.pagedrecording</title></head><body>
+<h1>rheome.pagedrecording</h1>
+<p><em>class Classes</em> &mdash; Rheome</p>
+<pre>  PAGEDRECORDING  A long sensor recording read one time page at a time.
+ 
+    pr = rheome.pagedrecording('sub01', 'PageLength', 6000, 'Overlap', 1929)
+    pr = rheome.pagedrecording(recordingFile, ...)
+    p  = page(pr, k)
+ 
+  The object declares the FULL time axis without touching the data; page(pr,k) is the
+  only thing that reads. Backed by a v7.3 store whose F is a TOP-LEVEL variable, so
+  m.F(:, a:b) is a genuine partial read -- measured 2.4 ms for a 4 s page against 250 ms
+  for a full load. See rheome.import.recording, which writes that store.
+ 
+  ⚠ WHY THE STORE IS SEPARATE FROM study.mat. MatFile objects only support '()' indexing
+  on TOP-LEVEL variables: `m.rec.F(:, a:b)` fails outright (&quot;MatFile objects only support
+  '()' indexing&quot;), and `m.rec` loads the whole 977 MB struct. Nesting F inside a struct
+  defeats paging entirely, which is why rheome.import.recording surfaces it as its own variable.
+ 
+  ⚠ CORE vs SPAN -- the distinction the caller must respect. A page is read WIDER than it
+  is used. `.samples` is the span actually read; `.core` masks the part this page OWNS.
+  The cores of successive pages PARTITION the record exactly once, so summing a statistic
+  over cores counts every sample once; summing over spans double-counts the overlap and
+  silently inflates every total. The margin exists to absorb the wavelet cone of
+  influence: set Overlap from waveletsupport(fb), whose lowest filter fixes the longest
+  support (a [1 60] Hz bank at 600 Hz reaches +/- 3.215 s = 1929 samples).
+ 
+  ⚠ EDGE PAGES CANNOT HAVE THEIR FULL MARGIN. The first and last pages clip against the
+  record, so their cores carry cone-contaminated samples. `.clipped` = [pre post] reports
+  how many samples of margin were unavailable; nonzero means treat that end with care.
+ 
+  PROPERTIES
+    File  NumSamples  SamplingFrequency  Time  Duration
+    ChannelFlag  ChannelName  ChannelType  Channels  NumChannels
+    PageLength  Overlap  Precision  NumPages
+ 
+  See also: rheome.import.recording, page, cwtfilterbank, waveletsupport
+ 
+  Author: Diellor Basha, 2026
+
+    Documentation for rheome.pagedrecording
+       doc rheome.pagedrecording
+
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.load.dirac</title></head><body>
+<h1>rheome.load.dirac</h1>
+<p><em>function rheome.load</em> &mdash; Rheome</p>
+<pre>  LOAD.DIRAC  Load a cached relative-Dirac eigenbasis (and Laplace–Beltrami basis) from +data.
+ 
+    dbasis          = rheome.load.dirac(name)              % tau=0.5, K=400 (defaults)
+    [dbasis, basis] = rheome.load.dirac(name, tau, K)      % also the Laplace–Beltrami basis (out.basis)
+ 
+  Reads +data/&lt;name&gt;/dirac__tau&lt;tau&gt;__K&lt;K&gt;.mat, written by rheome.import.dirac / rheome.import.dataset.
+  Errors (with a hint) if that (tau, K) has not been imported for the dataset.
+ 
+  See also: rheome.import.dirac, rheome.eigen.dirac_frame, rheome.load.surface
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

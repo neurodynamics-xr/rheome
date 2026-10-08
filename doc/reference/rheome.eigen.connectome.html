@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.eigen.connectome</title></head><body>
+<h1>rheome.eigen.connectome</h1>
+<p><em>function rheome.eigen</em> &mdash; Rheome</p>
+<pre>  EIGEN.CONNECTOME  Low eigenmodes of a normalized connectome Laplacian (normalized-adjacency trick).
+ 
+    basis = rheome.eigen.connectome(N, K)     % N = normalized adjacency from rheome.operators.connectome_laplacian
+ 
+  The smooth network harmonics of the symmetric normalized connectome Laplacian L = I - N. Rather
+  than shift-invert the (near-singular) L for its smallest eigenvalues, take the LARGEST of the
+  normalized adjacency N -- factorization-free, well-conditioned -- and map back:
+      [Phi, mu] = eigs(N, K, 'largestreal');   lambda_L = 1 - mu.
+  Faithful port of tess_eigen / proto_fiber_connectome's connectome branch. (For the LB-Connectome
+  variant use rheome.eigen.modes(A,B,K) directly -- a generalized symmetric pencil; the Dirac-Connectome
+  basis is that LB-Connectome basis lifted by eigen.dirac.)
+ 
+  INPUTS:
+    N   [nk x nk] normalized adjacency D^{-1/2} W D^{-1/2} (rheome.operators.connectome_laplacian)
+    K   number of low modes (default 250)
+ 
+  OUTPUT (struct basis): .Phi [nk x K] (orthonormal) .Lambda [K x 1] (ascending) .Mass (I) .nV .K
+ 
+  See also: rheome.operators.connectome_laplacian, rheome.operators.connectome, rheome.eigen.modes, eigen.dirac
+ 
+  Author: Diellor Basha, 2026 (port of tess_eigen 'Connectome Laplacian')
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

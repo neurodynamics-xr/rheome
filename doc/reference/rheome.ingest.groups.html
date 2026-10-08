@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.ingest.groups</title></head><body>
+<h1>rheome.ingest.groups</h1>
+<p><em>function rheome.ingest</em> &mdash; Rheome</p>
+<pre>  INGEST.GROUPS  Roll level statistics up the sensor tree: one column per internal node.
+ 
+    Tg = rheome.ingest.groups(T, tree, chanRows)    T = {1 x Lmax+1} from rheome.ingest.rollup (or one level)
+ 
+  For every internal node of the tree and every level, sums and maxima over the node's
+  member channels: sumX, sumX2, energy add; absMax, max, envMax take the max; min the
+  min. n and nCoi are per record and are shared. chanRows maps the store's channel axis
+  (1..C) to rows of the array the tree was built on (meta.iChannel against the array's
+  channel list), so a tree built on the helmet's 270 sensors serves a store of any
+  channel subset; nodes with no member in the store get no column.
+ 
+  ⭐ Exact by the same argument as the time roll-up: a parent node equals its children
+  merged, because every stored statistic is a sum, a count, a max or a min.
+ 
+  OUTPUT: Tg {1 x Lmax+1} (or one struct), fields sumX, sumX2 [K x nG] double;
+          absMax, min, max [K x nG] single; energy [K x nG x B] double; envMax single;
+          .nodes [1 x nG] the internal node ids in column order
+ 
+  See also: rheome.sensors.tree, rheome.ingest.rollup, rheome.ingest.build
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

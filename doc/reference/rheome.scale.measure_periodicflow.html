@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_periodicflow</title></head><body>
+<h1>rheome.scale.measure_periodicflow</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_PERIODICFLOW  Apparent alpha flow on the TOTAL and the PERIODIC envelope, over many tiles.
+ 
+    [T, X] = rheome.scale.measure_periodicflow(name)
+    [T, X] = rheome.scale.measure_periodicflow(name, rheome.scale.sensors(name), NumTiles=12)
+    [T, X] = rheome.scale.measure_periodicflow(name, S, Centres=c)     % explicit tile centres (samples)
+ 
+  alpha_apparent_flow_omega.m and alpha_periodic_flow_omega.m with the figures removed, run on
+  NumTiles 2 s tiles spread EVENLY across the recording instead of the single strongest one. The
+  report periodicflow_article ends by asking for exactly this: speed against amplitude ACROSS
+  tiles, where the samples are independent, because 599 frames of one tile are ~25 samples.
+  Per tile, identical to the scripts:
+    Welch PSD of the whole recording (8 s Hann, 50%), aperiodic fit with knee on [1 45] Hz minus
+    60/120 Hz -&gt; rheome.spectral.decompose on the tile's FFT (+-2 s margin) with the unit conversion
+    derived from the data (the ratio of MEANS of |C|^2 and the PSD over the fit band), periodic
+    gains applied with Hermitian symmetry -&gt; for TOTAL and PERIODIC: 8-16 Hz IIR band-pass,
+    Hilbert AT THE SENSORS, decimate 600 -&gt; 300 Hz, left-hemisphere minimum-norm current
+    (S.Res, SnrFixed 3, amplitude), |J^| (rheome.flow.activation), Horn-Schunck Alpha=1 (rheome.flow.apparent).
+ 
+  Returns rheome.scale.rows (analysis &quot;periodicflow&quot;); band = &quot;total&quot; | &quot;periodic&quot; | &quot;&quot; (spectrum):
+    periodic_fraction, _q25, _q75   PSD periodic share of 8-16 Hz power, over channels  fraction
+    aperiodic_share                  1 - periodic_fraction: the 1/f share of the band     fraction
+    aperiodic_exponent, fit_r2       chi of the knee fit, and its log-space R^2
+    tile_inband_periodic_median      the split's own in-band share, median over tiles     fraction
+    tile_bg_above_obs_median         % bins where the background exceeds |C|^2 (0/100 = unit error)
+    n_tiles, frames_per_tile         n_tiles counts ACCEPTED tiles only
+    n_tiles_rejected                 tiles dropped by the stationarity screen (below)
+    clean_start_s, clean_end_s       the span tiles were placed in (rheome.scale.cleanspan)
+  per band (total, periodic):
+    speed_median, speed_p95          median over tiles of each tile's median / p95 |v|     m/s
+    curl_p95, div_p95                median over tiles of p95 |curl v|, |div v|           1/s
+    r_within_median                  median over tiles of corr(frame mean envelope, frame median speed)
+    neff_median                      median Bartlett effective n of that correlation      samples
+    r_within_pooled, z_within        n_eff-weighted Fisher pool of the within-tile r, and its Stouffer z
+    r_across, p_across               corr ACROSS tiles of tile mean envelope vs tile median speed ⭐
+    env_spatial_r_median             (periodic only) spatial corr of the two tile-mean envelopes
+  X is the per-tile table (one row per tile x band), written as flowtiles.csv by rheome.scale.run; its
+  power_ratio and rejected columns say which tiles the summaries used.
+ 
+  ⚠⚠ TILES ARE SCREENED FOR STATIONARITY, AND A BAD TILE NO LONGER COSTS THE OTHER ELEVEN. The split
+  compares each tile's |C|^2 with a background fitted on the WHOLE recording, so it is only valid
+  where the tile looks like the recording. Three guards, in order:
+    1. rheome.scale.cleanspan trims artefact blocks off both edges and the Welch PSD and the tile centres
+       use only [clean_start, clean_end]. Before 2026-10-07 tile 12 ended on the last sample, and on
+       ~3% of a resting cohort that sample sat inside a ~3.5 s common-mode end-of-recording artefact.
+       ⚠ The Welch PSD also leaves out every segment touching an INTERIOR bad block
+       (rheome.scale.cleanwelch). Without that, a 50x artefact at 20-25 s of one subject made the PSD 20x
+       a typical stretch and all 12 clean tiles read power_ratio 0.03-0.07 (another subject: 0.15-0.33),
+       so both failed with notiles. With no interior bad block the PSD is the pwelch call, bit for bit.
+    2. a tile whose window (margins included) touches a remaining bad block is rejected.
+    3. power_ratio = (data-derived |C|^2/PSD scale) / (fs*nT/2, the analytic one). It is 0.88-1.13
+       on one subject's clean tiles, and over EVERY 6 s window it spans 0.44-1.82 on a reference subject
+       (595 windows) and 0.87-1.67 on the first subject's clean span. Outside [1/MaxPowerRatio, MaxPowerRatio]
+       (default 3) the tile is rejected. Its old tile 12 read ~3e4 -- what tripped
+       spectral:decompose:scale as a &quot;UNIT MISMATCH&quot; -- and its old tile 1 read 3.1.
+  Rejected tiles stay in X as NaN rows with the reason.
+ 
+  ⚠ BARTLETT n_eff = n / (1 + 2 sum_{k=1}^{n/5} (1-k/n) rho_x(k) rho_y(k)). At 300 Hz both series
+  have lag-1 autocorrelation ~0.99, so the nominal n = 599 overstates the evidence ~20-fold.
+  ⚠ a reference subject's strongest tile read r = -0.425 (total) and -0.162 (periodic), periodic fraction
+  0.693, speed 15.1 / 13.2 mm/s; Centres= reproduces that tile.
+ 
+  See also: rheome.flow.apparent, rheome.flow.activation, rheome.spectral.decompose, rheome.spectral.aperiodic, rheome.scale.run,
+            rheome.scale.cleanspan, rheome.scale.cleanwelch
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

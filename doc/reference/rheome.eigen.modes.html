@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.eigen.modes</title></head><body>
+<h1>rheome.eigen.modes</h1>
+<p><em>function rheome.eigen</em> &mdash; Rheome</p>
+<pre>  EIGEN.MODES  Smallest Laplace-Beltrami eigenmodes as an M-orthonormal basis.
+ 
+    basis = rheome.eigen.modes(L, M, K)
+    basis = rheome.eigen.modes(L, M, K, 'tol', 1e-6)
+ 
+  Solves the generalized eigenproblem  L phi = lambda M phi  for the K smallest
+  eigenvalues and returns an M-ORTHONORMAL basis (phi_i' M phi_j = delta_ij) sorted
+  by increasing eigenvalue. This is the spectral basis every atom is projected onto
+  (via rheome.filters.apply / rheome.filters.localize) and reconstructed from.
+ 
+  INPUTS:
+    L   [nV x nV] symmetric PSD stiffness (from rheome.operators.laplace_beltrami)
+    M   [nV x nV] symmetric PD mass matrix (from rheome.operators.mass)
+    K   number of modes to compute (clamped to nV-1)
+ 
+  OPTIONS:
+    'tol'    eigs convergence tolerance (default 1e-6)
+ 
+  The eigensolve goes through rheome.eigen.smallest (a port of Brainstorm's bst_eigs_smallest): a small
+  NEGATIVE sigma shift so (L - sigma*M) = L + |sigma|*M is SPD/well-conditioned. This is REQUIRED
+  -- the naive eigs(L,M,'smallestabs') factorizes the (near-)singular L at sigma=0 and returns
+  WRONG low eigenvectors (~40% residual, non-reproducible) for LBO/Dirac/connectome pencils.
+ 
+  OUTPUT (struct basis):
+    .Phi     [nV x K] eigenvectors, M-orthonormal, columns in ascending lambda
+    .Lambda  [K x 1]  eigenvalues (ascending; the smallest ~0)
+    .Mass    [nV x nV] the mass matrix (kept so downstream ops need only 'basis')
+    .nV, .K  counts
+ 
+  Notes:
+    - A whole cortex is two disconnected hemispheres, so the first TWO eigenvalues
+      are ~0 (one constant mode per hemisphere). Both are kept; they are the DC of
+      each hemisphere and pass through low-pass kernels unchanged.
+    - Within a degenerate multiplet the individual eigenvectors are only defined up
+      to rotation; any atom built from a full multiplet is nonetheless well defined.
+ 
+  See also: rheome.operators.laplace_beltrami, rheome.filters.localize, rheome.show.surface
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

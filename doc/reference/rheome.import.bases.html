@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.import.bases</title></head><body>
+<h1>rheome.import.bases</h1>
+<p><em>function rheome.import</em> &mdash; Rheome</p>
+<pre>  IMPORT.BASES  Precompute + cache PER-HEMISPHERE operators &amp; eigenbases for both hemispheres.
+ 
+    file = rheome.import.bases(name)                    % K = Kc = 400
+    file = rheome.import.bases(name, K, Kc)             % K scalar (LBO axis), Kc connection modes
+    file = rheome.import.bases(name, K, Kc, opts)
+ 
+  Caches, for EACH hemisphere of the dataset cortex (L and R), the operator AND its eigenbasis
+  for every operator family the module uses:
+    LBO         : cotan stiffness L + Galerkin mass M   (rheome.operators.laplace_beltrami)  + eigenmodes
+    Connection  : Levi-Civita connection Laplacian C     (rheome.operators.connection_laplacian) + eigenmodes
+  The Dirac family is NOT duplicated here -- its whole-cortex eigenbasis is already cached by
+  rheome.import.dirac (dirac__*.mat) and is sliced per hemisphere on load (rheome.load.bases attaches it), so a
+  single copy serves both hemispheres.
+ 
+  ⭐ THE CACHE IS KEYED BY K. Files are written as bases__K&lt;K&gt;__Kc&lt;Kc&gt;.mat, so a K = 400 and a
+  K = 1000 basis COEXIST rather than one silently overwriting the other, and rheome.load.bases VERIFIES
+  that the K it loaded is the K that was asked for. The failure mode otherwise is invisible:
+  everything downstream still runs, on a different lambda axis, and nothing raises an error.
+  (A legacy unkeyed bases.mat is still read if no keyed file exists.)
+ 
+  ⭐ THE CONNECTION SOLVE IS REUSED BY DEFAULT. Kc has nothing to do with K -- the connection
+  Laplacian does not depend on the LBO basis at all -- and it is the expensive half. When an
+  existing cache already holds the requested Kc, its connection block is COPIED rather than
+  re-solved, so raising the LBO K costs only the LBO eigensolve. opts.reuseConn = false forces it.
+ 
+  INPUTS:
+    name  cached dataset name (rheome.import.surface first);  K  LBO modes per hemisphere (default 400);
+    Kc    connection eigenmodes per hemisphere (default = K)
+    opts  .reuseConn  true (default) -- copy the connection block from an existing cache with the
+                      same Kc instead of re-solving it
+         .overwrite   false (default) -- refuse to clobber an existing keyed file
+ 
+  OUTPUT: writes +data/&lt;name&gt;/bases__K&lt;K&gt;__Kc&lt;Kc&gt;.mat holding a struct 'bases':
+    .meta  struct(K, Kc, builtFrom, lambdaMax, sigmaFloor)
+    .hemi  {1 x nH} hemisphere labels (from S.HemiLabel)
+    .(L|R) struct per hemisphere:
+        .gv    [nVh x 1] global vertex indices (local -&gt; whole-cortex)
+        .S     slim hemisphere surface (.Vertices .Faces .VertNormals .nV .nF)
+        .lbo   struct(.L .M  .Phi .Lambda .Mass)      operator + eigenbasis (scalar)
+        .conn  struct(.C  .Psi .Lambda)               operator + eigenbasis (complex tangent)
+ 
+  See also: rheome.load.bases, rheome.import.dirac, rheome.operators.connection_laplacian, rheome.detect.operator
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.sensitivity</title></head><body>
+<h1>rheome.flow.sensitivity</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.SENSITIVITY  What a flow kernel produces from NOISE, per vertex.
+ 
+    s = rheome.flow.sensitivity(kc.vertexOperator, noiseCov)     -&gt; [V x 1]
+ 
+    s_v = k_v * C_noise * k_v'      (the variance the kernel yields at v from that noise)
+ 
+  ⭐ THE NORMALISER THAT MAKES REGIONS COMPARABLE. A measured flow energy is not interpretable
+  on its own, because the kernel's sensitivity varies enormously across the surface -- deep and
+  medial vertices are poorly constrained and a handful of vertices dominate. Dividing measured
+  energy by this makes the result a RATIO to what noise alone would produce there: dimensionless,
+  comparable between regions of any size or depth, and directly readable as an SNR.
+ 
+  ⚠ THIS IS A BUG FIX, NOT A REFINEMENT. Measured on the AnphySleep EEG kernel: the top 1% of
+  vertices carry 15% of the total squared row norm, and the smallest scouts (entorhinal,
+  frontalpole, transversetemporal) are exactly the ones with the largest kernel norm PER UNIT
+  AREA. Reporting area-normalised ROI energy without this returned 'transversetemporal R' as the
+  peak region for EVERY band in EVERY sleep stage -- a property of the inverse, not the data.
+  The same mechanism inflated the deep and medial regions in the resting MEG phase-locking map.
+ 
+  ⚠ REDUCE THE NORMALISER THE SAME WAY AS THE MEASUREMENT. To normalise an ROI mean, reduce s
+  over the ROI with the SAME area weighting, then divide:
+      roiS = (Membership * (w .* s)) ./ areas;      roiRatio = roiE ./ roiS;
+  Normalising a per-area mean by a per-vertex sensitivity does not cancel the bias.
+ 
+  ⚠ WITH AN IDENTITY COVARIANCE this is just the squared row norm -- the kernel's gain to
+  isotropic input. That is a reasonable fallback when no noise covariance is available, but the
+  measured covariance is the better null because it carries the real spatial structure of the
+  noise.
+ 
+  INPUTS:
+    vertexOperator  [V x C] sensors -&gt; per-vertex flow quantity (kc.vertexOperator)
+    noiseCov        [C x C] sensor noise covariance, or [] for identity
+ 
+  See also: rheome.flow.curl, rheome.flowfeatures, rheome.io.read.noisecov
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

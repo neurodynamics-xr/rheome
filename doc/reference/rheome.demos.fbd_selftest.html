@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.demos.fbd_selftest</title></head><body>
+<h1>rheome.demos.fbd_selftest</h1>
+<p><em>function rheome.demos</em> &mdash; Rheome</p>
+<pre>  DEMOS.FBD_SELFTEST  Reach the private demo helpers from the test suite.
+ 
+    rheome.demos.fbd_selftest('check',  name, measured, expected, tol, unit)
+    rheome.demos.fbd_selftest('report', checks)
+    rheome.demos.fbd_selftest('ternary', cond, a, b)
+    rheome.demos.fbd_selftest('fig',    doExport, pos)
+    rheome.demos.fbd_selftest('sphere',   nSub, K)
+    rheome.demos.fbd_selftest('bump',     S, seedIdx, sigma)
+    rheome.demos.fbd_selftest('sectoral', S, l, phase)
+    rheome.demos.fbd_selftest('rotating', S, degrees, Omega, tvec)
+ 
+  +demos/private is invisible outside the package, so this thin forwarder exists to let
+  tests exercise the helpers directly rather than only through a whole demo.
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

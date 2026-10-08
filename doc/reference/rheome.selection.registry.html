@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.selection.registry</title></head><body>
+<h1>rheome.selection.registry</h1>
+<p><em>function rheome.selection</em> &mdash; Rheome</p>
+<pre>  SELECTION.REGISTRY  Every way we index or weigh a manifold's elements, as one type.
+ 
+    T = rheome.selection.registry()
+    T = rheome.selection.registry(); T(T.merges, :)        % the ones a coarser cell can be summed from
+ 
+  ⭐ THE FOURTH PILLAR. +domain says where a field lives, +fieldtype says what it is,
+  rheome.operators.registry says which arrows move it -- and this says how we CUT it. A tile, a window, a
+  frequency band, a tree node, an ROI and a wavelet member are all the same kind of thing: a weight
+  over the elements of one domain. They differed only in which package happened to implement them
+  (+select for tiles, rheome.pipeline.window for frames, @graphfilterbank for kernels, rheome.geom.tree for
+  patches), and nothing related them, so the same question had to be re-answered per mechanism.
+ 
+  ⭐⭐ THE COLUMN THAT MATTERS IS `merges`. It is the difference between a partition and a frame, and
+  getting it wrong is the most expensive mistake in this codebase:
+    PARTITION (merges)   disjoint and exhaustive, so a coarser cell is EXACTLY the sum of finer ones.
+                         rheome.geom.tree, the dyadic time tiles, the constant-Q bands, the Weyl octaves.
+                         Verified: energy rolls up at 4.3e-16 relative error across tree depths.
+    KERNEL (does not)    smooth and overlapping, a frame you can invert but not add up. One member is
+                         a PROJECTION: measured, a single joint wavelet keeps 0.048 = 1/21 of its
+                         (tile x octave) cell, and the graph bank has A/B = 0.274 against the
+                         temporal bank's exactly 1.000.
+    SUBSET (does not)    a plain index range or an ROI list. ⚠ atlas ROIs are NOT disjoint and NOT
+                         exhaustive, so they never merge even though they look like a partition.
+ 
+  ⚠⚠ AND `merges` IS A PROPERTY OF THE SELECTION, NOT OF THE MEASUREMENT. Even under a partition only
+  quantities LINEAR in the accumulated statistic roll up. In rheome.flow.windowtable, `energy` is the only
+  column a parent may take as a sum of its children; peak, crest, vortex count and the gauge shares
+  all have to be recomputed. A partition permits merging; it does not make every column mergeable.
+ 
+  ⭐ THE PAYOFF: rheome.select.ladder and rheome.geom.ladder are the same function. Both pair a partition of one
+  axis with a partition of its conjugate and ask how many units of the first fit in a cell of the
+  second -- 22.6 cycles per time tile, 2.01 diameters per wavelength. Same predicate, two axes, and
+  the 11x gap between those numbers is a fact about the instrument that only shows once they are
+  recognised as the same quantity.
+ 
+  COLUMNS
+    id            the selection, as called
+    fcn           the function that builds it -- must resolve (same contract as rheome.operators.registry)
+    domain_kind   which domain kinds it cuts: complex | graph | points | index
+    axes          the axis or axes it cuts, as a cell of names: {'time'}, {'eigenmode','frequency'}
+    rank          the element rank it selects on
+    kind          partition | kernel | subset
+    merges        can a coarser cell be summed from finer ones (true only for partitions)
+    nested        is there a parent/child hierarchy
+    tight         for kernels: 1 if the frame is tight (A == B), 0 if not, NaN where not applicable.
+                  ⚠ a DOUBLE, not a logical: cell2mat refuses a column mixing NaN with true/false,
+                  which is how this table failed to build the first time.
+    notes
+ 
+  ⭐ A PRODUCT SELECTION IS NOW TYPED, NOT LABELLED. `joint_wavelet` has domain_kind 'product' and two
+  entries in `axes`, and rheome.domain.product builds the descriptor it cuts. The earlier version of this
+  table carried a stringly `axis2` column because no product domain existed; before that it typed
+  joint_wavelet as a plain eigenmode selection, which is the error that prompted all of this -- the one
+  genuinely product-valued row got one axis. The invariant is now checkable:
+  numel(axes) == 2 &lt;=&gt; domain_kind == 'product'.
+ 
+  See also: rheome.domain.kinds, rheome.fieldtype.registry, rheome.operators.registry, rheome.selection.describe,
+            rheome.selection.check, rheome.select.ladder, rheome.geom.ladder
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

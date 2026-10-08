@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.localize</title></head><body>
+<h1>rheome.filters.localize</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.LOCALIZE  Localize a filter (bank) at cortical vertices -&gt; atoms.
+ 
+    Y = rheome.filters.localize(basis, vertex, gains)
+    Y = rheome.filters.localize(basis, vertices, gains)
+ 
+  Drops a unit delta at each requested vertex and filters it through the spectral
+  gain(s). The result is the filter &quot;localized&quot; at that vertex -- a cortical atom.
+  This is exactly the delta-seed step of Brainstorm's bst_eigenfilter('Atom') for the
+  Laplace–Beltrami case: c0 = Phi' M delta,  atom = Phi * (g(lambda) .* c0).
+ 
+  INPUTS:
+    basis     struct from rheome.eigen.modes
+    vertices  scalar vertex index, or [P x 1] indices to seed
+    gains     [K x 1] single filter, or [K x Nf] filterbank, or a function handle
+ 
+  OUTPUT:
+    Y  single vertex : [nV x 1] (single filter) or [nV x Nf] (filterbank)
+       P vertices     : [nV x P] (single filter) or [nV x P x Nf] (filterbank)
+ 
+  See also: rheome.filters.apply, rheome.filters.heat, rheome.filters.mexhat, rheome.show.surface
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.dynamics.flow_readout</title></head><body>
+<h1>rheome.dynamics.flow_readout</h1>
+<p><em>function rheome.dynamics</em> &mdash; Rheome</p>
+<pre>  DYNAMICS.FLOW_READOUT  GCF readouts of a propagation velocity field.
+ 
+    readout = rheome.dynamics.flow_readout(velocityField, surface)
+ 
+  Applies the (instantaneous) flow operators to the PROPAGATION velocity field v (from
+  dynamics.opticalflow_*), giving the Global Cortical-Flow descriptors:
+    .divergence  [nV x T]  div(v) -- propagation source-sink motifs (where activity emerges /
+                           converges as it propagates)
+    .vorticity   [nV x T]  curl(v) -- circulation of the propagation
+    .speed       [nV x T]  |v| per vertex (propagation speed, per-frame units; x sfreq for /s)
+ 
+  Reuses rheome.differential.divergence / rheome.differential.curl on the velocity field.
+ 
+  See also: rheome.dynamics.opticalflow_scalar, rheome.dynamics.opticalflow_vector, rheome.differential.divergence
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

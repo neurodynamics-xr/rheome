@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.demos.filterbank_cwt</title></head><body>
+<h1>rheome.demos.filterbank_cwt</h1>
+<p><em>function rheome.demos</em> &mdash; Rheome</p>
+<pre>  DEMOS.FILTERBANK_CWT  What a filterbank's parameters do, on MATLAB's validated class.
+ 
+    rheome.demos.filterbank_cwt()
+    out = rheome.demos.filterbank_cwt(outDir)     % also export figures as PNGs
+ 
+  The REFERENCE of the three-demo suite. It establishes the five-figure order that
+  rheome.demos.filterbank_graph and rheome.demos.filterbank_joint then repeat on our own classes, so
+  the analogy can be read by scrolling:
+ 
+    1 design      what VoicesPerOctave / Wavelet / FrequencyLimits actually change
+    2 properties  scales, centre frequencies, bandwidths, Q
+    3 signal      a chirp and a burst, with their known features annotated
+    4 decompose   scalogram + both marginals
+    5 recovery    measured vs analytic, with PASS/FAIL
+ 
+  GROUND TRUTH. The chirp sweeps 20 -&gt; 200 Hz linearly over 1 s, so its instantaneous
+  frequency is known at every instant and the scalogram ridge must track it. The burst is
+  a Gaussian-windowed 100 Hz tone at t = 0.5 s, so the scalogram maximum must land there.
+ 
+  ⭐ NOTE FOR THE COMPARISON. qfactor here returns ONE number: a CWT is CONSTANT-Q by
+  construction, which is the defining property of a wavelet transform. graphfilterbank
+  returns Q per member, because a mexhat bank over a TRUNCATED spectrum is not constant-Q
+  near the edges. Fig 2 of each demo shows the contrast.
+ 
+  Requires the Wavelet Toolbox; without it the demo SKIPS rather than fails.
+ 
+  See also: rheome.demos.filterbank_graph, rheome.demos.filterbank_joint, cwtfilterbank
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.windowtable</title></head><body>
+<h1>rheome.flow.windowtable</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.WINDOWTABLE  One table indexed by time window: every measurement under a tile on each axis.
+ 
+    T        = rheome.flow.windowtable('sub01')
+    [T, X]   = rheome.flow.windowtable(name, WindowSec=2, Bands=[4 8; 8 16], MaxDepth=4)
+ 
+  One row per (time window, band, cortical tile). Columns carry the activation statistics under
+  that tile, the sensor band power for that window, the eigenmode-octave shares, the gauge split
+  and the flow scalars. `X` holds what does not fit a rectangular table: the full per-group Dirac
+  power [nGroup x nWindow x nBand] and the axis definitions.
+ 
+  ⭐ ROLL-UP IS DELIBERATELY NOT REQUIRED HERE. An earlier design restricted this table to
+  quadratic quantities so every coarser tile would be an exact sum of finer ones. That buys speed
+  and exactness and it excludes peak amplitude, crest, vortex counts and anything else that is not
+  a quadratic form. This table includes them: it is a LABELLING table, so the cost of recomputing a
+  coarser window is accepted. ⚠ The consequence is real and must not be forgotten: a row at depth 2
+  is NOT the sum of its depth-3 children for the non-quadratic columns, and `energy` is the only
+  column for which summing children is valid.
+ 
+  ⚠⚠ WHAT THIS TABLE CANNOT LABEL, MEASURED BY PLANTING (plant_scale_omega.m). A source of known
+  scale planted through the leadfield, noise and inverse comes back at ~100 mm REGARDLESS of its
+  true size once the SNR is at or below 10 dB: slope +0.02, R^2 0.002 across a planted 70-267 mm
+  range. So `kCentroidMM` and the octave shares describe WHICH FILTER responded, not how big the
+  source was, and they are named and documented as such. ⭐ Location survived the same test
+  (43-52 mm median error, correct depth-3 node 55-65%), so `node` IS a measurement.
+ 
+  ⚠ ADMISSIBILITY IS A COLUMN, NOT A FILTER. Tiles below 2*r50 = 104 mm are kept with
+  `admissible=false` rather than dropped, because they are the control that shows when a result is
+  instrumental -- the 70 mm rung has repeatedly behaved like the admissible ones.
+ 
+  ⚠ DEPTH BEATS EVERYTHING on localisation: at 10 dB the planted-source error runs 13/35/41/97 mm
+  by distance-to-nearest-coil quartile and the correct-node rate 98/64/28/28%. `depthMM` is carried
+  per tile for exactly this reason; a comparison between two tiles at different depths is a depth
+  comparison.
+ 
+  ⚠ ONE WINDOW GRID FOR ALL BANDS, which is NOT the constant-Q convention. `rheome.select.ladder` gives
+  each band its own natural level so that cycles per tile is constant (22.6 on this bank). A table
+  indexed by a single time window cannot do that, so `nCycles` is carried per row and a band whose
+  `nCycles` is small is under-resolved in that window. At WindowSec=2 the 4-8 Hz row holds 8-16
+  cycles and delta would hold 4 or fewer -- which is why delta is not in the default band list.
+ 
+  ⭐ WINDOW LENGTH: 1-2 s is the measured sweet spot. The activation decorrelates in ~2 s and
+  adjacent 2 s windows are already 90% decorrelated, so rows at that length are near-independent.
+  ⚠ Samples WITHIN a window are not: Bartlett gives n_eff = 25 for 599 frames at lag-1 0.99, so
+  `nEff` and not `nSamples` is the divisor for any error bar. Both are carried.
+ 
+  ⚠ NORMALISERS ARE CARRIED, NOT APPLIED. A table that has divided cannot be undivided.
+ 
+  NAME-VALUE
+    Tiles ([])      [tStart tEnd] in seconds, one row per window -- pass the STORE's tile spans at
+                    a level (rheome.select.derive returns t_lo/t_hi) so every row joins on (level, k)
+    BandIds ([])    the store's own band ids, carried into a band_id column
+    WindowSec (2)   used only when Tiles is empty
+    Bands ([4 8; 8 16; 16 32; 32 64])   MaxDepth (4)   Hemi (&quot;L&quot;)
+    Flow (true)     div/curl/vortex scalars on the window-mean current (the costly extras)
+    MaxWindows (Inf)   stop after this many windows per band
+    Verbose (true)
+ 
+  COLUMNS. ⭐ A `win_` prefix means the column is a property of the WINDOW and is identical across
+  every tile in it; everything without the prefix varies by tile. That prefix is load-bearing: an
+  earlier version computed the gauge split and the vortex count hemisphere-wide and copied them into
+  every row, where they were indistinguishable from measured per-tile values.
+    index : window tStart tEnd band fLo fHi nCycles
+    tile  : node depth nodeDiameterMM nodeAreaM2 depthMM admissible
+    per tile : meanAct peakAct p95Act stdAct crest energy density share normalShare tangShare
+               divRMS curlRMS nVortex
+    per window : win_nSamples win_nEff win_bandPowerSensor win_envMean win_oct1..6
+                 win_kCentroidMM (⚠ which filter responded, NOT a source size)
+ 
+  See also: rheome.flowfeatures, rheome.geom.tree, rheome.operators.gauge, plant_scale_omega,
+            docs/2026-09-26-feature-table-design.md
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

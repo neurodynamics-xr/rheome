@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.dynamics.pde_fit</title></head><body>
+<h1>rheome.dynamics.pde_fit</h1>
+<p><em>function rheome.dynamics</em> &mdash; Rheome</p>
+<pre>  DYNAMICS.PDE_FIT  Fit the per-mode temporal dynamics to candidate PDEs (the model-based law).
+ 
+    fit = rheome.dynamics.pde_fit(coeff [,opts])
+ 
+  For each spatial mode k (eigenvalue lambda_k), fits its coefficient trajectory c_k(t) to two
+  linear generators and extracts the effective physical constants:
+    diffusion    c_k(t) = c_k(0) exp(-lambda_k D t)       -&gt; effective diffusivity D
+    damped wave  c_k(t) = exp(-gamma t) cos(sqrt(lambda_k) c t + phi)  -&gt; wave speed c, damping gamma
+  Each mode is classified (oscillatory -&gt; wave; monotone decay -&gt; diffusion) and the constants are
+  aggregated (robust median) across modes. This is the model-based counterpart to the data-driven
+  DMD/dispersion; the two should agree on the wave speed.
+ 
+  INPUTS:
+    coeff  from rheome.dynamics.mode_coefficients (.C [K x T], .dt, .lambda [K x 1])
+    opts.minCycles  minimum oscillation cycles to accept a wave mode (default 1.5)
+  OUTPUT (struct fit):
+    .diffusivity  robust D over diffusion modes           (position^2/s)
+    .waveSpeed    robust c over wave modes                 (position/s)
+    .damping      robust gamma over wave modes             (1/s)
+    .modelType    'wave' | 'diffusion' (majority)
+    .perMode      struct array: .lambda .frequency .speed .damping .diffusivity .isWave
+ 
+  See also: rheome.dynamics.dmd, rheome.dynamics.dispersion
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

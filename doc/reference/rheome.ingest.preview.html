@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.ingest.preview</title></head><body>
+<h1>rheome.ingest.preview</h1>
+<p><em>function rheome.ingest</em> &mdash; Rheome</p>
+<pre>  INGEST.PREVIEW  A min/max pyramid of a recording, beside it, with no transform at all.
+ 
+    file = rheome.ingest.preview('sub01')
+    file = rheome.ingest.preview(name, Floor=1/60, Channels=&quot;MEG&quot;, Overwrite=true)
+ 
+  ⭐ WHAT IT IS FOR. Before deciding what to analyse you want to LOOK: browse every channel
+  of a recording, find the stretch worth having, and only then load it. That needs one thing
+  and nothing else -- the minimum and maximum of each channel over each tile. Those two merge
+  by extremum, so the pair at any level bounds every sample under it, and a band drawn from
+  them is an exact preview of the trace at any zoom. No bank, no bands, no moments, no
+  coefficients: a reshape and two extrema per chunk.
+ 
+  ⭐ AND IT SETS THE ANALYSIS. Choosing a window in the preview chooses a window LENGTH, and
+  a window length is a statement about which bands can be resolved in it -- constant Q means
+  a band needs about rheome.ingest.support seconds. So the explorer's selection already names the
+  band support of whatever comes next (rheome.ingest.support, printed by the browser).
+ 
+  ⚠ THE FLOOR IS THE WHOLE COST. 8 bytes per channel per level-0 tile, doubled by the
+  pyramid. Measured on a 300-channel, 600 s, 600 Hz recording (868 MB):
+ 
+      floor    level 0    pyramid    of the recording    pixel-exact down to
+      1 s       1.4 MB     2.9 MB        0.2 %              1114 s
+      0.25 s    5.8 MB    11.5 MB        0.7 %               278 s
+      1/60 s   86.4 MB   172.8 MB       10   %                19 s
+      1/150 s 216.0 MB   432.0 MB       25   %                 7 s
+ 
+  The last column is the rule: a preview stays pixel-exact down to (axis pixels x floor)
+  seconds. Choose the floor so that meets the window where raw reads become cheap -- about
+  20 s / 1100 px = 1/60 s here, which is why that is the default.
+ 
+  ⚠ IT IS A TILE STORE WITH NO BANDS. rheome.select.open reads it, rheome.select.derive gives min, max and
+  ptp from it, and @recordingbrowser opens on it in envelope mode. Everything band-shaped is
+  absent by construction, and says so rather than returning zeros.
+ 
+  OPTIONS
+    Floor      level-0 tile in seconds (1/60); Floor*fs must be an integer
+    Channels   &quot;MEG&quot; (good channels of that type) or explicit row indices
+    Store      &quot;default&quot; | &quot;native&quot;, as pagedrecording
+    Levels     &quot;all&quot; (the pyramid) | &quot;base&quot; (level 0 only; roll up on read, 13 ms a channel)
+    ChunkSeconds  seconds of every channel read at once (60)
+    Overwrite, Verbose
+ 
+  See also: rheome.ingest.build, rheome.ingest.support, rheome.select.open, rheome.recordingbrowser
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

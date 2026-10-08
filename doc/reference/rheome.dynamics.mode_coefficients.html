@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.dynamics.mode_coefficients</title></head><body>
+<h1>rheome.dynamics.mode_coefficients</h1>
+<p><em>function rheome.dynamics</em> &mdash; Rheome</p>
+<pre>  DYNAMICS.MODE_COEFFICIENTS  Reduced-order coefficient time series for the dynamics fits.
+ 
+    coeff = rheome.dynamics.mode_coefficients(datasetName, basis [,opts])
+ 
+  Projects the reconstructed cortical activity onto a spatial eigenbasis, giving the compact
+  coefficient series C [K x T] that rheome.dynamics.dmd / dispersion / pde_fit operate on.
+    basis = 'lbo'   : Laplace–Beltrami coefficients of the source magnitude |J| (clean
+                      spatial-scale axis; the interpretable, dispersion-friendly choice).
+    basis = 'dirac' : the Dirac vector mode-coefficient series out.c (full vector dynamics).
+ 
+  OUTPUT (struct coeff):
+    .C [K x T]           coefficient series
+    .dt                  sampling interval (s)
+    .lambda [K x 1]      per-mode spatial eigenvalue (LBO) -- the dispersion x-axis; for 'dirac' this
+                         is the scalar-LBO reference lambdaLBO (Dirac lambda is co-normalised)
+    .basisModes          [nV x K] spatial modes (for reconstruction to the cortex)
+ 
+  See also: rheome.source.dirac, rheome.eigen.modes, rheome.dynamics.dmd
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

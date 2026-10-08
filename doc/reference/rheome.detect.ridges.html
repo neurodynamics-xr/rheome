@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.ridges</title></head><body>
+<h1>rheome.detect.ridges</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.RIDGES  Scale-space ridge tracking: detection, size and continuity from one volume.
+ 
+    out = rheome.detect.ridges(f, S, basis, sigmas)        % legacy: hand-declared sigma list (m)
+    out = rheome.detect.ridges(f, S, basis, frame)         % preferred: a designed frame (rheome.filters.frame)
+    out = rheome.detect.ridges(f, S, basis, ..., opts)
+ 
+  Builds the scale-space volume  W(v,m,t) = |mexhat_{sigma_m}(Delta) f(:,t)|,  takes local maxima
+  JOINTLY in (vertex, scale) -- so each detection carries a POSITION and a SIZE from one operation --
+  and links them through time by ridge connectivity. The linking gate is the MESH NEIGHBOURHOOD
+  itself: there is no tuned association distance, no lost-track buffer and no merge/split bookkeeping.
+ 
+  WHY. Detect-then-associate discards continuity when each frame is reduced to a point list, then
+  reconstructs it by matching. A ridge never discards it. Measured consequence on real alpha:
+  rheome.detect.track caps motif lifetime at the minimum-track-length floor regardless of band, whereas
+  ridges on the demodulated envelope reach ~1.3 s (see the grant workspace notes).
+ 
+  ⚠ RUN THIS ON A PHASE-INVARIANT FIELD. An oscillating curl/divergence field reverses sign every
+  half cycle, driving |W| to zero twice per period, so ridges terminate at each reversal exactly as
+  tracks do. Pass the analytic ENVELOPE (demodulated), not the raw band-limited field, unless you
+  specifically want the within-half-cycle structure.
+ 
+  NORMALISATION. rheome.filters.mexhat(Lambda, t) = (t*lambda).*exp(-t*lambda) IS Lindeberg's
+  scale-normalised Laplacian t*grad^2 G, so its PEAK response is scale-independent (e^-1 for every t)
+  and the scale axis is directly comparable -- which is what makes the joint (vertex,scale) maximum a
+  valid size estimate.
+ 
+  ⚠ .sigma AND .sigmaMode ARE MEMBER LABELS, NOT VORTEX SIZES -- multiply by sqrt(2). The member
+  whose gain PEAKS with a sigma-vortex's vorticity spectrum is the one with sigma_m = sigma, but the
+  detector maximises the RESPONSE, which integrates the overlap against the mode density (uniform in
+  lambda on a surface, by Weyl). That integral,
+ 
+      Resp(t) ~ int_0^inf (t*lam*e^{-t*lam})(lam*e^{-lam*sigma^2/2}) dlam = 2t/(t + sigma^2/2)^3
+ 
+  is maximised at t = sigma^2/4, so the reported member sits at sigma/sqrt(2):
+ 
+      ⭐ gamma = sigma_m / sigma_true = 1/sqrt(2) = 0.7071   -&gt;   sigma_true = sqrt(2) * sigma_m
+ 
+  Analytic, not fitted; confirmed at 0.735 over sigma = 8-40 mm in sphere_validate section 4. It is
+  NOT applied here, because doing so silently would change every already-reported size -- apply it
+  at the point of reporting, and say that you have.
+ 
+  ⚠ AND THE FINEST MEMBERS UNDER-RESPOND. rheome.filters.frame sets t_min = 1/lambda_max, which puts 73.6%
+  of the finest member's mass beyond the end of the basis (and 45.9% of the next one's), so the
+  scale-space maximum is pushed one member coarser for small vortices. Members with
+  sigma_m &gt;= 3.08/sqrt(lambda_max) lose under 5%; below that, treat the size as a floor.
+ 
+  INPUTS:
+    f       [nV x nT] scalar field over time (real or complex; |.| is taken)
+    S       surface struct (.Vertices, .Faces, .nV)
+    basis   Laplace-Beltrami eigenbasis (.Phi, .Lambda, .Mass, .nV)
+    sigmas  [1 x M] spatial scales in METRES. Scales with 2/sigma^2 &gt; max(Lambda) are REFUSED
+            (the mexhat peak would fall above the basis's spectral limit and the filter would
+            silently clamp to a spectral edge -- a real artifact source).
+    opts    .thresh    'mad' (default, 3*robust sd of |W|) | a numeric absolute threshold
+            .minFrames minimum ridge length in frames (default 3)
+            .nbr       precomputed neighbour cell array (saves time across repeated calls)
+ 
+  OUTPUT (struct out):
+    .ridges  struct array: .v (vertex path) .m (scale index path) .t (frames)
+                           .pos [n x 3] .sigma [n x 1] (m) .w [n x 1] (response)
+                           .nFrames .lifetime .netDisplacement .pathLength .speedNet
+                           .sigmaMode (modal scale, m) .nScales (distinct scales visited)
+    .summary .nRidges .nDetPerFrame .sigmas .scaleHist .lifetime .speedNet .thresh .dt
+    .W       the scale-space volume [nV x M x nT], single (only if opts.keepVolume)
+ 
+  See also: rheome.filters.mexhat, rheome.filters.apply, rheome.detect.track, rheome.show.ridges
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.filters.resonator</title></head><body>
+<h1>rheome.filters.resonator</h1>
+<p><em>function rheome.filters</em> &mdash; Rheome</p>
+<pre>  FILTERS.RESONATOR  Damped harmonic resonator (eigenmode x frequency, 'js' domain).
+ 
+    G = rheome.filters.resonator(lambda, omega, f0, Q)
+ 
+  g(omega) = f0^2 / (f0^2 - omega^2 + i*omega*f0/Q). The transfer function of a damped
+  harmonic oscillator resonant at f0 Hz with quality Q -- lambda-independent (same at
+  every spatial scale). Its impulse response is a decaying f0-Hz oscillation. COMPLEX
+  (Hermitian in signed frequency). Port of bst_eigfilter_design_resonator.
+ 
+  INPUTS:
+    lambda [K x 1] (used only for the output row count)
+    omega  [1 x N] one-sided frequency axis (Hz) from rheome.filters.jspectrum
+    f0     resonant frequency (Hz, default 10)   Q quality factor (default 6)
+  OUTPUT:
+    G      [K x N] complex gains (constant across rows)
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

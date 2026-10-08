@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.show.filmstrip</title></head><body>
+<h1>rheome.show.filmstrip</h1>
+<p><em>function rheome.show</em> &mdash; Rheome</p>
+<pre>  SHOW.FILMSTRIP  Cortex snapshots of a space-time field at selected time frames.
+ 
+    rheome.show.filmstrip(surf, U, frames)
+    rheome.show.filmstrip(surf, U, frames, name, value, ...)
+ 
+  Lays out a row of cortex renders (one per frame) with a SHARED colour scale, so the
+  evolution of a space-time field (e.g. a joint-filter impulse response) can be read
+  left-to-right. Can place its row into a multi-filter montage grid.
+ 
+  INPUTS:
+    surf   surface struct or file path
+    U      [nV x nT] space-time field
+    frames vector of frame indices to show
+ 
+  OPTIONS:
+    'Parent'   figure handle to draw into (default: new figure)
+    'Grid'     [nRows nCols] montage layout (default [1 numel(frames)])
+    'Row'      which row of the grid this filmstrip occupies (default 1)
+    'CLim'     shared colour limits (default symmetric from U(:,frames))
+    'Colormap' default: diverging (signed) via rheome.show.surface
+    'View'     camera [az el] (default [-90 10])
+    'Titles'   {1 x numel(frames)} per-panel titles (default '')
+    'RowLabel' text label for the row (shown on the first panel's y-axis)
+    'Visible'  'on' (default) | 'off'
+ 
+  OUTPUT: hFig figure handle.
+ 
+  See also: rheome.filters.impulse, rheome.show.surface, rheome.show.gif
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

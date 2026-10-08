@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.selection.wavelettile</title></head><body>
+<h1>rheome.selection.wavelettile</h1>
+<p><em>function rheome.selection</em> &mdash; Rheome</p>
+<pre>  SELECTION.WAVELETTILE  Wavelets as a tiling: centre and time SUPPORT where a tile has centre and span.
+ 
+    T = rheome.selection.wavelettile(db)                       % every band the store carries
+    T = rheome.selection.wavelettile(db, Bands=6)              % alpha only
+    T = rheome.selection.wavelettile(db, Energy=0.99, Positions=true)
+ 
+  ⭐ THE IDEA. A dyadic tile is a hard window: a centre and a span, and a set of them partitions the
+  line. A wavelet is the same pair of numbers -- a centre and a time SUPPORT -- with the span replaced
+  by a decay. So a band can be selected by the wavelet that best supports it, and that wavelet's
+  support localises it in time: one object navigates frequency and time together, which is what a tile
+  and a band do only when paired by hand.
+ 
+  ⭐⭐ THE LEVEL STRUCTURE IS IDENTICAL TO THE HARD TILING, AND THAT IS THE WHOLE POINT. One wavelet's
+  support is EXACTLY two of the next level's: supportCycles is scale-invariant (15.051) and fc halves
+  per octave, so supportSec goes 0.166 / 0.333 / 0.665 / 1.330 / 2.661 / 5.322 s, each exactly twice the
+  last. A wavelet at level L sits above two at L+1, four at L+2, down to the sampling rate -- the same
+  nesting a dyadic tile has. `nested = true` in rheome.selection.registry means that, and nothing looser.
+ 
+  ⭐ THERE ARE TWO STRIDES, FOR TWO PURPOSES, and conflating them is what made the first version of
+  this function confusing:
+    strideSelect = supportSec        redundancy 1     the TILE LATTICE with a smooth window instead of
+                                                      a hard one. This is the navigation stride: one
+                                                      position per support, levels nesting two-to-one.
+    strideFrame  = 1/rate            redundancy 12.5  the bank's own translation step, set by the
+                                                      BANDWIDTH of the coefficient sequence. Required
+                                                      for the frame to invert.
+  ⚠ The selection lattice is a sub-lattice of the frame lattice -- roughly every 12th position -- so it
+  indexes and navigates but does NOT reconstruct: dropping to it loses the frame property. Select on
+  strideSelect; reconstruct through the full bank.
+ 
+  ⚠ AND THE TWO STRIDES DO NOT AGREE ON WHAT &quot;ONE PER TILE&quot; MEANS. The dyadic tile is 1.50 supports
+  long (supportPerTile = 0.665), because the tile is the support rounded UP to the next power of two.
+  So a wavelet at each tile centre covers two thirds of its tile and a covering needs 1.5 per tile;
+  `positionsPerTileSelect` says so rather than leaving it to be discovered.
+ 
+  ⚠ &quot;stride from the bandwidth&quot; and &quot;stride from the dyadic level&quot; are the SAME statement here, not two
+  accounts: constant Q makes bandwidth proportional to fc, so a bandwidth-derived stride is
+  automatically dyadic. Neither derivation is more fundamental.
+ 
+  ⚠⚠ A WAVELET TILING DOES NOT PARTITION, so nothing summed over it is exact. `freq_band` and
+  `time_tile` merge -- a parent is exactly its children -- and this does not: measured, one voice holds
+  0.245 of its band's response and a band's own four voices hold only 0.835 of the bank's response over
+  that band, the rest being neighbouring voices leaking in. Use this to SELECT and to navigate; use the
+  tiles when a total has to add up. rheome.selection.registry marks it kind='kernel', merges=false.
+ 
+  ⚠ THE SUPPORT IS AN ENERGY THRESHOLD, NOT AN ANALYTIC WIDTH, and the two do not agree numerically.
+  `support(tfb)` is the fraction-of-energy definition; `widths` on the graph side is analytic
+  (sigma = sqrt(2t), exact). Report which one a number came from -- this table's `Energy` column says.
+  ⚠ I ASSERTED THE SUPPORT DEPENDS ON SignalLength AND IT DOES NOT -- measured 15.0514 cycles at
+  2^14, 2^16 and 2^18, identical to every digit. That warning came from `cwtfilterbank/waveletsupport`,
+  which is a different function with a different contract; `timefilterbank/support` returns the
+  scale-invariant constant and is length-independent. The column is kept as provenance, not as a hazard.
+ 
+  ⚠⚠ WHAT THE SUPPORT REALLY DEPENDS ON IS THE ENERGY THRESHOLD, and strongly: measured 5.92 / 8.31 /
+  15.05 cycles at Energy = 0.95 / 0.99 / 0.999, so `supportPerTile` swings 0.26 -&gt; 0.37 -&gt; 0.67. Any
+  statement of the form &quot;the wavelet supporting alpha is 1.33 s long&quot; is a statement about 0.999 of its
+  energy and nothing else. Quote the threshold with the number.
+ 
+  ⭐ THE EXCHANGE RATE WITH THE HARD TILING, measured: a wavelet spans 15.05 cycles of its own centre
+  frequency (scale-invariant) and a constant-Q tile spans 22.63, so A TILE IS 1.50 WAVELET SUPPORTS
+  LONG -- the tile is the support rounded up to the next dyadic level. `supportPerTile` is that ratio
+  per row and should read 0.67 in every octave.
+ 
+  NAME-VALUE
+    Bands      store band ids to include (default: all with a natural level in the grid)
+    Energy     fraction of |psi|^2 the support must hold (default 0.999)
+    Positions  also return the lattice of centre times per band (default false)
+    Stride     &quot;select&quot; (default, = support, the tile lattice) | &quot;frame&quot; (= 1/rate, the bank's own)
+    SignalLength  samples the support is measured over (default 2^16) -- see the note above
+ 
+  OUTPUT (one row per band, or per (band, position) with Positions=true)
+    band, fLo, fHi, fCenter, q, supportSec, supportCycles, strideSelect, strideFrame,
+    redundancyFrame, positionsPerTileSelect, positionsPerTileFrame, childrenPerSupport,
+    dyadicLevel, tileSec, cyclesPerTile, supportPerTile, energy, signalLength, tCenter (Positions)
+ 
+  See also: rheome.selection.registry, rheome.select.ladder, rheome.geom.ladder, rheome.timefilterbank/support,
+            @graphfilterbank/widths, wavelet_tiles_omega
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

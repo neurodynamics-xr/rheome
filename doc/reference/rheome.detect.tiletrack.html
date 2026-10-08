@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.tiletrack</title></head><body>
+<h1>rheome.detect.tiletrack</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.TILETRACK  Link tile peaks across frames into trajectories: walks on the tile graph.
+ 
+    out = rheome.detect.tiletrack(P, G, Y)
+    out = rheome.detect.tiletrack(P, G, Y, LostFrames=30, Margin=0.1, MinFrames=10, SampleRate=300)
+ 
+  P is rheome.detect.tilepeaks of Y. A track sitting on tile c may continue at frame t only to a peak on c
+  itself or on a tile adjacent to c (G.A &gt; 0). That is the whole motion model: at a rate and tile size
+  chosen so a feature cannot cross a whole tile in one frame, adjacency lists every legal destination,
+  and a jump to a non-adjacent tile is not motion -- it starts a new track.
+ 
+  Assignment each frame is global (matchpairs), with cost 0 to stay, 1 to step to a neighbour, less a
+  small reward for a higher peak, so two tracks cannot claim the same peak and a track prefers staying.
+ 
+  ⭐ `Margin` IS A HYSTERESIS ON THE TILE GRAPH. A peak sitting on a boundary makes two tiles nearly
+  equal and the argmax flickers between them. With Margin = h, a track on c steps to an adjacent peak
+  d only when Y(d) &gt;= (1 + h) * Y(c); otherwise it stays on c, even though c is momentarily the flank
+  rather than the peak. It is expressed in the field's own units, so it does not depend on how fast the
+  feature moves -- unlike a hold-for-n-frames debounce, which erases the hops of anything that crosses
+  a tile in fewer than n frames.
+ 
+  INPUTS
+    P           rheome.detect.tilepeaks output          G  rheome.geom.tiles struct (.A)
+    Y           [nTile x nT] the tile field P was detected on (needed for Margin)
+    LostFrames  frames a track survives with no peak before it ends (30 = one alpha cycle at 300 Hz)
+    Margin      tile-step hysteresis, fraction (0 = off)
+    MinFrames   drop tracks observed on fewer frames (3)
+    SampleRate  frames per second, for .duration (1)
+ 
+  OUTPUT (struct out)
+    .tracks  struct array: frames tiles values held hops firstFrame lastFrame duration
+             `held` marks frames where Margin kept the track on a non-peak tile
+    .nTracks
+ 
+  See also: rheome.detect.tilepeaks, rheome.geom.tilemean, rheome.geom.tiles, rheome.detect.track
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

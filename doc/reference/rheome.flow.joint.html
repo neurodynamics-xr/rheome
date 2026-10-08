@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.joint</title></head><body>
+<h1>rheome.flow.joint</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.JOINT  Apply a flow kernel in the JOINT (spatial-mode x temporal-frequency) domain.
+ 
+    out = rheome.flow.joint(F, sfreq, coeffOperator, band)
+    out = rheome.flow.joint(F, sfreq, coeffOperator, band, opts)
+ 
+  Transforms the sensor series once, keeps only the POSITIVE in-band bins, and applies the flow
+  kernel there:
+ 
+    C(lambda,omega) = coeffOperator * Btilde(:,omega)          one GEMM, [Ks x nOmega]
+ 
+  WHY IN FREQUENCY. The MEG forward model is quasi-static, so the kernel carries no frequency
+  dependence and acts on the SENSOR index alone -- every bin is mapped identically. Discarding
+  out-of-band bins BEFORE the multiply is therefore free, and a narrow band is sparse in
+  frequency: at 600 s the resolution is ~1/600 Hz, so an 8-13 Hz band is ~3e3 of ~1.8e5 bins.
+  The same GEMM in the decimated time domain would run over ~7e4 columns.
+ 
+  Retaining positive frequencies only makes the result the ANALYTIC signal by construction (the
+  sensor series is real, so its spectrum is conjugate-symmetric); no Hilbert transform is needed
+  anywhere downstream. Use rheome.flow.synth to return to time at any output rate.
+ 
+  ⚠ TAPER THE BAND EDGES -- opts.edgeTaper, ON BY DEFAULT. Keeping a set of bins and discarding the
+  rest IS a bandpass, with a RECTANGULAR transfer function: a sinc in time decaying as 1/t. Because
+  the FFT treats the record as periodic, that long tail wraps around and contaminates the retained
+  band. A raised cosine at each band edge shortens the tail and the problem goes with it.
+ 
+  MEASURED (subject01, 8-13 Hz, each route against ITSELF on a longer record, so only edge effects
+  differ). Relative error in the interior, beyond a 2.5 s guard:
+ 
+    truncate, no taper .................. 0.0194
+    edge taper 1 Hz ..................... 0.0004     &lt;- 50x better, and this is the whole fix
+    mirror-pad 3 s only ................. 0.0200     &lt;- padding alone does nothing
+    pad + taper ......................... 0.0003     &lt;- padding adds nothing on top of the taper
+    FIR prefilter (bst-style) + truncate  0.0166     &lt;- 40x WORSE than the taper
+ 
+  So the fix belongs in the joint domain, not in a separate time-domain stage: this is a weighting
+  of coefficients like every other filter here. opts.prefilter and opts.pad remain available and
+  are documented, but neither is needed.
+ 
+  ⚠ NONE of these fixes the EDGES themselves (~0.25-0.36 within 1 s for every route). The first and
+  last samples simply have less context; guard them.
+ 
+  INPUTS:
+    F              [C x nT] sensor time series (channels already selected)
+    sfreq          sampling rate (Hz)
+    coeffOperator  [Ks x C] flow kernel, e.g. kc.coeffOperator from rheome.flow.curl
+    band           [f1 f2] retained band (Hz)
+    opts  .prefilter  false (default) | true | a spec from rheome.filters.firbandpass
+                      apply a declared FIR bandpass before the transform (RECOMMENDED)
+          .fir        options forwarded to rheome.filters.firbandpass (.tranBand .ripple .atten .mode)
+          .pad        SECONDS of mirror padding before the transform (recommended: &gt;= 2/bandwidth).
+                      Makes the circular convolution linear over the original support, which is
+                      what the periodicity artefact actually needs -- no filter shape fixes it.
+          .edgeTaper  Hz of raised cosine at each band edge (the shape fix, in the joint domain)
+          .lambda     eigenvalues of the scalar basis, so the returned .axes is COMPLETE.
+                      Without it the axes carry the frequency side only and rheome.jtv.compatible cannot
+                      check that two representations share a basis.
+          .taper      'none' (default) | 'hann'   taper before the transform
+          .nfft       transform length (default: nT)
+ 
+  OUTPUT (struct out):
+    .C     [Ks x nOmega] complex joint spectrum
+    .f     [1 x nOmega]  bin frequencies (Hz), strictly positive
+    .df    bin spacing (Hz)         .nfft   transform length used
+    .nT    original sample count    .sfreq  original rate
+    .kept  nOmega / (nfft/2) -- the fraction of the positive axis retained
+    .psiTime  [1 x nOmega] the band member as applied (rheome.filters.psitime). It reaches EXACTLY zero
+           at both band edges, which is what makes the truncation to .f lossless rather than
+           approximately so -- the discarded bins lie beyond a gain that is already zero.
+    .edgeTaper  the edge width actually used (Hz)
+    .axes  rheome.jtv.axes object: the frequency axis, sampling, retained bands, half convention and the
+           implied time boundary ('ring' for a plain FFT, 'path' if mirror-padded). Attach the
+           eigenvalue axis with rheome.jtv.axes(...,'lambda',Lambda) and check pairs with rheome.jtv.compatible.
+    .t0    time origin offset: pass as opts.t0 to rheome.flow.synth so the output lands on the original
+           samples. Nonzero whenever .pad was used; ignoring it misaligns the whole record.
+    .fir   the FIR spec if prefiltered, else []
+    .edgeSamples  samples at each end the filter touches (0 if not prefiltered)
+ 
+  See also: rheome.flow.synth, rheome.flow.curl, rheome.spectral.decompose
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>
