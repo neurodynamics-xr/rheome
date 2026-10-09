@@ -14,7 +14,8 @@ function scaleSynthSubject(d)
     [V0, F0] = rheome.geom.icosphere(3);  nh = size(V0, 1);  R = 0.04;
     Vs = {V0*R - [0.03 0 0], V0*R + [0.03 0 0]};
     S = struct('Vertices', [Vs{1}; Vs{2}], 'Faces', [F0; F0 + nh], 'VertNormals', [V0; V0], 'nV', 2*nh, 'nF', 2*size(F0,1), ...
-               'Hemi', {{(1:nh)', (nh+1:2*nh)'}}, 'HemiLabel', {{'Cortex L', 'Cortex R'}}, 'Comment', 'synth', 'SurfaceFile', '');
+               'Hemi', {{(1:nh)', (nh+1:2*nh)'}}, 'HemiLabel', {{'Cortex L', 'Cortex R'}}, 'Comment', 'synth', 'SurfaceFile', '', ...
+               'Sphere', [V0; V0]*0.1);                   % the registration sphere: each hemisphere on R = 100 mm
     bases = struct('hemi', {{'L', 'R'}});
     for h = 1:2
         Sh = struct('Vertices', Vs{h}, 'Faces', F0, 'VertNormals', V0, 'nV', nh, 'nF', size(F0, 1));
