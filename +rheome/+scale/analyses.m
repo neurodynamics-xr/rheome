@@ -13,6 +13,11 @@ function a = analyses(which)
 %   grouptrack       grouptrack_article        alpha_grouptrack_omega: Viterbi paths vs swap/null
 %   fieldsmooth      MS1 Fig. 12               per-vertex vs graph-wavelet band-limited J, div, curl
 %   eventsensors     MS1 Figs. 8, 10           the tracked event's samples and channels (after grouptrack)
+%   bandperiodic     MS1 Table 5               per-band periodic fraction, oscillation SNR, floors, IAF, halves
+%   helmholtzbands   MS1 Fig. 4A-B             planted Helmholtz bands recovered on the subject's cortex
+%   ownregion        MS1 rule 5                own-region fraction of div/curl per Desikan-Killiany region
+%   geometry         MS1 Figs. 2, 16, 20       atom-tile overlap, gauge singularities, roll-up exactness
+%   fusion           MS1 Section 8.2           fused kernels against reconstruct-then-differentiate
 %   inject           grouptrack_article fig 5  alpha_inject_omega: injection recovery
 %   vortex           report_cortical_vortex    planted spin through forward + inverse
 %   sensorwavelet    report_sensor_wavelet     leadfield rows as dyadic atoms
@@ -21,6 +26,10 @@ function a = analyses(which)
 %   composition sizeruler vortexscale rotation detection diracangles
 %                    MS1 G2 (section 9.4)      what the noise floor and the inverse manufacture
 %                    -- the eight MS1 plant analyses run only when asked (nsp cf-plant-floors), not "ported"
+%   patterns         MS1 G5 (Fig. 15C)        catalogue detectors per frame vs 200 phase-randomised surrogates
+%                                              and the empty room, alpha and IAF +- 2 Hz, + theta-gamma PAC
+%   patternnulls     MS1 G13 (section 6.3)     speed-sweep peakedness, Dirac dispersion ratio, r(curl v, curl J)
+%                    -- both run only when asked (nsp cf-patterns), not "ported"
 %   catalogue        MS1 G6, G3 rule 11, G16   the 19 catalogue plants x 3 centres per hemisphere through own gain,
 %                                              whitened MNE and sensor noise (rest, empty room) at Inf and 10 dB;
 %                                              framework vs bst_opticalflow (HornSchunck sweep) vs phase regression
@@ -35,7 +44,8 @@ function a = analyses(which)
 
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
            "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
-           "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" "catalogue" "catalognulls" "coefficients"];
+           "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" ...
+           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end

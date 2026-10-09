@@ -17,6 +17,15 @@ function R = run(name, opts)
 %   detection.csv, diracangles.csv   the MS1 group plants (P1, nsp cf-plant-floors): the per-plant /
 %                     per-placement tables of rheome.scale.measure_plantfloors, measure_movingvortex and
 %                     measure_noisefloor; opt-in, not in the "ported" default
+%   bandperiodic.csv  bandperiodic: per (half, band) -- Table 5 on the clean span and its two halves
+%   helmholtzbands.csv  helmholtzbands: per hemisphere x band x plant -- Fig. 4A-B on this cortex
+%   ownregion.csv     ownregion: per Desikan-Killiany region -- own-region fraction of div and curl
+%   geometry.csv      geometry: per hemisphere x level x tile -- atom-tile overlap (Fig. 2A)
+%   fusion.csv        fusion: per frame -- fused kernels against reconstruct-then-differentiate
+%                     (the five MS1 group P2 tables, nsp rheome-ms1-scale; opt-in, not in "ported")
+%   patterns.csv, patternnulls.csv   MS1 G5 / G13 (P3, nsp cf-patterns): rheome.scale.measure_patterns --
+%                     detector x band x half rows against the phase-randomised surrogates and the empty room,
+%                     and the section 6.3 statistics against their nulls; opt-in, not in the "ported" default
 %   catalogue.csv, catalognulls.csv, catalogue_strips.mat   MS1 G6, G3 rule 11, G16 (P4, nsp cf-plants):
 %                     rheome.scale.measure_catalogue -- the 19 catalogue plants through the participant's own
 %                     gain, whitened MNE and sensor noise (rest, empty room), read by the framework, Brainstorm's
@@ -37,7 +46,10 @@ function R = run(name, opts)
 % (apparent flow of the total and the periodic alpha envelope over FlowTiles tiles; its "total"
 % rows are the flowmap pipeline's speed, curl and div), grouptrack, fieldsmooth (per-vertex vs
 % graph-wavelet band-limited current, div and curl), eventsensors (needs grouptrack first: the
-% best Viterbi path's samples and channels on the sensor data). The others --
+% best Viterbi path's samples and channels on the sensor data), and the MS1 group P2 measures:
+% bandperiodic (per-band periodic fraction, oscillation SNR, aperiodic fit, floors, IAF, split
+% halves), helmholtzbands (planted-band recovery on the cortex), ownregion (readout rule 5), geometry
+% (atom-tile overlap, gauge, roll-up exactness) and fusion (fused-kernel exactness). The others --
 % flowmap (div/curl maps), inject, vortex, sensorwavelet -- are listed in
 % rheome.scale.analyses with status "not_ported" until each has a figure-free measure.
 %
@@ -78,11 +90,14 @@ function R = run(name, opts)
         end
     end
 
-    M = table();  snr = table();  S = [];  X = struct();  Best = [];
+    M = table();  snr = table();  S = [];  X = struct();  Best = [];  ctx = [];  Kf = [];
     for a = opts.Analyses(:)'
         t0 = tic;  msg = "";  st = "ok";
         try
-            if isempty(S) && a ~= "bandsnr", S = rheome.scale.sensors(name); end
+            if isempty(S) && ~ismember(a, ["bandsnr" "helmholtzbands"]), S = rheome.scale.sensors(name); end
+            if isempty(Kf) && ismember(a, ["ownregion" "fusion"])          % the fused kernels, built once
+                ctx = rheome.flow.context(name);  Kf = rheome.flow.build(ctx);
+            end
             switch a
                 case "resolution",     M = [M; rheome.scale.measure_resolution(name, S)]; %#ok<AGROW>
                 case "bandsnr"
@@ -113,6 +128,24 @@ function R = run(name, opts)
                     [Tv, X.movingvortex] = rheome.scale.measure_movingvortex(name, S);  M = [M; Tv]; %#ok<AGROW>
                 case {"composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles"}   % MS1 G2
                     [Tn, X.(a)] = rheome.scale.measure_noisefloor(name, S, a);  M = [M; Tn]; %#ok<AGROW>
+                case "bandperiodic"
+                    nz = [];  if ~isempty(opts.NoiseStudy), nz = i_noiserec(rheome.load.study(opts.NoiseStudy)); end
+                    [Tb, X.bandperiodic] = rheome.scale.measure_bandperiodic(name, S, Noise=nz);
+                    M = [M; Tb]; %#ok<AGROW>
+                case "helmholtzbands"
+                    [Th, X.helmholtzbands] = rheome.scale.measure_helmholtzbands(name);
+                    M = [M; Th]; %#ok<AGROW>
+                case "ownregion"
+                    [To, X.ownregion] = rheome.scale.measure_ownregion(name, S, Kf);
+                    M = [M; To]; %#ok<AGROW>
+                case "geometry"
+                    [Tq, X.geometry] = rheome.scale.measure_geometry(name, S);
+                    M = [M; Tq]; %#ok<AGROW>
+                case "fusion"
+                    [Tz, X.fusion] = rheome.scale.measure_fusion(name, ctx, Kf);
+                    M = [M; Tz]; %#ok<AGROW>
+                case {"patterns" "patternnulls"}   % MS1 G5, G13: catalogue detectors and section 6.3 nulls
+                    [Tq, X.(a)] = rheome.scale.measure_patterns(name, S, a);  M = [M; Tq]; %#ok<AGROW>
                 case {"catalogue" "catalognulls"}   % MS1 G6, G3 rule 11, G16: catalogue plants and comparators
                     [Tc, X.(a), strips] = rheome.scale.measure_catalogue(name, S, a);  M = [M; Tc]; %#ok<AGROW>
                     if a == "catalogue", save(fullfile(od, 'catalogue_strips.mat'), '-struct', 'strips', '-v7.3'); end
