@@ -34,6 +34,14 @@ function R = run(name, opts)
 %   inject.csv, trackfactorial.csv   MS1 G7 / G8 (P5, nsp cf-track): per-injection rows of
 %                     rheome.scale.measure_inject and the factorial rows of measure_trackfactorial
 %                     (RefHead from RHEOME_REFHEAD); opt-in, not in the "ported" default
+%   aperiodic.csv     MS1 G10 (P6, nsp cf-aperiodic): rheome.scale.measure_aperiodic -- per cell (arm x plant x
+%                     sigma x speed x signal) the on-patch Viterbi rate against the held-out null, the split's
+%                     reduction, band-map errors and along-path speed; opt-in, not in the "ported" default
+%   slowosc.csv, slowosc_events.csv   MS1 G15, G16 (P7, nsp cf-slowosc): rheome.scale.measure_slowosc -- sleep
+%                     slow oscillations per event x hemisphere x condition (original, reversed, surrogate) x
+%                     estimator (framework, bst_of, phasereg, sensorlatency): direction vs A->P, speed; and the
+%                     detected events. A sleep EEG subject: Modality="EEG", and Edf/Events with ProtoDir (the
+%                     template forward model) to import it (rheome.scale.importeeg); opt-in, not "ported"
 %   correspondence.csv, atlasevents.csv, gaugetensor.csv, connectome.csv   MS1 G12 (P8, nsp cf-atlas):
 %                     rheome.scale.measure_atlas -- DK agreement through the sphere vs raw coordinates and the
 %                     frame vs the shared meridian; alpha atlas events at depth <= 3 vs phase-randomised
@@ -79,6 +87,9 @@ function R = run(name, opts)
         opts.DurationS (1,1) double = 300
         opts.NoiseStudy char = ''      % a cached study whose .rec is the noise (e.g. 'emptyroom')
         opts.FlowTiles (1,1) double = 12   % periodicflow: evenly spaced 2 s tiles per subject
+        opts.Modality (1,1) string = "MEG" % "EEG": sleep EEG (rheome.scale.importeeg), average reference
+        opts.Edf char = ''                 % with Events: import from EEG-BIDS + ProtoDir's forward model
+        opts.Events char = ''
     end
     if isempty(opts.OutDir), opts.OutDir = fullfile(rheome.load.outroot(), 'scale'); end
     od = fullfile(opts.OutDir, name);  if ~exist(od, 'dir'), mkdir(od); end
@@ -93,7 +104,11 @@ function R = run(name, opts)
     if ~isempty(opts.ProtoDir)
         t0 = tic;
         try
-            P.import = rheome.scale.importsubject(name, opts.ProtoDir, DurationS=opts.DurationS, Sub=opts.Sub);
+            if isempty(opts.Edf)
+                P.import = rheome.scale.importsubject(name, opts.ProtoDir, DurationS=opts.DurationS, Sub=opts.Sub);
+            else
+                P.import = rheome.scale.importeeg(name, opts.ProtoDir, opts.Edf, opts.Events);
+            end
             tim = [tim; {"import", toc(t0), i_rss(), "ok", ""}];
         catch e
             tim = [tim; {"import", toc(t0), i_rss(), "error", string(e.message)}];
@@ -105,7 +120,7 @@ function R = run(name, opts)
     for a = opts.Analyses(:)'
         t0 = tic;  msg = "";  st = "ok";
         try
-            if isempty(S) && ~ismember(a, ["bandsnr" "helmholtzbands"]), S = rheome.scale.sensors(name); end
+            if isempty(S) && ~ismember(a, ["bandsnr" "helmholtzbands"]), S = rheome.scale.sensors(name, Modality=opts.Modality); end
             if isempty(Kf) && ismember(a, ["ownregion" "fusion"])          % the fused kernels, built once
                 ctx = rheome.flow.context(name);  Kf = rheome.flow.build(ctx);
             end
@@ -164,6 +179,10 @@ function R = run(name, opts)
                     [Ti, X.inject] = rheome.scale.measure_inject(name, S);  M = [M; Ti]; %#ok<AGROW>
                 case "trackfactorial"          % MS1 G8 (Fig. 9): the 0.52 diagnosis, 2^5 factorial
                     [Tf, X.trackfactorial] = rheome.scale.measure_trackfactorial(name, S);  M = [M; Tf]; %#ok<AGROW>
+                case "aperiodic"               % MS1 G10: a moving 1/f change, threshold and split selectivity
+                    [Ta, X.aperiodic] = rheome.scale.measure_aperiodic(name, S);  M = [M; Ta]; %#ok<AGROW>
+                case "slowosc"                 % MS1 G15, G16: sleep slow oscillations, the positive control
+                    [Tq, X.slowosc, X.slowosc_events] = rheome.scale.measure_slowosc(name, S);  M = [M; Tq]; %#ok<AGROW>
                 case {"correspondence" "atlasevents" "gaugetensor" "connectome"}   % MS1 G12 (P8, nsp cf-atlas)
                     [Ta, X.(a)] = rheome.scale.measure_atlas(name, S, a);  M = [M; Ta]; %#ok<AGROW>
                 case "coefficients"            % Prognome's MEG input: opt-in, not in the "ported" default
