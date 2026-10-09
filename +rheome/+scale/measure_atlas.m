@@ -192,9 +192,10 @@ end
 function [n, dur, ntiles] = i_events_of(on, A, dt)
 % connected sets of on-cells: touching tiles within a time tile, same or touching tile across consecutive ones
     [nT, nb] = size(on);  id = reshape(1:nT*nb, nT, nb);
-    [i1, j1] = find(triu(A));  [e, t] = find(on(i1, :) & on(j1, :));
+    % ⚠ e(:), t(:): with one edge (depth 1, two tiles) on(i1,:) is a row and find returns rows (MATLAB:catenate)
+    [i1, j1] = find(triu(A));  [e, t] = find(on(i1, :) & on(j1, :));  e = e(:);  t = t(:);
     s = id(sub2ind([nT nb], i1(e), t));  d = id(sub2ind([nT nb], j1(e), t));
-    [i2, j2] = find(A | speye(nT));  [e, t] = find(on(i2, 1:end-1) & on(j2, 2:end));
+    [i2, j2] = find(A | speye(nT));  [e, t] = find(on(i2, 1:end-1) & on(j2, 2:end));  e = e(:);  t = t(:);
     s = [s; id(sub2ind([nT nb], i2(e), t))];  d = [d; id(sub2ind([nT nb], j2(e), t + 1))];
     c = conncomp(graph(sparse(s, d, 1, nT*nb, nT*nb) + sparse(d, s, 1, nT*nb, nT*nb)));
     v = find(on(:));  [~, ~, g] = unique(c(v));  n = max([g; 0]);

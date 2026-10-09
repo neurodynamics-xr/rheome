@@ -69,6 +69,16 @@ classdef tScaleAtlasP8 < matlab.unittest.TestCase
             tc.verifyLessThanOrEqual(max(X.tiles_visited_median(X.depth == 1)), 2);
         end
 
+        function twoTilesAllOnIsOneEvent(tc)
+            % regression (nsp cf-atlas, every subject): depth 1 has two tiles and ONE edge; with >= 2 co-active
+            % cells find() returned rows and the concat threw MATLAB:catenate:dimensionMismatch
+            [~, X] = rheome.scale.measure_atlas(tc.Name, [], "atlasevents", Template=tc.Tmpl, Depths=1, NSurr=1, ThresholdDB=-Inf);
+            d = X(X.source == "data", :);
+            tc.verifyEqual(d.n_events, [1; 1]);
+            tc.verifyEqual(d.tiles_visited_median, [2; 2]);
+            tc.verifyEqual(d.frac_on, [1; 1]);
+        end
+
         function tensorIsTraceNormalised(tc)
             [T, X] = rheome.scale.measure_atlas(tc.Name, [], "gaugetensor", Template=tc.Tmpl);
             tc.verifyEqual(height(X), 16);                           % 8 depth-3 tiles per hemisphere
