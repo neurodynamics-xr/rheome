@@ -19,6 +19,9 @@ function a = analyses(which)
 %   geometry         MS1 Figs. 2, 16, 20       atom-tile overlap, gauge singularities, roll-up exactness
 %   fusion           MS1 Section 8.2           fused kernels against reconstruct-then-differentiate
 %   inject           grouptrack_article fig 5  alpha_inject_omega: injection recovery
+%   inject           MS1 G7 (Fig. 8)           alpha_inject_omega per participant: injection recovery
+%   trackfactorial   MS1 G8 (Fig. 9)           the 0.52 diagnosis: sphere movers, 2^5 factorial
+%                    -- both run only when asked (nsp cf-track), not "ported"
 %   vortex           report_cortical_vortex    planted spin through forward + inverse
 %   sensorwavelet    report_sensor_wavelet     leadfield rows as dyadic atoms
 %   plantfloors      MS1 G1, G9 (Table 3)      planted source/vortex bands x SNR through own MEG: floors
@@ -30,6 +33,11 @@ function a = analyses(which)
 %                                              and the empty room, alpha and IAF +- 2 Hz, + theta-gamma PAC
 %   patternnulls     MS1 G13 (section 6.3)     speed-sweep peakedness, Dirac dispersion ratio, r(curl v, curl J)
 %                    -- both run only when asked (nsp cf-patterns), not "ported"
+%   catalogue        MS1 G6, G3 rule 11, G16   the 19 catalogue plants x 3 centres per hemisphere through own gain,
+%                                              whitened MNE and sensor noise (rest, empty room) at Inf and 10 dB;
+%                                              framework vs bst_opticalflow (HornSchunck sweep) vs phase regression
+%   catalognulls     MS1 G16                   false-propagation nulls: coherent and phase-lagged generator pairs
+%                    -- both run only when asked (nsp cf-plants), not "ported"
 %   aperiodic        MS1 G10 (Fig. 14)         a moving 1/f change planted at 30-100 mm through own MEG: on-patch
 %                                              false-path threshold and the periodic split's selectivity;
 %                                              run only when asked (nsp cf-aperiodic), not "ported"
@@ -43,7 +51,7 @@ function a = analyses(which)
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
            "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
            "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" ...
-           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "aperiodic" "coefficients"];
+           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end

@@ -26,6 +26,14 @@ function R = run(name, opts)
 %   patterns.csv, patternnulls.csv   MS1 G5 / G13 (P3, nsp cf-patterns): rheome.scale.measure_patterns --
 %                     detector x band x half rows against the phase-randomised surrogates and the empty room,
 %                     and the section 6.3 statistics against their nulls; opt-in, not in the "ported" default
+%   catalogue.csv, catalognulls.csv, catalogue_strips.mat   MS1 G6, G3 rule 11, G16 (P4, nsp cf-plants):
+%                     rheome.scale.measure_catalogue -- the 19 catalogue plants through the participant's own
+%                     gain, whitened MNE and sensor noise (rest, empty room), read by the framework, Brainstorm's
+%                     bst_opticalflow and a phase-regression estimator, and the false-propagation nulls;
+%                     opt-in, not in the "ported" default. bst_opticalflow needs RHEOME_BRAINSTORM (a Brainstorm checkout)
+%   inject.csv, trackfactorial.csv   MS1 G7 / G8 (P5, nsp cf-track): per-injection rows of
+%                     rheome.scale.measure_inject and the factorial rows of measure_trackfactorial
+%                     (RefHead from RHEOME_REFHEAD); opt-in, not in the "ported" default
 %   aperiodic.csv     MS1 G10 (P6, nsp cf-aperiodic): rheome.scale.measure_aperiodic -- per cell (arm x plant x
 %                     sigma x speed x signal) the on-patch Viterbi rate against the held-out null, the split's
 %                     reduction, band-map errors and along-path speed; opt-in, not in the "ported" default
@@ -49,6 +57,8 @@ function R = run(name, opts)
 % halves), helmholtzbands (planted-band recovery on the cortex), ownregion (readout rule 5), geometry
 % (atom-tile overlap, gauge, roll-up exactness) and fusion (fused-kernel exactness). The others --
 % flowmap (div/curl maps), inject, vortex, sensorwavelet -- are listed in
+% best Viterbi path's samples and channels on the sensor data). The others --
+% flowmap (div/curl maps), vortex, sensorwavelet -- are listed in
 % rheome.scale.analyses with status "not_ported" until each has a figure-free measure.
 %
 % See also: rheome.scale.importsubject, rheome.scale.measure_resolution, rheome.scale.reduce, rheome.scale.analyses
@@ -144,6 +154,13 @@ function R = run(name, opts)
                     M = [M; Tz]; %#ok<AGROW>
                 case {"patterns" "patternnulls"}   % MS1 G5, G13: catalogue detectors and section 6.3 nulls
                     [Tq, X.(a)] = rheome.scale.measure_patterns(name, S, a);  M = [M; Tq]; %#ok<AGROW>
+                case {"catalogue" "catalognulls"}   % MS1 G6, G3 rule 11, G16: catalogue plants and comparators
+                    [Tc, X.(a), strips] = rheome.scale.measure_catalogue(name, S, a);  M = [M; Tc]; %#ok<AGROW>
+                    if a == "catalogue", save(fullfile(od, 'catalogue_strips.mat'), '-struct', 'strips', '-v7.3'); end
+                case "inject"                  % MS1 G7 (Fig. 8): movers injected into the own recording, tracked
+                    [Ti, X.inject] = rheome.scale.measure_inject(name, S);  M = [M; Ti]; %#ok<AGROW>
+                case "trackfactorial"          % MS1 G8 (Fig. 9): the 0.52 diagnosis, 2^5 factorial
+                    [Tf, X.trackfactorial] = rheome.scale.measure_trackfactorial(name, S);  M = [M; Tf]; %#ok<AGROW>
                 case "aperiodic"               % MS1 G10: a moving 1/f change, threshold and split selectivity
                     [Ta, X.aperiodic] = rheome.scale.measure_aperiodic(name, S);  M = [M; Ta]; %#ok<AGROW>
                 case "coefficients"            % Prognome's MEG input: opt-in, not in the "ported" default
