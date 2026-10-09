@@ -1,11 +1,12 @@
 function scaleSynthSubject(d)
 % SCALESYNTHSUBJECT  A synthetic cached subject for the rheome.scale measures: two icosphere hemispheres
 % (radius 40 mm), a dipole-falloff leadfield on 40 channels, 40 s of noise with a 10 Hz source, and an
-% empty room (noise.mat) on the same channels.
+% empty room (noise.mat) on the same channels, and a four-region 'Desikan-Killiany' atlas (atlas.mat: each
+% hemisphere split at its mean z).
 %
 %   scaleSynthSubject(fullfile(getenv('RHEOME_DATA'), name))
 %
-% Shared by tScaleFieldEvents and tScalePlantFloors.
+% Shared by tScaleFieldEvents, tScalePlantFloors and tScaleGroupP2.
 %
 % Author: Diellor Basha, 2026
 
@@ -36,11 +37,15 @@ function scaleSynthSubject(d)
     ch = struct('Loc', num2cell(loc, 1)', 'Name', compose('M%02d', (1:C)'));
     chan = struct('Type', {repmat({'MEG'}, 1, C)}, 'Name', {{ch.Name}}, 'Channel', ch');
     rec = struct('F', F, 'sfreq', fs, 'ChannelFlag', ones(C, 1), 'Time', t);
-    hm = struct('Gain', Gain);  ncov = struct('NoiseCov', eye(C) * var(F(:)) * 1e-2);
+    hm = struct('Gain', Gain, 'nV', S.nV);  ncov = struct('NoiseCov', eye(C) * var(F(:)) * 1e-2, 'FourthMoment', [], 'nSamples', []);
     save(fullfile(d, 'study.mat'), 'rec', 'chan', 'hm', 'ncov');
     nrec = struct('F', 1e-2 * randn(C, N) * std(Gain(:)), 'sfreq', fs, 'ChannelFlag', ones(C, 1), 'Time', t, ...
                   'ChannelName', {{ch.Name}'}, 'ChannelType', {chan.Type});
     save(fullfile(d, 'noise.mat'), 'nrec');
+    z = S.Vertices(:, 3) > mean(S.Vertices(:, 3));  hL = (1:S.nV)' <= nh;
+    atlas = struct('Name', 'Desikan-Killiany', 'Label', {{'a L', 'b L', 'a R', 'b R'}}, ...
+                   'Membership', sparse([z & hL, ~z & hL, z & ~hL, ~z & ~hL]'));
+    save(fullfile(d, 'atlas.mat'), 'atlas');
 end
 
 % Author: Diellor Basha, 2026

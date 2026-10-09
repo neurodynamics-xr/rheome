@@ -13,6 +13,11 @@ function a = analyses(which)
 %   grouptrack       grouptrack_article        alpha_grouptrack_omega: Viterbi paths vs swap/null
 %   fieldsmooth      MS1 Fig. 12               per-vertex vs graph-wavelet band-limited J, div, curl
 %   eventsensors     MS1 Figs. 8, 10           the tracked event's samples and channels (after grouptrack)
+%   bandperiodic     MS1 Table 5               per-band periodic fraction, oscillation SNR, floors, IAF, halves
+%   helmholtzbands   MS1 Fig. 4A-B             planted Helmholtz bands recovered on the subject's cortex
+%   ownregion        MS1 rule 5                own-region fraction of div/curl per Desikan-Killiany region
+%   geometry         MS1 Figs. 2, 16, 20       atom-tile overlap, gauge singularities, roll-up exactness
+%   fusion           MS1 Section 8.2           fused kernels against reconstruct-then-differentiate
 %   inject           grouptrack_article fig 5  alpha_inject_omega: injection recovery
 %   vortex           report_cortical_vortex    planted spin through forward + inverse
 %   sensorwavelet    report_sensor_wavelet     leadfield rows as dyadic atoms
@@ -34,7 +39,8 @@ function a = analyses(which)
 
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
            "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
-           "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" "patterns" "patternnulls" "coefficients"];
+           "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" ...
+           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end
