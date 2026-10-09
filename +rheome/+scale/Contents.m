@@ -5,6 +5,7 @@
 %   rheome.scale.bandsnr                - Per-octave SNR of the rest recording against the subject's own noise run.
 %   rheome.scale.cleanspan              - Where a recording is stationary enough to tile: artefact blocks and trimmed edges.
 %   rheome.scale.cleanwelch             - Welch PSD of a span, averaging only the segments that touch no artefact block.
+%   rheome.scale.coefficients           - Graph-wavelet coefficient envelopes rolled up to cortical tiles: Prognome's MEG input.
 %   rheome.scale.importsubject          - One Brainstorm-protocol subject -> the data cache the analyses load from.
 %   rheome.scale.locate                 - Find one subject's files inside an unzipped Brainstorm protocol.
 %   rheome.scale.measure_bandresolution - Resolution at each octave's OWN measured SNR, for one subject.

@@ -14,13 +14,15 @@ function a = analyses(which)
 %   inject           grouptrack_article fig 5  alpha_inject_omega: injection recovery
 %   vortex           report_cortical_vortex    planted spin through forward + inverse
 %   sensorwavelet    report_sensor_wavelet     leadfield rows as dyadic atoms
+%   coefficients     (Prognome input)          rheome.scale.coefficients: tile x scale x time envelopes;
+%                                              run only when asked (a ~200 MB file), so not "ported"
 %
 % See also: rheome.scale.run
 %
 % Author: Diellor Basha, 2026
 
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
-           "inject" "vortex" "sensorwavelet"];
+           "inject" "vortex" "sensorwavelet" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end
