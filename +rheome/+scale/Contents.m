@@ -9,6 +9,7 @@
 %   rheome.scale.importsubject          - One Brainstorm-protocol subject -> the data cache the analyses load from.
 %   rheome.scale.locate                 - Find one subject's files inside an unzipped Brainstorm protocol.
 %   rheome.scale.measure_bandresolution - Resolution at each octave's OWN measured SNR, for one subject.
+%   rheome.scale.measure_catalogue     - The catalogue's patterns through this participant's own head, read by three estimators (MS1 G6, G16).
 %   rheome.scale.measure_grouptrack     - Viterbi tile tracking of the alpha envelope, real against the mode-shift surrogate.
 %   rheome.scale.measure_periodicflow   - Apparent alpha flow on the TOTAL and the PERIODIC envelope, over many tiles.
 %   rheome.scale.measure_resolution     - The resolution report's headline numbers for one subject.

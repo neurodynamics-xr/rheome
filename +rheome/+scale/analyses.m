@@ -21,6 +21,11 @@ function a = analyses(which)
 %   composition sizeruler vortexscale rotation detection diracangles
 %                    MS1 G2 (section 9.4)      what the noise floor and the inverse manufacture
 %                    -- the eight MS1 plant analyses run only when asked (nsp cf-plant-floors), not "ported"
+%   catalogue        MS1 G6, G3 rule 11, G16   the 19 catalogue plants x 3 centres per hemisphere through own gain,
+%                                              whitened MNE and sensor noise (rest, empty room) at Inf and 10 dB;
+%                                              framework vs bst_opticalflow (HornSchunck sweep) vs phase regression
+%   catalognulls     MS1 G16                   false-propagation nulls: coherent and phase-lagged generator pairs
+%                    -- both run only when asked (nsp cf-plants), not "ported"
 %   coefficients     (Prognome input)          rheome.scale.coefficients: tile x scale x time envelopes;
 %                                              run only when asked (a ~200 MB file), so not "ported"
 %
@@ -30,7 +35,7 @@ function a = analyses(which)
 
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
            "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
-           "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" "coefficients"];
+           "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" "catalogue" "catalognulls" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end
