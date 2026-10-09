@@ -30,6 +30,10 @@
 %   apparent    - that map -> Horn-Schunck velocity v, then div v, curl v, |v|
 %                 (reuses rheome.dynamics.opticalflow_scalar and rheome.dynamics.flow_readout)
 %
+% The comparators a reader would otherwise use (MS1 G16):
+%   bstopticalflow  - Brainstorm's own bst_opticalflow on |X|, called from a Brainstorm checkout (GPL, not copied)
+%   phaseregression - circular-linear regression of phase on geodesic distance within a patch
+%
 % A rotating current can sit inside a stationary envelope (curl J large, curl v zero) and a
 % travelling bump can be irrotational everywhere (curl J zero, div v large). MEASURED on one
 % resting alpha tile: the spatial correlation of |curl v| with |curl J| is -0.11, i.e. they are
