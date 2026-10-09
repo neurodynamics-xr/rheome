@@ -16,6 +16,11 @@ function a = analyses(which)
 %   inject           grouptrack_article fig 5  alpha_inject_omega: injection recovery
 %   vortex           report_cortical_vortex    planted spin through forward + inverse
 %   sensorwavelet    report_sensor_wavelet     leadfield rows as dyadic atoms
+%   plantfloors      MS1 G1, G9 (Table 3)      planted source/vortex bands x SNR through own MEG: floors
+%   movingvortex     MS1 G11 (Fig. 11)         moving vortex core error per readout sigma x SNR
+%   composition sizeruler vortexscale rotation detection diracangles
+%                    MS1 G2 (section 9.4)      what the noise floor and the inverse manufacture
+%                    -- the eight MS1 plant analyses run only when asked (nsp cf-plant-floors), not "ported"
 %   coefficients     (Prognome input)          rheome.scale.coefficients: tile x scale x time envelopes;
 %                                              run only when asked (a ~200 MB file), so not "ported"
 %
@@ -24,7 +29,8 @@ function a = analyses(which)
 % Author: Diellor Basha, 2026
 
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
-           "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" "coefficients"];
+           "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
+           "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end

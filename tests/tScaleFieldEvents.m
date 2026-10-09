@@ -13,7 +13,7 @@ classdef tScaleFieldEvents < matlab.unittest.TestCase
         function cache(tc)
             d = tc.applyFixture(matlab.unittest.fixtures.TemporaryFolderFixture).Folder;
             old = getenv('RHEOME_DATA');  setenv('RHEOME_DATA', d);  tc.addTeardown(@setenv, 'RHEOME_DATA', old);
-            i_cache(fullfile(d, tc.Name));
+            scaleSynthSubject(fullfile(d, tc.Name));
         end
     end
 
@@ -71,37 +71,6 @@ classdef tScaleFieldEvents < matlab.unittest.TestCase
             tc.verifyEqual(R.metrics.value(R.metrics.metric == "n_tiles"), 256);
         end
     end
-end
-
-function i_cache(d)
-    mkdir(d);  rng(7);
-    [V0, F0] = rheome.geom.icosphere(3);  nh = size(V0, 1);  R = 0.04;
-    Vs = {V0*R - [0.03 0 0], V0*R + [0.03 0 0]};
-    S = struct('Vertices', [Vs{1}; Vs{2}], 'Faces', [F0; F0 + nh], 'VertNormals', [V0; V0], 'nV', 2*nh, 'nF', 2*size(F0,1));
-    bases = struct('hemi', {{'L', 'R'}});
-    for h = 1:2
-        Sh = struct('Vertices', Vs{h}, 'Faces', F0, 'VertNormals', V0, 'nV', nh, 'nF', size(F0, 1));
-        [L, M] = rheome.operators.laplace_beltrami(Sh.Vertices, Sh.Faces);
-        [P, D] = eig(full(L), full(M), 'chol');  [lam, o] = sort(max(diag(D), 0));  P = P(:, o(1:200));  lam = lam(1:200);
-        P = P ./ sqrt(sum(P .* (M * P), 1));
-        lr = 'LR';  bases.(lr(h)) = struct('lbo', struct('L', L, 'M', M, 'Phi', P, 'Lambda', lam, 'Mass', M), ...
-                                 'gv', (1:nh)' + (h-1)*nh, 'S', Sh);
-    end
-    save(fullfile(d, 'bases.mat'), 'bases');  L = [];  M = [];  save(fullfile(d, 'surface.mat'), 'S', 'L', 'M');
-    C = 40;  fs = 600;  N = 40 * fs;  az = 2*pi*(0:C-1)/C;  el = linspace(0.2, 1.2, C);
-    loc = 0.12 * [cos(el).*cos(az); cos(el).*sin(az); sin(el)];
-    Gain = zeros(C, 3*S.nV);                                   % dipole-like falloff, so the gain is smooth
-    for c = 1:C
-        r = loc(:, c)' - S.Vertices;  g = r ./ vecnorm(r, 2, 2).^3;  Gain(c, :) = reshape(g', 1, []);
-    end
-    src = 7;  t = (0:N-1)/fs;
-    J = zeros(3*S.nV, 1);  J(3*src-2:3*src) = [1 0 0];
-    F = 1e-3 * Gain * J * (sin(2*pi*10*t) .* (1 + sin(2*pi*0.2*t))) + 1e-2 * randn(C, N) * std(Gain(:));
-    ch = struct('Loc', num2cell(loc, 1)', 'Name', compose('M%02d', (1:C)'));
-    chan = struct('Type', {repmat({'MEG'}, C, 1)}, 'Channel', ch);
-    rec = struct('F', F, 'sfreq', fs, 'ChannelFlag', ones(C, 1), 'Time', t);
-    hm = struct('Gain', Gain);  ncov = struct('NoiseCov', eye(C) * var(F(:)) * 1e-2);
-    save(fullfile(d, 'study.mat'), 'rec', 'chan', 'hm', 'ncov');
 end
 
 % Author: Diellor Basha, 2026
