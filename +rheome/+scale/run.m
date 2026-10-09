@@ -31,6 +31,11 @@ function R = run(name, opts)
 %                     gain, whitened MNE and sensor noise (rest, empty room), read by the framework, Brainstorm's
 %                     bst_opticalflow and a phase-regression estimator, and the false-propagation nulls;
 %                     opt-in, not in the "ported" default. bst_opticalflow needs RHEOME_BRAINSTORM (a Brainstorm checkout)
+%   slowosc.csv, slowosc_events.csv   MS1 G15, G16 (P7, nsp cf-slowosc): rheome.scale.measure_slowosc -- sleep
+%                     slow oscillations per event x hemisphere x condition (original, reversed, surrogate) x
+%                     estimator (framework, bst_of, phasereg, sensorlatency): direction vs A->P, speed; and the
+%                     detected events. A sleep EEG subject: Modality="EEG", and Edf/Events with ProtoDir (the
+%                     template forward model) to import it (rheome.scale.importeeg); opt-in, not "ported"
 %   timing.csv        analysis, seconds, peak_rss_GB, status, message
 %   rheome_coeffs.mat Analyses="coefficients" only: graph-wavelet envelopes per tile x scale x time,
 %                     Prognome's contract (rheome.scale.coefficients)
@@ -68,6 +73,9 @@ function R = run(name, opts)
         opts.DurationS (1,1) double = 300
         opts.NoiseStudy char = ''      % a cached study whose .rec is the noise (e.g. 'emptyroom')
         opts.FlowTiles (1,1) double = 12   % periodicflow: evenly spaced 2 s tiles per subject
+        opts.Modality (1,1) string = "MEG" % "EEG": sleep EEG (rheome.scale.importeeg), average reference
+        opts.Edf char = ''                 % with Events: import from EEG-BIDS + ProtoDir's forward model
+        opts.Events char = ''
     end
     if isempty(opts.OutDir), opts.OutDir = fullfile(rheome.load.outroot(), 'scale'); end
     od = fullfile(opts.OutDir, name);  if ~exist(od, 'dir'), mkdir(od); end
@@ -82,7 +90,11 @@ function R = run(name, opts)
     if ~isempty(opts.ProtoDir)
         t0 = tic;
         try
-            P.import = rheome.scale.importsubject(name, opts.ProtoDir, DurationS=opts.DurationS, Sub=opts.Sub);
+            if isempty(opts.Edf)
+                P.import = rheome.scale.importsubject(name, opts.ProtoDir, DurationS=opts.DurationS, Sub=opts.Sub);
+            else
+                P.import = rheome.scale.importeeg(name, opts.ProtoDir, opts.Edf, opts.Events);
+            end
             tim = [tim; {"import", toc(t0), i_rss(), "ok", ""}];
         catch e
             tim = [tim; {"import", toc(t0), i_rss(), "error", string(e.message)}];
@@ -94,7 +106,7 @@ function R = run(name, opts)
     for a = opts.Analyses(:)'
         t0 = tic;  msg = "";  st = "ok";
         try
-            if isempty(S) && ~ismember(a, ["bandsnr" "helmholtzbands"]), S = rheome.scale.sensors(name); end
+            if isempty(S) && ~ismember(a, ["bandsnr" "helmholtzbands"]), S = rheome.scale.sensors(name, Modality=opts.Modality); end
             if isempty(Kf) && ismember(a, ["ownregion" "fusion"])          % the fused kernels, built once
                 ctx = rheome.flow.context(name);  Kf = rheome.flow.build(ctx);
             end
@@ -149,6 +161,8 @@ function R = run(name, opts)
                 case {"catalogue" "catalognulls"}   % MS1 G6, G3 rule 11, G16: catalogue plants and comparators
                     [Tc, X.(a), strips] = rheome.scale.measure_catalogue(name, S, a);  M = [M; Tc]; %#ok<AGROW>
                     if a == "catalogue", save(fullfile(od, 'catalogue_strips.mat'), '-struct', 'strips', '-v7.3'); end
+                case "slowosc"                 % MS1 G15, G16: sleep slow oscillations, the positive control
+                    [Tq, X.slowosc, X.slowosc_events] = rheome.scale.measure_slowosc(name, S);  M = [M; Tq]; %#ok<AGROW>
                 case "coefficients"            % Prognome's MEG input: opt-in, not in the "ported" default
                     st0 = rheome.load.study(name);
                     Cf = rheome.scale.coefficients(S.B, S.Res.ImagingKernel, double(st0.rec.F(S.iSel,:)), st0.rec.sfreq);
