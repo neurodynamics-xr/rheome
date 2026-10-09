@@ -1,7 +1,8 @@
-function [A, B, gamma] = lb_connectome(S, W, keep)
+function [A, B, gamma] = lb_connectome(S, W, keep, gamma)
 % OPERATORS.LB_CONNECTOME  Laplace-Beltrami bridged by the structural connectome (whole brain).
 %
 %   [A, B, gamma] = rheome.operators.lb_connectome(S, W, keep)
+%   [A, B, gamma] = rheome.operators.lb_connectome(S, W, keep, gamma)   % explicit balance (a gamma sweep)
 %
 % The combined whole-brain operator: the per-hemisphere cotan Laplace-Beltrami stiffness K
 % (local geometry) bridged across hemispheres by the connectome graph Laplacian D-W (long-range
@@ -9,6 +10,10 @@ function [A, B, gamma] = lb_connectome(S, W, keep)
 %     A = K + gamma*(D - W),   B = M            (M = LBO Galerkin mass)
 % with gamma chosen scale-portably so the connectome term sits at the K diagonal scale
 %     gamma = mean|diag K| / mean|diag(D-W)|.
+% ⚠ The auto gamma couples at MESH scale: it is invariant to rescaling W, so a dense homotopic
+% connectome (W = area, every vertex) lifts the antisymmetric branch by 2*gamma = 2*mean|diag K|/mean(a),
+% l ~ 75 on an ico5 sphere of 100 mm -- above any usable band (VR1 2.1d). Pass gamma to set the
+% coupling yourself: with W_ij = a_i on homotopic pairs the antisymmetric modes sit at l(l+1)/R^2 + 2*gamma.
 % Low eigenmodes (rheome.eigen.modes(A,B,K)) respect BOTH cortical geometry and the connectome; lifting
 % them to quaternions (rheome.eigen.lift) gives the Dirac-Connectome vector basis. Faithful port of
 % tess_operators / local_build_connectome_operator ('LB-Connectome').
@@ -45,8 +50,10 @@ function [A, B, gamma] = lb_connectome(S, W, keep)
     Lc = sparse(nV, nV);  Lc(keep, keep) = spdiags(d, 0, nk, nk) - Wk;
 
     % scale-portable balance: match mean nonzero diagonal magnitude
-    dK = full(diag(K));  dL = full(diag(Lc));
-    gamma = mean(abs(dK(dK ~= 0))) / max(mean(abs(dL(dL ~= 0))), eps);
+    if nargin < 4 || isempty(gamma)
+        dK = full(diag(K));  dL = full(diag(Lc));
+        gamma = mean(abs(dK(dK ~= 0))) / max(mean(abs(dL(dL ~= 0))), eps);
+    end
 
     A = K + gamma * Lc;  A = (A + A') / 2;
     B = M;

@@ -19,6 +19,8 @@
 %                 not dense eig: 20484 vertices is not a dense eigenproblem. Measured on the
 %                 reference cortex: 127 nodes to depth 6 in 1 s, each level halving area exactly
 %                 and dividing the diameter by sqrt(2), leaves partitioning all 20484.
+%   rheome.geom.sphereframe - the group gauge: the registered sphere's meridian pushed to the cortex
+%                 (poles at sphere.reg's +-z, the same anatomical place in every subject).
 %   rheome.geom.tiles  - one depth of the tree as a graph: vertex -> tile lookup, membership, and the
 %                 tile adjacency P'*A*P (cut-edge counts). .heap says whether node k's children
 %                 are 2k and 2k+1 -- true only if no branch stopped early.

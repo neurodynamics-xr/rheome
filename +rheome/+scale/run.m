@@ -34,6 +34,12 @@ function R = run(name, opts)
 %   inject.csv, trackfactorial.csv   MS1 G7 / G8 (P5, nsp cf-track): per-injection rows of
 %                     rheome.scale.measure_inject and the factorial rows of measure_trackfactorial
 %                     (RefHead from RHEOME_REFHEAD); opt-in, not in the "ported" default
+%   correspondence.csv, atlasevents.csv, gaugetensor.csv, connectome.csv   MS1 G12 (P8, nsp cf-atlas):
+%                     rheome.scale.measure_atlas -- DK agreement through the sphere vs raw coordinates and the
+%                     frame vs the shared meridian; alpha atlas events at depth <= 3 vs phase-randomised
+%                     surrogates; the alpha orientation tensor per depth-3 group tile in the shared gauge;
+%                     Destrieux -> DK vs the dyadic roll-up and connectome-wavelet widths over a gamma sweep.
+%                     Opt-in. Needs a template cortex (RHEOME_TEMPLATE or RHEOME_BRAINSTORM's ICBM152)
 %   timing.csv        analysis, seconds, peak_rss_GB, status, message
 %   rheome_coeffs.mat Analyses="coefficients" only: graph-wavelet envelopes per tile x scale x time,
 %                     Prognome's contract (rheome.scale.coefficients)
@@ -158,6 +164,8 @@ function R = run(name, opts)
                     [Ti, X.inject] = rheome.scale.measure_inject(name, S);  M = [M; Ti]; %#ok<AGROW>
                 case "trackfactorial"          % MS1 G8 (Fig. 9): the 0.52 diagnosis, 2^5 factorial
                     [Tf, X.trackfactorial] = rheome.scale.measure_trackfactorial(name, S);  M = [M; Tf]; %#ok<AGROW>
+                case {"correspondence" "atlasevents" "gaugetensor" "connectome"}   % MS1 G12 (P8, nsp cf-atlas)
+                    [Ta, X.(a)] = rheome.scale.measure_atlas(name, S, a);  M = [M; Ta]; %#ok<AGROW>
                 case "coefficients"            % Prognome's MEG input: opt-in, not in the "ported" default
                     st0 = rheome.load.study(name);
                     Cf = rheome.scale.coefficients(S.B, S.Res.ImagingKernel, double(st0.rec.F(S.iSel,:)), st0.rec.sfreq);

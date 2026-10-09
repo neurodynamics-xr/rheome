@@ -16,7 +16,9 @@ function L = locate(protoDir, sub)
 % would silently mis-index every vertex.
 %
 % Returns L with .sub .cortex .restDir .restRaw .channel .headmodel .noisecov .noiseRaw
-% (.noiseRaw '' if the protocol holds no noise run).
+% (.noiseRaw '' if the protocol holds no noise run), and two optional files ('' when absent):
+%   .mri     anat/<sub>/subjectimage*.mat (not a volume atlas): its SCS/NCS place the cortex in MNI
+%   .fibers  anat/<sub>/tess_fibers*.mat: the subject's OWN tractography (nsp bst-fibers' augmented protocol)
 %
 % See also: rheome.scale.importsubject, rheome.scale.run
 %
@@ -53,6 +55,12 @@ function L = locate(protoDir, sub)
     nz = dir(fullfile(protoDir, 'data', L.sub, '@raw*task-noise*'));  nz = nz([nz.isdir]);
     L.noiseRaw = '';
     if ~isempty(nz), L.noiseRaw = i_one(fullfile(nz(1).folder, nz(1).name), 'data_0raw_*.mat'); end
+
+    a = fullfile(protoDir, 'anat', L.sub);
+    m = dir(fullfile(a, 'subjectimage*.mat'));  m = m(~startsWith({m.name}, '._') & ~contains({m.name}, {'volatlas' 'tissues' 'mask'}));
+    L.mri = '';  if ~isempty(m), L.mri = fullfile(m(1).folder, m(1).name); end
+    b = dir(fullfile(a, 'tess_fibers*.mat'));  b = b(~startsWith({b.name}, '._'));
+    L.fibers = '';  if ~isempty(b), L.fibers = fullfile(b(1).folder, b(1).name); end
 end
 
 function f = i_one(d, pat)

@@ -10,6 +10,8 @@ function info = importsubject(name, protoDir, opts)
 %   noise.mat     the same-session noise run, same rate and projector treatment as rec
 %   bases.mat     rheome.import.bases(name, K, Kc)  -- rheome.load.bases picks it up as the richest LBO cache
 %   atlas.mat     rheome.import.atlas(name)
+%   mri.mat       SCS, NCS of the subject's MRI, when the protocol staged it (rheome.scale.measure_atlas: MNI)
+%   fibers_subject.mat  the subject's own tractography, when the protocol carries it (rheome.connectome.resolve)
 %
 % ⭐ THE RECORDING IS READ FROM THE RAW .bst, NOT AN IMPORTED BLOCK. The protocol holds only the
 % raw link (data_0raw_*), e.g. at 1200 Hz; rheome.io.read.rawbst reads it with the SSP projectors applied,
@@ -65,6 +67,11 @@ function info = importsubject(name, protoDir, opts)
 
     rheome.import.bases(name, opts.K, opts.Kc);
     rheome.import.atlas(name);
+    if ~isempty(L.mri)                                     % only the transforms, not the volume
+        mri = builtin('load', L.mri, 'SCS', 'NCS');         %#ok<NASGU>
+        builtin('save', fullfile(d, 'mri.mat'), '-struct', 'mri');
+    end
+    if ~isempty(L.fibers), copyfile(L.fibers, fullfile(d, 'fibers_subject.mat')); end
 
     k = dir(fullfile(L.restDir, 'results_*KERNEL*.mat'));  k = k(~startsWith({k.name}, '._'));
     info.shippedKernels = string({k.name});
