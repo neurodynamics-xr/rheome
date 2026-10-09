@@ -45,6 +45,11 @@ function a = analyses(which)
 %                                              and speed per event; framework, bst_of, phasereg, sensor latency;
 %                                              time-reversed and phase-randomised nulls -- run only when asked
 %                                              (nsp cf-slowosc), not "ported"
+%   correspondence   MS1 G12 (section 12.2)    DK through the sphere vs raw coordinates; frame vs the shared meridian
+%   atlasevents      MS1 G12 (Fig. 10)         alpha events on the group tiles, depth <= 3, vs phase-randomised surrogates
+%   gaugetensor      MS1 G12 (section 12.3)    alpha orientation tensor per depth-3 group tile in the shared gauge
+%   connectome       MS1 G12 (Fig. 3C)         Destrieux -> DK vs dyadic roll-up; connectome-wavelet widths, gamma sweep
+%                    -- the four run only when asked (nsp cf-atlas), not "ported"; rheome.scale.measure_atlas
 %   coefficients     (Prognome input)          rheome.scale.coefficients: tile x scale x time envelopes;
 %                                              run only when asked (a ~200 MB file), so not "ported"
 %
@@ -55,7 +60,7 @@ function a = analyses(which)
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
            "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
            "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" ...
-           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "coefficients"];
+           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "correspondence" "atlasevents" "gaugetensor" "connectome" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end
