@@ -17,6 +17,9 @@ function R = run(name, opts)
 %   detection.csv, diracangles.csv   the MS1 group plants (P1, nsp cf-plant-floors): the per-plant /
 %                     per-placement tables of rheome.scale.measure_plantfloors, measure_movingvortex and
 %                     measure_noisefloor; opt-in, not in the "ported" default
+%   patterns.csv, patternnulls.csv   MS1 G5 / G13 (P3, nsp cf-patterns): rheome.scale.measure_patterns --
+%                     detector x band x half rows against the phase-randomised surrogates and the empty room,
+%                     and the section 6.3 statistics against their nulls; opt-in, not in the "ported" default
 %   timing.csv        analysis, seconds, peak_rss_GB, status, message
 %   rheome_coeffs.mat Analyses="coefficients" only: graph-wavelet envelopes per tile x scale x time,
 %                     Prognome's contract (rheome.scale.coefficients)
@@ -108,6 +111,8 @@ function R = run(name, opts)
                     [Tv, X.movingvortex] = rheome.scale.measure_movingvortex(name, S);  M = [M; Tv]; %#ok<AGROW>
                 case {"composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles"}   % MS1 G2
                     [Tn, X.(a)] = rheome.scale.measure_noisefloor(name, S, a);  M = [M; Tn]; %#ok<AGROW>
+                case {"patterns" "patternnulls"}   % MS1 G5, G13: catalogue detectors and section 6.3 nulls
+                    [Tq, X.(a)] = rheome.scale.measure_patterns(name, S, a);  M = [M; Tq]; %#ok<AGROW>
                 case "coefficients"            % Prognome's MEG input: opt-in, not in the "ported" default
                     st0 = rheome.load.study(name);
                     Cf = rheome.scale.coefficients(S.B, S.Res.ImagingKernel, double(st0.rec.F(S.iSel,:)), st0.rec.sfreq);
