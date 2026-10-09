@@ -50,6 +50,10 @@ function [T, X] = measure_aperiodic(name, S, opts)
 % null 95th percentile (/s), per BandMM the phi / psi extremum errors and their nulls.
 %
 % ⚠ One hemisphere is planted (Hemi); the emptyroom arm has no sources elsewhere (the rest arm has the real ones).
+% ⚠ The null windows are NullWindows random disjoint WindowS + 2 MarginS slots of the record; a record too short
+%   for that (every OMEGA / PREVENT-AD empty room is <= 120 s, 20 slots of 6 s) spaces them evenly so only the
+%   margins overlap and the WindowS cores stay disjoint (>= 68 s at the defaults). An empty room shorter than
+%   that drops the emptyroom arm (rest only, as without one); a rest record that short is an error.
 % ⚠ With an empty room on fewer channels, every arm uses the shared channels and its own MNE kernel (SnrFixed 3).
 %   A participant without an empty room runs the rest arm only.
 % ⚠ The fit-window PSD mixes the window's own Welch PSD at weight 6/L with the background's over the L span (the
@@ -95,6 +99,12 @@ function [T, X] = measure_aperiodic(name, S, opts)
         try, [E, iC] = i_emptyroom(name, S);
         catch e, fprintf('[aperiodic %s] no empty-room arm: %s\n', name, e.message);
         end
+    end
+    if ~isempty(E) && isempty(i_windows(round(size(E.F, 2)*fs/E.fs), round((W + 2*opts.MarginS)*fs), ...
+                                        round(W*fs), fs, opts.NullWindows))
+        fprintf('[aperiodic %s] no empty-room arm: %.0f s is too short for %d null windows\n', name, ...
+                size(E.F, 2)/E.fs, opts.NullWindows);
+        E = [];  iC = (1:numel(S.iSel))';
     end
     arms = opts.Arms;  if isempty(E), arms = setdiff(arms, "emptyroom", 'stable'); end
     Res = S.Res;
@@ -156,11 +166,11 @@ function [T, X] = measure_aperiodic(name, S, opts)
     for arm = arms
         rng(opts.Seed + find(arm == ["emptyroom" "rest"]));
         if arm == "rest", rec = REST; else, rec = ER; end
-        nSlot = floor(size(rec, 2)/fs/Lw);
-        if nSlot < opts.NullWindows
-            error('scale:aperiodic:short', '%s: %d disjoint %g s windows, need %d', arm, nSlot, Lw, opts.NullWindows);
+        ix0 = i_windows(size(rec, 2), nT, numel(keep), fs, opts.NullWindows);
+        if isempty(ix0)
+            error('scale:aperiodic:short', '%s: %.0f s cannot hold %d windows of %g s with disjoint %g s cores', ...
+                  arm, size(rec, 2)/fs, opts.NullWindows, Lw, W);
         end
-        ix0 = round(Lw*(sort(randperm(nSlot, opts.NullWindows)) - 1)*fs);   % disjoint windows
         BG = cell(opts.NullWindows, 1);  N0c = BG;  Pctx = 0;
         for w = 1:opts.NullWindows
             ix = ix0(w) + (1:nT);
@@ -242,6 +252,16 @@ function [T, X] = measure_aperiodic(name, S, opts)
 end
 
 %% ------------------------------------------------------------------------------------------------------------------
+function ix0 = i_windows(nS, nT, nK, fs, N)
+% N window starts (0-based samples) in a record of nS samples: N random disjoint nT-sample slots if the record
+% holds them, else N windows evenly spaced so that only their margins overlap (the nK-sample cores, the part the
+% readouts see, stay disjoint); [] if even that does not fit
+    nSlot = floor(nS/nT);
+    if nSlot >= N, ix0 = (sort(randperm(nSlot, N)) - 1)*nT; return; end
+    step = floor((nS - nT)/max(N - 1, 1));
+    if step < nK, ix0 = []; else, ix0 = (0:N-1)*step; end
+end
+
 function [T, X] = i_metrics(Xr, opts, W)
 % per cell: medians over reps, rates per second, the held-out null 95th percentile; then threshold and selectivity
     [gi, X] = findgroups(Xr(:, {'arm','mode','level','sigmaMM','vMS','signal'}));
