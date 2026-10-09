@@ -13,6 +13,10 @@ function R = run(name, opts)
 %   fieldsmooth.csv   fieldsmooth: one row per (band, map, frame) -- Dirichlet wavelength, coherence
 %   fieldsmooth_maps.mat   fieldsmooth: the strongest frame's raw and band-limited fields (figure data)
 %   eventsensors.mat  eventsensors: the tracked event on the sensor data (figure data)
+%   plantfloors.csv, movingvortex.csv, composition.csv, sizeruler.csv, vortexscale.csv, rotation.csv,
+%   detection.csv, diracangles.csv   the MS1 group plants (P1, nsp cf-plant-floors): the per-plant /
+%                     per-placement tables of rheome.scale.measure_plantfloors, measure_movingvortex and
+%                     measure_noisefloor; opt-in, not in the "ported" default
 %   timing.csv        analysis, seconds, peak_rss_GB, status, message
 %   provenance.json   commit (+ dirty flag), MATLAB release, host, options, located inputs, the
 %                     kernels the protocol ships, import durations
@@ -96,6 +100,12 @@ function R = run(name, opts)
                     [Te, ev] = rheome.scale.measure_eventsensors(name, S, Best);
                     M = [M; Te]; %#ok<AGROW>
                     save(fullfile(od, 'eventsensors.mat'), 'ev', '-v7.3');
+                case "plantfloors"             % MS1 G1/G9: Helmholtz-band floors through this MEG
+                    [Tp, X.plantfloors] = rheome.scale.measure_plantfloors(name, S);  M = [M; Tp]; %#ok<AGROW>
+                case "movingvortex"            % MS1 G11: a moving vortex planted and read back
+                    [Tv, X.movingvortex] = rheome.scale.measure_movingvortex(name, S);  M = [M; Tv]; %#ok<AGROW>
+                case {"composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles"}   % MS1 G2
+                    [Tn, X.(a)] = rheome.scale.measure_noisefloor(name, S, a);  M = [M; Tn]; %#ok<AGROW>
                 otherwise, st = "not_ported";
             end
         catch e
