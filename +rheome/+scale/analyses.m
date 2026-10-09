@@ -41,6 +41,10 @@ function a = analyses(which)
 %   aperiodic        MS1 G10 (Fig. 14)         a moving 1/f change planted at 30-100 mm through own MEG: on-patch
 %                                              false-path threshold and the periodic split's selectivity;
 %                                              run only when asked (nsp cf-aperiodic), not "ported"
+%   slowosc          MS1 G15, G16              sleep slow oscillations (EEG, rheome.scale.importeeg): direction vs A->P
+%                                              and speed per event; framework, bst_of, phasereg, sensor latency;
+%                                              time-reversed and phase-randomised nulls -- run only when asked
+%                                              (nsp cf-slowosc), not "ported"
 %   coefficients     (Prognome input)          rheome.scale.coefficients: tile x scale x time envelopes;
 %                                              run only when asked (a ~200 MB file), so not "ported"
 %
@@ -51,7 +55,7 @@ function a = analyses(which)
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
            "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
            "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" ...
-           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "coefficients"];
+           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end
