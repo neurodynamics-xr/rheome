@@ -30,6 +30,11 @@ function a = analyses(which)
 %                                              and the empty room, alpha and IAF +- 2 Hz, + theta-gamma PAC
 %   patternnulls     MS1 G13 (section 6.3)     speed-sweep peakedness, Dirac dispersion ratio, r(curl v, curl J)
 %                    -- both run only when asked (nsp cf-patterns), not "ported"
+%   catalogue        MS1 G6, G3 rule 11, G16   the 19 catalogue plants x 3 centres per hemisphere through own gain,
+%                                              whitened MNE and sensor noise (rest, empty room) at Inf and 10 dB;
+%                                              framework vs bst_opticalflow (HornSchunck sweep) vs phase regression
+%   catalognulls     MS1 G16                   false-propagation nulls: coherent and phase-lagged generator pairs
+%                    -- both run only when asked (nsp cf-plants), not "ported"
 %   coefficients     (Prognome input)          rheome.scale.coefficients: tile x scale x time envelopes;
 %                                              run only when asked (a ~200 MB file), so not "ported"
 %
@@ -40,7 +45,7 @@ function a = analyses(which)
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
            "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
            "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" ...
-           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "coefficients"];
+           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end

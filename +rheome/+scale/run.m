@@ -26,6 +26,11 @@ function R = run(name, opts)
 %   patterns.csv, patternnulls.csv   MS1 G5 / G13 (P3, nsp cf-patterns): rheome.scale.measure_patterns --
 %                     detector x band x half rows against the phase-randomised surrogates and the empty room,
 %                     and the section 6.3 statistics against their nulls; opt-in, not in the "ported" default
+%   catalogue.csv, catalognulls.csv, catalogue_strips.mat   MS1 G6, G3 rule 11, G16 (P4, nsp cf-plants):
+%                     rheome.scale.measure_catalogue -- the 19 catalogue plants through the participant's own
+%                     gain, whitened MNE and sensor noise (rest, empty room), read by the framework, Brainstorm's
+%                     bst_opticalflow and a phase-regression estimator, and the false-propagation nulls;
+%                     opt-in, not in the "ported" default. bst_opticalflow needs RHEOME_BRAINSTORM (a Brainstorm checkout)
 %   timing.csv        analysis, seconds, peak_rss_GB, status, message
 %   rheome_coeffs.mat Analyses="coefficients" only: graph-wavelet envelopes per tile x scale x time,
 %                     Prognome's contract (rheome.scale.coefficients)
@@ -141,6 +146,9 @@ function R = run(name, opts)
                     M = [M; Tz]; %#ok<AGROW>
                 case {"patterns" "patternnulls"}   % MS1 G5, G13: catalogue detectors and section 6.3 nulls
                     [Tq, X.(a)] = rheome.scale.measure_patterns(name, S, a);  M = [M; Tq]; %#ok<AGROW>
+                case {"catalogue" "catalognulls"}   % MS1 G6, G3 rule 11, G16: catalogue plants and comparators
+                    [Tc, X.(a), strips] = rheome.scale.measure_catalogue(name, S, a);  M = [M; Tc]; %#ok<AGROW>
+                    if a == "catalogue", save(fullfile(od, 'catalogue_strips.mat'), '-struct', 'strips', '-v7.3'); end
                 case "coefficients"            % Prognome's MEG input: opt-in, not in the "ported" default
                     st0 = rheome.load.study(name);
                     Cf = rheome.scale.coefficients(S.B, S.Res.ImagingKernel, double(st0.rec.F(S.iSel,:)), st0.rec.sfreq);
