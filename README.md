@@ -1,4 +1,7 @@
-# Rheome
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/brand/rheome-readme-header-dark.svg">
+  <img alt="Rheome — multiscale geometry of human cortical dynamics, a neurodynamics·xr toolbox" src=".github/brand/rheome-readme-header-light.svg" width="640">
+</picture>
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23251310.svg)](https://doi.org/10.5281/zenodo.23251310)
 
