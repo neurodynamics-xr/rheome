@@ -18,6 +18,8 @@ function R = run(name, opts)
 %                     per-placement tables of rheome.scale.measure_plantfloors, measure_movingvortex and
 %                     measure_noisefloor; opt-in, not in the "ported" default
 %   timing.csv        analysis, seconds, peak_rss_GB, status, message
+%   rheome_coeffs.mat Analyses="coefficients" only: graph-wavelet envelopes per tile x scale x time,
+%                     Prognome's contract (rheome.scale.coefficients)
 %   provenance.json   commit (+ dirty flag), MATLAB release, host, options, located inputs, the
 %                     kernels the protocol ships, import durations
 % No figures. An analysis that errors is recorded as status "error" with its message and the
@@ -106,6 +108,14 @@ function R = run(name, opts)
                     [Tv, X.movingvortex] = rheome.scale.measure_movingvortex(name, S);  M = [M; Tv]; %#ok<AGROW>
                 case {"composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles"}   % MS1 G2
                     [Tn, X.(a)] = rheome.scale.measure_noisefloor(name, S, a);  M = [M; Tn]; %#ok<AGROW>
+                case "coefficients"            % Prognome's MEG input: opt-in, not in the "ported" default
+                    st0 = rheome.load.study(name);
+                    Cf = rheome.scale.coefficients(S.B, S.Res.ImagingKernel, double(st0.rec.F(S.iSel,:)), st0.rec.sfreq);
+                    clear st0
+                    save(fullfile(od, 'rheome_coeffs.mat'), '-struct', 'Cf', '-v7');
+                    M = [M; rheome.scale.rows("coefficients", ["n_tiles" "n_scales" "n_samples"], ...
+                                              size(Cf.W, 1:3), ["tiles" "scales" "samples"])]; %#ok<AGROW>
+                    clear Cf
                 otherwise, st = "not_ported";
             end
         catch e
