@@ -47,6 +47,23 @@ classdef tScaleAperiodic < matlab.unittest.TestCase
             tc.verifyEqual(sort(se.band)', ["emptyroom_p6s" "emptyroom_pwhole" "rest_p6s" "rest_pwhole"]);
         end
 
+        function anEmptyRoomShortOfSlotsOverlapsTheMargins(tc)
+            % 40 s records hold 6 disjoint 6 s slots; 8 null windows overlap in their margins (cores disjoint)
+            [~, X] = rheome.scale.measure_aperiodic(tc.Name, tc.S, tc.small{:}, 'NullWindows', 8);
+            tc.verifyEqual(height(X), 4*2*3 + 3*2*3);
+            tc.verifyEqual(sort(unique(X.arm))', ["emptyroom" "rest"]);
+        end
+
+        function aTooShortEmptyRoomStillRunsRest(tc)
+            % a 10 s empty room cannot hold 4 windows with disjoint 2 s cores (12 s): rest only, no error
+            f = fullfile(getenv('RHEOME_DATA'), tc.Name, 'noise.mat');  copyfile(f, [f '.bak']);  tc.addTeardown(@movefile, [f '.bak'], f, 'f');
+            load(f, 'nrec');  n = round(10*nrec.sfreq);  nrec.F = nrec.F(:, 1:n);  nrec.Time = nrec.Time(1:n);  save(f, 'nrec');
+            [T, X] = rheome.scale.measure_aperiodic(tc.Name, tc.S, tc.small{:});
+            tc.verifyEqual(height(X), 3*2*3);
+            tc.verifyTrue(all(X.arm == "rest"));
+            tc.verifyEqual(sort(T.band(T.metric == "selectivity"))', ["rest_p6s" "rest_pwhole"]);
+        end
+
         function theDriverWritesTheTable(tc)
             od = tc.applyFixture(matlab.unittest.fixtures.TemporaryFolderFixture).Folder;
             tc.verifyTrue(ismember("aperiodic", rheome.scale.analyses()));
