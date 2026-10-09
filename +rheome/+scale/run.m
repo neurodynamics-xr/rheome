@@ -17,6 +17,9 @@ function R = run(name, opts)
 %   detection.csv, diracangles.csv   the MS1 group plants (P1, nsp cf-plant-floors): the per-plant /
 %                     per-placement tables of rheome.scale.measure_plantfloors, measure_movingvortex and
 %                     measure_noisefloor; opt-in, not in the "ported" default
+%   inject.csv, trackfactorial.csv   MS1 G7 / G8 (P5, nsp cf-track): per-injection rows of
+%                     rheome.scale.measure_inject and the factorial rows of measure_trackfactorial
+%                     (RefHead from RHEOME_REFHEAD); opt-in, not in the "ported" default
 %   timing.csv        analysis, seconds, peak_rss_GB, status, message
 %   rheome_coeffs.mat Analyses="coefficients" only: graph-wavelet envelopes per tile x scale x time,
 %                     Prognome's contract (rheome.scale.coefficients)
@@ -33,7 +36,7 @@ function R = run(name, opts)
 % rows are the flowmap pipeline's speed, curl and div), grouptrack, fieldsmooth (per-vertex vs
 % graph-wavelet band-limited current, div and curl), eventsensors (needs grouptrack first: the
 % best Viterbi path's samples and channels on the sensor data). The others --
-% flowmap (div/curl maps), inject, vortex, sensorwavelet -- are listed in
+% flowmap (div/curl maps), vortex, sensorwavelet -- are listed in
 % rheome.scale.analyses with status "not_ported" until each has a figure-free measure.
 %
 % See also: rheome.scale.importsubject, rheome.scale.measure_resolution, rheome.scale.reduce, rheome.scale.analyses
@@ -108,6 +111,10 @@ function R = run(name, opts)
                     [Tv, X.movingvortex] = rheome.scale.measure_movingvortex(name, S);  M = [M; Tv]; %#ok<AGROW>
                 case {"composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles"}   % MS1 G2
                     [Tn, X.(a)] = rheome.scale.measure_noisefloor(name, S, a);  M = [M; Tn]; %#ok<AGROW>
+                case "inject"                  % MS1 G7 (Fig. 8): movers injected into the own recording, tracked
+                    [Ti, X.inject] = rheome.scale.measure_inject(name, S);  M = [M; Ti]; %#ok<AGROW>
+                case "trackfactorial"          % MS1 G8 (Fig. 9): the 0.52 diagnosis, 2^5 factorial
+                    [Tf, X.trackfactorial] = rheome.scale.measure_trackfactorial(name, S);  M = [M; Tf]; %#ok<AGROW>
                 case "coefficients"            % Prognome's MEG input: opt-in, not in the "ported" default
                     st0 = rheome.load.study(name);
                     Cf = rheome.scale.coefficients(S.B, S.Res.ImagingKernel, double(st0.rec.F(S.iSel,:)), st0.rec.sfreq);

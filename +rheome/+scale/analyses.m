@@ -13,7 +13,9 @@ function a = analyses(which)
 %   grouptrack       grouptrack_article        alpha_grouptrack_omega: Viterbi paths vs swap/null
 %   fieldsmooth      MS1 Fig. 12               per-vertex vs graph-wavelet band-limited J, div, curl
 %   eventsensors     MS1 Figs. 8, 10           the tracked event's samples and channels (after grouptrack)
-%   inject           grouptrack_article fig 5  alpha_inject_omega: injection recovery
+%   inject           MS1 G7 (Fig. 8)           alpha_inject_omega per participant: injection recovery
+%   trackfactorial   MS1 G8 (Fig. 9)           the 0.52 diagnosis: sphere movers, 2^5 factorial
+%                    -- both run only when asked (nsp cf-track), not "ported"
 %   vortex           report_cortical_vortex    planted spin through forward + inverse
 %   sensorwavelet    report_sensor_wavelet     leadfield rows as dyadic atoms
 %   plantfloors      MS1 G1, G9 (Table 3)      planted source/vortex bands x SNR through own MEG: floors
@@ -29,7 +31,7 @@ function a = analyses(which)
 % Author: Diellor Basha, 2026
 
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
-           "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
+           "fieldsmooth" "eventsensors" "inject" "trackfactorial" "vortex" "sensorwavelet" ...
            "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end

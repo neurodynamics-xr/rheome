@@ -10,6 +10,9 @@
 %   rheome.scale.locate                 - Find one subject's files inside an unzipped Brainstorm protocol.
 %   rheome.scale.measure_bandresolution - Resolution at each octave's OWN measured SNR, for one subject.
 %   rheome.scale.measure_grouptrack     - Viterbi tile tracking of the alpha envelope, real against the mode-shift surrogate.
+%   rheome.scale.measure_inject         - Known movers injected into the own recording, tracked back (MS1 G7, Fig. 8).
+%   rheome.scale.measure_trackfactorial - The 0.52 diagnosis as a 2^5 factorial on one participant (MS1 G8, Fig. 9).
+%   rheome.scale.refhead                - A cached head without its recording: the factorial's reference head (subject01).
 %   rheome.scale.measure_periodicflow   - Apparent alpha flow on the TOTAL and the PERIODIC envelope, over many tiles.
 %   rheome.scale.measure_resolution     - The resolution report's headline numbers for one subject.
 %   rheome.scale.reduce                 - Per-subject tables -> group distributions, the anchor's place, cohort contrasts.
