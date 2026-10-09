@@ -26,6 +26,9 @@ function R = run(name, opts)
 %   patterns.csv, patternnulls.csv   MS1 G5 / G13 (P3, nsp cf-patterns): rheome.scale.measure_patterns --
 %                     detector x band x half rows against the phase-randomised surrogates and the empty room,
 %                     and the section 6.3 statistics against their nulls; opt-in, not in the "ported" default
+%   aperiodic.csv     MS1 G10 (P6, nsp cf-aperiodic): rheome.scale.measure_aperiodic -- per cell (arm x plant x
+%                     sigma x speed x signal) the on-patch Viterbi rate against the held-out null, the split's
+%                     reduction, band-map errors and along-path speed; opt-in, not in the "ported" default
 %   timing.csv        analysis, seconds, peak_rss_GB, status, message
 %   rheome_coeffs.mat Analyses="coefficients" only: graph-wavelet envelopes per tile x scale x time,
 %                     Prognome's contract (rheome.scale.coefficients)
@@ -141,6 +144,8 @@ function R = run(name, opts)
                     M = [M; Tz]; %#ok<AGROW>
                 case {"patterns" "patternnulls"}   % MS1 G5, G13: catalogue detectors and section 6.3 nulls
                     [Tq, X.(a)] = rheome.scale.measure_patterns(name, S, a);  M = [M; Tq]; %#ok<AGROW>
+                case "aperiodic"               % MS1 G10: a moving 1/f change, threshold and split selectivity
+                    [Ta, X.aperiodic] = rheome.scale.measure_aperiodic(name, S);  M = [M; Ta]; %#ok<AGROW>
                 case "coefficients"            % Prognome's MEG input: opt-in, not in the "ported" default
                     st0 = rheome.load.study(name);
                     Cf = rheome.scale.coefficients(S.B, S.Res.ImagingKernel, double(st0.rec.F(S.iSel,:)), st0.rec.sfreq);

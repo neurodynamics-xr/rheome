@@ -30,6 +30,9 @@ function a = analyses(which)
 %                                              and the empty room, alpha and IAF +- 2 Hz, + theta-gamma PAC
 %   patternnulls     MS1 G13 (section 6.3)     speed-sweep peakedness, Dirac dispersion ratio, r(curl v, curl J)
 %                    -- both run only when asked (nsp cf-patterns), not "ported"
+%   aperiodic        MS1 G10 (Fig. 14)         a moving 1/f change planted at 30-100 mm through own MEG: on-patch
+%                                              false-path threshold and the periodic split's selectivity;
+%                                              run only when asked (nsp cf-aperiodic), not "ported"
 %   coefficients     (Prognome input)          rheome.scale.coefficients: tile x scale x time envelopes;
 %                                              run only when asked (a ~200 MB file), so not "ported"
 %
@@ -40,7 +43,7 @@ function a = analyses(which)
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
            "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
            "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" ...
-           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "coefficients"];
+           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "aperiodic" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end
