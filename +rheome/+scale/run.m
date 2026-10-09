@@ -10,6 +10,9 @@ function R = run(name, opts)
 %   bandsnr.csv       the per-octave SNR the band analyses used
 %   flowtiles.csv     periodicflow: one row per tile x (total, periodic)
 %   grouptrack.csv    grouptrack: one row per hemisphere x depth x frame rate
+%   fieldsmooth.csv   fieldsmooth: one row per (band, map, frame) -- Dirichlet wavelength, coherence
+%   fieldsmooth_maps.mat   fieldsmooth: the strongest frame's raw and band-limited fields (figure data)
+%   eventsensors.mat  eventsensors: the tracked event on the sensor data (figure data)
 %   timing.csv        analysis, seconds, peak_rss_GB, status, message
 %   rheome_coeffs.mat Analyses="coefficients" only: graph-wavelet envelopes per tile x scale x time,
 %                     Prognome's contract (rheome.scale.coefficients)
@@ -23,7 +26,9 @@ function R = run(name, opts)
 %
 % Ported analyses (the reports' names): resolution, bandsnr, bandresolution, periodicflow
 % (apparent flow of the total and the periodic alpha envelope over FlowTiles tiles; its "total"
-% rows are the flowmap pipeline's speed, curl and div), grouptrack. The others --
+% rows are the flowmap pipeline's speed, curl and div), grouptrack, fieldsmooth (per-vertex vs
+% graph-wavelet band-limited current, div and curl), eventsensors (needs grouptrack first: the
+% best Viterbi path's samples and channels on the sensor data). The others --
 % flowmap (div/curl maps), inject, vortex, sensorwavelet -- are listed in
 % rheome.scale.analyses with status "not_ported" until each has a figure-free measure.
 %
@@ -64,7 +69,7 @@ function R = run(name, opts)
         end
     end
 
-    M = table();  snr = table();  S = [];  X = struct();
+    M = table();  snr = table();  S = [];  X = struct();  Best = [];
     for a = opts.Analyses(:)'
         t0 = tic;  msg = "";  st = "ok";
         try
@@ -82,8 +87,17 @@ function R = run(name, opts)
                     [Tf, Xf] = rheome.scale.measure_periodicflow(name, S, NumTiles=opts.FlowTiles);
                     M = [M; Tf];  X.flowtiles = Xf; %#ok<AGROW>
                 case "grouptrack"
-                    [Tg, Xg] = rheome.scale.measure_grouptrack(name, S);
+                    [Tg, Xg, Best] = rheome.scale.measure_grouptrack(name, S);
                     M = [M; Tg];  X.grouptrack = Xg; %#ok<AGROW>
+                case "fieldsmooth"
+                    [Ts, Xs, maps] = rheome.scale.measure_fieldsmooth(name, S);
+                    M = [M; Ts];  X.fieldsmooth = Xs; %#ok<AGROW>
+                    save(fullfile(od, 'fieldsmooth_maps.mat'), 'maps', '-v7.3');
+                case "eventsensors"
+                    if isempty(Best), error('scale:run:order', 'eventsensors needs grouptrack first'); end
+                    [Te, ev] = rheome.scale.measure_eventsensors(name, S, Best);
+                    M = [M; Te]; %#ok<AGROW>
+                    save(fullfile(od, 'eventsensors.mat'), 'ev', '-v7.3');
                 case "coefficients"            % Prognome's MEG input: opt-in, not in the "ported" default
                     st0 = rheome.load.study(name);
                     Cf = rheome.scale.coefficients(S.B, S.Res.ImagingKernel, double(st0.rec.F(S.iSel,:)), st0.rec.sfreq);
