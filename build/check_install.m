@@ -1,7 +1,7 @@
 function check_install(mltbx)
 % CHECK_INSTALL  Install the .mltbx into a clean path, run the quick start, uninstall.
 %
-%   check_install('build/out/rheome-1.0.0.mltbx')
+%   check_install('build/out/rheome-1.0.1.mltbx')
 %
 % Run it in a FRESH MATLAB started outside the repository, so the clone is not on the path:
 %   cd /tmp && matlab -batch "addpath('<repo>/build'); check_install('<repo>/build/out/<name>.mltbx')"

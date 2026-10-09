@@ -1,5 +1,7 @@
 # Rheome
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23251310.svg)](https://doi.org/10.5281/zenodo.23251310)
+
 **A MATLAB toolbox for the multiscale geometry of human cortical dynamics.**
 
 *rheo-* (flow, current) + *-ome* (the complete set, as in connectome). Rheome measures spatiotemporal
@@ -26,11 +28,11 @@ package, and the root `Contents.m` lists them all.
 
 ## Install
 
-**Toolbox (recommended).** Download `rheome-1.0.0.mltbx` from the
+**Toolbox (recommended).** Download `rheome-1.0.1.mltbx` from the
 [release page](https://github.com/neurodynamics-xr/rheome/releases) and double-click it, or:
 
 ```matlab
-matlab.addons.install('rheome-1.0.0.mltbx');
+matlab.addons.install('rheome-1.0.1.mltbx');
 ```
 
 **From source.** Clone the repository and put its root on the path (the `+rheome` folder resolves
@@ -123,9 +125,10 @@ Brainstorm itself is not needed: its files are read from disk as plain `.mat`.
 If you use Rheome, please cite it (see [`CITATION.cff`](CITATION.cff)):
 
 > Basha, D., & Baillet, S. (2026). *Rheome: a MATLAB toolbox for the multiscale geometry of human
-> cortical dynamics* (Version 1.0.0) [Computer software]. https://github.com/neurodynamics-xr/rheome
+> cortical dynamics* (Version 1.0.1) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.23251310
 
-A DOI will be added here when the release is archived on Zenodo.
+The DOI above is the concept DOI: it always resolves to the latest version. Each release also has its own
+version DOI on [Zenodo](https://doi.org/10.5281/zenodo.23251310) (1.0.0: [10.5281/zenodo.23251311](https://doi.org/10.5281/zenodo.23251311)).
 
 ## For developers
 

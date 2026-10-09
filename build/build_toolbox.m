@@ -1,7 +1,7 @@
 function file = build_toolbox(outDir)
 % BUILD_TOOLBOX  Package the toolbox as rheome-<version>.mltbx (R2023b packageToolbox).
 %
-%   file = build_toolbox()           % writes build/out/rheome-1.0.0.mltbx
+%   file = build_toolbox()           % writes build/out/rheome-1.0.1.mltbx
 %   file = build_toolbox(outDir)
 %
 % Reproducible: the files are the GIT-TRACKED files of the packaged folders at HEAD, so untracked

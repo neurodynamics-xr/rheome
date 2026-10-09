@@ -2,9 +2,17 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "Rheome: a MATLAB toolbox for the multiscale geometry of human cortical dynamics"
 type: software
-version: 1.0.0
+version: 1.0.1
 license: MIT
-date-released: 2026-10-08
+doi: "10.5281/zenodo.23251310"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.23251310"
+    description: "Concept DOI: every version of Rheome (resolves to the latest)"
+  - type: doi
+    value: "10.5281/zenodo.23251311"
+    description: "Version 1.0.0"
+date-released: 2026-10-09
 authors:
   - family-names: Basha
     given-names: Diellor

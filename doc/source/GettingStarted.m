@@ -17,10 +17,10 @@
 % Statistics and Machine Learning Toolbox (the flow kernels use both).
 % Brainstorm itself is not needed: its files are read from disk.
 %
-% Install the toolbox file by double-clicking |rheome-1.0.0.mltbx|,
+% Install the toolbox file by double-clicking |rheome-1.0.1.mltbx|,
 % or from the command line:
 %
-%   matlab.addons.install('rheome-1.0.0.mltbx');
+%   matlab.addons.install('rheome-1.0.1.mltbx');
 %
 % If you work from a clone of the repository instead, put its root on the path:
 %

@@ -1,5 +1,5 @@
 % RHEOME  The multiscale geometry of human cortical dynamics: graph wavelets, phase and flow.
-% Version 1.0.0 (R2023b) 08-Oct-2026
+% Version 1.0.1 (R2023b) 09-Oct-2026
 %
 % Spatiotemporal dynamics on graphs -- cortical meshes, connectomes and sensor arrays: graph wavelet
 % frames, the joint (lambda, omega) plane, phase geometry and flow. Everything lives in ONE namespace,
