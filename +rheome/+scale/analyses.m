@@ -11,6 +11,8 @@ function a = analyses(which)
 %   flowmap          flowmap_article           alpha_apparent_flow_omega: div/curl from sensors
 %   periodicflow     periodicflow_article      alpha_periodic_flow_omega: specparam split, speed
 %   grouptrack       grouptrack_article        alpha_grouptrack_omega: Viterbi paths vs swap/null
+%   fieldsmooth      MS1 Fig. 12               per-vertex vs graph-wavelet band-limited J, div, curl
+%   eventsensors     MS1 Figs. 8, 10           the tracked event's samples and channels (after grouptrack)
 %   inject           grouptrack_article fig 5  alpha_inject_omega: injection recovery
 %   vortex           report_cortical_vortex    planted spin through forward + inverse
 %   sensorwavelet    report_sensor_wavelet     leadfield rows as dyadic atoms
@@ -20,8 +22,8 @@ function a = analyses(which)
 % Author: Diellor Basha, 2026
 
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
-           "inject" "vortex" "sensorwavelet"];
-    ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack"];
+           "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet"];
+    ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end
 

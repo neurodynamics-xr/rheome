@@ -1,4 +1,4 @@
-function [T, X] = measure_grouptrack(name, S, opts)
+function [T, X, Best] = measure_grouptrack(name, S, opts)
 % SCALE.MEASURE_GROUPTRACK  Viterbi tile tracking of the alpha envelope, real against the mode-shift surrogate.
 %
 %   [T, X] = rheome.scale.measure_grouptrack(name)
@@ -24,6 +24,9 @@ function [T, X] = measure_grouptrack(name, S, opts)
 %   frac_beyond_tile  fraction of passing paths whose net exceeds one tile    fraction
 %   sur_n_pass, sur_net_mm, sur_speed_ms   the same for the held-out surrogate passes
 % plus "n_windows" (band ""). X is the per-configuration table (grouptrack.csv).
+% Best (third output): per configuration, the highest-scoring REAL path -- .hemi .depth .jj .rate
+% .window .score .passed .track (rheome.detect.tilepath track, frames within its window) .G (the tiles),
+% which rheome.scale.measure_eventsensors maps onto the sensor data.
 %
 % ⚠ netMM is quantised to the tiling: displacement below one tile is not measured, by design.
 % ⚠ Everything is through the instrument -- a trajectory is the trajectory of the RENDERED blob.
@@ -47,7 +50,7 @@ function [T, X] = measure_grouptrack(name, S, opts)
     rng(opts.Seed);
     if isempty(S), B = rheome.load.bases(name); else, B = S.B; end
     E = rheome.flow.envelopemodes(name, Band=[8 16], Rate=opts.Rate);
-    FR = opts.Rate;  W = opts.WindowS;  res = [];  nWin = NaN;
+    FR = opts.Rate;  W = opts.WindowS;  res = [];  nWin = NaN;  Best = struct([]);
     for hh = opts.Hemis
         H = B.(char(hh));  Sh = H.S;  Phi = H.lbo.Phi;  Mm = H.lbo.Mass;
         av = full(sum(Mm, 2));  C = double(E.(char(hh)).C);  nFr = size(C, 2);  nWin = floor(nFr/(W*FR));
@@ -74,6 +77,12 @@ function [T, X] = measure_grouptrack(name, S, opts)
                     if pth.nTracks, rs(w) = pth.tracks(1).score; rst{w} = i_stats(pth, G, rate); end
                 end
                 pr = rs > thr;  ps = ss(tst) > thr;
+                [bs, bw] = max(rs);
+                if bs > 0
+                    pth = rheome.detect.tilepath(Yr(:, (bw-1)*nF + (1:nF)), G, Baseline=b0, SampleRate=rate);
+                    Best = [Best, struct('hemi', hh, 'depth', d, 'jj', jj, 'rate', rate, 'window', bw, ...
+                        'score', bs, 'passed', bs > thr, 'track', pth.tracks(1), 'G', G)]; %#ok<AGROW>
+                end
                 R = vertcat(rst{pr});  Sx = vertcat(sst{tst(ps)});
                 if isempty(R), R = i_stats([], G, rate); end
                 if isempty(Sx), Sx = i_stats([], G, rate); end
