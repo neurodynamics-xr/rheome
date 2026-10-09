@@ -56,6 +56,20 @@ classdef tScaleFieldEvents < matlab.unittest.TestCase
             tc.verifyTrue(isfile(fullfile(od, tc.Name, 'fieldsmooth_maps.mat')));
             tc.verifyTrue(any(R.metrics.metric == "div_wavelength_mm" & R.metrics.band == "bl92"));
         end
+
+        function theDriverWritesPrognomeCoefficients(tc)
+            % rheome.scale.run(..., Analyses="coefficients") -> rheome_coeffs.mat, Prognome's contract
+            od = tc.applyFixture(matlab.unittest.fixtures.TemporaryFolderFixture).Folder;
+            R = rheome.scale.run(tc.Name, Analyses="coefficients", OutDir=od);
+            tc.assertEqual(R.timing.status, "ok", R.timing.message);
+            C = load(fullfile(od, tc.Name, 'rheome_coeffs.mat'));
+            tc.verifyEmpty(setdiff(["W" "codes" "scales" "fs"], string(fieldnames(C))));
+            tc.verifyEqual(C.fs, 100);
+            tc.verifyEqual(C.codes, (2^8:2^9-1)');                    % depth 7 per hemisphere: level 8
+            tc.verifySize(C.W, [256 numel(C.scales) 40*100]);          % 40 s at 100 Hz
+            tc.verifyTrue(all(isfinite(C.W), 'all') && all(C.W >= 0, 'all'));
+            tc.verifyEqual(R.metrics.value(R.metrics.metric == "n_tiles"), 256);
+        end
     end
 end
 

@@ -14,6 +14,8 @@ function R = run(name, opts)
 %   fieldsmooth_maps.mat   fieldsmooth: the strongest frame's raw and band-limited fields (figure data)
 %   eventsensors.mat  eventsensors: the tracked event on the sensor data (figure data)
 %   timing.csv        analysis, seconds, peak_rss_GB, status, message
+%   rheome_coeffs.mat Analyses="coefficients" only: graph-wavelet envelopes per tile x scale x time,
+%                     Prognome's contract (rheome.scale.coefficients)
 %   provenance.json   commit (+ dirty flag), MATLAB release, host, options, located inputs, the
 %                     kernels the protocol ships, import durations
 % No figures. An analysis that errors is recorded as status "error" with its message and the
@@ -96,6 +98,14 @@ function R = run(name, opts)
                     [Te, ev] = rheome.scale.measure_eventsensors(name, S, Best);
                     M = [M; Te]; %#ok<AGROW>
                     save(fullfile(od, 'eventsensors.mat'), 'ev', '-v7.3');
+                case "coefficients"            % Prognome's MEG input: opt-in, not in the "ported" default
+                    st0 = rheome.load.study(name);
+                    Cf = rheome.scale.coefficients(S.B, S.Res.ImagingKernel, double(st0.rec.F(S.iSel,:)), st0.rec.sfreq);
+                    clear st0
+                    save(fullfile(od, 'rheome_coeffs.mat'), '-struct', 'Cf', '-v7');
+                    M = [M; rheome.scale.rows("coefficients", ["n_tiles" "n_scales" "n_samples"], ...
+                                              size(Cf.W, 1:3), ["tiles" "scales" "samples"])]; %#ok<AGROW>
+                    clear Cf
                 otherwise, st = "not_ported";
             end
         catch e
