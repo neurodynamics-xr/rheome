@@ -22,6 +22,21 @@ classdef tFlowBandlimit < matlab.unittest.TestCase
             tc.verifyLessThan(abs(s.coherence), 0.1);
         end
 
+        function transportCoherenceIgnoresTheTurningOfTheTangentPlane(tc)
+            [S, lbo] = i_sphere();  X = i_atoms(S, lbo, 2);  rng(2);
+            s = rheome.flow.smoothness(X, S, lbo);               % a smooth source and vortex on a sphere
+            tc.verifyGreaterThan(s.transportCoherence, s.coherence);
+            tc.verifyGreaterThan(s.transportCoherence, [0.9 0.9]);    % a source fans out: 0.945, not 1
+            r = rheome.flow.smoothness(randn(size(X, 1), 1), S, lbo);
+            tc.verifyLessThan(abs(r.transportCoherence), 0.1);
+            tc.verifyTrue(all(isnan(rheome.flow.smoothness(lbo.Phi(:, 5), S, lbo).transportCoherence)));
+        end
+
+        function finestSigmaIsFinite(tc)
+            [S, lbo] = i_sphere();  B = rheome.flow.bandlimit(i_atoms(S, lbo, 2), S, lbo, CutoffMM=700);
+            tc.verifyEqual(B.finestSigmaMM, sqrt(2) * min(B.keptWavelengthMM) / (2*pi), 'RelTol', 1e-12);
+        end
+
         function keepingEveryBandIsLossless(tc)
             [S, lbo] = i_sphere();  X = i_atoms(S, lbo, 2);
             B = rheome.flow.bandlimit(X, S, lbo, CutoffMM=1);

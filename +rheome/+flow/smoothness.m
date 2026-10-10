@@ -12,8 +12,14 @@ function s = smoothness(X, S, lbo)
 % the arrows across folds counts as roughness -- which is what the eye sees in a quiver plot.
 % .coherence (vectors only) is the magnitude-weighted mean cosine between the vectors at the two ends
 % of every mesh edge: 1 = neighbouring arrows parallel, 0 = unrelated.
+% ⭐ .transportCoherence (vectors) is the same cosine after carrying each arrow to its neighbour by
+% the Levi-Civita transport (rheome.operators.connection_laplacian .Rt), on the tangential part. It
+% does NOT count the turning of the tangent plane across folds, which bounds the two ambient
+% measures for ANY tangent field on the cortex: on OMEGA sub-0002 the tangential gradient of the 6th
+% Laplace-Beltrami mode (wavelength > 300 mm) reads 16 mm and coherence 0.875 ambient, 0.960 here.
+% Read arrow smoothness here, against that ceiling.
 %
-% OUTPUT (struct s): .wavelengthMM [1 x nT]   .coherence [1 x nT] (NaN for scalar maps)
+% OUTPUT (struct s): .wavelengthMM [1 x nT]   .coherence .transportCoherence [1 x nT] (NaN for scalar maps)
 %
 % See also: rheome.flow.bandlimit, rheome.differential.helmholtzbands
 %
@@ -30,8 +36,16 @@ function s = smoothness(X, S, lbo)
             u = [X(a+1,t) X(a+2,t) X(a+3,t)];  v = [X(b+1,t) X(b+2,t) X(b+3,t)];
             s.coherence(t) = sum(sum(u .* v, 2)) / max(sum(vecnorm(u, 2, 2) .* vecnorm(v, 2, 2)), realmin);
         end
+        C = rheome.operators.connection_laplacian(S.Vertices, S.Faces);  [i, j, r] = find(C.Rt);
+        s.transportCoherence = zeros(1, nT);
+        for t = 1:nT
+            w = [X(1:3:end,t) X(2:3:end,t) X(3:3:end,t)];  w = w - sum(w .* C.normal, 2) .* C.normal;
+            z = sum(w .* C.e1, 2) + 1i * sum(w .* C.e2, 2);  zi = r .* z(i);  zj = z(j);   % z_i carried to j
+            s.transportCoherence(t) = sum(real(conj(zi) .* zj)) / max(sum(abs(zi) .* abs(zj)), realmin);
+        end
     elseif size(X, 1) == nV
-        num = sum(X .* (M*X), 1);  den = sum(X .* (L*X), 1);  s.coherence = NaN(1, size(X, 2));
+        num = sum(X .* (M*X), 1);  den = sum(X .* (L*X), 1);
+        s.coherence = NaN(1, size(X, 2));  s.transportCoherence = s.coherence;
     else
         error('flow:smoothness:size', 'X has %d rows; expects nV = %d or 3nV.', size(X, 1), nV);
     end
