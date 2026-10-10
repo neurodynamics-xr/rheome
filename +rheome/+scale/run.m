@@ -10,6 +10,8 @@ function R = run(name, opts)
 %   bandsnr.csv       the per-octave SNR the band analyses used
 %   flowtiles.csv     periodicflow: one row per tile x (total, periodic)
 %   grouptrack.csv    grouptrack: one row per hemisphere x depth x frame rate
+%   gaugeflow.csv     periodicflow: the alpha flow in the group gauge (FreeSurfer sphere poles), one
+%                     row per chart x band x ico3 sphere patch -- the input of rheome.scale.reducegaugeflow
 %   fieldsmooth.csv   fieldsmooth: one row per (band, map, frame) -- Dirichlet wavelength, coherence
 %   fieldsmooth_maps.mat   fieldsmooth: the strongest frame's raw and band-limited fields (figure data)
 %   eventsensors.mat  eventsensors: the tracked event on the sensor data (figure data)
@@ -134,8 +136,12 @@ function R = run(name, opts)
                     if isempty(snr), error('scale:run:order', 'bandresolution needs bandsnr first'); end
                     M = [M; rheome.scale.measure_bandresolution(name, S, snr)]; %#ok<AGROW>
                 case "periodicflow"
-                    [Tf, Xf] = rheome.scale.measure_periodicflow(name, S, NumTiles=opts.FlowTiles);
+                    [Tf, Xf, Gf] = rheome.scale.measure_periodicflow(name, S, NumTiles=opts.FlowTiles);
                     M = [M; Tf];  X.flowtiles = Xf; %#ok<AGROW>
+                    if ~isempty(Gf)
+                        X.gaugeflow = [table(repmat(string(name),height(Gf),1), repmat(opts.Cohort,height(Gf),1), ...
+                            repmat(opts.Dataset,height(Gf),1), 'VariableNames', {'subject','cohort','dataset'}), Gf];
+                    end
                 case "grouptrack"
                     [Tg, Xg, Best] = rheome.scale.measure_grouptrack(name, S);
                     M = [M; Tg];  X.grouptrack = Xg; %#ok<AGROW>

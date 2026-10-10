@@ -1,9 +1,10 @@
-function [T, X] = measure_periodicflow(name, S, opts)
+function [T, X, G] = measure_periodicflow(name, S, opts)
 % SCALE.MEASURE_PERIODICFLOW  Apparent alpha flow on the TOTAL and the PERIODIC envelope, over many tiles.
 %
 %   [T, X] = rheome.scale.measure_periodicflow(name)
 %   [T, X] = rheome.scale.measure_periodicflow(name, rheome.scale.sensors(name), NumTiles=12)
 %   [T, X] = rheome.scale.measure_periodicflow(name, S, Centres=c)     % explicit tile centres (samples)
+%   [T, X, G] = rheome.scale.measure_periodicflow(...)                  % + the flow in the group gauge
 %
 % alpha_apparent_flow_omega.m and alpha_periodic_flow_omega.m with the figures removed, run on
 % NumTiles 2 s tiles spread EVENLY across the recording instead of the single strongest one. The
@@ -36,6 +37,17 @@ function [T, X] = measure_periodicflow(name, S, opts)
 %   env_spatial_r_median             (periodic only) spatial corr of the two tile-mean envelopes
 % X is the per-tile table (one row per tile x band), written as flowtiles.csv by rheome.scale.run; its
 % power_ratio and rejected columns say which tiles the summaries used.
+%
+% G is the velocity IN THE GROUP GAUGE, written as gaugeflow.csv: one row per chart x band x patch
+% (rheome.geom.spherepatches, ico-PatchLevel on the registered sphere, so patch k is the same place in
+% every subject), pooled over every frame of every accepted tile and every vertex of the patch:
+%   n_vertices, n_samples                vertices in the patch, vertex-frames pooled
+%   vn_mean, vw_mean                     mean north / west velocity (rheome.geom.sphereframe)    m/s
+%   tnn, tnw, tww                        mean v (x) v in (north, west): the orientation tensor, (m/s)^2
+%   env_mean                             mean activation |J^| (rheome.flow.activation units)
+%   colat_deg, lon_deg, spread_deg, has_pole, excluded   the patch, and whether the gauge holds there
+% chart "z" has its poles at the sphere's +-z (the group gauge); chart "x" at +-x, to read the polar
+% patches z excludes. Left hemisphere only, as the flow. Empty if the surface has no Reg.Sphere.
 %
 % ⚠⚠ TILES ARE SCREENED FOR STATIONARITY, AND A BAD TILE NO LONGER COSTS THE OTHER ELEVEN. The split
 % compares each tile's |C|^2 with a background fitted on the WHOLE recording, so it is only valid
@@ -79,6 +91,7 @@ function [T, X] = measure_periodicflow(name, S, opts)
         opts.FitRange (1,2) double = [1 45]
         opts.MaxPowerRatio (1,1) double {mustBeGreaterThan(opts.MaxPowerRatio, 1)} = 3
         opts.EdgeS (1,1) double = 10
+        opts.PatchLevel (1,1) double = 3
     end
     if isempty(S), S = rheome.scale.sensors(name); end
     band = opts.Band;  FITR = opts.FitRange;
@@ -115,6 +128,8 @@ function [T, X] = measure_periodicflow(name, S, opts)
                     'HalfPowerFrequency2', band(2), 'SampleRate', fs);
     nm = ["total" "periodic"];
     X = table();
+    GZ = i_gaugeprep(S, gvL, SL, opts.PatchLevel);      % [] without a registration sphere
+    if ~isempty(GZ), acc = zeros(SL.nV, 7, 2, 2); end   % vertex x [n vn vw nn nw ww env] x band x chart
     for ti = 1:numel(c)
         seg = (c(ti) - floor(Lt/2) - Lm) : (c(ti) + ceil(Lt/2) - 1 + Lm);
         Xw = F(:, seg);  nT = numel(seg);
@@ -158,6 +173,9 @@ function [T, X] = measure_periodicflow(name, S, opts)
             mE = mean(A(:, 1:end-1), 1);  mS = median(o.speed, 1);
             r = corr(mE(:), mS(:));  ne = i_neff(mE(:), mS(:));
             Am{v} = mean(A, 2);
+            if ~isempty(GZ)
+                for ch = 1:2, acc(:,:,v,ch) = acc(:,:,v,ch) + i_frameSums(o.velocity * rate, A(:, 1:end-1), GZ.fr{ch}); end
+            end
             X = [X; table(ti, c(ti)/fs, nm(v), o.nT, mean(mE), median(o.speed(:)), prctile(o.speed(:), 95), ...
                  prctile(abs(o.vorticity(:)), 95), prctile(abs(o.divergence(:)), 95), r, ne, ...
                  shareBand, bgAbove, D.partition, NaN, o.seconds, pr, "", ...
@@ -168,6 +186,8 @@ function [T, X] = measure_periodicflow(name, S, opts)
             name, ti, numel(c), c(ti)/fs, X.r_within(end-1), X.r_within(end), shareBand);
     end
 
+    G = table();
+    if ~isempty(GZ), G = i_gaugeTable(acc, GZ, nm); end
     ok = X.rejected == "";
     if ~any(ok), error('scale:periodicflow:notiles', 'all %d tiles were rejected by the stationarity screen', numel(c)); end
     nAcc = sum(ok & X.band == "total");
@@ -194,6 +214,48 @@ function [T, X] = measure_periodicflow(name, S, opts)
             m(end+1) = "env_spatial_r_median";  v(end+1) = median(x.env_spatial_r);  u(end+1) = "r"; %#ok<AGROW>
         end
         T = [T; rheome.scale.rows("periodicflow", m, v, u, b)]; %#ok<AGROW>
+    end
+end
+
+function GZ = i_gaugeprep(S, gvL, SL, level)
+% the two charts' frames and patches on the left hemisphere (rheome.geom.sphereframe, rheome.geom.spherepatches)
+    GZ = [];
+    if ~isfield(S, 'Sf') || ~isfield(S.Sf, 'Sphere') || isempty(S.Sf.Sphere)
+        fprintf('[periodicflow] no Reg.Sphere on the surface: gaugeflow skipped\n');  return
+    end
+    Sp = S.Sf.Sphere(gvL, :);  ax = [0 0 1; 1 0 0];
+    for ch = 1:2
+        GZ.fr{ch} = rheome.geom.sphereframe(SL.Vertices, SL.Faces, SL.VertNormals, Sp, Axis=ax(ch,:));
+        GZ.P{ch}  = rheome.geom.spherepatches(Sp, Level=level, Axis=ax(ch,:));
+    end
+end
+
+function a = i_frameSums(vel, A, fr)
+% per vertex, over frames: [n, sum vn, sum vw, sum vn^2, sum vn*vw, sum vw^2, sum env]; the
+% frame's singular vertices contribute nothing
+    vx = vel(1:3:end, :);  vy = vel(2:3:end, :);  vz = vel(3:3:end, :);
+    e1 = fr.e1;  e2 = fr.e2;  ok = ~fr.singular;  e1(~ok,:) = 0;  e2(~ok,:) = 0;
+    vn = vx.*e1(:,1) + vy.*e1(:,2) + vz.*e1(:,3);
+    vw = vx.*e2(:,1) + vy.*e2(:,2) + vz.*e2(:,3);
+    nT = size(vel, 2);
+    a = [ok*nT, sum(vn,2), sum(vw,2), sum(vn.^2,2), sum(vn.*vw,2), sum(vw.^2,2), ok.*sum(A,2)];
+end
+
+function G = i_gaugeTable(acc, GZ, nm)
+% vertex sums -> patch means, one row per chart x band x patch
+    G = table();  chart = ["z" "x"];
+    for ch = 1:2
+        P = GZ.P{ch};  nP = numel(P.n);
+        for b = 1:2
+            s = zeros(nP, 7);
+            for j = 1:7, s(:,j) = accumarray(P.patch, acc(:,j,b,ch), [nP 1]); end
+            m = s(:,2:7) ./ s(:,1);
+            G = [G; table(repmat(chart(ch),nP,1), repmat(nm(b),nP,1), (1:nP)', P.n, s(:,1), ...
+                 m(:,1), m(:,2), m(:,3), m(:,4), m(:,5), m(:,6), P.colat, P.lon, P.spread, ...
+                 P.hasPole, P.excluded, 'VariableNames', {'chart','band','patch','n_vertices', ...
+                 'n_samples','vn_mean','vw_mean','tnn','tnw','tww','env_mean','colat_deg', ...
+                 'lon_deg','spread_deg','has_pole','excluded'})]; %#ok<AGROW>
+        end
     end
 end
 
