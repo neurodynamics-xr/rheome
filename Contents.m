@@ -43,10 +43,11 @@
 %   rheome.modes             - Resting-state pattern atlas: large-scale complex modes, their nulls and the keep rule.
 %   rheome.qc                - Quality control of raw MEG.
 %   rheome.report            - A measured result written up as a mini-article, with its provenance.
-%   rheome.io                - Read Brainstorm files from disk.
+%   rheome.io                - Read Brainstorm files from disk; write a result as a viewer bundle.
 %   rheome.import            - Brainstorm -> data cache (write once).
 %   rheome.load              - Data cache -> analyses, and where outputs go (rheome.load.root, rheome.load.outroot).
 %   rheome.show              - Visualizations.
+%   rheome.view              - A result in the Cortical Flow Editor from one call (rheome.show without it).
 %   rheome.utils             - Shared helpers.
 %   rheome.demos             - Runnable, self-checking demonstrations (start here).
 %
