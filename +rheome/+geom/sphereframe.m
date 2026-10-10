@@ -20,7 +20,7 @@ function fr = sphereframe(V, F, N, Sph, opts)
 % ⚠ THE FRAME IS MEANINGLESS NEAR A POLE, AND +z IS IN ACTIVE CORTEX (precentral: mu/alpha). The
 % meridians converge, so a patch of half-width rho at colatitude theta sees the frame turn by about
 % 2*rho*cot(theta) relative to parallel transport; a pooled vector there mixes directions. Two
-% remedies: drop the vertices near the poles (.colat) or read them in the
+% remedies, both measured by rheome.geom.spherepatches: drop the patch (.excluded) or read it in the
 % second chart, Axis=[1 0 0], whose poles lie on the equator of the first. The two charts differ
 % by a known per-vertex rotation (.e1 of both), so nothing is lost by switching.
 %
@@ -38,7 +38,7 @@ function fr = sphereframe(V, F, N, Sph, opts)
 %   .singular [nV x 1] logical: the poles and ill-conditioned push-forwards
 %   .condition [nV x 1]  .axis
 %
-% See also: rheome.operators.gauge, rheome.operators.trivial_connection, rheome.scale.measure_atlas
+% See also: rheome.geom.spherepatches, rheome.operators.gauge, rheome.operators.trivial_connection, rheome.scale.measure_atlas
 %
 % Author: Diellor Basha, 2026
 

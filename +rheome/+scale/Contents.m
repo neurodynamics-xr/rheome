@@ -24,6 +24,7 @@
 %   rheome.scale.measure_resolution     - The resolution report's headline numbers for one subject.
 %   rheome.scale.reduce                 - Per-subject tables -> group distributions, the anchor's place, cohort contrasts.
 %   rheome.scale.reducegauge            - Per-subject gaugetensor.csv -> the group alpha orientation tensor per shared tile.
+%   rheome.scale.reducegaugeflow        - Per-subject gaugeflow.csv -> the group alpha flow per sphere patch in the shared frame.
 %   rheome.scale.rows                   - Long-format metric rows: one row per (analysis, metric, band).
 %   rheome.scale.run                    - One subject, every ported analysis, compact tables out. The per-subject driver.
 %   rheome.scale.sensors                - The channel selection, leadfield, noise covariance and kernel every measure shares.
