@@ -12,6 +12,8 @@ function info = importsubject(name, protoDir, opts)
 %   atlas.mat     rheome.import.atlas(name)
 %   mri.mat       SCS, NCS of the subject's MRI, when the protocol staged it (rheome.scale.measure_atlas: MNI)
 %   fibers_subject.mat  the subject's own tractography, when the protocol carries it (rheome.connectome.resolve)
+%   pet.mat       the protocol's PET surface maps, when it carries them: pet(k).name .x [nV x 1] .units .file
+%                 (rheome.scale.measure_multimodal); a map on another surface than the leadfield's is an error
 %
 % ⭐ THE RECORDING IS READ FROM THE RAW .bst, NOT AN IMPORTED BLOCK. The protocol holds only the
 % raw link (data_0raw_*), e.g. at 1200 Hz; rheome.io.read.rawbst reads it with the SSP projectors applied,
@@ -72,10 +74,26 @@ function info = importsubject(name, protoDir, opts)
         builtin('save', fullfile(d, 'mri.mat'), '-struct', 'mri');
     end
     if ~isempty(L.fibers), copyfile(L.fibers, fullfile(d, 'fibers_subject.mat')); end
+    if ~isempty(L.pet), i_pet(L.pet, fullfile(d, 'pet.mat')); end
 
     k = dir(fullfile(L.restDir, 'results_*KERNEL*.mat'));  k = k(~startsWith({k.name}, '._'));
     info.shippedKernels = string({k.name});
     info.importSeconds = toc(t0);
+end
+
+function i_pet(files, out)
+% Brainstorm results_surface_PET_* -> pet struct array; only maps on the leadfield's cortex
+    pet = struct('name', {}, 'x', {}, 'units', {}, 'file', {});
+    for k = 1:numel(files)
+        r = builtin('load', files{k}, 'ImageGridAmp', 'SurfaceFile', 'Comment', 'DisplayUnits');
+        [~, sf] = fileparts(char(r.SurfaceFile));
+        if ~strcmp(sf, 'tess_cortex_pial_low')
+            error('scale:importsubject:pet', '%s is on %s, not tess_cortex_pial_low', files{k}, r.SurfaceFile);
+        end
+        nm = regexprep(strtrim(regexprep(char(r.Comment), '^PET\s*', '')), '\W+', '_');
+        pet(end+1) = struct('name', nm, 'x', double(r.ImageGridAmp(:, 1)), 'units', char(r.DisplayUnits), 'file', files{k}); %#ok<AGROW>
+    end
+    builtin('save', out, 'pet');
 end
 
 function [rec, meta] = i_raw(rawFile, opts)
