@@ -106,6 +106,9 @@ classdef tPhaseGradient < matlab.unittest.TestCase
             out = rheome.flow.phasegradient(z, S, 'Rate', fs);
             sp = out.speed(:, 3:end-2);
             tc.verifyEqual(median(sp(:)), lam*f0, 'RelTol', 1e-2);   % 0.6 m/s
+            vx = out.velocity(:, 1, 3:end-2);  vy = out.velocity(:, 2, 3:end-2);
+            tc.verifyEqual(median(vx(:)), lam*f0, 'RelTol', 1e-2);   % along +x, not -x
+            tc.verifyLessThan(abs(median(vy(:))), 1e-6);
         end
 
         function theEdgeWrappedFormBeatsTheDividedDifferenceAtCoarseResolution(tc)
