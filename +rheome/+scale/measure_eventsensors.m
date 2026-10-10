@@ -8,7 +8,7 @@ function [T, ev] = measure_eventsensors(name, S, Best, opts)
 % rheome.detect.eventsensors on the same 8-16 Hz analytic sensor signal and the same minimum-norm kernel
 % rheome.flow.envelopemodes builds the tracked envelope from (8th-order IIR band-pass, Hilbert at the
 % sensors). Tracker frame f of window w at dyadic level jj covers 300-fps frames
-% (w-1)*WindowS*300 + (f-1)*2^jj + (1 : 2^jj), i.e. samples ((frame-1)*dec + 1) ... at the recording rate.
+% frame0 + (w-1)*WindowS*300 + (f-1)*2^jj + (1 : 2^jj) (frame0: grouptrack's clean-span offset), i.e. samples ((frame-1)*dec + 1) ... at the recording rate.
 %
 % Returns rheome.scale.rows (analysis "eventsensors"), band "<hemi>/d<depth>/<fps>fps", metrics:
 %   n_steps, passed (1 if the path beat the surrogate threshold), carrying_channels_median (per step),
@@ -43,8 +43,9 @@ function [T, ev] = measure_eventsensors(name, S, Best, opts)
     T = table();  ev = struct([]);
     for b = Best(:)'
         H = S.B.(char(b.hemi));  rows = reshape((double(H.gv(:))' - 1) * 3 + (1:3)', [], 1);
-        bs = 2^b.jj;  f0 = (b.window - 1) * nW + ((1:max(b.track.frames))' - 1) * bs;   % 300-fps frame before each tracker frame
-        s0 = (b.window - 1) * nW * dec;  pad = round(0.5 * fs);
+        w0 = b.frame0 + (b.window - 1) * nW;                                    % 300-fps frames before the window
+        bs = 2^b.jj;  f0 = w0 + ((1:max(b.track.frames))' - 1) * bs;   % 300-fps frame before each tracker frame
+        s0 = w0 * dec;  pad = round(0.5 * fs);
         s = max(1, s0 + 1 - pad) : min(size(F, 2), s0 + nW * dec + pad);       % the window, +-0.5 s
         fsm = [f0 * dec + 1, (f0 + bs) * dec] - (s(1) - 1);
         E = rheome.detect.eventsensors(b.track, b.G, S.G(:, rows), Res.ImagingKernel(rows, :), Fa(:, s), ...
