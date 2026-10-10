@@ -18,6 +18,8 @@ function [T, X, maps] = measure_fieldsmooth(name, S, opts)
 % Returns rheome.scale.rows (analysis "fieldsmooth"): for each map <m> in J Jt absJ div curl phi psi,
 %   <m>_wavelength_mm   median over frames of the Dirichlet wavelength                mm
 %   <m>_coherence       (vectors) median magnitude-weighted neighbour cosine           cos
+%   <m>_transport_coherence (vectors) the same after Levi-Civita transport: arrow
+%                       smoothness without the fold turning that bounds the ambient two  cos
 % and normal_frac, harmonic_frac (band ""), finest_sigma_mm per cutoff. X is the per-frame table.
 % maps (third output, for the figure): the strongest frame's raw and band-limited fields at every cutoff,
 % the hemisphere surface, the frame time.
@@ -79,6 +81,7 @@ function [T, X, maps] = measure_fieldsmooth(name, S, opts)
             T = [T; rheome.scale.rows("fieldsmooth", m + "_wavelength_mm", median(X.wavelengthMM(k)), "mm", g)]; %#ok<AGROW>
             if any(~isnan(X.coherence(k)))
                 T = [T; rheome.scale.rows("fieldsmooth", m + "_coherence", median(X.coherence(k)), "cos", g)]; %#ok<AGROW>
+                T = [T; rheome.scale.rows("fieldsmooth", m + "_transport_coherence", median(X.transportCoherence(k)), "cos", g)]; %#ok<AGROW>
             end
         end
     end
@@ -93,7 +96,7 @@ function X = i_measure(X, maps, band, tS, Sh, lbo)
     for m = string(fieldnames(maps))'
         s = rheome.flow.smoothness(maps.(m), Sh, lbo);  n = numel(tS);
         X = [X; table(repmat(band, n, 1), repmat(m, n, 1), tS(:), s.wavelengthMM(:), s.coherence(:), ...
-             'VariableNames', {'band', 'map', 'tS', 'wavelengthMM', 'coherence'})]; %#ok<AGROW>
+             s.transportCoherence(:), 'VariableNames', {'band', 'map', 'tS', 'wavelengthMM', 'coherence', 'transportCoherence'})]; %#ok<AGROW>
     end
 end
 
