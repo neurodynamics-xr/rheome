@@ -50,6 +50,8 @@ function a = analyses(which)
 %   gaugetensor      MS1 G12 (section 12.3)    alpha orientation tensor per depth-3 group tile in the shared gauge
 %   connectome       MS1 G12 (Fig. 3C)         Destrieux -> DK vs dyadic roll-up; connectome-wavelet widths, gamma sweep
 %                    -- the four run only when asked (nsp cf-atlas), not "ported"; rheome.scale.measure_atlas
+%   multimodal       MS1 multimodal (ea515f28) MEG band power, PET SUVR, fibre degree through one wavelet bank on
+%                                              one dyadic ladder, exact roll-up; run only when asked, not "ported"
 %   coefficients     (Prognome input)          rheome.scale.coefficients: tile x scale x time envelopes;
 %                                              run only when asked (a ~200 MB file), so not "ported"
 %
@@ -60,7 +62,7 @@ function a = analyses(which)
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
            "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
            "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" ...
-           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "correspondence" "atlasevents" "gaugetensor" "connectome" "coefficients"];
+           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "correspondence" "atlasevents" "gaugetensor" "connectome" "multimodal" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end

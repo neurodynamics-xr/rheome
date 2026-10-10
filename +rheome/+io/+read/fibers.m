@@ -22,9 +22,15 @@ function endPts = fibers(name)
         error('io:read:fibers:missing', ...
             'No fibers cached for ''%s'' (expected %s). Register + export a Fibers .mat first.', name, f);
     end
-    Fm = load(f, 'Points');
-    P  = double(Fm.Points);
-    endPts = P(:, [1 end], :);      % first + last point of each streamline -> [nFib x 2 x 3]
+    % a 1e6-streamline Brainstorm file holds 2.4 GB of Points, its ends 48 MB: read only the two end slices
+    % from a v7.3 (HDF5) file; an older MAT-file cannot be sliced and is loaded whole, as before
+    fid = fopen(f, 'r');  hdr = fread(fid, [1 20], '*char');  fclose(fid);
+    if startsWith(hdr, 'MATLAB 7.3')
+        m = matfile(f);  n = size(m, 'Points', 2);
+        endPts = double(cat(2, m.Points(:, 1, :), m.Points(:, n, :)));   % first + last point -> [nFib x 2 x 3]
+    else
+        Fm = load(f, 'Points');  endPts = double(Fm.Points(:, [1 end], :));
+    end
 end
 
 % Author: Diellor Basha, 2026

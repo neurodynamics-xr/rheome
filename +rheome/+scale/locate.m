@@ -19,6 +19,8 @@ function L = locate(protoDir, sub)
 % (.noiseRaw '' if the protocol holds no noise run), and two optional files ('' when absent):
 %   .mri     anat/<sub>/subjectimage*.mat (not a volume atlas): its SCS/NCS place the cortex in MNI
 %   .fibers  anat/<sub>/tess_fibers*.mat: the subject's OWN tractography (nsp bst-fibers' augmented protocol)
+% and .pet, a cell of data/<sub>/PET/results_surface_PET_*.mat (nsp bst-pet / bst-multimodal: one SUVR map per
+% tracer on the cortex), {} when absent
 %
 % See also: rheome.scale.importsubject, rheome.scale.run
 %
@@ -61,6 +63,8 @@ function L = locate(protoDir, sub)
     L.mri = '';  if ~isempty(m), L.mri = fullfile(m(1).folder, m(1).name); end
     b = dir(fullfile(a, 'tess_fibers*.mat'));  b = b(~startsWith({b.name}, '._'));
     L.fibers = '';  if ~isempty(b), L.fibers = fullfile(b(1).folder, b(1).name); end
+    p = dir(fullfile(protoDir, 'data', L.sub, 'PET', 'results_surface_PET_*.mat'));  p = p(~startsWith({p.name}, '._'));
+    L.pet = fullfile({p.folder}, {p.name});
 end
 
 function f = i_one(d, pat)
