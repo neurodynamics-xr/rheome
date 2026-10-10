@@ -22,6 +22,9 @@
 %   rheome.geom.sphereframe - the group gauge: the registered sphere's meridian pushed to the cortex
 %   rheome.geom.spherepatches - ico patches on the registered sphere (same place in every subject), and
 %                               where the polar gauge turns too much to pool (.excluded -> use chart x)
+%   rheome.geom.spiralorder   - a 1-D order of vertices or tiles along a pole-to-pole spiral in the same gauge:
+%                               the same order in every subject (sphere.reg); meridional motion reads as
+%                               monotone motion along it
 %                 (poles at sphere.reg's +-z, the same anatomical place in every subject).
 %   rheome.geom.tiles  - one depth of the tree as a graph: vertex -> tile lookup, membership, and the
 %                 tile adjacency P'*A*P (cut-edge counts). .heap says whether node k's children
