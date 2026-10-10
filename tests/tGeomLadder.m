@@ -7,6 +7,7 @@ classdef tGeomLadder < matlab.unittest.TestCase
     end
     methods (TestClassSetup)
         function build(t)
+            rheomeTestSubject(t, 'subject');   % skips, with the reason, when the cache or the subject is absent
             try
                 t.L = rheome.geom.ladder(rheomeTestSubject(), MaxDepth=8);
             catch

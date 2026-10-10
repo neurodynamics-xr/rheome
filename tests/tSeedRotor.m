@@ -8,6 +8,7 @@ classdef tSeedRotor < matlab.unittest.TestCase
     end
     methods (TestClassSetup)
         function build(t)
+            rheomeTestSubject(t, 'subject');   % skips, with the reason, when the cache or the subject is absent
             try, t.B = rheome.load.bases(rheomeTestSubject());
             catch, t.assumeFail('cached bases for test subject are not present'); end
         end

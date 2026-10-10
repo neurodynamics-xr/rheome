@@ -9,6 +9,7 @@ classdef tVortexSpectrum < matlab.unittest.TestCase
 
     methods (TestClassSetup)
         function build(t)
+            rheomeTestSubject(t, 'subject');   % skips, with the reason, when the cache or the subject is absent
             try
                 t.B  = rheome.load.bases(rheomeTestSubject());
                 t.g  = rheome.operators.gauge(t.B.L.S.Vertices, double(t.B.L.S.Faces), Method="diffusion");

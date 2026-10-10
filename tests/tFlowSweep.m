@@ -11,6 +11,7 @@ classdef tFlowSweep < matlab.unittest.TestCase
     methods (TestClassSetup)
         function build(t)
             C = [];
+            rheomeTestSubject(t, 'subject');   % skips, with the reason, when the cache or the subject is absent
             try, C = rheome.select.catalog(); catch, end
             if isempty(C) || ~any(C.recording_id == string(rheomeTestSubject()) & C.bank == "frame")
                 t.assumeFail('no default frame store for test subject');

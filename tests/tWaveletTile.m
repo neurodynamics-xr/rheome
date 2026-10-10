@@ -8,6 +8,7 @@ classdef tWaveletTile < matlab.unittest.TestCase
     end
     methods (TestClassSetup)
         function build(t)
+            rheomeTestSubject(t, 'subject');   % skips, with the reason, when the cache or the subject is absent
             try
                 C = rheome.select.catalog();
                 h = find(C.recording_id == string(rheomeTestSubject()) & C.bank == "frame" & ...

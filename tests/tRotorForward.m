@@ -7,6 +7,7 @@ classdef tRotorForward < matlab.unittest.TestCase
     end
     methods (TestClassSetup)
         function build(t)
+            rheomeTestSubject(t, 'subject', 'noise');   % skips, with the reason, when the cache or the subject is absent
             try
                 t.B = rheome.load.bases(rheomeTestSubject());
                 d = rheome.load.dirac(rheomeTestSubject());

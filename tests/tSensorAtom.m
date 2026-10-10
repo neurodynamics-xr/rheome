@@ -9,6 +9,7 @@ classdef tSensorAtom < matlab.unittest.TestCase
 
     methods (TestClassSetup)
         function build(t)
+            rheomeTestSubject(t, 'subject');   % skips, with the reason, when the cache or the subject is absent
             try
                 B  = rheome.load.bases(rheomeTestSubject());
                 st = rheome.load.study(rheomeTestSubject());
