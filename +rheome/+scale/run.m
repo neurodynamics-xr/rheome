@@ -23,6 +23,8 @@ function R = run(name, opts)
 %   helmholtzbands.csv  helmholtzbands: per hemisphere x band x plant -- Fig. 4A-B on this cortex
 %   ownregion.csv     ownregion: per Desikan-Killiany region -- own-region fraction of div and curl
 %   geometry.csv      geometry: per hemisphere x level x tile -- atom-tile overlap (Fig. 2A)
+%   geometry_parcels.csv, geometry_tiles.csv   geometry: area and equivalent-disc diameter per DK and
+%                     Destrieux parcel (G12g) and per tile at depths 0-3 (G12h)
 %   fusion.csv        fusion: per frame -- fused kernels against reconstruct-then-differentiate
 %                     (the five MS1 group P2 tables, nsp rheome-ms1-scale; opt-in, not in "ported")
 %   patterns.csv, patternnulls.csv   MS1 G5 / G13 (P3, nsp cf-patterns): rheome.scale.measure_patterns --
@@ -176,7 +178,8 @@ function R = run(name, opts)
                     [To, X.ownregion] = rheome.scale.measure_ownregion(name, S, Kf);
                     M = [M; To]; %#ok<AGROW>
                 case "geometry"
-                    [Tq, X.geometry] = rheome.scale.measure_geometry(name, S);
+                    [Tq, X.geometry, Zg] = rheome.scale.measure_geometry(name, S);
+                    X.geometry_parcels = Zg.parcels;  X.geometry_tiles = Zg.tiles;
                     M = [M; Tq]; %#ok<AGROW>
                 case "fusion"
                     [Tz, X.fusion] = rheome.scale.measure_fusion(name, ctx, Kf);
