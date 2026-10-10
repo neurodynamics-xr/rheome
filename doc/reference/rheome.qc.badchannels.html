@@ -2,8 +2,33 @@
 <html><head><meta charset="utf-8"><title>rheome.qc.badchannels</title></head><body>
 <h1>rheome.qc.badchannels</h1>
 <p><em>function rheome.qc</em> &mdash; Rheome</p>
-<pre>  Author: Diellor Basha, 2026
+<pre>  QC.BADCHANNELS  Pre-registered automatic bad-channel detection on staged Brainstorm raw links.
+ 
+    out = rheome.qc.badchannels(rawDirs, dataRoot, outDir)            % run, write tables + figures
+    out = rheome.qc.badchannels(rawDirs, dataRoot, outDir, 'DryRun', true)   % list runs + thresholds only
+ 
+    rawDirs  : cellstr of extracted '@raw*' study folders (each holds data_0raw_*.mat and channel_*.mat),
+               COPIES of the staged protocols -- this function never writes into them.
+    dataRoot : where the BIDS root '/data' of the import container lives on this host.
+    outDir   : output folder (tables, per-channel evidence PNGs).
+ 
+    Criteria and thresholds are fixed in research/methods/omega-badchannels/PROTOCOL.md, written before
+    the first run. They are the defaults of i_params and must not be tuned on the validation set.
+    ⭐ v2 (PROTOCOL-v2.md, Diellor Basha 2026-10-02): an EMPTY-ROOM recording (rheome.qc.isemptyroom: task-noise,
+    task-emptyroom, sub-emptyroom) is never labelled. Its metrics are still computed and saved, and the
+    rules that WOULD have fired are kept as rawFlag/rawWhy for the record, but flag is all false. Subject
+    recordings are untouched: same criteria, same thresholds, bit-identical flags to v1.
+    ⚠ v1 marked 772 empty-room channels across one resting cohort, 652 of them PSD-only: an empty-room spectrum is
+    sensor noise alone, so a run-relative PSD z there measures sensor noise floors, not artefacts.
+    ⭐ v3 (2026-10-08): the 65–115 Hz rule (PSD_HIGH) never labels a channel on its own, it only
+    corroborates another rule (rheome.qc.badchannelrules). A PSD_HIGH-only channel stays in rawFlag/rawWhy
+    and is counted in runs.csv nRulesFiredUnlabelled. Metrics and every other rule are unchanged from v2.
+    Only Brainstorm type 'MEG' is evaluated; MEG REF / system / EEG channels are never touched.
+    ⚠ process_detectbad and process_detectbad_mad flag SEGMENTS, not channels -- they do not fit here.
+    Requires Brainstorm on the path and started (brainstorm server) for in_fread.
+ 
+  See also: rheome.qc.badchannelrules, rheome.qc.isemptyroom, in_fread, process_detectbad_mad
 </pre>
-<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
 <p><a href="index.html">Rheome reference</a></p>
 </body></html>

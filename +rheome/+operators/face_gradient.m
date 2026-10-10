@@ -21,6 +21,11 @@ function fg = face_gradient(V, F)
 %   .W             [nV x nF] sparse area-weighted face->vertex average (row-normalized)
 %   .nV .nF
 %
+% Example:
+%   [V, F] = rheome.geom.icosphere(3);
+%   fg = rheome.operators.face_gradient(V, F);
+%   assert(max(abs(fg.Gx * ones(size(V, 1), 1))) < 1e-12)   % the gradient of a constant is zero
+%
 % See also: rheome.differential.divergence, rheome.differential.curl, rheome.differential.helmholtz
 %
 % Author: Diellor Basha, 2026

@@ -22,10 +22,16 @@
   OPTIONS: opts.tol (1e-6) .maxit (1000) .disp (0)
   OUTPUTS: V [n x k] eigenvectors (ascending);  D [k x k] diagonal eigenvalues (ascending, real)
  
+  Example:
+    [V, F] = rheome.geom.icosphere(3);
+    [L, M] = rheome.operators.laplace_beltrami(V, F);
+    [Phi, D] = rheome.eigen.smallest(L, M, 9);          % the constant, then the l = 1 and l = 2 shells
+    assert(issorted(diag(D)) &amp;&amp; norm(Phi' * M * Phi - eye(9)) &lt; 1e-6)
+ 
   See also: rheome.eigen.modes, rheome.operators.laplace_beltrami   (source: Brainstorm bst_eigs_smallest)
  
   Author: Diellor Basha, 2026 (port of bst_eigs_smallest)
 </pre>
-<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
 <p><a href="index.html">Rheome reference</a></p>
 </body></html>

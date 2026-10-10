@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_eventsensors</title></head><body>
+<h1>rheome.scale.measure_eventsensors</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_EVENTSENSORS  The sensor samples and channels that carry the tracked alpha events.
+ 
+    [T, ev] = rheome.scale.measure_eventsensors(name, S, Best)     % Best: 3rd output of measure_grouptrack
+    [T, ev] = rheome.scale.measure_eventsensors(name, S, Best, Hemi=&quot;L&quot;, Depth=8, JLevel=4, Fraction=0.5)
+ 
+  For every configuration in Best (the highest-scoring real Viterbi path per hemisphere x depth x rate),
+  rheome.detect.eventsensors on the same 8-16 Hz analytic sensor signal and the same minimum-norm kernel
+  rheome.flow.envelopemodes builds the tracked envelope from (8th-order IIR band-pass, Hilbert at the
+  sensors). Tracker frame f of window w at dyadic level jj covers 300-fps frames
+  (w-1)*WindowS*300 + (f-1)*2^jj + (1 : 2^jj), i.e. samples ((frame-1)*dec + 1) ... at the recording rate.
+ 
+  Returns rheome.scale.rows (analysis &quot;eventsensors&quot;), band &quot;&lt;hemi&gt;/d&lt;depth&gt;/&lt;fps&gt;fps&quot;, metrics:
+    n_steps, passed (1 if the path beat the surrogate threshold), carrying_channels_median (per step),
+    carrying_channels_union, footprint_top10_share (share of the footprint in the 10 strongest channels)
+  ev: the figure data for the configuration (Hemi, Depth, JLevel) -- E (eventsensors output), the window's
+  raw and band-passed sensor data, times, channel names, 2-D sensor positions (azimuthal equidistant
+  about the array's mean direction), the track and its tiles. Draw with rheome.show.eventsensors.
+ 
+  See also: rheome.detect.eventsensors, rheome.show.eventsensors, rheome.scale.measure_grouptrack
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

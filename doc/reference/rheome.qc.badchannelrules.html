@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.qc.badchannelrules</title></head><body>
+<h1>rheome.qc.badchannelrules</h1>
+<p><em>function rheome.qc</em> &mdash; Rheome</p>
+<pre>  QC.BADCHANNELRULES  The bad-channel rules of rheome.qc.badchannels and how they combine into a label (protocol v3).
+ 
+    [flag, why, rawFlag, rawWhy] = rheome.qc.badchannelrules(M, P)
+ 
+    M : metrics from rheome.qc.badchannels (fields sd, z_sd, r_sd, jumpfrac, z_lo, r_lo, z_hi, r_hi), each [nC x 1].
+    P : thresholds (rheome.qc.badchannels i_params: zFlat rFlat zNoisy rNoisy jumpFrac zPsd lrPsd).
+    flag    [nC x 1] logical : the channel is LABELLED bad.
+    why     {nC x 1}         : every rule that fired on a labelled channel ('' otherwise), e.g. 'NOISY PSD_HIGH'.
+    rawFlag [nC x 1] logical : ANY rule fired, labelled or not -- kept for the record.
+    rawWhy  {nC x 1}         : every rule that fired, whether or not the channel is labelled.
+ 
+    ⭐ v3 (2026-10-08): PSD_HIGH (65–115 Hz) never labels a channel on its own; it
+    only corroborates FLAT, NOISY, JUMPY or PSD_LOW. ⚠ Across one resting cohort all 53 PSD_HIGH-only subject marks of v1/v2
+    were sensor noise-floor differences above 65 Hz (38 on MRO11/MRO12/MRP41/MRP51/MRP53, each also raised in
+    the same session's empty-room run), not bad signal in the band we analyse.
+    The empty-room gate (rheome.qc.isemptyroom) is applied by the caller, after this step.
+ 
+  See also: rheome.qc.badchannels, rheome.qc.isemptyroom
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

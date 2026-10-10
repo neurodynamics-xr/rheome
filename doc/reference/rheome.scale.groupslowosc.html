@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.groupslowosc</title></head><body>
+<h1>rheome.scale.groupslowosc</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.GROUPSLOWOSC  The MS1 positive control across participants: one mean direction each, V-test for A-&gt;P, proportion and speed (G15, G16).
+ 
+    [G, P] = rheome.scale.groupslowosc(inDir, outDir)
+    [G, P] = rheome.scale.groupslowosc(inDir, outDir, SpeedRange=[1 7], Boot=2000, Seed=5)
+ 
+  inDir holds one folder per participant (rheome.scale.run's OutDir) with slowosc.csv (rheome.scale.measure_slowosc),
+  or nsp cf-slowosc's flat &lt;sub&gt;_slowosc.csv files (any depth).
+  Per participant x estimator x param x condition (hemispheres pooled): the circular mean of the event
+  directions (0 = anterior -&gt; posterior), its resultant, and the median event speed -&gt; participants.csv (P).
+  Across participants (plan section 1.2 and G15) -&gt; group.csv (G):
+    n             participants with at least MinEvents events
+    vtest_u/p     V-test of the participants' mean directions towards A-&gt;P (0), one-sided
+    frac_ap       proportion of participants whose mean direction is A-&gt;P (|angle| &lt; 90 deg), with its 95%
+                  Clopper-Pearson CI (ap_lo, ap_hi)
+    speed_median  median of the participants' median speeds, 95% percentile bootstrap CI over participants
+                  (Boot resamples): speed_lo, speed_hi; and frac_speed_in_range, the proportion of participants
+                  whose median speed lies in SpeedRange (1-7 m/s, Massimini et al. 2004, as the plan quotes it)
+  ⭐ The control passes for an estimator if, on the ORIGINAL events, the V-test rejects at alpha (Holm across
+    estimators x params is the reader's: the p values are reported raw) AND on the REVERSED events it does not
+    (the direction must flip), AND on the SURROGATES it does not. Column passes_* states each part; nothing is
+    pooled across cohorts here (AnphySleep is the only cohort of the primary control).
+ 
+  See also: rheome.scale.measure_slowosc, rheome.scale.vtest, rheome.scale.reduce
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_geometry</title></head><body>
+<h1>rheome.scale.measure_geometry</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_GEOMETRY  The atlas geometry checks on one subject's cortex: atom-tile overlap, gauge, roll-up.
+ 
+    [T, X] = rheome.scale.measure_geometry(name)
+    [T, X] = rheome.scale.measure_geometry(name, rheome.scale.sensors(name), Levels=2:5, RollupDepths=3:6)
+ 
+  The geometry parts of MS1 group plan G12, per hemisphere, on rheome.geom.tree (area bisection):
+ 
+  1. WAVELET-TILE MATCH (Fig. 2A). At each level l, one mexhat atom g(x) = x e^-x per tile at its most
+     interior vertex (largest geodesic distance to the tile's boundary), t_l = A_l / (4 pi) with
+     A_l = hemisphere area / 2^l, so the flat-space central lobe (area 4 pi t) equals one tile.
+     psi = Phi (g(t lambda) .* Phi(c,:)'). Per tile: lobe_ratio = area of the connected positive lobe
+     containing c / tile area; energy_in_tile = sum over the tile of a psi^2 / sum of a psi^2 (lumped area a).
+     Rows (band &quot;L&lt;l&gt;&quot;): lobe_ratio and energy_in_tile, medians over the tiles of both hemispheres.
+  2. GAUGE (Fig. 16). rheome.operators.gauge Method &quot;trivial&quot;, +1 at the two faces of largest separation
+     (the default). Rows (band &quot;L&quot; | &quot;R&quot;): n_singular (expected 2), charge_sum (expected chi = 2),
+     neighbour_angle_deg (median between neighbouring frame vectors), residual_rad (own connection,
+     0 by construction) and residual_lc_rad (against Levi-Civita).
+  3. ROLL-UP EXACTNESS (Section 13.4). An 8-16 Hz co-power connectome C = Re(sum_xyz X X^H) of the
+     tile-summed minimum-norm current (S.Res on the whole cached recording, analytic band-pass at
+     the sensors), direct at each depth in RollupDepths against block sums of the deepest. Rows (band
+     &quot;L&quot; | &quot;R&quot;): rollup_max_rel_error (max over depths of max|rolled - direct| / max|direct|).
+ 
+  ⚠ THE TILING IS rheome.geom.tree (Fiedler bisection), NOT THE ATLAS's EQUAL-AREA GEODESIC BISECTION that
+  drew Fig. 2 (nsp atlas ladder, F13 card: lobe 0.83/0.95/0.97/0.97, energy 80/84/85/86 % at l = 2-5,
+  700 modes). Both halve area per level; tile shapes differ, so the numbers are comparable, not identical.
+  The basis is the cache's own (rheome.load.bases: 1000 modes per hemisphere in rheome.scale.importsubject).
+  ⚠ The gauge's poles here are geometric (largest separation); MS1 Fig. 16B put them at the two
+  lowest-alpha faces (dirac_gauge_omega.m). The singularity count and the smoothness do not depend on
+  where they are; the canonical (registered-sphere) frame is the atlas's (group plan P8).
+ 
+  See also: rheome.geom.tree, rheome.geom.tiles, rheome.operators.gauge, rheome.ingest.rollup
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

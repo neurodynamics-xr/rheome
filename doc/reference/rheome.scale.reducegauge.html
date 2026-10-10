@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.reducegauge</title></head><body>
+<h1>rheome.scale.reducegauge</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.REDUCEGAUGE  Per-subject gaugetensor.csv -&gt; the group alpha orientation tensor per shared tile.
+ 
+    G = rheome.scale.reducegauge(inDir, outDir)
+    G = rheome.scale.reducegauge(inDir, outDir, PolarDeg=35)
+ 
+  inDir holds rheome.scale.run's per-subject folders (&lt;sub&gt;/gaugetensor.csv, &lt;sub&gt;/metrics.csv) or nsp cf-atlas's
+  flat &lt;sub&gt;_gaugetensor.csv and &lt;sub&gt;_metrics.csv (any depth); metrics.csv gives the dataset (OMEGA, PREVENT-AD),
+  which is the group: cf-atlas labels every subject's cohort &quot;unlabelled&quot;. The tiles are the template's
+  group tiles reached through the registered sphere, and the gauge is rheome.geom.sphereframe with the poles at
+  the FreeSurfer sphere's +-z in every participant (MS1 section 9, 21cc8d9b), so tile k and its north are the
+  same in everyone and the subjects' tensors can be averaged directly. Writes outDir/gaugegroup.csv, one row per
+  (dataset, hemi, depth, node_id):
+    n               subjects with the tile
+    t11 t22 t12     the mean of the subjects' trace-normalised tensors (each subject weighs the same)
+    anisotropy      (l1-l2)/(l1+l2) of that mean tensor; axis_deg its major axis (0 = north, 90 = west)
+    axis_R          axis agreement across subjects: |mean exp(2i axis)| (1 = all subjects share the axis)
+    anisotropy_subject_median, normal_share_median, colat_median_deg   medians over subjects
+    polar           the tile's median colatitude is within PolarDeg of a pole
+ 
+  ⚠ A POLE IN ACTIVE CORTEX IS EXCLUDED FROM THE AXIS, NOT FROM THE TILE. The +z pole is precentral, in active
+  cortex; near it the meridian turns through 360 deg inside one tile, so the axis there is the frame's, not the
+  current's. For polar tiles axis_deg and axis_R are NaN. Anisotropy and normal share are gauge-invariant and are
+  kept. ⚠ THE THRESHOLD IS ON THE MEDIAN. A depth-3 tile is 1/8 of the sphere (pi/2 sr, a 41 deg cap), so a tile
+  that holds a pole has median colatitude &lt;= ~29 deg; PolarDeg 35 flags it, a tile beside the cap is not flagged.
+  Descriptive only: no test across tiles or cohorts.
+ 
+  See also: rheome.scale.measure_atlas, rheome.geom.sphereframe, rheome.scale.reduce
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

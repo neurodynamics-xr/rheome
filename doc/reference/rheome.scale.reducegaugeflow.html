@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.reducegaugeflow</title></head><body>
+<h1>rheome.scale.reducegaugeflow</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.REDUCEGAUGEFLOW  Per-subject gaugeflow.csv -&gt; the group alpha flow in the shared frame.
+ 
+    [Gr, Pl] = rheome.scale.reducegaugeflow(inDir, outDir)
+ 
+  Reads every *gaugeflow.csv under inDir (rheome.scale.run's per-subject folders, or nsp's flat
+  &lt;sub&gt;_gaugeflow.csv) and, per cohort x band x ico3 patch, pools SUBJECTS -- each subject's patch
+  mean counts once. Each patch is read in chart &quot;z&quot; (poles at FreeSurfer's sphere +-z, the group
+  gauge) unless z excludes it (rheome.geom.spherepatches: a pole, or the frame turning &gt; 15 deg across it),
+  in which case chart &quot;x&quot; is used and .chart says so. DESCRIPTIVE: no test, no correction.
+ 
+  Writes outDir/group_gaugeflow.csv (Gr), one row per cohort x band x patch:
+    n_subjects
+    vn, vw            group mean of the subjects' mean north / west velocity, m/s
+    heading_deg       atan2(vw, vn): 0 = north (towards the +pole), 90 = west
+    speed_of_mean     |(vn, vw)|, m/s       mean_speed   mean over subjects of |(vn_s, vw_s)|, m/s
+    R                 speed_of_mean / mean_speed: 1 = every subject's mean flow points one way
+    axis_deg          principal axis of the group mean orientation tensor, in [-90 90), 0 = north
+    anisotropy        (l1 - l2)/(l1 + l2) of that tensor: 0 = no preferred axis
+    env_median        median over subjects of the patch's mean activation
+    colat_deg lon_deg of the patch in the chart used
+  and outDir/poles.csv (Pl), one row per subject x z-pole patch: the patch's env_mean percentile
+  among that subject's patches (periodic band and total) -- how active the cortex under each
+  group-gauge pole is.
+ 
+  ⚠ CONP AND PREVENT-AD ARE THE SAME PEOPLE (rheome.scale.reduce): cohorts are reduced separately and
+  never pooled here.
+ 
+  See also: rheome.scale.run, rheome.scale.measure_periodicflow, rheome.geom.sphereframe, rheome.geom.spherepatches, rheome.scale.reduce
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

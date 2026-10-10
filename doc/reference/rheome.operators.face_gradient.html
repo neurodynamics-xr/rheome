@@ -24,10 +24,15 @@
     .W             [nV x nF] sparse area-weighted face-&gt;vertex average (row-normalized)
     .nV .nF
  
+  Example:
+    [V, F] = rheome.geom.icosphere(3);
+    fg = rheome.operators.face_gradient(V, F);
+    assert(max(abs(fg.Gx * ones(size(V, 1), 1))) &lt; 1e-12)   % the gradient of a constant is zero
+ 
   See also: rheome.differential.divergence, rheome.differential.curl, rheome.differential.helmholtz
  
   Author: Diellor Basha, 2026
 </pre>
-<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
 <p><a href="index.html">Rheome reference</a></p>
 </body></html>

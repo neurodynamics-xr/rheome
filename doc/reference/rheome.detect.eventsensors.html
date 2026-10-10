@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.eventsensors</title></head><body>
+<h1>rheome.detect.eventsensors</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.EVENTSENSORS  Which sensor samples and channels carry a tracked event.
+ 
+    E = rheome.detect.eventsensors(track, G, Gain, K, X, FrameSamples=fs)
+    E = rheome.detect.eventsensors(track, G, Gain, K, X, FrameSamples=fs, Fraction=0.5)
+        track   one element of rheome.detect.tiletrack / tilepath .tracks (.frames .tiles)
+        G       rheome.geom.tiles (.P [nV x nTile] membership)
+        Gain    [C x 3nV] (free) or [C x nV] (fixed) leadfield on the selected channels
+        K       [3nV x C] or [nV x C] imaging kernel: J = K * X, the estimate the tracker read
+        X       [C x nS] sensor data (raw, band-passed or analytic)
+        FrameSamples  [nF x 2] first and last sample of each tracker frame (frame f -&gt; row f)
+ 
+  ⭐ THE EVENT'S PART OF THE SENSOR DATA. At each frame the track sits on a tile; its sensor signal is
+  the source estimate on that tile, forwarded:  x_ev(t) = Gain(:,tile) * K(tile,:) * x(t). That is
+  exactly what the recording contributes to what the tracker followed, in the recording's own units,
+  so it can be overlaid on the traces. ⚠ It is not a unique decomposition: neighbouring tiles' estimates
+  overlap through the point spread, so x_ev of two tiles do not add to x.
+  A channel CARRIES the event at a frame when it is in the smallest set holding Fraction of that frame's
+  x_ev energy; E.mask marks those (channel, sample) cells.
+ 
+  OUTPUT (struct E)
+    .Xevent [C x nS] the event's sensor signal (zero outside its frames)
+    .mask   [C x nS] logical, channel carries the event at that sample
+    .channels {nStep x 1} carrying channels per step (strongest first)   .samples [nStep x 2]
+    .power  [C x nStep] mean |x_ev|^2 per channel and step   .footprint [C x 1] summed over steps
+    .tiles  [nStep x 1] tile of each step   .fraction
+ 
+  See also: rheome.show.eventsensors, rheome.detect.tiletrack, rheome.detect.tilepath, rheome.geom.tiles
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

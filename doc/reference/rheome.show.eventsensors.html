@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.show.eventsensors</title></head><body>
+<h1>rheome.show.eventsensors</h1>
+<p><em>function rheome.show</em> &mdash; Rheome</p>
+<pre>  SHOW.EVENTSENSORS  A tracked event on the sensor traces and on a sensor topography.
+ 
+    [hFig, info] = rheome.show.eventsensors(X, t, E, pos2)
+    rheome.show.eventsensors(X, t, E, pos2, 'NumChannels', 8, 'Labels', names, 'Visible', 'off')
+        X     [C x nS] sensor data (the traces shown)      t [1 x nS] times (s)
+        E     rheome.detect.eventsensors output             pos2 [C x 2] flattened sensor positions
+ 
+  Left: the NumChannels channels with the largest event footprint, stacked; grey = the recording,
+  colour = the samples where that channel CARRIES the event (E.mask), thin dark = the event's own
+  sensor signal E.Xevent (same units); shaded = the event's frames. Right: E.footprint on the array,
+  carrying channels ringed and the traced ones numbered. So a reader can find in the raw traces what
+  the tracker followed on the cortex.
+ 
+  OPTIONS: 'NumChannels' (8)  'Labels' {1 x C} channel names  'Color' ([0.85 0.33 0.10])
+           'Visible' ('on')  'Title' ('')
+  OUTPUT:  info .channels [NumChannels x 1] the traced channels   .carrying [n x 1] union over steps
+ 
+  See also: rheome.detect.eventsensors, rheome.detect.tiletrack
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

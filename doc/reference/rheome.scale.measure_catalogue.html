@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_catalogue</title></head><body>
+<h1>rheome.scale.measure_catalogue</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_CATALOGUE  The catalogue's patterns planted through this participant's own head, and three estimators reading them (MS1 G6, G3 rule 11, G16).
+ 
+    [T, X, strips] = rheome.scale.measure_catalogue(name, S, &quot;catalogue&quot;)     % G6 + G3 rule 11 + G16 on the plants
+    [T, X]         = rheome.scale.measure_catalogue(name, S, &quot;catalognulls&quot;)  % G16 false-propagation nulls
+ 
+  Port of pattern_catalogue_validate.m (v18 Fig. 15A-B: subject01's gain, source noise, one hemisphere) to
+  every participant, both hemispheres (Hemis), the participant's own leadfield and whitened minimum norm
+  (S.Res: rheome.inverse.mne on the participant's noise covariance), and SENSOR noise from the
+  participant's own resting record and empty room (spec: desk/evidence/3377657c.../group-analysis-plan.md
+  section 2, G6, G3 rule 11, G16).
+ 
+  catalogue     the 19 catalogue plants (i_catalogue: planar, source, sink, rotor, spiral, pair, saddle,
+                standing, nested, each meso and macro, and a drifting rotor) x Centres random centres per
+                hemisphere (the same centres for every pattern, so patterns are comparable), each read in arms
+                  direct       the plant itself, no instrument (the &quot;same plants without the instrument&quot; baseline,
+                               and the truth every other arm is judged against: truthOnMesh)
+                  meg/inf      normal current -&gt; own gain -&gt; whitened MNE, read along normals smoothed over
+                               NormalSigmaMM (20 mm), noise-free
+                  meg/rest     the same + a window of the participant's own resting record at SNRdB
+                  meg/emptyroom the same + a window of the participant's own empty room at SNRdB (channels by
+                               name; NaN rows when the participant has none)
+                  meglocal/inf planar_macro only (G3 rule 11): the meg/inf arm read along the LOCAL normals
+                Estimators (column estimator):
+                  framework    flow.phasegradient on the band-limited analytic field (speed, wavelength, direction,
+                               rotation period), detect.criticalPoints on the amplitude-weighted phase-velocity
+                               direction, detect.phasesingularity (chirality, drift track), differential.helmholtz,
+                               the standing index, the wavelet-scale wavelength, PAC and the fast-envelope speed
+                  bst_of       Brainstorm's bst_opticalflow (rheome.flow.bstopticalflow) on |the band-limited
+                               field| over one cycle, at each HornSchunck (the first is Brainstorm's default 0.01;
+                               column param); arms direct, meg/inf, meg/rest
+                  phasereg     rheome.flow.phaseregression (circular-linear regression of phase on geodesic distance,
+                               PatchMM patches) at every vertex within 1.3 E of the centre; arms direct, meg/inf, meg/rest
+                The comparators are judged on the same quantities: phase speed, direction error (against the
+                direct arm's time-mean phase velocity), critical-point type, sign of div/curl at the core
+                (chirality for the rotational classes), and &quot;propagation declared&quot;.
+  catalognulls  G16 false-propagation nulls, NullsPerHemi per hemisphere per type, two Gaussian patches of normal
+                current (NullExtentMM) at 10 Hz, NullSepMM apart (geodesic):
+                  coherent     zero lag (stationary coherent dipoles)
+                  lagged       NullLag apart (two phase-lagged generators, Zhigalov &amp; Jensen 2023)
+                arms direct, meg/inf, meg/rest; all three estimators. Nothing propagates, so &quot;propagation declared&quot;
+                is a false propagation.
+ 
+  ⭐ PROPAGATION DECLARED, ONE RULE FOR EVERY ESTIMATOR (pre-declared): the amplitude-weighted directional
+    coherence of the estimator's time-mean velocity field over the region, |sum a v^| / sum a, is at least
+    PropCoherence (0.5) AND its median speed lies in PropSpeed (0.1-10 m/s).
+  ⭐ SNR IS MEASURED IN THE READOUT BAND (pattern frequency x [0.7 1.3]): the signal and the noise window are
+    both band-passed there and their channel-summed powers set the noise gain; the noise is added broadband.
+  ⭐ RATIOS: column ratio = recovered / ref, ref the catalogue's NOMINAL value where it has one (speed,
+    wavelength, period, drift, envelope speed), otherwise truthOnMesh (the direct arm's own reading).
+  ⚠ THE CHART IS NOT v18's. v18 took the azimuth about the centre on subject01's FreeSurfer registration sphere;
+    the nsp staging carries no sphere, so here theta is the azimuth in the centre's tangent plane on the cortex
+    SMOOTHED over NormalSigmaMM (LBO heat kernel on the coordinates); r is the geodesic distance on the folded
+    cortex, as in v18. The drifting rotor's core moves along the geodesic from the centre towards e1, not a great
+    circle. Every arm is judged against the direct arm on the same chart, so the chart cancels.
+  ⚠ The sampling rate is the record's (600 Hz) decimated by an integer to &gt;= SPC samples per cycle (nested: 10 per
+    fast cycle), so sensor-noise windows are the participant's own samples, resampled (anti-aliased) by that integer.
+ 
+  X (one row per hemi x centre x pattern x arm x noise x estimator x param x quantity): nominal, truthOnMesh,
+  recovered, ratio. T = rheome.scale.rows (analysis = item): per pattern x arm/noise x estimator x quantity the
+  median ratio (metric ratio_median) or the fraction correct (metric preserved_frac); for the nulls the
+  false-propagation rate per estimator x type x arm. strips: centre 1 of the first hemisphere, six phases of the
+  middle cycle per pattern and arm (Graphics: Fig. 15 strips for the illustrating participant).
+ 
+  See also: rheome.scale.run, rheome.flow.phaseregression, rheome.flow.bstopticalflow, rheome.flow.phasegradient,
+            rheome.detect.criticalPoints, rheome.scale.measure_plantfloors
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

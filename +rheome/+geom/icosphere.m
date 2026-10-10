@@ -20,6 +20,10 @@ function [V, F] = icosphere(nSub)
 %   V    [nV x 3] unit-sphere vertices
 %   F    [nF x 3] triangle indices (1-based)
 %
+% Example:
+%   [V, F] = rheome.geom.icosphere(3);
+%   assert(size(V, 1) == 642 && size(F, 1) == 1280 && max(abs(vecnorm(V, 2, 2) - 1)) < 1e-12)
+%
 % See also: demos.sphere_pde, rheome.operators.laplace_beltrami
 %
 % Author: Diellor Basha, 2026

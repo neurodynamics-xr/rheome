@@ -23,10 +23,14 @@
     V    [nV x 3] unit-sphere vertices
     F    [nF x 3] triangle indices (1-based)
  
+  Example:
+    [V, F] = rheome.geom.icosphere(3);
+    assert(size(V, 1) == 642 &amp;&amp; size(F, 1) == 1280 &amp;&amp; max(abs(vecnorm(V, 2, 2) - 1)) &lt; 1e-12)
+ 
   See also: demos.sphere_pde, rheome.operators.laplace_beltrami
  
   Author: Diellor Basha, 2026
 </pre>
-<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
 <p><a href="index.html">Rheome reference</a></p>
 </body></html>

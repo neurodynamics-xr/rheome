@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_plantfloors</title></head><body>
+<h1>rheome.scale.measure_plantfloors</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_PLANTFLOORS  Helmholtz-band resolution floors through this participant's MEG (MS1 G1, G9).
+ 
+    [T, X] = rheome.scale.measure_plantfloors(name)
+    [T, X] = rheome.scale.measure_plantfloors(name, S, LambdaMM=[46 65 92 130 183], PlantsPerCell=10)
+ 
+  The group version of helmholtz_noise_omega.m (MS1 v18 Table 3, Fig. 4C-E), on the participant's own
+  cortex, leadfield, plain minimum norm (S.Res) and 8-16 Hz resting background:
+    field    a source (tangential gradient of a band atom) at one vertex plus a vortex (n x gradient) at
+             another 60-120 mm away, each at unit energy, oscillating at F0 Hz with a random phase
+    sensors  its forward field plus a WindowS-second window of the participant's own rest, 8-16 Hz
+    SNR      signal power / background power over the window, summed over channels (dB)
+    readout  lock-in on the carrier -&gt; complex sensor pattern -&gt; MNE -&gt; its real part at the pattern's
+             own phase -&gt; rheome.differential.helmholtzbands; the band map's peak is the located vertex
+  ⭐ BALANCED CELLS. Per hemisphere, PlantsPerCell fields per planted band: the source bands are
+  repelem(bands, PlantsPerCell) and the vortex bands a random permutation of them, so every
+  (type, band, hemisphere) cell holds exactly PlantsPerCell plants (v18 drew bands at random: n 13-19).
+  ⭐ SPLIT HALVES. Half the plants of every cell (source and vortex alike) take their background from
+  the first half of the recording, the rest from the second; column `half` carries it for the ICC.
+ 
+  Per plant and condition (X, one row per plant x type x condition):
+    errMM        geodesic distance from the planted vertex to the peak of the band map at the KNOWN band
+    blindErrMM   the same at the band of maximum energy of that part (rule 2), blindShift its band offset
+    chanceMM     to a uniformly random vertex of the same hemisphere (the chance baseline)
+    normalFrac   energy share of the normal part of the read field (G9: spurious normal energy)
+    condition    &quot;meg&quot; (through leadfield + MNE, at snrDB) or &quot;direct&quot; (the planted field itself, no
+                 instrument; snrDB Inf)
+  Returns rheome.scale.rows (analysis &quot;plantfloors&quot;), pooled over hemispheres:
+    err_mm        median errMM per type x band x SNR             band &quot;&lt;type&gt;_&lt;lambda&gt;mm_&lt;snr&gt;&quot;
+    direct_err_mm, chance_mm   median per type x band              band &quot;&lt;type&gt;_&lt;lambda&gt;mm&quot;
+    floor_mm      the finest planted band whose median err_mm &lt;= FloorMM (33 mm = one depth-7 tile;
+                  NaN when none), per type x SNR                   band &quot;&lt;type&gt;_&lt;snr&gt;&quot;
+    blind_shift   median band offset of the blind choice, noise-free, per type
+    mixed_err_mm  noise-free median over all bands, per type (v18 Fig. 4C: vortex 20, source 80)
+    normal_frac   noise-free median spurious normal share through MEG (v18: 0.27)
+  plus the same floors per half (band &quot;&lt;type&gt;_&lt;snr&gt;_h1|h2&quot;) for the split-half reliability.
+ 
+  See also: rheome.differential.helmholtzbands, rheome.scale.run, rheome.scale.measure_movingvortex
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

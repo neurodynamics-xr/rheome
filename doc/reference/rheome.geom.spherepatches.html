@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.geom.spherepatches</title></head><body>
+<h1>rheome.geom.spherepatches</h1>
+<p><em>function rheome.geom</em> &mdash; Rheome</p>
+<pre>  GEOM.SPHEREPATCHES  Shared tiles on the registered sphere, and where the polar gauge breaks.
+ 
+    P = rheome.geom.spherepatches(Sph)                       % ico3: 642 patches per hemisphere
+    P = rheome.geom.spherepatches(Sph, Level=2, Axis=[1 0 0], MaxSpread=15)
+ 
+  Every vertex goes to the nearest vertex of an ico-Level sphere (rheome.geom.icosphere) on its
+  REGISTERED sphere point, so patch k is the same anatomical place in every subject: a sum over
+  a patch is comparable across a cohort without resampling anything. Then, per patch, how far the
+  rheome.geom.sphereframe gauge turns across it:
+ 
+    spread = max over member vertices of |angle between the member's meridian, parallel-transported
+             along the great circle to the patch centre, and the centre's own meridian|
+ 
+  It is ~0 on the equator and grows as 2*rho*cot(colatitude) towards a pole (rho = patch radius),
+  so it is THE number that says whether a pooled (north, west) vector means anything. A patch is
+  .excluded when spread &gt; MaxSpread or it holds a pole vertex; read those in the second chart
+  (Axis=[1 0 0]), where they lie near the equator.
+ 
+  INPUTS:  Sph [nV x 3] registered-sphere points (any radius)
+    Level      ico subdivision level, default 3 (642 patches; ~8 deg apart, ~14 mm on a 100 mm sphere)
+    Axis       pole axis of the gauge being judged, default [0 0 1]
+    MaxSpread  degrees, default 15
+ 
+  OUTPUT (struct P):
+    .patch [nV x 1]  patch of each vertex        .n [nP x 1] vertices per patch
+    .centre [nP x 3] unit centres                .colat .lon [nP x 1] of the centres, degrees
+    .spread [nP x 1] degrees (Inf for an empty patch)   .hasPole [nP x 1]   .excluded [nP x 1]
+ 
+  See also: rheome.geom.sphereframe, rheome.geom.icosphere, rheome.geom.tilemean
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

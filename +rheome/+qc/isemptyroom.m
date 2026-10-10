@@ -1,6 +1,5 @@
-% Author: Diellor Basha, 2026
 function tf = isemptyroom(name)
-% ISEMPTYROOM  True for an empty-room (noise) MEG recording, from its BIDS name.
+% QC.ISEMPTYROOM  True for an empty-room (noise) MEG recording, from its BIDS name.
 %
 %   tf = rheome.qc.isemptyroom(name)
 %

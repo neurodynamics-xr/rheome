@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.geom.sphereframe</title></head><body>
+<h1>rheome.geom.sphereframe</h1>
+<p><em>function rheome.geom</em> &mdash; Rheome</p>
+<pre>  GEOM.SPHEREFRAME  The group gauge: &quot;north&quot; and &quot;west&quot; on a cortex, from its FreeSurfer sphere.
+ 
+    fr = rheome.geom.sphereframe(V, F, N, Sph)                % poles at the registered sphere's +-z
+    fr = rheome.geom.sphereframe(V, F, N, Sph, Axis=[1 0 0])  % the second chart, poles at +-x
+ 
+  THE GAUGE FOR GROUP ANALYSIS (Diellor, 2026-10-08). Its two singularities sit at the poles of
+  FreeSurfer's registered sphere (sphere.reg, Brainstorm's Reg.Sphere), i.e. at the SAME anatomical
+  place in every subject (fsaverage +z: precentral; -z: fusiform / inferior temporal), and e1 is the
+  sphere's meridian towards +Axis PUSHED FORWARD to the cortex by the sphere-&gt;cortex vertex map (a
+  2x2 least-squares Jacobian per vertex, fitted on its 1-ring edges). This is the nsp atlas's
+  canonical frame (nsp/atlas/frames.py, domain &quot;sphere&quot;) in closed form: on the sphere the trivial
+  connection with +1 at both poles IS the meridian frame (rheome.operators.gauge: 0.36 deg median; frames.py
+  checks &lt;= 0.2 deg), so solving for it would only add solver error.
+ 
+  ⭐ Use this, not rheome.operators.gauge's default poles, whenever frame COMPONENTS are compared across
+  subjects: rheome.operators.gauge places its poles per mesh (and an older convention put them where alpha
+  power was lowest), so their location -- and every component -- differs between subjects.
+ 
+  ⚠ THE FRAME IS MEANINGLESS NEAR A POLE, AND +z IS IN ACTIVE CORTEX (precentral: mu/alpha). The
+  meridians converge, so a patch of half-width rho at colatitude theta sees the frame turn by about
+  2*rho*cot(theta) relative to parallel transport; a pooled vector there mixes directions. Two
+  remedies, both measured by rheome.geom.spherepatches: drop the patch (.excluded) or read it in the
+  second chart, Axis=[1 0 0], whose poles lie on the equator of the first. The two charts differ
+  by a known per-vertex rotation (.e1 of both), so nothing is lost by switching.
+ 
+  INPUTS:
+    V [nV x 3] cortex vertices, F [nF x 3] faces, N [nV x 3] cortex vertex normals (outward)
+    Sph [nV x 3] the registered-sphere point of each vertex (any radius; S.Sphere(gv,:))
+    Axis           pole axis on the sphere, default [0 0 1]
+    MaxCondition   a vertex whose push-forward Jacobian has condition above this is singular (50,
+                   as frames.py)
+ 
+  OUTPUT (struct fr):
+    .e1 .e2 [nV x 3]  north and west (e2 = N x e1), unit, tangent; NaN at singular vertices
+    .colat  [nV x 1]  colatitude on the sphere from +Axis, radians    .lon [nV x 1] longitude, rad
+    .north .south     the pole vertices (closest to +Axis / -Axis)
+    .singular [nV x 1] logical: the poles and ill-conditioned push-forwards
+    .condition [nV x 1]  .axis
+ 
+  See also: rheome.geom.spherepatches, rheome.operators.gauge, rheome.operators.trivial_connection, rheome.scale.measure_atlas
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

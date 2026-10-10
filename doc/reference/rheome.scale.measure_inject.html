@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_inject</title></head><body>
+<h1>rheome.scale.measure_inject</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_INJECT  Known movers injected into this participant's own recording, tracked back (MS1 G7, Fig. 8).
+ 
+    [T, X] = rheome.scale.measure_inject(name)
+    [T, X] = rheome.scale.measure_inject(name, S, Depths=[3 7 8], JLevels=[2 4], KAmp=2, NPer=12)
+ 
+  The group version of alpha_inject_omega.m (nxr-cortical-flow-matlab; sub-0002, left hemisphere, v18
+  Fig. 8 and section 5.2), same source, same tracker, same null, per hemisphere:
+    source   a Laplace-Beltrami heat-kernel blob (SigmaMM 15) along the normal, 10 Hz carrier, forwarded
+             through the participant's leadfield; movers are waypoint blobs blended at the sensors by
+             rheome.flow.movingpeak (exact: the forward is linear)
+    cases    still, swap (two blobs SwapMM apart trading amplitude: nothing travels), and movers at
+             Speeds 0.02 / 0.05 / 0.1 m/s along a cortical shortest path of v*W; NPer random 2 s windows
+             each, present for the window +-1 s with 0.25 s cosine ramps
+    amplitude KAmp x the PARTICIPANT'S OWN median per-window alpha envelope peak (over a unit blob's)
+    readout  each injected window band-passed (8-16 Hz) and Hilbert-transformed on an 8 s segment exactly
+             as the data were (rheome.flow.envelopemodes), minimum norm, LB modes, tile means; its paired
+             control is the same segment without the injection
+    tracker  rheome.detect.tilepath, top 3 paths; the baseline and threshold from a mode-shift surrogate of
+             the recorded envelope (rheome.detect.tilepathnull, Alpha false paths/s, odd windows calibrate,
+             even windows test); FOUND = a passing path with &gt;= half its frames within NearMM of the truth
+    real     every 2 s window of the recording through the same tracker and threshold (case &quot;real&quot;)
+ 
+  X (inject.csv): one row per hemisphere x case x injection x depth x rate, with the injected and the
+  control readouts (pass found near netMM speedMS straight durS, c_*), the window's `half` of the
+  recording (injections 1..NPer/2 come from the first half; real windows by position) for the ICC, and
+  the surrogate's held-out false rate `nullFalseS`.
+  T (rheome.scale.rows, analysis &quot;inject&quot;), band &quot;&lt;case&gt;/d&lt;depth&gt;/&lt;fps&gt;fps&quot;, medians over both hemispheres:
+    hit_rate      fraction of injections FOUND                                   fraction
+    speed_ratio   median recovered net speed / true speed, found movers ⭐       ratio
+    net_mm        median net displacement of the found path                      mm
+    control_found fraction of paired controls with a passing path near the site  fraction
+    false_rate    surrogate passes per second on held-out windows (band d/fps)   1/s
+    real_frac_pass, real_net_mm   real alpha: windows passing the null, their median net displacement
+  plus hit_rate and speed_ratio per half (band suffix &quot;_h1&quot; / &quot;_h2&quot;).
+ 
+  ⚠ Depth 3 tiles are lobar (8 per hemisphere): there a 0.1 m/s mover crosses at most one tile boundary,
+    so its speed ratio is quantised. It is in the design as the independence limit (MS1 section 9.5).
+  ⚠ A window holds two objects -- the injection and the recording's own alpha -- hence the top 3 paths.
+ 
+  See also: rheome.scale.measure_grouptrack, rheome.scale.measure_trackfactorial, rheome.detect.tilepath,
+            rheome.detect.tilepathnull, rheome.flow.movingpeak, rheome.flow.envelopemodes
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

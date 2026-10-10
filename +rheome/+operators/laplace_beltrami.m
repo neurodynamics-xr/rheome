@@ -31,6 +31,12 @@ function [L, M] = laplace_beltrami(V, F, massType)
 %   L  [nV x nV] sparse symmetric PSD cotan stiffness
 %   M  [nV x nV] sparse mass matrix (companion for the eigenproblem L phi = lambda M phi)
 %
+% Example:
+%   [V, F] = rheome.geom.icosphere(4);
+%   [L, M] = rheome.operators.laplace_beltrami(V, F);
+%   z = V(:, 3);                                       % an l = 1 harmonic: eigenvalue l(l+1) = 2
+%   assert(norm(L * ones(size(z))) < 1e-10 && abs((z' * L * z) / (z' * M * z) - 2) < 0.01)
+%
 % See also: rheome.operators.mass, rheome.eigen.modes
 %
 % Author: Diellor Basha, 2026

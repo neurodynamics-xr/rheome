@@ -1,5 +1,5 @@
 function build_hcp_template(cortexFile, fibersFile, outFile)
-% BUILD_HCP_TEMPLATE  One-time extraction of the HCP-1065 template into hcp_template.mat.
+% CONNECTOME.BUILD_HCP_TEMPLATE  One-time extraction of the HCP-1065 template into hcp_template.mat.
 %
 %   rheome.connectome.build_hcp_template(cortexFile, fibersFile, outFile)
 %
