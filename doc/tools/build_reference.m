@@ -17,7 +17,7 @@ function report = build_reference(toolboxRoot, varargin)
 %     'SearchDB'  - build the search database (builddocsearchdb). Default: true.
 %
 %   REPORT is a struct: pages (cellstr), missingHelp (items with no help text), noH1 (help text whose first line
-%   does not start with the item's name in capitals — the H1 line lookfor and Contents.m use), commit.
+%   does not start with the item's name in capitals, NAME or PKG.NAME — the H1 line lookfor and Contents.m use), commit.
 %   Missing help and missing H1 lines are gaps to request of the code's owners; never patch them in the docs.
 %
 %   Example:
@@ -99,7 +99,7 @@ for k = 1:numel(items)
         txt = '(No help text. This is a gap in the code, reported to its owners.)';
     else
         first = strtrim(strtok(txt, newline));
-        if ~strcmp(strtok(first), upper(short))       % H1 line: NAME  One-line summary.
+        if ~endsWith(['.' strtok(first)], ['.' upper(short)])   % H1 line: NAME or PKG.NAME, then a one-line summary
             report.noH1{end+1} = it.name;
         end
     end

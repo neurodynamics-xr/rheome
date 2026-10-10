@@ -14,7 +14,7 @@ function wd = weak_differential(V, F, fg)
 %
 %     coefficients = Phi' * wd.Curl * J        (NO mass matrix: the pairing already integrates)
 %
-% ⚠ THIS IS NOT A DIFFERENT DISCRETISATION. Verified in curl_weakform.m: wd.Curl agrees with the
+% ⚠ THIS IS NOT A DIFFERENT DISCRETISATION. Verified: wd.Curl agrees with the
 % strong-form face curl integrated per face to 7.2e-16. Integration by parts holds EXACTLY at the
 % discrete level -- P1 fields, exact per-face quadrature, closed surface, no boundary term. What it
 % actually removes is fg.W, the area-weighted face->vertex average that rheome.differential.curl applies
@@ -47,7 +47,7 @@ function wd = weak_differential(V, F, fg)
 %   .Curl [nV x 3nV] sparse   .Div [nV x 3nV] sparse   -- ambient J is interleaved [x1 y1 z1 x2 ...]
 %   .fg   the face-gradient bundle used
 %
-% See also: rheome.differential.curl, rheome.differential.divergence, rheome.operators.face_gradient, curl_weakform
+% See also: rheome.differential.curl, rheome.differential.divergence, rheome.operators.face_gradient
 %
 % Author: Diellor Basha, 2026
 

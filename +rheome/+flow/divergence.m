@@ -9,10 +9,10 @@ function kd = divergence(ctx)
 %   div(:,t)   = kd.vertexOperator * ctx.F(:,t)          vertexOperator [V x C]
 %   or reconstruct from coeffs: kd.scalarModes * (kd.coeffOperator * F).
 %
-% Exact by linearity: div(reconstruct(diracInverse*F)) = rheome.differential.divergence(currentKernel,S,fg) * F, and its
+% Exact by linearity: div(ctx.currentKernel*F) = rheome.differential.divergence(currentKernel,S,fg) * F, and its
 % Laplace-Beltrami coefficients are Phi_LB' * M * (that vertex kernel). Positive = source, negative = sink.
 %
-% See also: rheome.flow.field, rheome.flow.curl, rheome.flow.potential, rheome.differential.divergence, OPERATOR-REGISTRY.md
+% See also: rheome.flow.field, rheome.flow.curl, rheome.flow.potential, rheome.differential.divergence
 %
 % Author: Diellor Basha, 2026
 
