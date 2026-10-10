@@ -7,6 +7,7 @@
     [T, X] = rheome.scale.measure_periodicflow(name)
     [T, X] = rheome.scale.measure_periodicflow(name, rheome.scale.sensors(name), NumTiles=12)
     [T, X] = rheome.scale.measure_periodicflow(name, S, Centres=c)     % explicit tile centres (samples)
+    [T, X, G] = rheome.scale.measure_periodicflow(...)                  % + the flow in the group gauge
  
   alpha_apparent_flow_omega.m and alpha_periodic_flow_omega.m with the figures removed, run on
   NumTiles 2 s tiles spread EVENLY across the recording instead of the single strongest one. The
@@ -40,6 +41,17 @@
   X is the per-tile table (one row per tile x band), written as flowtiles.csv by rheome.scale.run; its
   power_ratio and rejected columns say which tiles the summaries used.
  
+  G is the velocity IN THE GROUP GAUGE, written as gaugeflow.csv: one row per chart x band x patch
+  (rheome.geom.spherepatches, ico-PatchLevel on the registered sphere, so patch k is the same place in
+  every subject), pooled over every frame of every accepted tile and every vertex of the patch:
+    n_vertices, n_samples                vertices in the patch, vertex-frames pooled
+    vn_mean, vw_mean                     mean north / west velocity (rheome.geom.sphereframe)    m/s
+    tnn, tnw, tww                        mean v (x) v in (north, west): the orientation tensor, (m/s)^2
+    env_mean                             mean activation |J^| (rheome.flow.activation units)
+    colat_deg, lon_deg, spread_deg, has_pole, excluded   the patch, and whether the gauge holds there
+  chart &quot;z&quot; has its poles at the sphere's +-z (the group gauge); chart &quot;x&quot; at +-x, to read the polar
+  patches z excludes. Left hemisphere only, as the flow. Empty if the surface has no Reg.Sphere.
+ 
   ⚠⚠ TILES ARE SCREENED FOR STATIONARITY, AND A BAD TILE NO LONGER COSTS THE OTHER ELEVEN. The split
   compares each tile's |C|^2 with a background fitted on the WHOLE recording, so it is only valid
   where the tile looks like the recording. Three guards, in order:
@@ -68,6 +80,6 @@
  
   Author: Diellor Basha, 2026
 </pre>
-<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
 <p><a href="index.html">Rheome reference</a></p>
 </body></html>

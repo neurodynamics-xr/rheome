@@ -21,7 +21,7 @@ function ctx = context(name, K, Klbo, opts)
 %
 % ⚠ "STOPS AT" DEPENDS ON THE DEFINITION, and the two in use here differ by 1.7x. The 90.4 mm
 % above was recorded without one; a per-mode calibration of the SAME cached basis
-% (alpha_dirac_scale_omega.m: project each Dirac mode's three ambient current components onto
+% (project each Dirac mode's three ambient current components onto
 % the LBO basis, take the energy-weighted wavenumber centroid) puts the FINEST mode's own scale
 % at 52 mm, with 396 of the 800 modes resolving to one hemisphere and spanning 459 down to
 % 52 mm. Those are different quantities -- the finest mode's scale is not the scale at which a
@@ -43,17 +43,21 @@ function ctx = context(name, K, Klbo, opts)
 %
 % ⚠ K IS THE DIRAC MODE COUNT (Method='dirac' only); Klbo IS THE LBO ONE. They are independent,
 % and it is Klbo that sets
-% the lambda axis every scale, size and speed is read off. Leaving Klbo empty takes whatever the
-% richest cached LBO basis happens to be -- fine while exploring, NOT fine for a result, because
-% the thing that changes is sigma and nothing announces it. Pass Klbo to pin it.
+% the lambda axis every scale, size and speed is read off. The method's default is Klbo = 400
+% modes per hemisphere (Ks = 800), the value the pipeline and the paper use: pass it. Leaving Klbo
+% empty takes whatever the richest cached LBO basis happens to be -- fine while exploring, NOT
+% fine for a result, because the thing that changes is sigma and nothing announces it. K = 400
+% when empty is the DIRAC mode count, not this one.
 %
-% Runs the Dirac source mapping in AMPLITUDE measure (physical current A.m, the right
-% quantity for flow), reconstructs the field kernel currentKernel = rheome.forward.reconstruct(diracInverse, dbasis),
-% and assembles the shared operators (face_gradient) and Laplace–Beltrami eigenbasis used by the
-% potentials. The LBO eigenbasis is LOADED from the cached per-hemisphere bases (rheome.load.bases) and
-% assembled block-diagonally -- NO eigensolve. `name` is a cached dataset name (see rheome.import.dataset,
-% rheome.import.bases); the source mapping is loaded/computed via rheome.source.dirac. Build this ONCE and reuse
-% it across the rheome.flow.* builders.
+% The field kernel currentKernel [3V x C] is the source estimate in AMPLITUDE measure (physical
+% current A.m, the right quantity for flow): for Method = 'mne' (default) the whitened minimum norm
+% of rheome.inverse.mne on the full unconstrained leadfield; for Method = 'dirac' the Dirac source
+% mapping of rheome.source.dirac, reconstructed as rheome.forward.reconstruct(diracInverse, dbasis).
+% It then assembles the shared operators (face_gradient) and the Laplace–Beltrami eigenbasis used
+% by the potentials. The LBO eigenbasis is LOADED from the cached per-hemisphere bases
+% (rheome.load.bases) and assembled block-diagonally -- NO eigensolve. `name` is a cached dataset
+% name (see rheome.import.study, rheome.import.bases; rheome.import.dataset for 'dirac'). Build
+% this ONCE and reuse it across the rheome.flow.* builders.
 %
 % OUTPUT (struct ctx):
 %   .currentKernel [3V x C]  the source estimate every flow kernel is built from (amplitude, A.m)
@@ -63,7 +67,7 @@ function ctx = context(name, K, Klbo, opts)
 %   .F [C x nT] selected MEG data   .sfreq   .iSel selected channel rows   .chNames {1 x C}
 %   .V nVert   .C nChan(sel)   .P nModes   .Ks LBO modes used by the potentials
 %
-% See also: rheome.source.dirac, rheome.inverse.dirac, rheome.forward.reconstruct, rheome.operators.face_gradient
+% See also: rheome.inverse.mne, rheome.source.dirac, rheome.inverse.dirac, rheome.forward.reconstruct, rheome.operators.face_gradient
 %
 % Author: Diellor Basha, 2026
 

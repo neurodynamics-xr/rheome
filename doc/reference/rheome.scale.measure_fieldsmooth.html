@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_fieldsmooth</title></head><body>
+<h1>rheome.scale.measure_fieldsmooth</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_FIELDSMOOTH  How smooth the cortical current, div and curl are, per vertex and band-limited.
+ 
+    [T, X] = rheome.scale.measure_fieldsmooth(name)
+    [T, X, maps] = rheome.scale.measure_fieldsmooth(name, S, CutoffsMM=[65 92 130], NumFrames=20)
+ 
+  The diagnosis behind MS1 Fig. 12 (C-E): the arrows and the div/curl maps look noisy although the
+  minimum-norm current is smooth at the scale MEG resolves. At the NumFrames strongest alpha moments of
+  the clean span (8-12 Hz, 3rd-order Butterworth zero-phase, Hilbert at the sensors, real part; peaks of
+  the channel-mean envelope, &gt;= 1 s apart), left hemisphere, plain minimum norm (S.Res, free
+  orientation, amplitude), it measures with rheome.flow.smoothness:
+    band &quot;raw&quot;         J (ambient 3-vector), Jt (its tangential reading = what the arrows draw),
+                       |J|, pointwise div and curl (rheome.differential.divergence / curl), and the
+                       Helmholtz potentials phi, psi
+    band &quot;bl&lt;cut&gt;&quot;     the same after rheome.flow.bandlimit at CutoffMM = cut: J, div, curl, phi, psi
+  and, per frame, the shares of the current energy that are NORMAL to the cortex and harmonic.
+ 
+  Returns rheome.scale.rows (analysis &quot;fieldsmooth&quot;): for each map &lt;m&gt; in J Jt absJ div curl phi psi,
+    &lt;m&gt;_wavelength_mm   median over frames of the Dirichlet wavelength                mm
+    &lt;m&gt;_coherence       (vectors) median magnitude-weighted neighbour cosine           cos
+  and normal_frac, harmonic_frac (band &quot;&quot;), finest_sigma_mm per cutoff. X is the per-frame table.
+  maps (third output, for the figure): the strongest frame's raw and band-limited fields at every cutoff,
+  the hemisphere surface, the frame time.
+ 
+  See also: rheome.flow.bandlimit, rheome.flow.smoothness, rheome.differential.helmholtzbands, rheome.scale.run
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

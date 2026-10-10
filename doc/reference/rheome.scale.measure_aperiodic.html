@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_aperiodic</title></head><body>
+<h1>rheome.scale.measure_aperiodic</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_APERIODIC  A moving change of the aperiodic (1/f) background planted through this participant's
+  MEG: when does it read as a wave, and does the periodic split remove it? (MS1 G10, Fig. 14; section 10.1)
+ 
+    [T, X] = rheome.scale.measure_aperiodic(name)
+    [T, X] = rheome.scale.measure_aperiodic(name, S, SigmaMM=[30 60 100], Reps=8, NullWindows=32)
+ 
+  The group version of nxr-cortical-flow-matlab aperiodic_wave_omega.m (180bbaf; sub-0002, a 30 mm patch, the
+  existence case), at lobar scale and with the threshold and the split's selectivity per participant:
+    PLANT    a Gaussian patch (sigma SigmaMM, geodesic) whose centre moves along a PathMM shortest path at v m/s,
+             centred in a WindowS window with cosine ramps (v = 0: the patch sits at mid-path for the whole window,
+             a regional difference). With g the patch gain (1 at its core) and N0, N0', N1 independent smooth 1/f
+             fields (rheome.spectral.synthesise per Laplace-Beltrami mode, heat-smoothed over 15 mm):
+               offset   X = sqrt(OffsetX - 1) g N0'                   core power x OffsetX, exponent unchanged
+               exponent X = (sqrt(1-g) - 1) N0 + sqrt(g) N1           core exponent chi0 -&gt; chi0 + ExponentChange
+               control  X = g c (cos 2pi 12t + cos 2pi 24t)           a coherent moving RHYTHM, 0 dB in Band: the
+                                                                      positive control the split must keep
+    ARMS     emptyroom  X forwarded (normal currents through the gain) onto a synthetic cortical 1/f background
+                        (exponent chi0 = median resting sensor exponent, 2-40 Hz; level = resting aperiodic power
+                        less the empty room's) + the participant's OWN EMPTY ROOM
+             rest       the participant's OWN RESTING recording + the forwarded offset increment (exponent mode needs
+                        a source background to replace, so it is emptyroom only)
+    SPLIT    rheome.spectral.decompose at the sensors on the 6 s window's FFT, the background fitted (knee, 1-45 Hz)
+             on a PSD over FitWindowsS seconds around the window: 6 = the window itself (the fit sees the plant at
+             full weight), 30, Inf = the whole record (the plant diluted to 6/L of the fit)
+    READOUTS Band (8-16 Hz) FFT-mask analytic signal -&gt; MNE read along normals smoothed over 20 mm -&gt; envelope at
+             25 frames/s, then on the total and on each periodic split:
+               viterbi   rheome.detect.tilepath at each of Depths (3, 7) against rheome.detect.tilepathnull on the
+                         plant-free windows (Alpha false paths/s; odd windows calibrate); &quot;on the patch&quot; = the best
+                         passing path within sqrt(2) sigma of the moving centre for &gt;= half the frames it exists
+               bands     rheome.differential.helmholtzbands of the mean apparent velocity over the crossing: the
+                         scalar-potential and stream-function extrema in the bands nearest BandMM (130, 183 mm),
+                         distance to the mid-path (mm); plant and its paired null
+               flow      rheome.flow.apparent (Horn-Schunck, Alpha 0.01, the validated value): the signed along-chord
+                         speed within 2 sigma of the centre (m/s); plant and paired null
+    NULL     every plant window is a background window + the plant; the same window without it is its paired null.
+             The HELD-OUT null on-patch rate of a cell: each plant geometry applied to every even (test) null window.
+ 
+  Returns T (rheome.scale.rows, analysis &quot;aperiodic&quot;):
+    threshold_db   per arm x sigma x speed x signal x depth (band &quot;&lt;arm&gt;_s&lt;sigma&gt;_v&lt;v&gt;_&lt;signal&gt;_d&lt;depth&gt;&quot;): the
+                   smallest in-band dB change (10 log10(1 + plant/background), Band, while the patch is there) of
+                   the offset ladder at which the on-patch rate exceeds the participant's held-out null 95th
+                   percentile; NaN = never exceeded
+    selectivity    per arm x fit window (band &quot;&lt;arm&gt;_&lt;signal&gt;&quot;): median split reduction of the offset plants over
+                   median reduction of the coherent control; reduction = 1 - in-band power of the plant after the
+                   split's gains / before (the gains fitted on plant + background). 1 = not selective
+    reduction      the two medians (band &quot;&lt;arm&gt;_&lt;signal&gt;_offset&quot; | &quot;_control&quot;)
+  and X, one row per cell (arm, mode, level, sigma, speed, signal), medians over Reps: in-band plant dB and dB
+  change, reduction, along-chord speed and null, per depth the passing and on-patch rates (/s) and the held-out
+  null 95th percentile (/s), per BandMM the phi / psi extremum errors and their nulls.
+ 
+  ⚠ One hemisphere is planted (Hemi); the emptyroom arm has no sources elsewhere (the rest arm has the real ones).
+  ⚠ The null windows are NullWindows random disjoint WindowS + 2 MarginS slots of the record; a record too short
+    for that (every OMEGA / PREVENT-AD empty room is &lt;= 120 s, 20 slots of 6 s) spaces them evenly so only the
+    margins overlap and the WindowS cores stay disjoint (&gt;= 68 s at the defaults). An empty room shorter than
+    that drops the emptyroom arm (rest only, as without one); a rest record that short is an error.
+  ⚠ With an empty room on fewer channels, every arm uses the shared channels and its own MNE kernel (SnrFixed 3).
+    A participant without an empty room runs the rest arm only.
+  ⚠ The fit-window PSD mixes the window's own Welch PSD at weight 6/L with the background's over the L span (the
+    rest record; or the empty room + the cortical background's mean PSD) -- the plant exists only in the window,
+    so this is the record's Welch PSD up to the segments straddling the window's edges.
+ 
+  See also: rheome.spectral.decompose, rheome.detect.tilepath, rheome.differential.helmholtzbands,
+            rheome.scale.measure_movingvortex
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

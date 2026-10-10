@@ -1,6 +1,5 @@
-% Author: Diellor Basha, 2026
 function [flag, why, rawFlag, rawWhy] = badchannelrules(M, P)
-% BADCHANNELRULES  The bad-channel rules of rheome.qc.badchannels and how they combine into a label (protocol v3).
+% QC.BADCHANNELRULES  The bad-channel rules of rheome.qc.badchannels and how they combine into a label (protocol v3).
 %
 %   [flag, why, rawFlag, rawWhy] = rheome.qc.badchannelrules(M, P)
 %

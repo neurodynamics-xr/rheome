@@ -10,7 +10,7 @@ function kc = curl(ctx, opts)
 %   vort(:,t)   = kc.vertexOperator * ctx.F(:,t)          vertexOperator [V x C]
 %   or reconstruct from coeffs: kc.scalarModes * (kc.coeffOperator * F).
 %
-% Exact by linearity: curl(reconstruct(diracInverse*F)) = rheome.differential.curl(currentKernel,S,fg) * F, and its
+% Exact by linearity: curl(ctx.currentKernel*F) = rheome.differential.curl(currentKernel,S,fg) * F, and its
 % Laplace-Beltrami coefficients are Phi_LB' * M * (that vertex kernel). Positive = CCW (from
 % outside), negative = CW.
 %
@@ -29,7 +29,7 @@ function kc = curl(ctx, opts)
 %       pairing already integrates.
 %
 % ⚠ THESE ARE THE SAME OPERATOR up to that averaging step -- the weak form agrees with the strong
-% form integrated per face to 7.2e-16 (curl_weakform.m). Integration by parts is EXACT here: P1
+% form integrated per face to 7.2e-16. Integration by parts is EXACT here: P1
 % fields, exact per-face quadrature, closed surface, no boundary term. So 'weak' is not a different
 % discretisation, and 'lumped' is not wrong; the difference is one redundant smoothing step.
 %
@@ -37,12 +37,12 @@ function kc = curl(ctx, opts)
 %       'lumped'  rel err 4.53e-4
 %       'weak'    rel err 1.76e-4      <- 2.6x closer
 % but at 1-30% noise on J the weak form is a flat 5% WORSE, because the lumping smooths noise while
-% it blurs signal. It is a trade. The default is unchanged so that no existing number moves; run
-% flow_curl_methods.m to see both on real data before switching.
+% it blurs signal. It is a trade. The default is unchanged so that no existing number moves; compare
+% both on your own data before switching.
 % ---------------------------------------------------------------------------------------------
 %
 % See also: rheome.flow.field, rheome.flow.divergence, rheome.flow.stream, rheome.differential.curl,
-%           rheome.operators.weak_differential, flow_curl_methods, OPERATOR-REGISTRY.md
+%           rheome.operators.weak_differential
 %
 % Author: Diellor Basha, 2026
 

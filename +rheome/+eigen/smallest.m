@@ -19,6 +19,12 @@ function [V, D] = smallest(A, B, k, opts)
 % OPTIONS: opts.tol (1e-6) .maxit (1000) .disp (0)
 % OUTPUTS: V [n x k] eigenvectors (ascending);  D [k x k] diagonal eigenvalues (ascending, real)
 %
+% Example:
+%   [V, F] = rheome.geom.icosphere(3);
+%   [L, M] = rheome.operators.laplace_beltrami(V, F);
+%   [Phi, D] = rheome.eigen.smallest(L, M, 9);          % the constant, then the l = 1 and l = 2 shells
+%   assert(issorted(diag(D)) && norm(Phi' * M * Phi - eye(9)) < 1e-6)
+%
 % See also: rheome.eigen.modes, rheome.operators.laplace_beltrami   (source: Brainstorm bst_eigs_smallest)
 %
 % Author: Diellor Basha, 2026 (port of bst_eigs_smallest)

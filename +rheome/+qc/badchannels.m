@@ -1,6 +1,5 @@
-% Author: Diellor Basha, 2026
 function out = badchannels(rawDirs, dataRoot, outDir, varargin)
-% BADCHANNELS  Pre-registered automatic bad-channel detection on staged Brainstorm raw links.
+% QC.BADCHANNELS  Pre-registered automatic bad-channel detection on staged Brainstorm raw links.
 %
 %   out = rheome.qc.badchannels(rawDirs, dataRoot, outDir)            % run, write tables + figures
 %   out = rheome.qc.badchannels(rawDirs, dataRoot, outDir, 'DryRun', true)   % list runs + thresholds only

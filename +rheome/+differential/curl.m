@@ -19,6 +19,12 @@ function vort = curl(J, S, fg)
 % OUTPUT:
 %   vort  [nV x nT] per-vertex scalar vorticity (CCW +, CW -)
 %
+% Example:
+%   [V, F] = rheome.geom.icosphere(4);  S = struct('Vertices', V, 'Faces', F);
+%   J = reshape(cross(repmat([0 0 1], size(V, 1), 1), V, 2).', [], 1);   % rotation about z
+%   vort = rheome.differential.curl(J, S);                    % analytic: 2z on the unit sphere
+%   assert(norm(vort - 2*V(:, 3)) / norm(2*V(:, 3)) < 0.01)
+%
 % See also: rheome.operators.face_gradient, rheome.differential.divergence, rheome.differential.helmholtz
 %
 % Author: Diellor Basha, 2026

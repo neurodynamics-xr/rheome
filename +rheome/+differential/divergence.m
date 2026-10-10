@@ -21,6 +21,11 @@ function div = divergence(J, S, fg)
 % OUTPUT:
 %   div  [nV x nT] per-vertex scalar divergence (sources +, sinks -)
 %
+% Example:
+%   [V, F] = rheome.geom.icosphere(3);  S = struct('Vertices', V, 'Faces', F);
+%   J = reshape(repmat([0 0 1], size(V, 1), 1).', [], 1);   % a constant ambient field
+%   assert(max(abs(rheome.differential.divergence(J, S))) < 1e-10)
+%
 % See also: rheome.operators.face_gradient, rheome.differential.curl, rheome.differential.helmholtz
 %
 % Author: Diellor Basha, 2026

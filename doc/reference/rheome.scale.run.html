@@ -13,7 +13,49 @@
     bandsnr.csv       the per-octave SNR the band analyses used
     flowtiles.csv     periodicflow: one row per tile x (total, periodic)
     grouptrack.csv    grouptrack: one row per hemisphere x depth x frame rate
+    gaugeflow.csv     periodicflow: the alpha flow in the group gauge (FreeSurfer sphere poles), one
+                      row per chart x band x ico3 sphere patch -- the input of rheome.scale.reducegaugeflow
+    fieldsmooth.csv   fieldsmooth: one row per (band, map, frame) -- Dirichlet wavelength, coherence
+    fieldsmooth_maps.mat   fieldsmooth: the strongest frame's raw and band-limited fields (figure data)
+    eventsensors.mat  eventsensors: the tracked event on the sensor data (figure data)
+    plantfloors.csv, movingvortex.csv, composition.csv, sizeruler.csv, vortexscale.csv, rotation.csv,
+    detection.csv, diracangles.csv   the MS1 group plants (P1, nsp cf-plant-floors): the per-plant /
+                      per-placement tables of rheome.scale.measure_plantfloors, measure_movingvortex and
+                      measure_noisefloor; opt-in, not in the &quot;ported&quot; default
+    bandperiodic.csv  bandperiodic: per (half, band) -- Table 5 on the clean span and its two halves
+    helmholtzbands.csv  helmholtzbands: per hemisphere x band x plant -- Fig. 4A-B on this cortex
+    ownregion.csv     ownregion: per Desikan-Killiany region -- own-region fraction of div and curl
+    geometry.csv      geometry: per hemisphere x level x tile -- atom-tile overlap (Fig. 2A)
+    fusion.csv        fusion: per frame -- fused kernels against reconstruct-then-differentiate
+                      (the five MS1 group P2 tables, nsp rheome-ms1-scale; opt-in, not in &quot;ported&quot;)
+    patterns.csv, patternnulls.csv   MS1 G5 / G13 (P3, nsp cf-patterns): rheome.scale.measure_patterns --
+                      detector x band x half rows against the phase-randomised surrogates and the empty room,
+                      and the section 6.3 statistics against their nulls; opt-in, not in the &quot;ported&quot; default
+    catalogue.csv, catalognulls.csv, catalogue_strips.mat   MS1 G6, G3 rule 11, G16 (P4, nsp cf-plants):
+                      rheome.scale.measure_catalogue -- the 19 catalogue plants through the participant's own
+                      gain, whitened MNE and sensor noise (rest, empty room), read by the framework, Brainstorm's
+                      bst_opticalflow and a phase-regression estimator, and the false-propagation nulls;
+                      opt-in, not in the &quot;ported&quot; default. bst_opticalflow needs RHEOME_BRAINSTORM (a Brainstorm checkout)
+    inject.csv, trackfactorial.csv   MS1 G7 / G8 (P5, nsp cf-track): per-injection rows of
+                      rheome.scale.measure_inject and the factorial rows of measure_trackfactorial
+                      (RefHead from RHEOME_REFHEAD); opt-in, not in the &quot;ported&quot; default
+    aperiodic.csv     MS1 G10 (P6, nsp cf-aperiodic): rheome.scale.measure_aperiodic -- per cell (arm x plant x
+                      sigma x speed x signal) the on-patch Viterbi rate against the held-out null, the split's
+                      reduction, band-map errors and along-path speed; opt-in, not in the &quot;ported&quot; default
+    slowosc.csv, slowosc_events.csv   MS1 G15, G16 (P7, nsp cf-slowosc): rheome.scale.measure_slowosc -- sleep
+                      slow oscillations per event x hemisphere x condition (original, reversed, surrogate) x
+                      estimator (framework, bst_of, phasereg, sensorlatency): direction vs A-&gt;P, speed; and the
+                      detected events. A sleep EEG subject: Modality=&quot;EEG&quot;, and Edf/Events with ProtoDir (the
+                      template forward model) to import it (rheome.scale.importeeg); opt-in, not &quot;ported&quot;
+    correspondence.csv, atlasevents.csv, gaugetensor.csv, connectome.csv   MS1 G12 (P8, nsp cf-atlas):
+                      rheome.scale.measure_atlas -- DK agreement through the sphere vs raw coordinates and the
+                      frame vs the shared meridian; alpha atlas events at depth &lt;= 3 vs phase-randomised
+                      surrogates; the alpha orientation tensor per depth-3 group tile in the shared gauge;
+                      Destrieux -&gt; DK vs the dyadic roll-up and connectome-wavelet widths over a gamma sweep.
+                      Opt-in. Needs a template cortex (RHEOME_TEMPLATE or RHEOME_BRAINSTORM's ICBM152)
     timing.csv        analysis, seconds, peak_rss_GB, status, message
+    rheome_coeffs.mat Analyses=&quot;coefficients&quot; only: graph-wavelet envelopes per tile x scale x time,
+                      Prognome's contract (rheome.scale.coefficients)
     provenance.json   commit (+ dirty flag), MATLAB release, host, options, located inputs, the
                       kernels the protocol ships, import durations
   No figures. An analysis that errors is recorded as status &quot;error&quot; with its message and the
@@ -24,14 +66,21 @@
  
   Ported analyses (the reports' names): resolution, bandsnr, bandresolution, periodicflow
   (apparent flow of the total and the periodic alpha envelope over FlowTiles tiles; its &quot;total&quot;
-  rows are the flowmap pipeline's speed, curl and div), grouptrack. The others --
+  rows are the flowmap pipeline's speed, curl and div), grouptrack, fieldsmooth (per-vertex vs
+  graph-wavelet band-limited current, div and curl), eventsensors (needs grouptrack first: the
+  best Viterbi path's samples and channels on the sensor data), and the MS1 group P2 measures:
+  bandperiodic (per-band periodic fraction, oscillation SNR, aperiodic fit, floors, IAF, split
+  halves), helmholtzbands (planted-band recovery on the cortex), ownregion (readout rule 5), geometry
+  (atom-tile overlap, gauge, roll-up exactness) and fusion (fused-kernel exactness). The others --
   flowmap (div/curl maps), inject, vortex, sensorwavelet -- are listed in
+  best Viterbi path's samples and channels on the sensor data). The others --
+  flowmap (div/curl maps), vortex, sensorwavelet -- are listed in
   rheome.scale.analyses with status &quot;not_ported&quot; until each has a figure-free measure.
  
   See also: rheome.scale.importsubject, rheome.scale.measure_resolution, rheome.scale.reduce, rheome.scale.analyses
  
   Author: Diellor Basha, 2026
 </pre>
-<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
 <p><a href="index.html">Rheome reference</a></p>
 </body></html>

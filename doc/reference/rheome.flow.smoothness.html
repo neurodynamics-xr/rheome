@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.smoothness</title></head><body>
+<h1>rheome.flow.smoothness</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.SMOOTHNESS  How smooth a map or a vector field is on the surface, in millimetres.
+ 
+    s = rheome.flow.smoothness(X, S, lbo)
+        X    [nV x nT] scalar maps, or [3nV x nT] ambient vectors (rows x1,y1,z1,...)
+        S    surface: .Vertices (m) .Faces          lbo  .Mass .L (cotan stiffness) on S
+ 
+  ⭐ .wavelengthMM IS THE DIRICHLET WAVELENGTH: 2*pi*sqrt(x'Mx / x'Lx), the wavelength of the single
+  Laplace-Beltrami mode with the same ratio of gradient energy to energy (a Rayleigh quotient). A
+  field that changes at the mesh spacing reads a few mm; a field smooth at the MEG point spread reads
+  tens to hundreds of mm. For vectors the three ambient components are summed, so the turning of
+  the arrows across folds counts as roughness -- which is what the eye sees in a quiver plot.
+  .coherence (vectors only) is the magnitude-weighted mean cosine between the vectors at the two ends
+  of every mesh edge: 1 = neighbouring arrows parallel, 0 = unrelated.
+ 
+  OUTPUT (struct s): .wavelengthMM [1 x nT]   .coherence [1 x nT] (NaN for scalar maps)
+ 
+  See also: rheome.flow.bandlimit, rheome.differential.helmholtzbands
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>
