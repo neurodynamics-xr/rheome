@@ -5,6 +5,7 @@
 %
 % Sub-packages:
 %   rheome.io.read.surface   - read a Brainstorm cortical surface .mat
+%   rheome.io.read.fssurf    - read a FreeSurfer binary surface (lh.white, lh.sphere, ...)
 %   rheome.io.read.atlas     - read every parcellation (the ROI axis) from that surface
 %   rheome.io.read.channel   - sensor definitions        rheome.io.read.headmodel - leadfield
 %   rheome.io.read.recording - sensor time series        rheome.io.read.noisecov  - noise covariance
