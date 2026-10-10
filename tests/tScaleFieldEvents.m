@@ -38,13 +38,29 @@ classdef tScaleFieldEvents < matlab.unittest.TestCase
             [T, ev] = rheome.scale.measure_eventsensors(tc.Name, S, Best, Depth=3, JLevel=2);
             tc.verifyEqual(T.value(T.metric == "n_steps"), numel(Best(1).track.frames));
             E = ev.E;  fs = 600;  dec = 2;  bs = 4;
-            f1 = (Best(1).window - 1) * 600 + (Best(1).track.frames(1) - 1) * bs;      % 300-fps frames
+            f1 = Best(1).frame0 + (Best(1).window - 1) * 600 + (Best(1).track.frames(1) - 1) * bs;      % 300-fps frames
             s1 = f1 * dec + 1 - round(ev.t(1) * fs);                                      % sample in the crop
             tc.verifyEqual(E.samples(1, :), [s1, s1 + bs*dec - 1]);
             tc.verifyTrue(any(E.mask(:, s1)));  tc.verifyEqual(size(E.mask), size(ev.Xraw));
             tc.verifySize(ev.pos2, [size(ev.Xraw, 1) 2]);
             h = rheome.show.eventsensors(ev.Xband, ev.t, E, ev.pos2, 'Labels', ev.labels, 'Visible', 'off');
             close(h);
+        end
+
+        function trackWindowsLieInsideTheCleanSpan(tc)
+            % a planted onset transient makes cleanspan trim the start; no grouptrack window may reach before it
+            nm = 'synth_onset';  d = fullfile(rheome.load.root(), nm);  scaleSynthSubject(d);
+            L = load(fullfile(d, 'study.mat'));  fs = L.rec.sfreq;  k = 1:round(0.75 * fs);
+            L.rec.F(:, k) = L.rec.F(:, k) + 50 * std(L.rec.F(:)) * exp(-(k - 1) / (0.1 * fs));
+            save(fullfile(d, 'study.mat'), '-struct', 'L');
+            S = rheome.scale.sensors(nm);
+            CS = rheome.scale.cleanspan(double(L.rec.F(S.iSel, :)), fs);
+            tc.assertGreaterThan(CS.first, round(0.75 * fs));
+            [T, ~, Best] = rheome.scale.measure_grouptrack(nm, S, Depths=3, JLevels=2, Hemis="L");
+            tc.verifyEqual(T.value(T.metric == "clean_start_s"), (CS.first - 1) / fs);
+            dec = round(fs / 300);  w0 = Best(1).frame0 + (Best(1).window - 1) * 600;
+            tc.verifyGreaterThanOrEqual(w0 * dec + 1, CS.first);
+            tc.verifyLessThanOrEqual((w0 + 600) * dec, CS.last);
         end
 
         function theDriverWritesTablesAndFigureData(tc)
