@@ -15,7 +15,7 @@ function E = envelopemodes(name, opts)
 %
 % OUTPUT  E.L / E.R: struct(.C single [K x nFrames], .fs, .band)
 %
-% See also: rheome.flow.activation, rheome.inverse.mne, alpha_grouptrack_omega, alpha_jointstate_omega
+% See also: rheome.flow.activation, rheome.inverse.mne
 %
 % Author: Diellor Basha, 2026
 

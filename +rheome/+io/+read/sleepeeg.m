@@ -4,7 +4,7 @@ function rec = sleepeeg(edfFile, eventsFile, opts)
 %   rec = rheome.io.read.sleepeeg(edf, eventsTsv)
 %   rec = rheome.io.read.sleepeeg(edf, eventsTsv, Stages=["N2" "N3"], Rate=100, Channels=names, ChunkS=300)
 %
-% The reader of the MS1 positive control (G15, nsp cf-slowosc). AnphySleep's EEG-BIDS (Data 4e19b265) holds
+% The reader of the MS1 positive control (G15). AnphySleep's EEG-BIDS holds
 % one ~7 h EDF+ at 1000 Hz per subject and an events.tsv with one row per scored 30-s epoch,
 % trial_type "stage/<label>", and the release's artefact matrix as artifact_channels ("none", or the
 % comma-separated EEG channels marked bad in that epoch). Only the epochs whose stage is in Stages are read:

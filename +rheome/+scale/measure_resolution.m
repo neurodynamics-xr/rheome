@@ -4,7 +4,7 @@ function T = measure_resolution(name, S)
 %   T = rheome.scale.measure_resolution(name)
 %   T = rheome.scale.measure_resolution(name, rheome.scale.sensors(name))
 %
-% Same call as resolution_scales_omega.m:52: rheome.inverse.resolution on the left hemisphere, the plain
+% rheome.inverse.resolution on the left hemisphere, the plain
 % MNE at SnrFixed = 3, 300 seeds. Returns rheome.scale.rows of
 %   r50_median, r50_q25, r50_q75   geodesic radius holding half the PSF power        mm
 %   ple_median                      peak localisation error                           mm

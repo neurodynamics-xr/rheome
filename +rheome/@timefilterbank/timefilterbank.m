@@ -15,7 +15,7 @@ classdef timefilterbank
 % of its bins alone, at Oversample x the bin count. Magnitudes are exact at those instants.
 % This is the non-stationary Gabor transform in its constant-Q form, in this repo's
 % vocabulary. Modelled on graphfilterbank; owns the range, the anchor and the shapes; not
-% the data. Design: docs/2026-09-22-timefilterbank-design.md.
+% the data.
 %
 % ⚠ The grid is ANCHORED AT AN ABSOLUTE FREQUENCY (Anchor, 1 Hz): member k sits at
 % Anchor*2^(k/V) for every record and every rate, so all records share scales.

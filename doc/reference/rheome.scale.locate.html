@@ -22,6 +22,8 @@
   (.noiseRaw '' if the protocol holds no noise run), and two optional files ('' when absent):
     .mri     anat/&lt;sub&gt;/subjectimage*.mat (not a volume atlas): its SCS/NCS place the cortex in MNI
     .fibers  anat/&lt;sub&gt;/tess_fibers*.mat: the subject's OWN tractography (nsp bst-fibers' augmented protocol)
+  and .pet, a cell of data/&lt;sub&gt;/PET/results_surface_PET_*.mat (nsp bst-pet / bst-multimodal: one SUVR map per
+  tracer on the cortex), {} when absent
  
   See also: rheome.scale.importsubject, rheome.scale.run
  

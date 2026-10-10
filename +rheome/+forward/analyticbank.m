@@ -22,7 +22,7 @@ function out = analyticbank(Gain, S, chanLoc, chanOri, opts)
 % each row's least squares by 1/sqrt(m) or 1/m, m the per-vertex magnitude, moves the equalised
 % agreement 0.9578 -> 0.9663 and the raw agreement 0.9862 -> 0.9838, both under a percent, and
 % changes nothing downstream: as an inverse basis 1/m beats raw LS on source cosine in 26 of 48
-% draws, which is chance. See docs/2026-09-26-feature-table-design.md section 53.
+% draws, which is chance.
 %
 % INPUTS
 %   Gain    [nCh x 3nV]      S  surface with .Vertices

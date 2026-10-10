@@ -22,18 +22,18 @@
   share it. Three speeds are reported:
     speedMaxMS    D / dt           one tile per frame: the ceiling
     speedTrackMS  D / (MinDwell*dt) the fastest a tile tracker actually followed: MinDwell = 2.5
-                                    frames per tile, measured in plant_tiletrack_omega.m
+                                    frames per tile, measured by planting
     speedMinMS    D / W            one tile in the whole window: slower than this is &quot;stationary&quot;
  
   ⭐ THE FEATURE-SIZE COLUMN IS MEASURED, NOT ASSUMED: a tile of diameter D holds features of
   sigma &gt;= D / TileSigma, and which ratio is right depends on the tracker.
     TileSigma = sqrt(2)  tile &lt;= the core RADIUS. What a PER-FRAME tile peak needs: a tile mean keeps a
-                         band-pass peak only up to that size (plant_tiletrack_omega.m: sigma 25 mm
+                         band-pass peak only up to that size (measured by planting: sigma 25 mm
                          tracked on 23-33 mm tiles at 10 dB, lost on 47 mm and coarser).
     TileSigma = 1        tile &lt;= sigma, one depth finer. What TRACK-BEFORE-DETECT prefers
                          (rheome.detect.tilepath): the path spreads over more of the peak's tiles, and its
-                         best cell was one depth finer than the sqrt(2) rule's (plant_tilepath_omega.m,
-                         confirmed on an independent seed by ladder_rules_omega.m).
+                         best cell was one depth finer than the sqrt(2) rule's (measured by planting,
+                         confirmed on an independent seed).
   The octave of eigenvalues a depth stands for is sigma in [sigmaMin, 2*sigmaMin], lambda = 2/sigma^2
   (the mexhat's peak, t = sigma^2/2), reported as lambdaLo/lambdaHi. Two tree depths are one spatial
   octave, because area halves per depth (rheome.geom.ladder).

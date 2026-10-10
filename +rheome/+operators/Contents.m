@@ -12,7 +12,7 @@
 %                                 trivial connection (parallel, singular only at chosen poles).
 %                                 ⚠ connection_laplacian's own .e1/.e2 are NOT a usable gauge --
 %                                 79 deg between neighbours -- so anything reading a per-component
-%                                 value needs this instead (dirac_gauge_omega.m)
+%                                 value needs this instead
 %   rheome.operators.trivial_connection - Crane 2010 trivial connection on the dual complex: indices k_f
 %                                 summing to chi, face curvature WRAPPED (the chart parts removed)
 %   rheome.operators.face_gradient     - per-face constant-gradient primitives (div/curl)

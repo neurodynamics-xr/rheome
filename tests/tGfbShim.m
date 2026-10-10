@@ -44,14 +44,14 @@ classdef tGfbShim < matlab.unittest.TestCase
         end
 
         function truncatedWarningStillFires(tc)
-            % sphere_validate.m asserts on this exact identifier.
+            % callers assert on this exact identifier.
             fx = gfbFixture();
             tc.verifyWarning(@() rheome.filters.frame('mexhat', 7, fx.Lambda), ...
                 'filters:frame:truncated');
         end
 
         function sparseWarningStillFires(tc)
-            % omega_rerun.m and flow_curl_methods.m suppress this exact identifier.
+            % callers suppress this exact identifier.
             fx = gfbFixture();
             tc.verifyWarning(@() rheome.filters.frame('mexhat', 3, fx.Lambda), ...
                 'filters:frame:sparse');

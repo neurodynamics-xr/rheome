@@ -21,7 +21,7 @@
   retained bins is LOSSLESS rather than approximately so: the discarded bins sit beyond a gain
   that is already zero.
  
-  MEASURED (subject01, 8-13 Hz, each route against ITSELF on a longer record so that only edge
+  MEASURED (a reference subject, 8-13 Hz, each route against ITSELF on a longer record so that only edge
   effects differ; relative interior error beyond a 2.5 s guard):
  
     truncate, no shaping ................ 0.0194
@@ -34,7 +34,7 @@
   first and last samples have less context, so a guard is still required.
  
   ⚠ NEVER APPLY THIS TO A PASS WHOSE SPECTRUM WILL BE FITTED. It removes the lowest bins, which
-  carry most of the leverage on a 1/f slope. Measured on subject01 over [1 45] Hz: width 0 Hz
+  carry most of the leverage on a 1/f slope. Measured on a reference subject over [1 45] Hz: width 0 Hz
   gives chi in [0.57 1.44]; width 0.5 Hz gives chi in [-5.08 -3.76] -- negative exponents, i.e.
   power RISING with frequency. Estimation passes use rheome.flow.psd (Welch), which tapers in TIME.
  

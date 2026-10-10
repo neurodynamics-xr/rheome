@@ -15,6 +15,8 @@
     atlas.mat     rheome.import.atlas(name)
     mri.mat       SCS, NCS of the subject's MRI, when the protocol staged it (rheome.scale.measure_atlas: MNI)
     fibers_subject.mat  the subject's own tractography, when the protocol carries it (rheome.connectome.resolve)
+    pet.mat       the protocol's PET surface maps, when it carries them: pet(k).name .x [nV x 1] .units .file
+                  (rheome.scale.measure_multimodal); a map on another surface than the leadfield's is an error
  
   ⭐ THE RECORDING IS READ FROM THE RAW .bst, NOT AN IMPORTED BLOCK. The protocol holds only the
   raw link (data_0raw_*), e.g. at 1200 Hz; rheome.io.read.rawbst reads it with the SSP projectors applied,

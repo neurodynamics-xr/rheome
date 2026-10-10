@@ -23,7 +23,7 @@ function out = decompose(C, f, opts)
 % ⚠⚠ FIT ON A WELCH PSD (rheome.flow.psd), NOT A SINGLE PERIODOGRAM. The log of a 2-dof periodogram is
 % biased LOW by gamma (~0.25 in log10), so the fitted background sits ~1.8x below the truth. That
 % bias is CONSTANT in frequency, so it leaves the exponent alone -- but the split depends on the
-% ABSOLUTE LEVEL of Pap, not its slope, so it inflates the periodic share. Measured on subject01,
+% ABSOLUTE LEVEL of Pap, not its slope, so it inflates the periodic share. Measured on a reference subject,
 % 8-13 Hz: single periodogram -> 77.5%% periodic; Welch (2 s, 50%% overlap) -> 26.4%%. The Welch
 % figure is the correct one, and the difference is not a detail: it is the difference between
 % "alpha-band flow is mostly rhythm" and "alpha-band flow is mostly background".

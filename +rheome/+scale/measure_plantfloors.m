@@ -4,7 +4,7 @@ function [T, X] = measure_plantfloors(name, S, opts)
 %   [T, X] = rheome.scale.measure_plantfloors(name)
 %   [T, X] = rheome.scale.measure_plantfloors(name, S, LambdaMM=[46 65 92 130 183], PlantsPerCell=10)
 %
-% The group version of helmholtz_noise_omega.m (MS1 v18 Table 3, Fig. 4C-E), on the participant's own
+% The group version of the Helmholtz-noise planting test (MS1 Table 3, Fig. 4C-E), on the participant's own
 % cortex, leadfield, plain minimum norm (S.Res) and 8-16 Hz resting background:
 %   field    a source (tangential gradient of a band atom) at one vertex plus a vortex (n x gradient) at
 %            another 60-120 mm away, each at unit energy, oscillating at F0 Hz with a random phase
@@ -14,7 +14,7 @@ function [T, X] = measure_plantfloors(name, S, opts)
 %            own phase -> rheome.differential.helmholtzbands; the band map's peak is the located vertex
 % ⭐ BALANCED CELLS. Per hemisphere, PlantsPerCell fields per planted band: the source bands are
 % repelem(bands, PlantsPerCell) and the vortex bands a random permutation of them, so every
-% (type, band, hemisphere) cell holds exactly PlantsPerCell plants (v18 drew bands at random: n 13-19).
+% (type, band, hemisphere) cell holds exactly PlantsPerCell plants (the single-subject test drew bands at random: n 13-19).
 % ⭐ SPLIT HALVES. Half the plants of every cell (source and vortex alike) take their background from
 % the first half of the recording, the rest from the second; column `half` carries it for the ICC.
 %
@@ -31,8 +31,8 @@ function [T, X] = measure_plantfloors(name, S, opts)
 %   floor_mm      the finest planted band whose median err_mm <= FloorMM (33 mm = one depth-7 tile;
 %                 NaN when none), per type x SNR                   band "<type>_<snr>"
 %   blind_shift   median band offset of the blind choice, noise-free, per type
-%   mixed_err_mm  noise-free median over all bands, per type (v18 Fig. 4C: vortex 20, source 80)
-%   normal_frac   noise-free median spurious normal share through MEG (v18: 0.27)
+%   mixed_err_mm  noise-free median over all bands, per type (MS1 Fig. 4C: vortex 20, source 80)
+%   normal_frac   noise-free median spurious normal share through MEG (single-subject reference: 0.27)
 % plus the same floors per half (band "<type>_<snr>_h1|h2") for the split-half reliability.
 %
 % See also: rheome.differential.helmholtzbands, rheome.scale.run, rheome.scale.measure_movingvortex

@@ -2,7 +2,15 @@
 <html><head><meta charset="utf-8"><title>rheome.dynamics.opticalflow_vector</title></head><body>
 <h1>rheome.dynamics.opticalflow_vector</h1>
 <p><em>function rheome.dynamics</em> &mdash; Rheome</p>
-<pre>  DYNAMICS.OPTICALFLOW_VECTOR  Vector optical flow of an unconstrained current field.
+<pre>  DYNAMICS.OPTICALFLOW_VECTOR  Vector optical flow of an unconstrained current field.  ⚠ RETIRED
+ 
+  ⚠ RETIRED 2026-10-08: on a NORMAL current J = I*n -- what an
+  inverse returns -- it fails noise-free on the FreeSurfer sphere (direction 25-69 deg, speed 35-89%, div/curl
+  27-64% of truth at alpha &lt;= 1), because n turns along the flow: the static geometry of n is texture
+  that says &quot;no motion&quot;. It is exact only when its model holds (three independently advected channels:
+  1-5 deg, 96-104%), and there it is worse than the scalar under noise, since its data term carries no
+  mass weight and alpha below ~1e3 does not regularise. The 'covariant' transport was never implemented.
+  Use rheome.dynamics.opticalflow_scalar on the envelope. Kept callable; warns on every call.
  
     velocityField = rheome.dynamics.opticalflow_vector(currentField, surface [,opts])
  

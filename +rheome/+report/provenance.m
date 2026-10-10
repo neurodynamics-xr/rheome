@@ -2,7 +2,7 @@ function P = provenance(opts)
 % REPORT.PROVENANCE  Everything needed to reproduce a result, collected rather than typed.
 %
 %   P = rheome.report.provenance()
-%   P = rheome.report.provenance(Script="resolution_scales_omega.m", Data=["...bases.mat"])
+%   P = rheome.report.provenance(Script="myanalysis.m", Data=["...bases.mat"])
 %   P = rheome.report.provenance(..., Hash="sha256")     % read every data file and digest it
 %
 % ⭐ PROVENANCE THAT IS TYPED BY HAND IS PROVENANCE THAT IS WRONG. The commit a figure was

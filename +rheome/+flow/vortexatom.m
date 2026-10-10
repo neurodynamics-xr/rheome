@@ -8,7 +8,7 @@ function out = vortexatom(name, varargin)
 % ⭐⭐ THE SPIN IS THE OSCILLATION, WHICH IS WHY THIS STAYS IN BAND. A carrier multiplied by an
 % independent spin rate is TWO atoms at f0 +- f_spin, and those sidebands leave the octave as soon
 % as the spin is quick: measured in-band energy falls to 2.5% at a 100 ms half turn and 0.1% at
-% 50 ms (docs/2026-09-26-feature-table-design.md section 29). Here the pattern's rotation IS the
+% 50 ms. Here the pattern's rotation IS the
 % band's oscillation -- one analytic atom, one peak -- so a fast spin is not a problem but the
 % definition. ⭐ The two-atom construction fitted ~4 turns inside an alpha atom; this one fits 15,
 % because the turn rate is fc rather than a separate dial bounded by the tile's width.
@@ -59,7 +59,7 @@ function out = vortexatom(name, varargin)
 % ⚠ peakHz is measured on the SOURCE field, per vertex. Whether the SENSORS see alpha is a
 %   separate question and needs the leadfield -- rheome.flow.vortexatom does not answer it. (It does:
 %   noiseless in-band 1.0000 at peak 11.25 Hz, and 0.6311 still peaking at 11.5 Hz with real
-%   empty-room noise at SNR 3. See docs/2026-09-26-feature-table-design.md section 30.)
+%   empty-room noise at SNR 3.)
 %
 % ⚠⚠ THE RECORD MUST BE SEVERAL TIMES THE ATOM'S SUPPORT, and fc IS THE NEAREST MEMBER THAT
 %   EXISTS, not the band's centre. Measured: asking for [4 8] on a 4 s record returns fc 6.727

@@ -8,7 +8,7 @@ function G = reducegauge(inDir, outDir, opts)
 % flat <sub>_gaugetensor.csv and <sub>_metrics.csv (any depth); metrics.csv gives the dataset (OMEGA, PREVENT-AD),
 % which is the group: cf-atlas labels every subject's cohort "unlabelled". The tiles are the template's
 % group tiles reached through the registered sphere, and the gauge is rheome.geom.sphereframe with the poles at
-% the FreeSurfer sphere's +-z in every participant (MS1 section 9, 21cc8d9b), so tile k and its north are the
+% the FreeSurfer sphere's +-z in every participant (MS1 section 9), so tile k and its north are the
 % same in everyone and the subjects' tensors can be averaged directly. Writes outDir/gaugegroup.csv, one row per
 % (dataset, hemi, depth, node_id):
 %   n               subjects with the tile

@@ -27,7 +27,7 @@
  
   ⚠⚠ ONE-RING MAXIMA SPLIT A FLAT TOP, so `MinSeparation` is not optional in practice. A basis-truncated
   atom has a plateau with ripples at the mesh's irregularity, and two vertices a few millimetres apart
-  both beat their rings at near-equal height. Measured (plant_track_omega.m, a 25 mm mexhat moving at
+  both beat their rings at near-equal height. Measured (by planting: a 25 mm mexhat moving at
   0.25 m/s, no noise): 20% of frames held two or three peaks 1-5 mm apart, which the tracker turned
   into four tracks for one object. Suppressing any peak within MinSeparation of a higher one fixes it.
   Set it to the map's own smoothness scale (the atom width in a plant, r50 = 52 mm on the inverse).
@@ -39,7 +39,7 @@
   2*sqrt(area/pi) of the connected half-height superlevel set holding the peak -- area from the
   mass matrix, because Euclidean extent across a folded sheet measures the folding. Two peaks whose
   half-height regions touch report the same region. Through an instrument this is a rendering width,
-  not a source size (plant_scale_omega.m: ~100 mm recovered whatever was planted below 10 dB).
+  not a source size (measured by planting: ~100 mm recovered whatever was planted below 10 dB).
  
   INPUTS
     X          [nV x nT] real scalar map (e.g. |curl| of an analytic current)

@@ -17,7 +17,7 @@ function [T, X] = windowtable(name, varargin)
 % is NOT the sum of its depth-3 children for the non-quadratic columns, and `energy` is the only
 % column for which summing children is valid.
 %
-% ⚠⚠ WHAT THIS TABLE CANNOT LABEL, MEASURED BY PLANTING (plant_scale_omega.m). A source of known
+% ⚠⚠ WHAT THIS TABLE CANNOT LABEL, MEASURED BY PLANTING. A source of known
 % scale planted through the leadfield, noise and inverse comes back at ~100 mm REGARDLESS of its
 % true size once the SNR is at or below 10 dB: slope +0.02, R^2 0.002 across a planted 70-267 mm
 % range. So `kCentroidMM` and the octave shares describe WHICH FILTER responded, not how big the
@@ -67,8 +67,7 @@ function [T, X] = windowtable(name, varargin)
 %   per window : win_nSamples win_nEff win_bandPowerSensor win_envMean win_oct1..6
 %                win_kCentroidMM (⚠ which filter responded, NOT a source size)
 %
-% See also: rheome.flowfeatures, rheome.geom.tree, rheome.operators.gauge, plant_scale_omega,
-%           docs/2026-09-26-feature-table-design.md
+% See also: rheome.flowfeatures, rheome.geom.tree, rheome.operators.gauge
 %
 % Author: Diellor Basha, 2026
 

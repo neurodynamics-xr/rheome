@@ -42,7 +42,7 @@ function out = simulate(name, varargin)
 % in-band array RMS exceed the noise-only 95th percentile.
 %
 % ⚠ What this cannot tell you: whether a detected pattern can be LOCALISED or SIZED. Detection in the
-% sensor timeseries is a much weaker question than recovery on the cortex -- plant_scale_omega.m
+% sensor timeseries is a much weaker question than recovery on the cortex -- rheome.scale.measure_noisefloor
 % recovers location to 43-52 mm and scale not at all below 10 dB. Use this for "is it visible", and
 % that for "what comes back".
 %
@@ -81,7 +81,7 @@ function out = simulate(name, varargin)
 %   .channels .fs .vertex .depthMM .family .band .lambdaMM
 %
 % See also: rheome.filters.impulse, rheome.filters.resonator, rheome.filters.gabor, rheome.forward.reconstruct,
-%           rheome.forward.observability, plant_scale_omega, rheome.sensors.generate
+%           rheome.forward.observability, rheome.sensors.generate
 %
 % Author: Diellor Basha, 2026
 

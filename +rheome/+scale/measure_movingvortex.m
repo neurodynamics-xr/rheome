@@ -4,7 +4,7 @@ function [T, X] = measure_movingvortex(name, S, opts)
 %   [T, X] = rheome.scale.measure_movingvortex(name)
 %   [T, X] = rheome.scale.measure_movingvortex(name, S, Placements=10, SigmaMM=[44 65 92 130], SNRdB=[Inf 10 0])
 %
-% The group version of MS1 v18 Fig. 11 / section 7.2 (export_data.m, F5 block; one placement on sub-0002):
+% The group version of MS1 Fig. 11 / section 7.2 (one placement on one participant):
 %   plant    rheome.flow.movingvortex, SpeedMS 0.10 along a geodesic (126 mm at the default 140 mm atom),
 %            alpha carrier in quadrature, 4 s; Placements start vertices per hemisphere, drawn at random
 %            among vertices >= 20 mm from the gauge's singular faces (the default start is deterministic)
@@ -15,10 +15,10 @@ function [T, X] = measure_movingvortex(name, S, opts)
 %            minimum-norm current) -> amplitude in one mexhat graph-wavelet member of width sigma
 %            (bank 12-160 mm, 1 voice, exact eigenbasis); the core is the peak of that amplitude summed
 %            over +-0.1 s around the frame
-%   frames   every fs/20-th sample inside the support (12 at 600 Hz, as v18)
+%   frames   every fs/20-th sample inside the support (12 at 600 Hz, as the single-participant figure)
 % ⭐ The no-instrument arm reads the TRUE current's stream function with the same band and frames, so
 % what the instrument costs is coreErr - directErr at the same sigma.
-% ⚠ Core distances are Euclidean, as v18 (export_data.m); the path and speed are geodesic.
+% ⚠ Core distances are Euclidean, as the single-participant figure; the path and speed are geodesic.
 % ⚠ The direct arm's analytic signal takes the Hilbert transform of the quadrature time factors and
 % holds the waypoint weights fixed, which is exact for a stationary atom and close for a slow one.
 %

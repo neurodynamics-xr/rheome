@@ -69,7 +69,7 @@ function basis = modes(L, M, K, varargin)
 
     % ---- how well the mesh resolves the TOP of the basis ----
     % ⚠ COTAN-FEM EIGENVALUES ARE BIASED HIGH, AND THE BIAS GROWS AS (l*h)^2. Measured against the
-    % exact spherical spectrum on ico5 (sphere_validate section 1): +7.3e-4 at degree 2 rising to
+    % exact spherical spectrum on ico5 (the sphere validation): +7.3e-4 at degree 2 rising to
     % +3.80% at degree 19, the top of a 400-mode basis -- and the per-degree errors collapse onto a
     % single constant once divided by (l*h/R)^2, which is the signature of discretisation rather
     % than of the solver. It therefore cannot be corrected here. But it CAN be declared, and the

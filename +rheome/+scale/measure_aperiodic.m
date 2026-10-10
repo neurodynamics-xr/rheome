@@ -5,7 +5,7 @@ function [T, X] = measure_aperiodic(name, S, opts)
 %   [T, X] = rheome.scale.measure_aperiodic(name)
 %   [T, X] = rheome.scale.measure_aperiodic(name, S, SigmaMM=[30 60 100], Reps=8, NullWindows=32)
 %
-% The group version of nxr-cortical-flow-matlab aperiodic_wave_omega.m (180bbaf; sub-0002, a 30 mm patch, the
+% The group version of a single-participant test (a 30 mm patch, the
 % existence case), at lobar scale and with the threshold and the split's selectivity per participant:
 %   PLANT    a Gaussian patch (sigma SigmaMM, geodesic) whose centre moves along a PathMM shortest path at v m/s,
 %            centred in a WindowS window with cosine ramps (v = 0: the patch sits at mid-path for the whole window,

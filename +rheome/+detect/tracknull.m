@@ -11,7 +11,7 @@ function thr = tracknull(nullStats, nullSeconds, opts)
 % exceed.
 %
 % ⭐ WHY TWO RULES AND A UNION. A still object is persistent and goes nowhere; a fast one over a short
-% path is brief and goes far -- plant_tiletrack_omega.m's 1 m/s mover lived 0.12 s, no longer than a
+% path is brief and goes far -- a planted 1 m/s mover lived 0.12 s, no longer than a
 % noise bump, so a duration-only rule (the "longest track") picked noise. Neither rule alone keeps
 % both; the union does, at a false rate of at most Alpha.
 %

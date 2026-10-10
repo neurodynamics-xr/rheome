@@ -4,7 +4,6 @@
 % (rheome.select.query) that two executors interpret and must agree on: a full scan
 % (rheome.select.scan, the reference) and a pruned descent of the pyramid (rheome.select.frames), which
 % rheome.select.sql renders as the SQL a database runs. Writes are transactions (rheome.select.label).
-% Design: docs/2026-09-22-select-design.md
 %
 % Schema and relations:
 %   rheome.select.schema   - relations, columns, types, keys, foreign keys
@@ -50,7 +49,7 @@
 %                     under a tile budget that is the axis width in pixels, or the level a
 %                     BAND implies (FollowBand). The strip draws each band at its own tile
 %                     length (StripMode), Envelope draws the min/max band, and raw samples
-%                     are read only below the diagonal (recordingbrowser_omega.m)
+%                     are read only below the diagonal
 %
 % Two bookkeeping matrices over the same nodes (rheome.select.schema marks which is which):
 %   'mergeable'  the feature relations -- dense, one row per (unit, tile), a parent exactly

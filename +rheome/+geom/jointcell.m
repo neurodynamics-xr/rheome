@@ -22,7 +22,7 @@ function [row, why] = jointcell(L, opts)
 %
 % ⚠ A REFUSAL IS AN ANSWER. If no depth is fine enough for the feature, or no level fast enough for
 % the speed, `row` is empty and `why` says which: a sigma-10 mm peak on a depth-8 tree (finest tile
-% 23 mm > 14 mm) is refused, and plant_tiletrack_omega.m found it untrackable at every depth.
+% 23 mm > 14 mm) is refused, and a planting test found it untrackable at every depth.
 %
 % ⚠ SpeedMS must also exceed the window's speedMinMS to be told from stationary; below it the
 % cell is still returned but `why` says the motion is below one tile per window.
@@ -35,7 +35,7 @@ function [row, why] = jointcell(L, opts)
 % TauS defaults to the octave's envelope correlation time 1/(fHi - fLo) (0.125 s for alpha).
 % EvidenceMin = 45.6 is where rheome.detect.tilepath's hit rate reaches 0.8: fitted on one planted run
 % (seed 13) and CHECKED on an independent one (seed 29) -- cells predicted detectable hit 0.99, the
-% rest 0.38 (ladder_rules_omega.m). At 10 dB that is 4.6 correlation times (~0.57 s of alpha); at
+% rest 0.38. At 10 dB that is 4.6 correlation times (~0.57 s of alpha); at
 % 20 dB 0.46. A fast mover over a short path is brief, and no rate or tile rescues a brief event:
 % frame rate moved the hit rate by <= 0.2 at 10 dB. ⚠ SnrDB is the planted tests' FIELD SNR (peak
 % over noise RMS of the pooled-to-be map), and EvidenceMin holds for their smooth, one-cycle noise;

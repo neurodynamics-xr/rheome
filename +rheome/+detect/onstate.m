@@ -23,7 +23,7 @@ function S = onstate(y, opts)
 %   .bimodal   .ashmanD   .dBIC (BIC one - BIC two; > 0 favours two)   .fracOn
 %   .mu [lo hi] .sigma [lo hi] (of log y)   .weight [lo hi]
 %
-% See also: rheome.detect.occupancy, rheome.detect.spindle, alpha_occupancy_omega
+% See also: rheome.detect.occupancy, rheome.detect.spindle
 %
 % Author: Diellor Basha, 2026
 

@@ -8,12 +8,12 @@
     info = rheome.scale.importeeg(name, protoDir, edf, eventsTsv, Rate=100, Stages=[&quot;N2&quot; &quot;N3&quot;], BadFrac=0.5)
  
   The EEG counterpart of rheome.scale.importsubject, for the MS1 positive control (G15; nsp cf-slowosc).
-  protoDir is a Brainstorm protocol holding the EEG FORWARD MODEL (Data D7, b3513816): a channel file whose
+  protoDir is a Brainstorm protocol holding the EEG FORWARD MODEL : a channel file whose
   EEG channels carry the electrode positions, and an UNCONSTRAINED surface head model (OpenMEEG BEM). The
   recording itself is NOT read from the protocol but from the EEG-BIDS EDF and its events.tsv
   (rheome.io.read.sleepeeg), so the protocol needs no raw link.
  
-  ⭐ ANPHYSLEEP HAS NO INDIVIDUAL MRI AND NO INDIVIDUAL DIGITISATION (Data 4e19b265 inventory): the anatomy is
+  ⭐ ANPHYSLEEP HAS NO INDIVIDUAL MRI AND NO INDIVIDUAL DIGITISATION: the anatomy is
     the ICBM152 template and the electrodes the release's co-registered average (.pos, ALS, metres), so the
     forward model is the SAME for every participant. info.forward records which head model was used
     (its Comment and file), so the template choice is stated per subject in provenance.json.

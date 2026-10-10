@@ -53,7 +53,7 @@ function out = directionfield(name, varargin)
 %   tangentialFrac, curlOverDiv
 %
 % See also: rheome.operators.trivial_connection, rheome.operators.connection_laplacian, rheome.operators.gauge, rheome.flow.seedvortex, rheome.flow.seedrotor,
-%           dirac_gauge_omega, rheome.detect.criticalPoints
+%           rheome.detect.criticalPoints
 %
 % Author: Diellor Basha, 2026
 

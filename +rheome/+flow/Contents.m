@@ -38,7 +38,7 @@
 % travelling bump can be irrotational everywhere (curl J zero, div v large). MEASURED on one
 % resting alpha tile: the spatial correlation of |curl v| with |curl J| is -0.11, i.e. they are
 % unrelated, which is the expected result and not a discrepancy. The vortex-over-the-alpha-
-% phase question is pipeline 2. Script: alpha_apparent_flow_omega.m.
+% phase question is pipeline 2.
 %
 % ⚠ PIPELINE 2 IS NONLINEAR AND NEEDS TWO FRAMES; pipeline 1 is linear and needs one. Nothing
 % about pipeline 2 can be fused into a kernel, which is why it costs 53 s for a 600-frame tile

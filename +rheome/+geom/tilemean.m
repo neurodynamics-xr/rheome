@@ -14,7 +14,7 @@ function Y = tilemean(G, X, a, stat)
 % the curl of a vortex -- has a positive core and a negative ring that integrate to nearly zero, so a
 % tile that swallows both reports almost nothing, and one that straddles the ring can report the
 % opposite sign. The tile has to be matched to the spatial band: that is the separable version of the
-% joint tiling's diagonal. plant_tiletrack_omega.m measures where it breaks.
+% joint tiling's diagonal. Planting measures where it breaks.
 %
 % INPUTS
 %   G     rheome.geom.tiles struct (.P, .tileOf)      X  [nV x nT] vertex maps

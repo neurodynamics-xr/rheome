@@ -4,7 +4,7 @@ function [T, X] = measure_patterns(name, S, item, opts)
 %   [T, X] = rheome.scale.measure_patterns(name, S, "patterns")       % G5, and the G13 singularity count
 %   [T, X] = rheome.scale.measure_patterns(name, S, "patternnulls")   % G13: speed sweep, dispersion, two-flow r
 %
-% Port of pattern_catalogue_omega.m (v18 Fig. 15C: one recording, 120 s, left hemisphere) to every
+% Port of the single-recording catalogue analysis (MS1 Fig. 15C: one recording, 120 s, left hemisphere) to every
 % participant, both hemispheres (Hemis), the whole imported record (rheome.scale.run DurationS, 300 s), the
 % participant's own plain minimum norm (S.Res) read along vertex normals smoothed over NormalSigmaMM.
 %
@@ -15,7 +15,7 @@ function [T, X] = measure_patterns(name, S, item, opts)
 %                 standing      |sum a z^2| / sum a |z|^2
 %                 speed         median phase speed on faces above median amplitude (m/s)
 %                 singularities phase singularities on faces inside the top 20% of the amplitude smoothed
-%                               at 62 mm (alpha_chirality_omega.m's mask: a singularity IS an amplitude zero,
+%                               at 62 mm (the chirality analysis's mask: a singularity IS an amplitude zero,
 %                               so masking on its own face removes it) -- G13's count
 %               and per PacWindowS window, band "thetagamma":
 %                 pac           median over vertices of the Theta-phase x Gamma-amplitude modulation index
@@ -33,16 +33,16 @@ function [T, X] = measure_patterns(name, S, item, opts)
 %               grid median against the surrogates' medians (G13 for "singularities").
 %               Halves 1 and 2 (frames in the first / second half of the record) for the ICC; half 0 = all.
 %
-% patternnulls  v18 section 6.3, per participant and hemisphere, each against a null that can move it:
+% patternnulls  MS1 section 6.3, per participant and hemisphere, each against a null that can move it:
 %                 peakedness    travelling-wave speed sweep (dynamics_spectral.m): max / mean over 0.05-1 m/s
 %                               of the joint-energy share on rheome.filters.travwave's ridge (width 1.5 Hz), LBO
 %                               coefficients of the normal current, NumWindows strongest WindowS alpha windows;
-%                               median over windows. v18: 1.32 (planted travelling 3.98, standing 2.07).
+%                               median over windows. Single-subject reference: 1.32 (planted travelling 3.98, standing 2.07).
 %                 dispersion    top / bottom |lambda| quintile ratio of each Dirac mode's periodic peak
 %                               frequency (Welch 8 s, aperiodic knee fit 1-45 Hz, peak in 6-16 Hz), the
-%                               hemisphere's Dirac modes applied to the MNE current. v18: 1.01, a wave needs 3.1.
+%                               hemisphere's Dirac modes applied to the MNE current. Single-subject reference: 1.01, a wave needs 3.1.
 %                 rotation_r    corr of |curl v| (rheome.flow.apparent of the 8-16 Hz envelope, 300 Hz) with
-%                               |curl J| over vertices, per 2 s tile, NumTiles tiles; median. v18: r = -0.11.
+%                               |curl J| over vertices, per 2 s tile, NumTiles tiles; median. Single-subject reference: r = -0.11.
 %               ⚠⚠ THE PHASE-RANDOMISED SURROGATE CANNOT BE THE NULL FOR THE FIRST TWO. Both are functions of
 %               each mode's power spectrum, and a shared random phase per bin leaves every mode's spectrum
 %               EXACTLY unchanged (|Pk * Y_f * e^{i theta_f}|^2 = |Pk * Y_f|^2): z would be 0/0. Their null is
@@ -54,8 +54,8 @@ function [T, X] = measure_patterns(name, S, item, opts)
 %
 % X is the per-unit table (rheome.scale.run writes it as <item>.csv); T the rheome.scale.rows.
 %
-% ⚠ The MNE resolution floor (median r50 ~52 mm on sub-0002) bounds every count: a mesoscale pattern cannot
-%   appear here as itself (pattern_catalogue_validate, 'meso' rows; G6 measures that loss).
+% ⚠ The MNE resolution floor (median r50 ~52 mm on one participant) bounds every count: a mesoscale pattern cannot
+%   appear here as itself (the catalogue validation's 'meso' rows; G6 measures that loss).
 %
 % See also: rheome.scale.run, rheome.flow.phasegradient, rheome.detect.criticalPoints,
 %           rheome.detect.phasesingularity, rheome.filters.travwave, rheome.flow.apparent

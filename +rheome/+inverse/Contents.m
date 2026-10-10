@@ -25,8 +25,7 @@
 % and it reports that trace(R) is exactly the sum of the Wiener gains -- so the rank the
 % regularisation sets and the resolution operator are one object.
 %
-% Scripts: inverse_resolution_omega.m sweeps SnrFixed against the empty-room band SNRs of
-% noise_floor_omega.m and prints both families of length (numbers in
-% docs/2026-09-22-ingest-notes.md).
+% rheome.scale.measure_resolution sweeps SnrFixed against the empty-room band SNRs of
+% rheome.scale.bandsnr and reports both families of length.
 %
 % Author: Diellor Basha, 2026

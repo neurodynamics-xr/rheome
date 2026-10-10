@@ -1,7 +1,7 @@
 function arr = meg(src, varargin)
 % SENSORS.MEG  MEG sensor positions -- the one array in the suite with real coordinates.
 %
-%   arr = rheome.sensors.meg('subject01')            % a dataset cached in +data
+%   arr = rheome.sensors.meg('mysubject')            % a dataset cached in +data
 %   arr = rheome.sensors.meg('ChannelFile', f)       % a Brainstorm channel file
 %   arr = rheome.sensors.meg('Channel', C)           % an rheome.io.read.channel struct already in hand
 %

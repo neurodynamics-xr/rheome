@@ -7,7 +7,7 @@ function [Cd, fd] = demod(C, f, w0)
 % C(omega + w0): the coefficients are untouched and only the axis moves.
 %
 % ⚠ WHAT THIS DOES **NOT** DO. exp(-i*2*pi*w0*t) has UNIT MODULUS, so it cannot change any
-% magnitude: |Psi*c| is identical with and without it (measured 1.8e-14 on subject01), and
+% magnitude: |Psi*c| is identical with and without it (measured 1.8e-14 on a reference subject), and
 % ridge tracking is bit-identical -- 702 ridges either way. The long ridges come from forming the
 % ANALYTIC SIGNAL at rheome.flow.joint (retaining positive frequencies only), not from this shift. On the
 % same data the real oscillating field gives 17 ridges and the analytic signal 702, with or

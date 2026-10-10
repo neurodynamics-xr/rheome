@@ -4,11 +4,11 @@ function [T, X, strips] = measure_catalogue(name, S, item, opts)
 %   [T, X, strips] = rheome.scale.measure_catalogue(name, S, "catalogue")     % G6 + G3 rule 11 + G16 on the plants
 %   [T, X]         = rheome.scale.measure_catalogue(name, S, "catalognulls")  % G16 false-propagation nulls
 %
-% Port of pattern_catalogue_validate.m (v18 Fig. 15A-B: subject01's gain, source noise, one hemisphere) to
+% Port of the single-subject catalogue validation (MS1 Fig. 15A-B: one reference gain, source noise, one hemisphere) to
 % every participant, both hemispheres (Hemis), the participant's own leadfield and whitened minimum norm
 % (S.Res: rheome.inverse.mne on the participant's noise covariance), and SENSOR noise from the
-% participant's own resting record and empty room (spec: desk/evidence/3377657c.../group-analysis-plan.md
-% section 2, G6, G3 rule 11, G16).
+% participant's own resting record and empty room (spec: the group-analysis plan,
+% G6, G3 rule 11, G16).
 %
 % catalogue     the 19 catalogue plants (i_catalogue: planar, source, sink, rotor, spiral, pair, saddle,
 %               standing, nested, each meso and macro, and a drifting rotor) x Centres random centres per
@@ -48,10 +48,10 @@ function [T, X, strips] = measure_catalogue(name, S, item, opts)
 %   both band-passed there and their channel-summed powers set the noise gain; the noise is added broadband.
 % ⭐ RATIOS: column ratio = recovered / ref, ref the catalogue's NOMINAL value where it has one (speed,
 %   wavelength, period, drift, envelope speed), otherwise truthOnMesh (the direct arm's own reading).
-% ⚠ THE CHART IS NOT v18's. v18 took the azimuth about the centre on subject01's FreeSurfer registration sphere;
+% ⚠ THE CHART IS NOT THE SINGLE-SUBJECT VALIDATION'S. That took the azimuth about the centre on the reference subject's FreeSurfer registration sphere;
 %   the nsp staging carries no sphere, so here theta is the azimuth in the centre's tangent plane on the cortex
 %   SMOOTHED over NormalSigmaMM (LBO heat kernel on the coordinates); r is the geodesic distance on the folded
-%   cortex, as in v18. The drifting rotor's core moves along the geodesic from the centre towards e1, not a great
+%   cortex, as there. The drifting rotor's core moves along the geodesic from the centre towards e1, not a great
 %   circle. Every arm is judged against the direct arm on the same chart, so the chart cancels.
 % ⚠ The sampling rate is the record's (600 Hz) decimated by an integer to >= SPC samples per cycle (nested: 10 per
 %   fast cycle), so sensor-noise windows are the participant's own samples, resampled (anti-aliased) by that integer.
@@ -97,7 +97,7 @@ end
 
 %% ---------- the catalogue
 function P = i_catalogue()
-% name class scale f(Hz) lambda(mm) E(mm) sep(mm) fast(Hz) mod drift(m/s) -- v18's table, verbatim
+% name class scale f(Hz) lambda(mm) E(mm) sep(mm) fast(Hz) mod drift(m/s) -- the validation's table, verbatim
     P = cell2struct({
      'planar_meso'    'planar'   'meso'  20  16.5 25 NaN NaN NaN 0
      'planar_macro'   'planar'   'macro' 10  200  100 NaN NaN NaN 0
@@ -167,7 +167,7 @@ function [fs, dec, t] = i_time(p, fs0, o)
 end
 
 function [X, tgt, path] = i_plant(p, C, ic, bax, t)
-% v18's i_plant on the cortex chart (r geodesic on the folded surface, theta in the smoothed tangent plane)
+% The validation's i_plant on the cortex chart (r geodesic on the folded surface, theta in the smoothed tangent plane)
     E = p.E*1e-3;  k = 2*pi/(p.lam*1e-3);  w2 = 2*pi*p.f;  path = [];
     [r, w] = i_chart(C, ic, bax);
     A = exp(-r.^2/(2*E^2));  core = @(rr) tanh(rr/(0.2*E));
@@ -229,7 +229,7 @@ function fr = i_frames(X, fs, p)
 end
 
 function Q = i_readout(X, C, fs, p, reg, tgt, path, Q0)
-% v18's i_readout (framework), less its optical flow (bst_of replaces it, in i_comparators)
+% The validation's i_readout (framework), less its optical flow (bst_of replaces it, in i_comparators)
     Sg = C.Sg;  unitv = @(V) V ./ max(vecnorm(V,2,2), eps);  ang = @(U,V) acosd(max(min(sum(unitv(U).*unitv(V),2),1),-1));
     z = i_analytic(X, fs, p.f*[0.7 1.3]);  fr = i_frames(X, fs, p);
     pg = rheome.flow.phasegradient(z(:,fr), Sg, 'Rate', fs);
