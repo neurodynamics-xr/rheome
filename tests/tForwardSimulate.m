@@ -8,6 +8,7 @@ classdef tForwardSimulate < matlab.unittest.TestCase
     end
     methods (TestClassSetup)
         function build(t)
+            rheomeTestSubject(t, 'subject', 'noise');   % skips, with the reason, when the cache or the subject is absent
             try
                 B = rheome.load.bases(rheomeTestSubject());
                 t.ctx = struct('H', B.L, 'd', rheome.load.dirac(rheomeTestSubject()), ...

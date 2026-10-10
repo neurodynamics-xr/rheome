@@ -66,6 +66,7 @@ classdef tCortexFeatures < matlab.unittest.TestCase
             % tile = its two level-3 tiles; needs rheome.flow.cortexfeatures('sub01') to have run
             Ct = rheome.select.catalog();
             tc.assumeFalse(isempty(Ct), 'no tile store in the cache');
+            rheomeTestSubject(tc, 'subject');   % skips, with the reason, when the cache or the subject is absent
             hit = find(Ct.recording_id == string(rheomeTestSubject()) & Ct.bank == "frame" & Ct.store == "default", 1);
             tc.assumeNotEmpty(hit, 'test subject store absent');
             db = rheome.select.open(char(Ct.file(hit)));
@@ -83,6 +84,7 @@ classdef tCortexFeatures < matlab.unittest.TestCase
 
         function aFragmentDoesNotStopTheTree(tc)
             % another subject's left hemisphere: a one-vertex fragment peeled off at depth 4 used to end the tree there
+            rheomeTestSubject(tc, 'second');   % skips, with the reason, when the cache or the subject is absent
             try, B = rheome.load.bases(rheomeTestSubject('second')); catch, tc.assumeFail('second test subject bases absent'); end
             for h = ["L" "R"]
                 T = rheome.geom.tree(B.(h).S, L=B.(h).lbo.L, M=B.(h).lbo.Mass, MaxDepth=7);

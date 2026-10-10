@@ -7,6 +7,7 @@ classdef tDirectionField < matlab.unittest.TestCase
     end
     methods (TestClassSetup)
         function build(t)
+            rheomeTestSubject(t, 'subject');   % skips, with the reason, when the cache or the subject is absent
             try
                 t.B = rheome.load.bases(rheomeTestSubject());
                 t.C = rheome.operators.connection_laplacian(t.B.L.S.Vertices, double(t.B.L.S.Faces));

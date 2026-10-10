@@ -1,5 +1,6 @@
-# local data cache and analysis outputs (load.root / load.outroot in a clone)
-+data/
+# local data cache and analysis outputs (load.root / load.outroot in a clone); /+data without the
+# slash also matches +data as a symlink to the cache on another drive
+/+data
 results/
 
 # toolbox builds (build/build_toolbox.m)
@@ -13,3 +14,6 @@ build/out/
 # OS
 .DS_Store
 ._*
+
+# per-machine agent settings (local paths, env): never in the public repo
+.claude/

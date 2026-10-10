@@ -24,6 +24,7 @@ classdef tLabelRegistry < matlab.unittest.TestCase
         end
 
         function cortexIdsAreAWholeCortexHeap(tc)
+            rheomeTestSubject(tc, 'subject');   % skips, with the reason, when the cache or the subject is absent
             try, C = rheome.geom.cortexnodes(string(rheomeTestSubject()), MaxDepth=4);
             catch, tc.assumeFail('cached bases for the test subject are not present'); end
             N = C.nodes;
