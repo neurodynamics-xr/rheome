@@ -31,6 +31,10 @@ function [T, X, Cn] = measure_multimodal(name, S, opts)
 % ⚠ A SIGNED BAND-PASS COEFFICIENT AVERAGES TOWARD ZERO over a tile larger than its scale
 % (rheome.geom.tilemean), so for PET and fibre members j > 0 compare tiles on ms = sum(a x^2)/sum(a), the
 % coefficient energy; MEG members are powers already (compare on mean).
+% ⚠ RAW MEG POWER ACROSS TILES IS MOSTLY THE KERNEL'S DEPTH SENSITIVITY: in PREVENT-AD sub-MTL0002 the alpha
+% tile power spans ~1000x while delta/theta varies +-12 %, so rho between raw band powers (and between a raw
+% power and anything deep-vs-superficial) reads the instrument. Compare a band relative to the sum of the bands
+% (exact at any level from the stored sums) before reading MEG against PET or fibres.
 % ⚠ The connectome is RAW endpoint counts between tiles (each end at its nearest cortex vertex, the step
 % rheome.operators.connectome starts from), without its 3-hop vertex smoothing: at tile scale the smoothing
 % only moves weight across a tile border, and the smoothed vertex matrix costs ~20 GB at 1e6 fibres.
