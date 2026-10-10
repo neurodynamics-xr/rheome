@@ -67,6 +67,27 @@ classdef tScaleGroupP2 < matlab.unittest.TestCase
             tc.verifyGreaterThan(v("energy_in_tile", "L3"), 0.5);
         end
 
+        function parcelAndTileSizeOnOneRuler(tc)
+            [T, ~, Z] = rheome.scale.measure_geometry(tc.Name, [], Levels=2, RollupDepths=2:3);
+            v = @(m, b) T.value(T.metric == m & T.band == b);
+            P = Z.parcels;  t = Z.tiles;
+            tc.verifyEqual(P.atlas', repmat("Desikan-Killiany", 1, 4));   % the synthetic subject has no Destrieux
+            tc.verifyEqual(v("n_parcels", "Destrieux"), 0);
+            tc.verifyEqual(P.hemi', ["L" "L" "R" "R"]);
+            tc.verifyEqual(P.d_eq_mm, 2 * sqrt(P.area_mm2 / pi), 'RelTol', 1e-12);
+            tc.verifyEqual(height(t), 2 * (1 + 2 + 4 + 8));
+            for h = ["L" "R"]                  % depth 0 is the hemisphere; each depth partitions its area
+                A0 = t.area_mm2(t.hemi == h & t.depth == 0);
+                tc.verifyEqual(v("hemisphere_area", h), A0 / 100, 'RelTol', 1e-12);
+                tc.verifyEqual(sum(P.area_mm2(P.hemi == h)), A0, 'RelTol', 1e-12);
+                for d = 1:3, tc.verifyEqual(sum(t.area_mm2(t.hemi == h & t.depth == d)), A0, 'RelTol', 1e-12); end
+            end
+            tc.verifyEqual(v("hemisphere_area", "L"), 4 * pi * 4^2, 'RelTol', 0.02);   % icosphere of radius 40 mm
+            tc.verifyEqual(v("tile_deq_median", "D0"), 2 * sqrt(4 * pi * 40^2 / pi), 'RelTol', 0.02);
+            tc.verifyGreaterThan(t.geodesic_diameter_mm(t.depth == 0), 0.95 * pi * 40);   % half a great circle
+            tc.verifyLessThan(t.geodesic_diameter_mm(t.depth == 0), 1.15 * pi * 40);
+        end
+
         function ownRegionAndFusion(tc)
             ctx = rheome.flow.context(tc.Name);  K = rheome.flow.build(ctx);
             [T, X] = rheome.scale.measure_ownregion(tc.Name, [], K);
@@ -87,7 +108,7 @@ classdef tScaleGroupP2 < matlab.unittest.TestCase
             a = ["bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion"];
             R = rheome.scale.run(tc.Name, Analyses=a, OutDir=od);
             tc.verifyEqual(R.timing.status', repmat("ok", 1, 5), strjoin(R.timing.message, ' | '));
-            for f = a, tc.verifyTrue(isfile(fullfile(od, tc.Name, f + ".csv")), f); end
+            for f = [a "geometry_parcels" "geometry_tiles"], tc.verifyTrue(isfile(fullfile(od, tc.Name, f + ".csv")), f); end
             tc.verifyEqual(unique(R.metrics.analysis)', sort(["bandperiodic" "bandperiodic_h1" "bandperiodic_h2" ...
                 "helmholtzbands" "ownregion" "geometry" "fusion"]));
             tc.verifyTrue(all(ismember(a, rheome.scale.analyses())));

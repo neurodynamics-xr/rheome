@@ -1,7 +1,9 @@
-function [T, X] = measure_geometry(name, S, opts)
-% SCALE.MEASURE_GEOMETRY  The atlas geometry checks on one subject's cortex: atom-tile overlap, gauge, roll-up.
+function [T, X, Z] = measure_geometry(name, S, opts)
+% SCALE.MEASURE_GEOMETRY  The atlas geometry checks on one subject's cortex: atom-tile overlap, gauge, roll-up,
+% and the size of parcels and tiles.
 %
 %   [T, X] = rheome.scale.measure_geometry(name)
+%   [T, X, Z] = rheome.scale.measure_geometry(name)     % Z.parcels, Z.tiles: G12g, G12h
 %   [T, X] = rheome.scale.measure_geometry(name, rheome.scale.sensors(name), Levels=2:5, RollupDepths=3:6)
 %
 % The geometry parts of MS1 group plan G12, per hemisphere, on rheome.geom.tree (area bisection):
@@ -20,6 +22,16 @@ function [T, X] = measure_geometry(name, S, opts)
 %    tile-summed minimum-norm current (S.Res on the whole cached recording, analytic band-pass at
 %    the sensors), direct at each depth in RollupDepths against block sums of the deepest. Rows (band
 %    "L" | "R"): rollup_max_rel_error (max over depths of max|rolled - direct| / max|direct|).
+% 4. PARCEL AND TILE SIZE (G12g, G12h). One ruler for both: the equivalent-disc diameter d_eq = 2 sqrt(A/pi),
+%    A the lumped vertex area (1/3 of the incident triangles) summed over the members, on this cortex.
+%    Z.parcels: one row per parcel of each of opts.Atlases (Brainstorm's scouts; any unknown /
+%    corpuscallosum / Medial_wall label dropped) -- atlas, label, hemi, n_vertices, area_mm2, d_eq_mm.
+%    Z.tiles: one row per rheome.geom.tree tile at depths opts.SizeDepths (depth 0 = the hemisphere) --
+%    hemi, depth, node_id, n_vertices, area_mm2, d_eq_mm, geodesic_diameter_mm (double-sweep on the
+%    mesh edge graph: a lower bound on the longest geodesic in the tile, and specific to this Fiedler tiling).
+%    Rows: hemisphere_area (cm2, band "L" | "R"); parcel_deq_median, n_parcels (band = atlas, over both
+%    hemispheres); tile_deq_median, tile_area_median (band "D<depth>"). A missing atlas gives n_parcels 0.
+%    The fraction of parcels below 2 r50 needs r50 (cf-scale) and is taken at the group reduction.
 %
 % ⚠ THE TILING IS rheome.geom.tree (Fiedler bisection), NOT THE ATLAS's EQUAL-AREA GEODESIC BISECTION that
 % drew Fig. 2 (nsp atlas ladder, F13 card: lobe 0.83/0.95/0.97/0.97, energy 80/84/85/86 % at l = 2-5,
@@ -40,20 +52,32 @@ function [T, X] = measure_geometry(name, S, opts)
         opts.RollupDepths double = 3:6
         opts.Band (1,2) double = [8 16]
         opts.Hemis string = ["L" "R"]
+        opts.Atlases string = ["Desikan-Killiany" "Destrieux"]
+        opts.SizeDepths double = 0:3
     end
     if isempty(S), S = rheome.scale.sensors(name); end
     st = rheome.load.study(name);  fs = st.rec.sfreq;  F = double(st.rec.F(S.iSel, :));  clear st
     bp = designfilt('bandpassiir', 'FilterOrder', 8, 'HalfPowerFrequency1', opts.Band(1), ...
                     'HalfPowerFrequency2', opts.Band(2), 'SampleRate', fs);
     Fa = hilbert(filtfilt(bp, F.')).';  clear F
-    T = rheome.scale.rows("geometry", strings(0,1), [], "");  X = table();
-    dmax = max([opts.Levels opts.RollupDepths]);
+    T = rheome.scale.rows("geometry", strings(0,1), [], "");  X = table();  Zt = table();  ag = [];
+    dmax = max([opts.Levels opts.RollupDepths opts.SizeDepths]);
     for h = opts.Hemis(:)'
         Hh = S.B.(h);  Sh = Hh.S;  lbo = Hh.lbo;  V = double(Sh.Vertices);  Fc = double(Sh.Faces);
         a = full(sum(lbo.Mass, 2));  Atot = sum(a);  lam = lbo.Lambda(:);  P = lbo.Phi;
         Tr = rheome.geom.tree(Sh, L=lbo.L, M=lbo.M, MaxDepth=dmax);
         E = unique(sort([Fc(:,[1 2]); Fc(:,[2 3]); Fc(:,[3 1])], 2), 'rows');
         Gm = graph(E(:,1), E(:,2), vecnorm(V(E(:,1),:) - V(E(:,2),:), 2, 2), size(V, 1));
+        ag(Hh.gv) = a; %#ok<AGROW>                            % the whole cortex's vertex areas, for the parcels
+
+        % 4. tile size (G12h): the tree's own area and equivalent-disc diameter
+        for r = find(ismember(Tr.depth, opts.SizeDepths))'
+            in = Tr.members{r}(:);  Gs = subgraph(Gm, in);
+            d1 = distances(Gs, 1);  d1(~isfinite(d1)) = -1;  [~, f] = max(d1);   % double sweep from vertex 1
+            dg = distances(Gs, f);  dg = max(dg(isfinite(dg)));
+            Zt = [Zt; {h, Tr.depth(r), Tr.node_id(r), numel(in), 1e6 * Tr.area(r), 1e3 * Tr.diameter(r), 1e3 * dg}]; %#ok<AGROW>
+        end
+        T = [T; rheome.scale.rows("geometry", "hemisphere_area", 1e4 * Atot, "cm2", h)]; %#ok<AGROW>
 
         % 1. wavelet-tile match
         for l = opts.Levels
@@ -98,6 +122,29 @@ function [T, X] = measure_geometry(name, S, opts)
         fprintf('[geometry %s] %s: %d singular faces, %.1f deg, roll-up %.2e\n', name, h, numel(gT.singular), gT.neighbourAngle, err);
     end
     X.Properties.VariableNames = {'hemi','level','tile','centre','n_vertices','lobe_ratio','energy_in_tile'};
+    Zt.Properties.VariableNames = {'hemi','depth','node_id','n_vertices','area_mm2','d_eq_mm','geodesic_diameter_mm'};
+    for d = opts.SizeDepths
+        k = Zt.depth == d;
+        T = [T; rheome.scale.rows("geometry", ["tile_deq_median" "tile_area_median"], ...
+             [median(Zt.d_eq_mm(k)) median(Zt.area_mm2(k))], ["mm" "mm2"], "D" + d)]; %#ok<AGROW>
+    end
+
+    % 4. parcel size (G12g)
+    Zp = table('Size', [0 6], 'VariableTypes', {'string','string','string','double','double','double'}, ...
+               'VariableNames', {'atlas','label','hemi','n_vertices','area_mm2','d_eq_mm'});
+    for at = opts.Atlases(:)'
+        try, A = rheome.load.atlas(name, at);
+        catch e, warning('scale:geometry:atlas', '%s: %s', at, e.message);  A = struct('Label', {{}}, 'Membership', sparse(0, numel(ag)));
+        end
+        lab = string(A.Label(:));  keep = ~contains(lower(lab), ["unknown" "corpuscallosum" "medial_wall"]);
+        Pm = double(A.Membership(keep, :));  lab = lab(keep);  av = zeros(size(Pm, 2), 1);  av(1:numel(ag)) = ag;
+        ar = 1e6 * (Pm * av);  hm = extractAfter(lab, strlength(lab) - 1);  hm(~ismember(hm, ["L" "R"])) = "";
+        Zp = [Zp; table(repmat(at, numel(lab), 1), lab, hm, full(sum(Pm, 2)), ar, 2 * sqrt(ar / pi), ...
+                        'VariableNames', Zp.Properties.VariableNames)]; %#ok<AGROW>
+        T = [T; rheome.scale.rows("geometry", ["parcel_deq_median" "n_parcels"], ...
+             [median(2 * sqrt(ar / pi)) numel(lab)], ["mm" "parcels"], at)]; %#ok<AGROW>
+    end
+    Z = struct('parcels', Zp, 'tiles', Zt);
     for l = opts.Levels
         k = X.level == l;
         T = [T; rheome.scale.rows("geometry", ["lobe_ratio" "energy_in_tile" "n_tiles"], ...
