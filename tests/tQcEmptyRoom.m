@@ -32,8 +32,8 @@ methods (Test)
         % v2 must apply the empty-room gate AFTER all rules, so no rule (FLAT, NOISY, JUMPY, PSD_*) escapes it
         src = fileread(which('rheome.qc.badchannels'));
         tc.verifyNotEmpty(regexp(src, 'qc\.isemptyroom', 'once'));
-        tc.verifyNotEmpty(regexp(src, "P\.version\s*=\s*'v2'", 'once'));
-        iRules = strfind(src, '[flag, why] = i_rules(M, P);');
+        tc.verifyNotEmpty(regexp(src, "P\.version\s*=\s*'v3'", 'once'));
+        iRules = strfind(src, '= rheome.qc.badchannelrules(M, P);');
         iGate = strfind(src, 'flag(:) = false;');
         tc.verifyNotEmpty(iRules); tc.verifyNotEmpty(iGate);
         tc.verifyGreaterThan(iGate(1), iRules(1));

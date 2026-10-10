@@ -18,11 +18,14 @@ function out = badchannels(rawDirs, dataRoot, outDir, varargin)
 %   recordings are untouched: same criteria, same thresholds, bit-identical flags to v1.
 %   ⚠ v1 marked 772 empty-room channels across one resting cohort, 652 of them PSD-only: an empty-room spectrum is
 %   sensor noise alone, so a run-relative PSD z there measures sensor noise floors, not artefacts.
+%   ⭐ v3 (2026-10-08): the 65–115 Hz rule (PSD_HIGH) never labels a channel on its own, it only
+%   corroborates another rule (rheome.qc.badchannelrules). A PSD_HIGH-only channel stays in rawFlag/rawWhy
+%   and is counted in runs.csv nRulesFiredUnlabelled. Metrics and every other rule are unchanged from v2.
 %   Only Brainstorm type 'MEG' is evaluated; MEG REF / system / EEG channels are never touched.
 %   ⚠ process_detectbad and process_detectbad_mad flag SEGMENTS, not channels -- they do not fit here.
 %   Requires Brainstorm on the path and started (brainstorm server) for in_fread.
 %
-% See also: in_fread, process_detectbad_mad
+% See also: rheome.qc.badchannelrules, rheome.qc.isemptyroom, in_fread, process_detectbad_mad
 
 ip = inputParser;
 ip.addParameter('DryRun', false);
@@ -64,17 +67,20 @@ for k = 1:numel(rawDirs)
     if ip.Results.DryRun, continue; end
 
     M = i_metrics(sFile, ChannelMat, iMeg, P);
-    [flag, why] = i_rules(M, P);
-    rawFlag = flag; rawWhy = why; emptyRoom = rheome.qc.isemptyroom(runName);
+    [flag, why, rawFlag, rawWhy] = rheome.qc.badchannelrules(M, P);
+    emptyRoom = rheome.qc.isemptyroom(runName);
     if emptyRoom                                      % v2: empty-room recordings get no label from ANY rule
         flag(:) = false; why(:) = {''};
         fprintf('EMPTYROOM %s: not labelled (v1 rules would have flagged %d: %s)\n', runName, sum(rawFlag), ...
             i_ruleslist({ChannelMat.Channel(iMeg).Name}, rawFlag, rawWhy));
+    elseif any(rawFlag & ~flag)                       % v3: PSD_HIGH alone, not labelled
+        fprintf('PSDHIGHONLY %s: not labelled: %s\n', runName, ...
+            i_ruleslist({ChannelMat.Channel(iMeg).Name}, rawFlag & ~flag, rawWhy));
     end
     names = {ChannelMat.Channel(iMeg).Name};
     nFlag = sum(flag); safety = nFlag > P.maxFrac * numel(iMeg);
     runRows(end+1, :) = {sub, runName, numel(iMeg), nFlag, safety, strjoin(names(flag), ' '), strjoin(tsvBad, ' '), ...
-        emptyRoom, sum(rawFlag)}; %#ok<AGROW>
+        emptyRoom, sum(rawFlag & ~flag)}; %#ok<AGROW>
     snip = i_snippet(sFile, ChannelMat, iMeg, P);
     for c = find(flag(:))'
         flagRows(end+1, :) = {sub, runName, names{c}, why{c}, M.z_sd(c), M.r_sd(c), M.jumpfrac(c), ...
@@ -129,7 +135,7 @@ else, T = cell2table(rows, 'VariableNames', vars); end
 end
 
 function P = i_params()
-P.version = 'v2'; P.emptyRoom = 'never labelled';
+P.version = 'v3'; P.emptyRoom = 'never labelled'; P.psdHigh = 'corroborates only';
 P.nWin = 60; P.winSec = 2; P.k = 6;
 P.zFlat = -5; P.rFlat = 0.2; P.zNoisy = 5; P.rNoisy = 3;
 P.zJump = 5; P.jumpFrac = 0.20;
@@ -166,20 +172,6 @@ M.jumpfrac = mean(zj > P.zJump, 2);
 lo = f >= P.lo(1) & f <= P.lo(2); hi = f >= P.hi(1) & f <= P.hi(2);
 plo = mean(log10(max(pxx(lo, :), realmin)), 1)'; phi = mean(log10(max(pxx(hi, :), realmin)), 1)';
 M.z_lo = i_rz(plo); M.r_lo = i_nr(10.^plo, M.nb); M.z_hi = i_rz(phi); M.r_hi = i_nr(10.^phi, M.nb);
-end
-
-function [flag, why] = i_rules(M, P)
-n = numel(M.sd); why = repmat({''}, n, 1);
-R.FLAT  = M.sd == 0 | (M.z_sd < P.zFlat & M.r_sd < P.rFlat);
-R.NOISY = M.z_sd > P.zNoisy & M.r_sd > P.rNoisy;
-R.JUMPY = M.jumpfrac > P.jumpFrac;
-R.PSD_LOW  = abs(M.z_lo) > P.zPsd & abs(log10(M.r_lo)) > P.lrPsd;
-R.PSD_HIGH = abs(M.z_hi) > P.zPsd & abs(log10(M.r_hi)) > P.lrPsd;
-fn = fieldnames(R); flag = false(n, 1);
-for i = 1:numel(fn)
-    hit = R.(fn{i}); flag = flag | hit(:);
-    for c = find(hit(:))', why{c} = strtrim([why{c} ' ' fn{i}]); end
-end
 end
 
 function z = i_rz(x)
