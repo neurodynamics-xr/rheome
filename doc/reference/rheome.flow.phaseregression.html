@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.flow.phaseregression</title></head><body>
+<h1>rheome.flow.phaseregression</h1>
+<p><em>function rheome.flow</em> &mdash; Rheome</p>
+<pre>  FLOW.PHASEREGRESSION  Source-space phase-gradient estimator: circular-linear regression of phase on geodesic distance in a patch.
+ 
+    out = rheome.flow.phaseregression(z, S, Rate=fs)
+    out = rheome.flow.phaseregression(z, S, Rate=fs, Centres=v, RadiusMM=20, Neighbours=out0.Neighbours)
+ 
+  The comparator a reader would otherwise use (MS1 G16, estimator iii; the circular-linear regression of
+  phase on distance of Zhang &amp; Jacobs 2015 / Kempter 2012, moved onto the cortex). Per centre vertex c:
+    patch   the vertices within RadiusMM of c by GEODESIC distance (rheome.geom.edgegraph);
+    chart   each patch vertex at its geodesic distance d from c, in the direction of its displacement
+            projected onto c's tangent plane (x, y), so |(x, y)| = d -- the regression is on geodesic distance;
+    fit     the wavevector q maximising the amplitude-weighted resultant over the window,
+                R(q) = sum_t | sum_i z_i(t) exp(-i q.(x_i, y_i)) | / sum_t sum_i |z_i(t)|,
+            on a grid of LambdaMM x NumDirections (plus q = 0), refined by a parabola in log wavelength
+            and in angle. R in [0, 1] is the fit's coherence (1 = one plane wave across the patch).
+    speed   omega / |k|, omega the patch's mean phase advance per sample x Rate, k = -q (for
+            z = A exp(i(omega t - k.x)) the resultant peaks at q = -k), velocity = omega k / |k|^2.
+  A best fit at q = 0 (no spatial phase gradient: a standing or a stationary pattern) returns speed Inf
+  and velocity 0.
+ 
+  INPUTS
+    z   [nV x nT] complex analytic field (band-limited), S surface (.Vertices .Faces .VertNormals)
+    Rate        Hz (required)
+    Centres     vertex indices to fit at (default every vertex)
+    RadiusMM    patch radius (default 20)
+    Neighbours  sparse [nV x nV], (i, c) = geodesic distance + 1e-12 (m) for i within RadiusMM of c; reuse
+                out.Neighbours across calls on the same mesh (it costs one Dijkstra per new centre)
+    LambdaMM    wavelength grid (default 40 log-spaced, 8-1000 mm)   NumDirections (default 24)
+  OUTPUT out: .centres [nC x 1]  .k .velocity [nC x 3] (1/m, m/s)  .speed .wavelength (mm) .omega (rad/s)
+              .R [nC x 1]  .Neighbours
+ 
+  ⚠ The grid floors the wavelength at LambdaMM(1); below ~4 mesh edges per wavelength the patch aliases,
+    as rheome.flow.phasegradient does (its .aliased).
+ 
+  See also: rheome.flow.phasegradient, rheome.flow.bstopticalflow, rheome.scale.measure_catalogue
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

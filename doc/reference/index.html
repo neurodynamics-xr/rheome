@@ -14,7 +14,7 @@
 </ul>
 <h2>rheome.connectome</h2>
 <ul>
-<li><a href="rheome.connectome.build_hcp_template.html">rheome.connectome.build_hcp_template</a> &mdash; One-time extraction of the HCP-1065 template into hcp_template.mat.</li>
+<li><a href="rheome.connectome.build_hcp_template.html">rheome.connectome.build_hcp_template</a> &mdash; CONNECTOME.BUILD_HCP_TEMPLATE  One-time extraction of the HCP-1065 template into hcp_template.mat.</li>
 <li><a href="rheome.connectome.resolve.html">rheome.connectome.resolve</a> &mdash; CONNECTOME.RESOLVE  Resolve the structural-connectome fiber source for a subject, with provenance.</li>
 </ul>
 <h2>rheome.demos</h2>
@@ -40,6 +40,7 @@
 <li><a href="rheome.detect.chargedensity.html">rheome.detect.chargedensity</a> &mdash; DETECT.CHARGEDENSITY  Topological charge of a phase field, at a chosen spatial aperture.</li>
 <li><a href="rheome.detect.chirality.html">rheome.detect.chirality</a> &mdash; DETECT.CHIRALITY  Annotate tracked ridges with the handedness of the field they sit in.</li>
 <li><a href="rheome.detect.criticalPoints.html">rheome.detect.criticalPoints</a> &mdash; DETECT.CRITICALPOINTS  Classified critical points of an ambient source vector field.</li>
+<li><a href="rheome.detect.eventsensors.html">rheome.detect.eventsensors</a> &mdash; DETECT.EVENTSENSORS  Which sensor samples and channels carry a tracked event.</li>
 <li><a href="rheome.detect.occupancy.html">rheome.detect.occupancy</a> &mdash; DETECT.OCCUPANCY  A dyadic pyramid of on/off occupancy: how long a state lasts, at every scale.</li>
 <li><a href="rheome.detect.onsetspread.html">rheome.detect.onsetspread</a> &mdash; DETECT.ONSETSPREAD  How a burst's ONSET spreads across tiles: slowness from half-rise times.</li>
 <li><a href="rheome.detect.onstate.html">rheome.detect.onstate</a> &mdash; DETECT.ONSTATE  Binary on/off state of an amplitude series from the bimodality of its log.</li>
@@ -148,6 +149,8 @@
 <li><a href="rheome.flow.activation.html">rheome.flow.activation</a> &mdash; FLOW.ACTIVATION  A current field reduced to a scalar activation map, for optical flow.</li>
 <li><a href="rheome.flow.alphastates.html">rheome.flow.alphastates</a> &mdash; FLOW.ALPHASTATES  Query the alpha labels: states of one class in one hemisphere, with their episodes.</li>
 <li><a href="rheome.flow.apparent.html">rheome.flow.apparent</a> &mdash; FLOW.APPARENT  Apparent motion of an activation pattern, and its divergence and curl.</li>
+<li><a href="rheome.flow.bandlimit.html">rheome.flow.bandlimit</a> &mdash; FLOW.BANDLIMIT  A current field, its divergence and its curl, band-limited by the graph-wavelet bank.</li>
+<li><a href="rheome.flow.bstopticalflow.html">rheome.flow.bstopticalflow</a> &mdash; FLOW.BSTOPTICALFLOW  Brainstorm's cortical optical flow (bst_opticalflow, Lefevre &amp; Baillet 2008), called as Brainstorm calls it.</li>
 <li><a href="rheome.flow.build.html">rheome.flow.build</a> &mdash; FLOW.BUILD  Assemble all fused flow kernels + a coeff-vs-vertex agreement report.</li>
 <li><a href="rheome.flow.context.html">rheome.flow.context</a> &mdash; FLOW.CONTEXT  One-time precompute bundle for the fused flow kernels.</li>
 <li><a href="rheome.flow.cortexfeatures.html">rheome.flow.cortexfeatures</a> &mdash; FLOW.CORTEXFEATURES  The mergeable cortical features of a recording, written beside its store.</li>
@@ -171,12 +174,14 @@
 <li><a href="rheome.flow.phasebin.html">rheome.flow.phasebin</a> &mdash; FLOW.PHASEBIN  Collapse a coefficient series onto a common PHASE axis.</li>
 <li><a href="rheome.flow.phasegradient.html">rheome.flow.phasegradient</a> &mdash; FLOW.PHASEGRADIENT  Local wavevector, frequency and propagation velocity of a complex field.</li>
 <li><a href="rheome.flow.phaselock.html">rheome.flow.phaselock</a> &mdash; FLOW.PHASELOCK  Is the cortical field reproducibly organised by a reference rhythm's phase?</li>
+<li><a href="rheome.flow.phaseregression.html">rheome.flow.phaseregression</a> &mdash; FLOW.PHASEREGRESSION  Source-space phase-gradient estimator: circular-linear regression of phase on geodesic distance in a patch.</li>
 <li><a href="rheome.flow.potential.html">rheome.flow.potential</a> &mdash; FLOW.POTENTIAL  Fused kernel: sensors -&gt; Helmholtz scalar potential Phi (sources/sinks).</li>
 <li><a href="rheome.flow.psd.html">rheome.flow.psd</a> &mdash; FLOW.PSD  Welch PSD of flow-kernel mode coefficients (for fitting, not for filtering).</li>
 <li><a href="rheome.flow.rateplan.html">rheome.flow.rateplan</a> &mdash; FLOW.RATEPLAN  Per-filter output rate for a constant-Q bank.</li>
 <li><a href="rheome.flow.seedrotor.html">rheome.flow.seedrotor</a> &mdash; FLOW.SEEDROTOR  Seed a 3-component VORTEX current field of known scale at a cortical vertex.</li>
 <li><a href="rheome.flow.seedvortex.html">rheome.flow.seedvortex</a> &mdash; FLOW.SEEDVORTEX  Seed a 3-component vortex by IMPOSING circulation in the connection frame.</li>
 <li><a href="rheome.flow.sensitivity.html">rheome.flow.sensitivity</a> &mdash; FLOW.SENSITIVITY  What a flow kernel produces from NOISE, per vertex.</li>
+<li><a href="rheome.flow.smoothness.html">rheome.flow.smoothness</a> &mdash; FLOW.SMOOTHNESS  How smooth a map or a vector field is on the surface, in millimetres.</li>
 <li><a href="rheome.flow.stream.html">rheome.flow.stream</a> &mdash; FLOW.STREAM  Fused kernel: sensors -&gt; Helmholtz stream function Psi (vortices).</li>
 <li><a href="rheome.flow.sweep.html">rheome.flow.sweep</a> &mdash; FLOW.SWEEP  Sweep one LEVEL of the store's time tiling, measuring on every axis, and write the</li>
 <li><a href="rheome.flow.synth.html">rheome.flow.synth</a> &mdash; FLOW.SYNTH  Return a joint spectrum to the time axis at ANY output rate.</li>
@@ -214,6 +219,9 @@
 <li><a href="rheome.geom.jointladder.html">rheome.geom.jointladder</a> &mdash; GEOM.JOINTLADDER  The joint (space x time) bookkeeping table: one row per observation window.</li>
 <li><a href="rheome.geom.karcher_mean.html">rheome.geom.karcher_mean</a> &mdash; GEOM.KARCHER_MEAN  Intrinsic (geodesic Fréchet) mean of points on the surface.</li>
 <li><a href="rheome.geom.ladder.html">rheome.geom.ladder</a> &mdash; GEOM.LADDER  The spatial ladder: which eigenvalue range each cortical tile level corresponds to.</li>
+<li><a href="rheome.geom.sphereframe.html">rheome.geom.sphereframe</a> &mdash; GEOM.SPHEREFRAME  The group gauge: &quot;north&quot; and &quot;west&quot; on a cortex, from its FreeSurfer sphere.</li>
+<li><a href="rheome.geom.spherepatches.html">rheome.geom.spherepatches</a> &mdash; GEOM.SPHEREPATCHES  Shared tiles on the registered sphere, and where the polar gauge breaks.</li>
+<li><a href="rheome.geom.spiralorder.html">rheome.geom.spiralorder</a> &mdash; GEOM.SPIRALORDER  A 1-D order of sphere points along a pole-to-pole spiral: vertices or tiles.</li>
 <li><a href="rheome.geom.tilemean.html">rheome.geom.tilemean</a> &mdash; GEOM.TILEMEAN  Summarise a vertex map over each tile: the observation a tile makes of a field.</li>
 <li><a href="rheome.geom.tiles.html">rheome.geom.tiles</a> &mdash; GEOM.TILES  The tiles of one rheome.geom.tree depth: vertex lookup, membership and adjacency.</li>
 <li><a href="rheome.geom.tree.html">rheome.geom.tree</a> &mdash; GEOM.TREE  Recursive spectral bisection of a surface: the cortical position pyramid.</li>
@@ -325,8 +333,9 @@
 </ul>
 <h2>rheome.qc</h2>
 <ul>
-<li><a href="rheome.qc.badchannels.html">rheome.qc.badchannels</a> &mdash; Author: Diellor Basha, 2026</li>
-<li><a href="rheome.qc.isemptyroom.html">rheome.qc.isemptyroom</a> &mdash; Author: Diellor Basha, 2026</li>
+<li><a href="rheome.qc.badchannelrules.html">rheome.qc.badchannelrules</a> &mdash; QC.BADCHANNELRULES  The bad-channel rules of rheome.qc.badchannels and how they combine into a label (protocol v3).</li>
+<li><a href="rheome.qc.badchannels.html">rheome.qc.badchannels</a> &mdash; QC.BADCHANNELS  Pre-registered automatic bad-channel detection on staged Brainstorm raw links.</li>
+<li><a href="rheome.qc.isemptyroom.html">rheome.qc.isemptyroom</a> &mdash; QC.ISEMPTYROOM  True for an empty-room (noise) MEG recording, from its BIDS name.</li>
 </ul>
 <h2>rheome.report</h2>
 <ul>
@@ -340,16 +349,40 @@
 <li><a href="rheome.scale.bandsnr.html">rheome.scale.bandsnr</a> &mdash; SCALE.BANDSNR  Per-octave SNR of the rest recording against the subject's own noise run.</li>
 <li><a href="rheome.scale.cleanspan.html">rheome.scale.cleanspan</a> &mdash; SCALE.CLEANSPAN  Where a recording is stationary enough to tile: artefact blocks and trimmed edges.</li>
 <li><a href="rheome.scale.cleanwelch.html">rheome.scale.cleanwelch</a> &mdash; SCALE.CLEANWELCH  Welch PSD of a span, averaging only the segments that touch no artefact block.</li>
+<li><a href="rheome.scale.coefficients.html">rheome.scale.coefficients</a> &mdash; SCALE.COEFFICIENTS  Graph-wavelet coefficient envelopes rolled up to cortical tiles: Prognome's MEG input.</li>
+<li><a href="rheome.scale.groupslowosc.html">rheome.scale.groupslowosc</a> &mdash; SCALE.GROUPSLOWOSC  The MS1 positive control across participants: one mean direction each, V-test for A-&gt;P, proportion and speed (G15, G16).</li>
+<li><a href="rheome.scale.importeeg.html">rheome.scale.importeeg</a> &mdash; SCALE.IMPORTEEG  A sleep EEG subject -&gt; the data cache the analyses load from: template forward model + scored NREM.</li>
 <li><a href="rheome.scale.importsubject.html">rheome.scale.importsubject</a> &mdash; SCALE.IMPORTSUBJECT  One Brainstorm-protocol subject -&gt; the data cache the analyses load from.</li>
 <li><a href="rheome.scale.locate.html">rheome.scale.locate</a> &mdash; SCALE.LOCATE  Find one subject's files inside an unzipped Brainstorm protocol.</li>
+<li><a href="rheome.scale.measure_aperiodic.html">rheome.scale.measure_aperiodic</a> &mdash; SCALE.MEASURE_APERIODIC  A moving change of the aperiodic (1/f) background planted through this participant's</li>
+<li><a href="rheome.scale.measure_atlas.html">rheome.scale.measure_atlas</a> &mdash; SCALE.MEASURE_ATLAS  MS1 group P8 (G12) on one participant: correspondence, atlas events, the shared-gauge</li>
+<li><a href="rheome.scale.measure_bandperiodic.html">rheome.scale.measure_bandperiodic</a> &mdash; SCALE.MEASURE_BANDPERIODIC  Table 5 for one subject: per band, rhythm against background and instrument.</li>
 <li><a href="rheome.scale.measure_bandresolution.html">rheome.scale.measure_bandresolution</a> &mdash; SCALE.MEASURE_BANDRESOLUTION  Resolution at each octave's OWN measured SNR, for one subject.</li>
+<li><a href="rheome.scale.measure_catalogue.html">rheome.scale.measure_catalogue</a> &mdash; SCALE.MEASURE_CATALOGUE  The catalogue's patterns planted through this participant's own head, and three estimators reading them (MS1 G6, G3 rule 11, G16).</li>
+<li><a href="rheome.scale.measure_eventsensors.html">rheome.scale.measure_eventsensors</a> &mdash; SCALE.MEASURE_EVENTSENSORS  The sensor samples and channels that carry the tracked alpha events.</li>
+<li><a href="rheome.scale.measure_fieldsmooth.html">rheome.scale.measure_fieldsmooth</a> &mdash; SCALE.MEASURE_FIELDSMOOTH  How smooth the cortical current, div and curl are, per vertex and band-limited.</li>
+<li><a href="rheome.scale.measure_fusion.html">rheome.scale.measure_fusion</a> &mdash; SCALE.MEASURE_FUSION  Fused flow kernels against reconstruct-then-differentiate, on one subject's data.</li>
+<li><a href="rheome.scale.measure_geometry.html">rheome.scale.measure_geometry</a> &mdash; SCALE.MEASURE_GEOMETRY  The atlas geometry checks on one subject's cortex: atom-tile overlap, gauge, roll-up.</li>
 <li><a href="rheome.scale.measure_grouptrack.html">rheome.scale.measure_grouptrack</a> &mdash; SCALE.MEASURE_GROUPTRACK  Viterbi tile tracking of the alpha envelope, real against the mode-shift surrogate.</li>
+<li><a href="rheome.scale.measure_helmholtzbands.html">rheome.scale.measure_helmholtzbands</a> &mdash; SCALE.MEASURE_HELMHOLTZBANDS  Helmholtz-band recovery on the subject's own cortex (geometry only; no MEG).</li>
+<li><a href="rheome.scale.measure_inject.html">rheome.scale.measure_inject</a> &mdash; SCALE.MEASURE_INJECT  Known movers injected into this participant's own recording, tracked back (MS1 G7, Fig. 8).</li>
+<li><a href="rheome.scale.measure_movingvortex.html">rheome.scale.measure_movingvortex</a> &mdash; SCALE.MEASURE_MOVINGVORTEX  A moving vortex planted through this participant's MEG and read back (MS1 G11).</li>
+<li><a href="rheome.scale.measure_noisefloor.html">rheome.scale.measure_noisefloor</a> &mdash; SCALE.MEASURE_NOISEFLOOR  What the noise floor and the inverse manufacture, in this participant (MS1 G2, v18 9.4).</li>
+<li><a href="rheome.scale.measure_ownregion.html">rheome.scale.measure_ownregion</a> &mdash; SCALE.MEASURE_OWNREGION  Readout rule 5 for one subject: which Desikan-Killiany regions own their flux.</li>
+<li><a href="rheome.scale.measure_patterns.html">rheome.scale.measure_patterns</a> &mdash; SCALE.MEASURE_PATTERNS  The catalogue's detectors on this participant's resting MEG against its own nulls (MS1 G5, G13).</li>
 <li><a href="rheome.scale.measure_periodicflow.html">rheome.scale.measure_periodicflow</a> &mdash; SCALE.MEASURE_PERIODICFLOW  Apparent alpha flow on the TOTAL and the PERIODIC envelope, over many tiles.</li>
+<li><a href="rheome.scale.measure_plantfloors.html">rheome.scale.measure_plantfloors</a> &mdash; SCALE.MEASURE_PLANTFLOORS  Helmholtz-band resolution floors through this participant's MEG (MS1 G1, G9).</li>
 <li><a href="rheome.scale.measure_resolution.html">rheome.scale.measure_resolution</a> &mdash; SCALE.MEASURE_RESOLUTION  The resolution report's headline numbers for one subject.</li>
+<li><a href="rheome.scale.measure_slowosc.html">rheome.scale.measure_slowosc</a> &mdash; SCALE.MEASURE_SLOWOSC  Sleep slow oscillations as a positive control with known propagation: direction and speed per event, four estimators, two nulls (MS1 G15, G16).</li>
+<li><a href="rheome.scale.measure_trackfactorial.html">rheome.scale.measure_trackfactorial</a> &mdash; SCALE.MEASURE_TRACKFACTORIAL  The 0.52 diagnosis as a 2^5 factorial on this participant (MS1 G8, Fig. 9).</li>
 <li><a href="rheome.scale.reduce.html">rheome.scale.reduce</a> &mdash; SCALE.REDUCE  Per-subject tables -&gt; group distributions, the anchor's place, cohort contrasts.</li>
+<li><a href="rheome.scale.reducegauge.html">rheome.scale.reducegauge</a> &mdash; SCALE.REDUCEGAUGE  Per-subject gaugetensor.csv -&gt; the group alpha orientation tensor per shared tile.</li>
+<li><a href="rheome.scale.reducegaugeflow.html">rheome.scale.reducegaugeflow</a> &mdash; SCALE.REDUCEGAUGEFLOW  Per-subject gaugeflow.csv -&gt; the group alpha flow in the shared frame.</li>
+<li><a href="rheome.scale.refhead.html">rheome.scale.refhead</a> &mdash; SCALE.REFHEAD  A cached head, without its recording, as the reference head of measure_trackfactorial.</li>
 <li><a href="rheome.scale.rows.html">rheome.scale.rows</a> &mdash; SCALE.ROWS  Long-format metric rows: one row per (analysis, metric, band).</li>
 <li><a href="rheome.scale.run.html">rheome.scale.run</a> &mdash; SCALE.RUN  One subject, every ported analysis, compact tables out. The per-subject driver.</li>
 <li><a href="rheome.scale.sensors.html">rheome.scale.sensors</a> &mdash; SCALE.SENSORS  The channel selection, leadfield, noise covariance and kernel every measure shares.</li>
+<li><a href="rheome.scale.vtest.html">rheome.scale.vtest</a> &mdash; SCALE.VTEST  The V-test (modified Rayleigh test) for circular uniformity against a known mean direction.</li>
 </ul>
 <h2>rheome.select</h2>
 <ul>
@@ -406,6 +439,7 @@
 <ul>
 <li><a href="rheome.show.activity.html">rheome.show.activity</a> &mdash; SHOW.ACTIVITY  Where and when vortical activity is strong.</li>
 <li><a href="rheome.show.critical.html">rheome.show.critical</a> &mdash; SHOW.CRITICAL  Classified critical points on the cortex, with the Poincare-Hopf check.</li>
+<li><a href="rheome.show.eventsensors.html">rheome.show.eventsensors</a> &mdash; SHOW.EVENTSENSORS  A tracked event on the sensor traces and on a sensor topography.</li>
 <li><a href="rheome.show.filmstrip.html">rheome.show.filmstrip</a> &mdash; SHOW.FILMSTRIP  Cortex snapshots of a space-time field at selected time frames.</li>
 <li><a href="rheome.show.frame.html">rheome.show.frame</a> &mdash; SHOW.FRAME  A spectral-graph wavelet frame: member gains, coverage and scales.</li>
 <li><a href="rheome.show.gif.html">rheome.show.gif</a> &mdash; SHOW.GIF  Write an animated GIF of a space-time field evolving on the cortex.</li>
@@ -438,5 +472,5 @@
 <ul>
 <li><a href="rheome.utils.hemisphere.html">rheome.utils.hemisphere</a> &mdash; UTILS.HEMISPHERE  Restrict a cortex surface + Dirac basis to ONE hemisphere.</li>
 </ul>
-<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference.</small></p>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference.</small></p>
 </body></html>

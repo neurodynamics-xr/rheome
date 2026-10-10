@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_movingvortex</title></head><body>
+<h1>rheome.scale.measure_movingvortex</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_MOVINGVORTEX  A moving vortex planted through this participant's MEG and read back (MS1 G11).
+ 
+    [T, X] = rheome.scale.measure_movingvortex(name)
+    [T, X] = rheome.scale.measure_movingvortex(name, S, Placements=10, SigmaMM=[44 65 92 130], SNRdB=[Inf 10 0])
+ 
+  The group version of MS1 v18 Fig. 11 / section 7.2 (export_data.m, F5 block; one placement on sub-0002):
+    plant    rheome.flow.movingvortex, SpeedMS 0.10 along a geodesic (126 mm at the default 140 mm atom),
+             alpha carrier in quadrature, 4 s; Placements start vertices per hemisphere, drawn at random
+             among vertices &gt;= 20 mm from the gauge's singular faces (the default start is deterministic)
+    sensors  forwarded through the participant's leadfield, plus a 4 s stretch of the participant's own
+             rest at SNRdB (8-16 Hz power over the atom's temporal support); Inf = the planted field alone
+    readout  8-16 Hz Butterworth + Hilbert at the sensors -&gt; the fused stream-function kernel
+             (rheome.differential.helmholtz applied to the hemisphere's MNE kernel, i.e. Psi of the
+             minimum-norm current) -&gt; amplitude in one mexhat graph-wavelet member of width sigma
+             (bank 12-160 mm, 1 voice, exact eigenbasis); the core is the peak of that amplitude summed
+             over +-0.1 s around the frame
+    frames   every fs/20-th sample inside the support (12 at 600 Hz, as v18)
+  ⭐ The no-instrument arm reads the TRUE current's stream function with the same band and frames, so
+  what the instrument costs is coreErr - directErr at the same sigma.
+  ⚠ Core distances are Euclidean, as v18 (export_data.m); the path and speed are geodesic.
+  ⚠ The direct arm's analytic signal takes the Hilbert transform of the quadrature time factors and
+  holds the waypoint weights fixed, which is exact for a stationary atom and close for a slow one.
+ 
+  Per placement x sigma x SNR (X): median/IQR/max core error (mm), the net displacement of the true and
+  the recovered core and their ratio, the median chance error (a random vertex of the atom's support
+  per frame), the direct (no-instrument) median error, the path length and realised speed.
+  Placements 1..P/2 take their background from the first half of the recording (`half`).
+  Returns rheome.scale.rows (analysis &quot;movingvortex&quot;), medians over placements and hemispheres:
+    core_err_mm, net_ratio per sigma x SNR (band &quot;s&lt;sigma&gt;_&lt;snr&gt;&quot;), chance_mm and direct_err_mm per
+    sigma (band &quot;s&lt;sigma&gt;&quot;), and core_err_mm per half (band &quot;s&lt;sigma&gt;_&lt;snr&gt;_h1|h2&quot;).
+ 
+  See also: rheome.flow.movingvortex, rheome.differential.helmholtz, rheome.scale.measure_plantfloors
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

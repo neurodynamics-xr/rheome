@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.coefficients</title></head><body>
+<h1>rheome.scale.coefficients</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.COEFFICIENTS  Graph-wavelet coefficient envelopes rolled up to cortical tiles: Prognome's MEG input.
+ 
+    C = rheome.scale.coefficients(B, K, F, fs)
+    C = rheome.scale.coefficients(B, K, F, fs, Depth=7, Band=[1 40], Rate=100)
+    S = rheome.scale.sensors(name);  st = rheome.load.study(name);
+    C = rheome.scale.coefficients(S.B, S.Res.ImagingKernel, st.rec.F(S.iSel,:), st.rec.sfreq);
+    save('sub_rheome_coeffs.mat', '-struct', 'C')     % what rheome.scale.run(..., Analyses=&quot;coefficients&quot;) writes
+ 
+  THE CONTRACT (prognome docs/rheome-contract.md, reader prognome.data.sources.rheome.coefficients):
+    W       [nTile x nScale x nTime] single   envelope of the graph-wavelet coefficients, per tile
+    codes   [nTile x 1]   ladder codes: root 1 = cortex, 2 = left, 3 = right; children 2c, 2c+1
+    scales  [1 x nScale]  graph scales t of the bank (rheome.graphfilterbank.scales)
+    fs      scalar        sample rate of W, Hz
+  plus .band .depth .widthsMM .hemisphere .bank (what the reader ignores, kept for provenance).
+ 
+  Per hemisphere: band-pass and Hilbert AT THE SENSORS (exact, the inverse is linear), the
+  unconstrained kernel K projected onto the hemisphere's Laplace-Beltrami modes per orientation, the
+  gain g_m(lambda) of each bank member, back to vertices, the norm over the three orientations of the
+  COMPLEX coefficient (the analytic envelope, not |J|, which pulses at twice the carrier -- see
+  rheome.flow.activation), then the area-weighted mean over each tile (rheome.geom.tilemean's formula).
+ 
+  ⚠ The envelope is taken per vertex BEFORE the tile mean. A band-pass coefficient averages toward zero
+  over a tile larger than its scale (rheome.geom.tilemean); its envelope does not.
+  ⚠ One bank for both hemispheres, on the smaller of their two lambda_max, so a scale means the same
+  thing left and right. Members losing more than 5% of their mass beyond it (gfb.Usable) are dropped,
+  and so is the lowpass (scaling) member: it has no scale t (NaN), and `scales` is a coordinate.
+  ⚠ The tile ladder needs every node down to Depth to split (rheome.geom.tiles .heap): one early leaf
+  would shift every code, so it is an error rather than a different answer.
+ 
+  INPUTS
+    B    rheome.load.bases struct (.L/.R with .gv .S .lbo.Phi .lbo.Lambda .lbo.Mass .lbo.L)
+    K    [3nV x nCh] unconstrained imaging kernel, interleaved [x1;y1;z1;x2;...]
+    F    [nCh x nT] sensor data on the kernel's channels       fs  its sample rate, Hz
+    Depth  tree depth per hemisphere (7: 128 tiles each, 256 in all)
+    Band   [lo hi] Hz band-pass at the sensors before the Hilbert transform
+    Rate   output sample rate, Hz (fs/Rate must be an integer)
+    Bank   a rheome.graphfilterbank to use instead of the default mexhat bank
+ 
+  See also: rheome.scale.run, rheome.flow.envelopemodes, rheome.geom.tree, rheome.geom.tiles, rheome.graphfilterbank
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

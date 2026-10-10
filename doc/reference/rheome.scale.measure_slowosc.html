@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_slowosc</title></head><body>
+<h1>rheome.scale.measure_slowosc</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_SLOWOSC  Sleep slow oscillations as a positive control with known propagation: direction and speed per event, four estimators, two nulls (MS1 G15, G16).
+ 
+    [T, X, E] = rheome.scale.measure_slowosc(name)              % S = rheome.scale.sensors(name, Modality=&quot;EEG&quot;)
+    [T, X, E] = rheome.scale.measure_slowosc(name, S, MaxEvents=200, HornSchunck=[0.01 0.1], PosteriorAxis=[-1 0 0])
+ 
+  Spec: desk/evidence/3377657c.../group-analysis-plan.md section 2, G15 (primary: AnphySleep hd-EEG) and G16.
+  Known propagation: slow oscillations travel predominantly front to back at about 1-7 m/s (Massimini et al.
+  2004). The subject is a sleep EEG cache (rheome.scale.importeeg): scored N2/N3 epochs, template forward model.
+ 
+  1. DETECTION (Massimini 2004 criteria, per channel, average reference, band-pass Band = 0.1-4 Hz, zero phase):
+     a negative-going zero crossing followed by a positive-going one HalfWaveS (0.3-1.0 s) later, a negative
+     peak below NegUV (-80 uV) between them, and a negative-to-positive peak-to-peak above P2PUV (140 uV).
+     Detections on different channels within ClusterS (0.2 s) of the first are one EVENT if at least MinChannels
+     channels detect it; its time is their median negative peak. An event is kept only if its whole analysis
+     window (+-(WindowS + PadS)) lies in one recorded segment and in epochs where no analysed channel carries
+     the release's artefact mark. Up to MaxEvents are drawn with a fixed Seed, BEFORE any direction is
+     computed, and every estimator reads the same events (G16).
+  2. PER EVENT, three CONDITIONS on the same window: original; reversed (the window played backwards: every
+     direction must flip exactly); surrogate (each channel's window phase-randomised independently, which keeps
+     each channel's spectrum and destroys the inter-channel lags: no propagation should be found).
+  3. ESTIMATORS (column estimator; one row per event x hemisphere x condition x estimator x param):
+     framework      the reconstructed normal current (whitened MNE, average reference, read along normals
+                    smoothed over NormalSigmaMM) -&gt; its graph-wavelet band map at the member nearest BandMM
+                    (130 mm: readout rule 1, the floor through the instrument, G1) -&gt; tile means at TileDepth -&gt;
+                    the best full-span Viterbi path (rheome.detect.tilepath) at TrackRate, following the band
+                    map's polarity at the event's negative peak. Direction: the displacement between the tile
+                    centres where the path LEAVES its first tile and ARRIVES at its last, projected on the tangent
+                    plane midway; speed: that geodesic distance (tile-centre ruler) over the time between them.
+                    ⚠ A least-squares slope over the whole window reads the frames where the extremum sits
+                    still and under-reads the speed ~6x (synthetic, 0.5 m/s planted); hence leave-to-arrive.
+                    A path that never leaves its tile has no direction (NaN angle, netMM 0, R 0).
+                    ⚠ THE EXTREMUM'S SPEED IS NOT THE PHASE SPEED of a wave much longer than the hemisphere: a slow
+                    oscillation (~1 Hz at 1-7 m/s: 1-7 m) is a ramp across one hemisphere, and its band map's
+                    extremum crosses it at its own pace. Synthetic (tests/tScaleSlowOsc, 0.5 m/s planted, 80 mm
+                    spheres): framework 0.17 m/s, phasereg 1.06, sensor latency 0.70, bst_of 0.01 (direction
+                    within 6 deg for all four). Compare speeds with Massimini through sensorlatency, and read
+                    the framework's speed as the speed of its readout, not of the wave.
+                    ALSO (original condition only): the Helmholtz-band SOURCE -- the extremum of the scalar
+                    potential's band map at BandMM (rheome.differential.helmholtzbands) of the 3-D current at the
+                    event's peak -- and the path's ORIGIN, as signed positions along the posterior axis (sourceAPmm,
+                    originAPmm: negative = anterior of the hemisphere's centroid).
+     bst_of         Brainstorm's bst_opticalflow (rheome.flow.bstopticalflow) on |normal current| over the window,
+                    at each HornSchunck (0.01 = Brainstorm's default); the time-mean velocity field.
+     phasereg       rheome.flow.phaseregression on the analytic normal current (Hilbert of the band-passed sensors,
+                    padded by PadS, then cropped), PatchMM patches at PhaseCentres vertices, wavelengths up to 20 m.
+     sensorlatency  Massimini's own reading, no inverse: each channel's negative-peak latency within ClusterS of
+                    the event regressed on the electrode's (posterior, lateral) position; the latency gradient's
+                    direction and 1/|gradient| as speed, R = the latency plane's R^2. One row per event, hemi
+                    &quot;both&quot;, param 0 (not NaN: findgroups drops NaN keys).
+     Field estimators (bst_of, phasereg) give one event direction as the weighted circular mean of the per-vertex
+     directions (weight: amplitude x |velocity|, x the fit's coherence R for phasereg) and their resultant R.
+  ⭐ DIRECTION IS AN ANGLE IN THE GAUGE, 0 = ANTERIOR -&gt; POSTERIOR. At each vertex the velocity and the
+    PosteriorAxis are projected on the tangent plane and expressed in the hemisphere's trivial gauge
+    (rheome.operators.gauge, +1 at the two faces of largest separation: the MS1 gauge); angleDeg is the velocity's
+    angle minus the posterior axis's, wrapped to (-180, 180]. apCos = cos(angle): +1 A-&gt;P, -1 P-&gt;A.
+  ⚠ PosteriorAxis defaults to [-1 0 0]: Brainstorm's SCS and the AnphySleep electrodes (ALS) both have +x
+    anterior. A protocol in another frame must pass its own.
+  ⚠ The detection thresholds are absolute (uV) and depend on the reference; they are Massimini's, on the average
+    reference here. Events are counted per participant, so a reference that shifts amplitudes changes n, not
+    the direction rule.
+ 
+  OUTPUT
+    X  per row: event, hemi, condition, estimator, param, angleDeg, apCos, speedMS, R, netMM, sourceAPmm, originAPmm
+    E  per detected event: sample, nightS, stage, nChannels, negUV, p2pUV, seedChannel, used
+    T  rheome.scale.rows(&quot;slowosc&quot;): detection counts, and per estimator/param x condition x hemi: n, circular
+       mean angle, resultant, fraction A-&gt;P, within-participant V-test (towards 0) u and p, median speed
+ 
+  See also: rheome.scale.groupslowosc, rheome.scale.importeeg, rheome.flow.bstopticalflow, rheome.flow.phaseregression,
+            rheome.detect.tilepath, rheome.differential.helmholtzbands, rheome.operators.gauge
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

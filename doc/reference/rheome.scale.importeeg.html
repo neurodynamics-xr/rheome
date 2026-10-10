@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.importeeg</title></head><body>
+<h1>rheome.scale.importeeg</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.IMPORTEEG  A sleep EEG subject -&gt; the data cache the analyses load from: template forward model + scored NREM.
+ 
+    info = rheome.scale.importeeg('anphysleep_EPCTL03', '/tmp/bst', edf, eventsTsv)
+    info = rheome.scale.importeeg(name, protoDir, edf, eventsTsv, Rate=100, Stages=[&quot;N2&quot; &quot;N3&quot;], BadFrac=0.5)
+ 
+  The EEG counterpart of rheome.scale.importsubject, for the MS1 positive control (G15; nsp cf-slowosc).
+  protoDir is a Brainstorm protocol holding the EEG FORWARD MODEL (Data D7, b3513816): a channel file whose
+  EEG channels carry the electrode positions, and an UNCONSTRAINED surface head model (OpenMEEG BEM). The
+  recording itself is NOT read from the protocol but from the EEG-BIDS EDF and its events.tsv
+  (rheome.io.read.sleepeeg), so the protocol needs no raw link.
+ 
+  ⭐ ANPHYSLEEP HAS NO INDIVIDUAL MRI AND NO INDIVIDUAL DIGITISATION (Data 4e19b265 inventory): the anatomy is
+    the ICBM152 template and the electrodes the release's co-registered average (.pos, ALS, metres), so the
+    forward model is the SAME for every participant. info.forward records which head model was used
+    (its Comment and file), so the template choice is stated per subject in provenance.json.
+  ⚠ The cortex is the head model's own SurfaceFile, resolved under protoDir/anat: a leadfield on another surface
+    would mis-index every vertex.
+  ⚠ Bad channels: a channel the release's artefact matrix marks in more than BadFrac of the kept epochs is
+    flagged -1 for the whole night; the per-epoch marks stay in rec.epochs.artifact for the analysis.
+  ⚠ Noise covariance: identity (sleep EEG has no noise recording; the reference choice is the analysis's: the
+    EEG rows are average-referenced in rheome.scale.sensors with Modality &quot;EEG&quot;).
+ 
+  Writes, under rheome.load.root()/&lt;name&gt;/: surface.mat, study.mat (chan, hm, rec, ncov), bases.mat, atlas.mat
+  (when the cortex carries one). Returns info (files, forward, channels, bad channels, epochs, seconds).
+ 
+  See also: rheome.io.read.sleepeeg, rheome.scale.importsubject, rheome.scale.measure_slowosc
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

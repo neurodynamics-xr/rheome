@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_fusion</title></head><body>
+<h1>rheome.scale.measure_fusion</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_FUSION  Fused flow kernels against reconstruct-then-differentiate, on one subject's data.
+ 
+    [T, X] = rheome.scale.measure_fusion(name)
+    [T, X] = rheome.scale.measure_fusion(name, ctx, rheome.flow.build(ctx), NumFrames=20)
+ 
+  fusion_exactness_omega.m (MS1 Section 8.2) as a per-subject spot check (group plan G14): on NumFrames
+  random frames of the cached recording (seed 0), at the default minimum-norm context:
+    divVertex, curlVertex   max|K.(div|curl).vertexOperator*F - differential.(divergence|curl)(currentKernel*F)| / max|staged|
+    divCoeff, curlCoeff     the same for coeffOperator against Phi_LB' M (staged vertex map)
+    helmholtzVertex         max over Phi, Psi of the vertex potentials against differential.helmholtz
+    energy, enstrophy, helicity   |F' Q F - sum(map(F))| / |sum(map(F))|
+    phiCorr, psiCorr        corr of the Ks-mode potentials with the full-rank vertex potentials
+                            (truncation, NOT exactness: it measures how much lies inside the modes)
+  Rows (analysis &quot;fusion&quot;): &lt;quantity&gt;_median and &lt;quantity&gt;_worst (max; min for the correlations),
+  max_exact_error (the worst of every exactness quantity), Ks, build_s (NaN when K is passed in). X is the per-frame table.
+ 
+  ⚠ For scale, a reference subject (Ks 800): div 9.0e-15 (worst 1.9e-14), curl 2.2e-15, potentials
+  1.3e-13 (2.6e-13), Grams 0.7-3.1e-15; Phi/Psi 0.987/0.998. Expected &lt;= 1e-12 everywhere.
+  ⚠ helicity is ~1e-20 in SI units, far below eps: never guard its denominator with eps.
+ 
+  See also: rheome.flow.context, rheome.flow.build
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

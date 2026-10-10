@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_trackfactorial</title></head><body>
+<h1>rheome.scale.measure_trackfactorial</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_TRACKFACTORIAL  The 0.52 diagnosis as a 2^5 factorial on this participant (MS1 G8, Fig. 9).
+ 
+    [T, X] = rheome.scale.measure_trackfactorial(name)                       % head level &quot;own&quot; only
+    [T, X] = rheome.scale.measure_trackfactorial(name, S, RefHead=&quot;subject01&quot;) % both head levels
+ 
+  MS1 v18 section 5.3: exact sphere movers tracked through subject01's leadfield read 0.52 of their speed;
+  injections into sub-0002's recording (Fig. 8, rheome.scale.measure_inject) read 0.93-1.0. The two tests
+  differ in five ways. Here each is a factor at two levels, crossed, in the same participant:
+    ruler       &quot;fold&quot;   net displacement on the folded cortex (rheome.detect.trackstats, edge-graph geodesic)
+                         over the true folded net speed (cortical geodesic from the true start to end vertex)
+                &quot;proj&quot;   the path's tile centres projected onto the EXACT trajectory on the registration
+                         sphere, slope of arc-length position against time, over v      (readout factor)
+    signal      &quot;carrier&quot; 10 Hz carrier on the source; sensors band-passed 8-16 Hz (IIR order 8, filtfilt on
+                         a 6 s segment) and Hilbert-transformed, as the data are
+                &quot;smooth&quot;  the source amplitude itself, no carrier and no filter
+    background  &quot;real&quot;   the participant's own resting record, a random 2 s window (its analytic 8-16 Hz signal)
+                &quot;synth&quot;  LB-smooth (15 mm heat envelope) complex AR(1) source noise with alpha's correlation
+                         time (1/9.71 s), forwarded; carrier level: on a 10 Hz carrier. Scaled so its median
+                         per-window envelope peak equals the real background's
+    matching    &quot;top3&quot;   a passing path among the top 3 that stays within NearMM of the truth (Fig. 8's rule)
+                &quot;best&quot;   the single best path only (Fig. 9's rule)                    (readout factor)
+    head        &quot;own&quot;    the participant's cortex, registration sphere, gain and minimum norm
+                &quot;ref&quot;    RefHead's (subject01): the mover lives on its sphere/cortex, goes through its gain and
+                         inverse on the channels it shares with the participant (by name); the participant's
+                         real background enters through those channels
+  Baseline: the DIRECT arm (no instrument: the source map itself + the synthetic background, own head),
+  whose speed read 0.97-0.98 on subject01's sphere.
+ 
+  MOVER (the sphere arm's): a geodesic Gaussian (SigmaMM 25, peak 1) on the participant's FreeSurfer
+  registration sphere (Reg.Sphere, R ~ 100 mm), along a random great circle at Speeds 0.05-1 m/s for
+  min(PathMM, v*W), at a random offset in the W = 2 s window and absent outside it; sphere vertex i IS
+  hemisphere cortex vertex i, so it drives a normal current there. Amplitude: KAmp x the real background's
+  median per-window envelope peak, over a unit mover's own peak at the same signal level.
+  TRACKER: rheome.detect.tilepath on the CORTEX tiles (rheome.geom.tiles, depths Depths), maps pooled
+  through the hemisphere's LB modes as in Fig. 8, at the frame rate chosen a priori per (speed, depth)
+  so the mover takes about half a tile per frame (Fig. 9's rule); baseline and threshold from NNull
+  mover-free windows of the same cell (rheome.detect.tilepathnull, Alpha 0.1/s, odd calibrate / even
+  test). HIT: passes, and &gt;= half the path's frames that hold the mover lie within NearMM of its centre
+  (sphere geodesic, tile centre to true centre). Speed ratios are for hits only.
+ 
+  X (trackfactorial.csv): one row per hemisphere x cell x speed x rep x depth x (ruler, matching):
+    head signal background matching ruler arm hemi speed rep depth rate tileMM nullFalseS hit speedRatio
+  T (rheome.scale.rows, analysis &quot;trackfactorial&quot;): hit_rate and speed_ratio (median over hits) per cell,
+  band &quot;&lt;ruler&gt;/&lt;signal&gt;/&lt;background&gt;/&lt;matching&gt;/&lt;head&gt;&quot;, pooled over speeds, depths and hemispheres, and
+  per depth (band suffix &quot;/d&lt;depth&gt;&quot;); the direct arm as band &quot;direct/&lt;ruler&gt;/&lt;matching&gt;&quot;; n_head_levels.
+  The group model (plan G8): speed_ratio ~ the five factors + two-way interactions + (1 | participant).
+ 
+  ⚠ Fixed across cells, and so NOT diagnosed here: blob width (25 mm, Fig. 9's; Fig. 8 used a 15 mm heat
+    kernel), the a-priori frame rate (Fig. 8 read 18.75 fps), and tracking on cortex tiles (Fig. 9 tracked
+    on sphere tiles). The ruler factor includes the sphere-to-cortex distortion by construction.
+  ⚠ No RefHead (empty, and RHEOME_REFHEAD unset or not a cache): the head factor runs &quot;own&quot; only and
+    n_head_levels = 1; the group model then has four factors.
+ 
+  See also: rheome.scale.measure_inject, rheome.detect.tilepath, rheome.detect.tilepathnull,
+            sphere_tilepath_validate (nxr-cortical-flow-matlab)
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

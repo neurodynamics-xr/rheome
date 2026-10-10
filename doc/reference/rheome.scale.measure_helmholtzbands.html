@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_helmholtzbands</title></head><body>
+<h1>rheome.scale.measure_helmholtzbands</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_HELMHOLTZBANDS  Helmholtz-band recovery on the subject's own cortex (geometry only; no MEG).
+ 
+    [T, X] = rheome.scale.measure_helmholtzbands(name)
+    [T, X] = rheome.scale.measure_helmholtzbands(name, Plants=5, Hemis=[&quot;L&quot; &quot;R&quot;], Seed=11)
+ 
+  Part 1 of helmholtz_bands_omega.m (MS1 Fig. 4A-B) per hemisphere, for the group (plan G9). For every
+  interior band m0 of the tight Laplace-Beltrami bank (logitersine, 2 voices per octave; 315-23 mm on a
+  1000-mode reference cortex) and Plants random vertices: a source field grad(psi) and a vortex field
+  N x grad(psi), psi the bank's own member m0 at the vertex, read by rheome.differential.helmholtzbands.
+  Per plant (X, one row per hemisphere x band x plant):
+    bandSource/bandVortex   argmax band of the irrotational / solenoidal energy (recovered = equals m0)
+    leakSource_pct          solenoidal / irrotational energy of the source, %       (wrong part / right part)
+    leakVortex_pct          irrotational / solenoidal energy of the vortex, %
+    harmSource_pct, harmVortex_pct   harmonic residual share of the field energy, %
+    captureSource, captureVortex     projected / unprojected Dirichlet energy (K modes hold it)
+  Summary rows per band (&quot;&lt;wl&gt; mm&quot;), pooled over hemispheres and plants: recovered_source,
+  recovered_vortex (fractions), leak_source_pct, leak_vortex_pct, harm_source_pct, harm_vortex_pct
+  (medians), n_plants. And per hemisphere (band &quot;&quot;): recovered_all_&lt;H&gt; (fraction of its 2 x bands x
+  Plants cases recovered).
+ 
+  ⚠ For scale, a reference subject (left hemisphere, 5 plants): 45/45 sources and 45/45 vortices
+  recovered, leak 0.4-0.8% (band medians), harmonic 4-9% to 46 mm, 9-11% at 32 mm, 14-18% at 23 mm.
+  ⚠ The baseline is closed form on the sphere (tHelmholtzBands); this is the folded-cortex check.
+ 
+  See also: rheome.differential.helmholtzbands, rheome.differential.helmholtz, rheome.graphfilterbank
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

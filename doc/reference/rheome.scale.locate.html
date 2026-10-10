@@ -19,12 +19,14 @@
   would silently mis-index every vertex.
  
   Returns L with .sub .cortex .restDir .restRaw .channel .headmodel .noisecov .noiseRaw
-  (.noiseRaw '' if the protocol holds no noise run).
+  (.noiseRaw '' if the protocol holds no noise run), and two optional files ('' when absent):
+    .mri     anat/&lt;sub&gt;/subjectimage*.mat (not a volume atlas): its SCS/NCS place the cortex in MNI
+    .fibers  anat/&lt;sub&gt;/tess_fibers*.mat: the subject's OWN tractography (nsp bst-fibers' augmented protocol)
  
   See also: rheome.scale.importsubject, rheome.scale.run
  
   Author: Diellor Basha, 2026
 </pre>
-<hr><p><small>Generated from the help text at commit <code>v1.0.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
 <p><a href="index.html">Rheome reference</a></p>
 </body></html>
