@@ -43,7 +43,7 @@ classdef flowfeatures
 % PROPERTIES
 %   Bundle  Bands  BandLimits  WindowSec  Atlas  NumScales
 %
-% See also: rheome.flowpage, rheome.flowbrowser, docs/2026-08-24-flow-descriptors-design.md
+% See also: rheome.flowpage, rheome.flowbrowser
 %
 % Author: Diellor Basha, 2026
 

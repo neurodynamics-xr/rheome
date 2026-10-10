@@ -12,7 +12,7 @@ function H = graphfilters(obj, varargin)
 % ⚠ THERE IS NO cwtfilters. R2023b's cwtfilterbank splits the two domains across two
 % accessors -- freqz for the frequency response, wavelets for the time-domain wavelet.
 % This method's original "one unified accessor" rationale was written from a misremembered
-% name; see docs/2026-08-22-graphfilterbank-design.md section 4.3. impulse is this class's
+% name. impulse is this class's
 % counterpart to wavelets. The 'vertex' mode stays because it seeds SEVERAL vertices at
 % once, which wavelets has no need to do.
 %

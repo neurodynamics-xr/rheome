@@ -25,8 +25,8 @@ function d = designbank(family, Nf, tmin, tmax, lmax, lminEff, voices)
             % Itersine windows on the LOG-WAVENUMBER axis xi = voices*log2(sqrt(lambda)/k_top),
             % two voices wide, member j centred at xi = -j, plus a low-pass and a high-pass
             % member completing the frame: sum_m g_m^2 = 1 on [0, lmax]. Tight AND
-            % log-spaced -- the temporal timefilterbank's construction on a graph spectrum
-            % (docs/2026-09-22-timefilterbank-design.md). Bands in octaves of wavelength.
+            % log-spaced -- the temporal timefilterbank's construction on a graph spectrum.
+            % Bands in octaves of wavelength.
             V = voices;  kTop = sqrt(lmax);  kMin = sqrt(max(lminEff, eps));
             J = max(1, floor(V * log2(kTop / kMin)));            % lowest centre >= xi(kMin)
             xi = @(l) V * log2(max(sqrt(double(l(:))), realmin) / kTop);

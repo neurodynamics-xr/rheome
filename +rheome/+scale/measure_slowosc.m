@@ -4,7 +4,7 @@ function [T, X, E] = measure_slowosc(name, S, opts)
 %   [T, X, E] = rheome.scale.measure_slowosc(name)              % S = rheome.scale.sensors(name, Modality="EEG")
 %   [T, X, E] = rheome.scale.measure_slowosc(name, S, MaxEvents=200, HornSchunck=[0.01 0.1], PosteriorAxis=[-1 0 0])
 %
-% Spec: desk/evidence/3377657c.../group-analysis-plan.md section 2, G15 (primary: AnphySleep hd-EEG) and G16.
+% Spec: the group-analysis plan, G15 (primary: AnphySleep hd-EEG) and G16.
 % Known propagation: slow oscillations travel predominantly front to back at about 1-7 m/s (Massimini et al.
 % 2004). The subject is a sleep EEG cache (rheome.scale.importeeg): scored N2/N3 epochs, template forward model.
 %

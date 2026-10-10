@@ -53,6 +53,11 @@
                       surrogates; the alpha orientation tensor per depth-3 group tile in the shared gauge;
                       Destrieux -&gt; DK vs the dyadic roll-up and connectome-wavelet widths over a gamma sweep.
                       Opt-in. Needs a template cortex (RHEOME_TEMPLATE or RHEOME_BRAINSTORM's ICBM152)
+    multimodal.csv, multimodal_assoc.csv, multimodal_connectome.mat   the MS1 multimodal example:
+                      rheome.scale.measure_multimodal -- MEG band power, PET SUVR and the fibre-degree density
+                      through one wavelet bank on one dyadic tile ladder, every level an exact roll-up; the
+                      descriptive cross-tile rho; the tile connectome per level. Opt-in. PET and fibres come
+                      from the protocol (pet.mat, fibers_subject.mat in the cache)
     timing.csv        analysis, seconds, peak_rss_GB, status, message
     rheome_coeffs.mat Analyses=&quot;coefficients&quot; only: graph-wavelet envelopes per tile x scale x time,
                       Prognome's contract (rheome.scale.coefficients)

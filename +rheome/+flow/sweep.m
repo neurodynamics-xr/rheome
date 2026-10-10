@@ -44,7 +44,7 @@ function [M, R, T] = sweep(name, varargin)
 %
 % ⚠ WHAT IS SAFE TO WRITE. Magnitude, divergence, curl and the gauge split under a cortical node
 % are measurements. A SIZE is not: planting a source of known scale through this chain returns
-% ~100 mm regardless of the truth below ~20 dB (plant_scale_omega.m, slope +0.02, R^2 0.002 over a
+% ~100 mm regardless of the truth below ~20 dB (measured by planting: slope +0.02, R^2 0.002 over a
 % 70-267 mm range), while LOCATION recovers to 43-52 mm. So this writes where and how much, never
 % how big, and `cortex_node.wavelength_mm` carries the admissibility of each node.
 %
@@ -70,7 +70,7 @@ function [M, R, T] = sweep(name, varargin)
 %   T  the wide per-tile cortical table (rheome.flow.windowtable), if you want it before melting
 %
 % See also: rheome.select.measure, rheome.select.measures, rheome.select.derive, rheome.select.rollback, rheome.flow.windowtable,
-%           rheome.select.schema, docs/2026-09-26-feature-table-design.md
+%           rheome.select.schema
 %
 % Author: Diellor Basha, 2026
 

@@ -5,11 +5,9 @@
 % can find the channels, times and frequencies where something of interest may be and
 % read raw samples only there. Features are the first family of tile labels.
 %
-% Design: docs/2026-09-22-ingest-design.md    Inventory: docs/atlas/INVENTORY.md
-%
 % THE BANK (2026-09-22): the default is @timefilterbank, a designed tight constant-Q frame
 % on the log-frequency axis anchored at 1 Hz, evaluated per member at its own rate
-% (docs/2026-09-22-timefilterbank-design.md): 11-14 s per subject at 600 Hz, 60 s at
+% (@timefilterbank): 11-14 s per subject at 600 Hz, 60 s at
 % 2400 Hz, bands partition sum x^2 exactly. cwtfilterbank (Bank="morse") is the reference
 % path, 20x slower, with its own paging machinery.
 %
@@ -51,8 +49,5 @@
 %   rheome.ingest.totable  - a store as long-form rows (recording, channel, level, tCenter,
 %                     tExtent, band, fCenter, fExtent, stat, value)
 %
-% Scripts: ingest_frame_omega.m builds the frame stores (600 Hz x2, 2400 Hz native);
-% ingest_build_omega.m / ingest_paged_omega.m are the Morse-path builds and comparisons.
-% All print the numbers the notes file records (docs/2026-09-22-ingest-notes.md).
 %
 % Author: Diellor Basha, 2026

@@ -66,7 +66,7 @@ function frame = frame(family, Nf, lrange, varargin)
 %     Resp(t) ~ int_0^inf (t*lam*e^{-t*lam})(lam*e^{-lam*sigma^2/2}) dlam = 2t/(t + sigma^2/2)^3
 %
 % is maximised at t = sigma^2/4, hence sigma_m = sqrt(2t) = sigma/sqrt(2). Analytic, not fitted;
-% measured 0.735 over sigma = 8-40 mm in sphere_validate section 4.
+% measured 0.735 over sigma = 8-40 mm in the sphere validation.
 %
 % ⚠ THE FINEST MEMBERS FALL OFF THE END OF THE BASIS. A mexhat member has mass 1/t, of which
 % (1+u)exp(-u) lies beyond lmax with u = t*lmax. The 'basis' policy sets t_min = 1/lmax, i.e. u = 1,
@@ -84,7 +84,6 @@ function frame = frame(family, Nf, lrange, varargin)
     % frame_bounds, frame_analysis, frame_synthesis and frame_scalogram consume that struct
     % and needed no change at all. New code should use graphfilterbank directly:
     %     gfb = rheome.graphfilterbank(lrange, 'Wavelet','mexhat', 'VoicesPerOctave',3);
-    % See docs/2026-08-22-graphfilterbank-design.md.
     if nargin < 3 || isempty(lrange), error('filters:frame:lrange', 'lrange = [lmin lmax] is required.'); end
     if nargin < 2, Nf = []; end
 
@@ -133,7 +132,7 @@ function frame = frame(family, Nf, lrange, varargin)
     % The class raises graphfilterbank:degenerateFrame on a DIFFERENT criterion (coverage,
     % A <= 1e-6*B) than the two warnings this function has always raised. Suppress it here
     % and re-issue filters:frame:truncated / :sparse below with their original identifiers,
-    % which sphere_validate asserts on and omega_rerun / flow_curl_methods suppress.
+    % which callers assert on or suppress.
     wsRestore = warning('off', 'graphfilterbank:degenerateFrame');
     restoreW  = onCleanup(@() warning(wsRestore));
     gfb = rheome.graphfilterbank(lrange, args{:});

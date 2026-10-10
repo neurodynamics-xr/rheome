@@ -1,7 +1,7 @@
 classdef tCortexFeatures < matlab.unittest.TestCase
 % The cortical features roll up exactly: a node is the sum of its two children and a tile of its two
 % halves, to 1e-12 relative, and rheome.select.rows reads the sidecar in the schema's columns.
-% (Exit criterion 2 of docs/2026-09-29-alpha-labelling-design.md, synthetic half.)
+% (Exit criterion 2 of the alpha-labelling design, synthetic half.)
 %
 % Author: Diellor Basha, 2026
 

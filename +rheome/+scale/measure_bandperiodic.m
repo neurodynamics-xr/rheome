@@ -5,7 +5,7 @@ function [T, X] = measure_bandperiodic(name, S, opts)
 %   [T, X] = rheome.scale.measure_bandperiodic(name, rheome.scale.sensors(name), Halves=true)
 %   [T, X] = rheome.scale.measure_bandperiodic(name, S, Noise=nrec)     % a rec struct, as rheome.scale.bandsnr
 %
-% aperiodic_snr_omega.m (MS1 Table 5) with the figures removed, on the clean span periodicflow uses, and
+% The band-SNR analysis of MS1 Table 5 with the figures removed, on the clean span periodicflow uses, and
 % repeated on each half of that span for split-half reliability (MS1 group plan G4, VP1 V5). Per channel:
 % Welch PSD (8 s Hann, 50%; rheome.scale.cleanwelch), aperiodic fit with a knee on [1 45] Hz minus
 % LineHz and 2*LineHz +-2 Hz (rheome.spectral.aperiodic); the residual max(P - Pap, 0) IS the periodic part.
@@ -25,7 +25,7 @@ function [T, X] = measure_bandperiodic(name, S, opts)
 % Analysis names: "bandperiodic" (the clean span), "bandperiodic_h1" and "bandperiodic_h2" (its halves) --
 % the same metrics, so an ICC pairs h1 with h2 row for row. X is the per-(half, band) table.
 %
-% ⚠ THE FIT RANGE IS NOT INCIDENTAL (aperiodic_snr_omega.m): on a reference subject 0.5-128 Hz gives
+% ⚠ THE FIT RANGE IS NOT INCIDENTAL: on a reference subject 0.5-128 Hz gives
 % chi 1.1 and zero 2-4 Hz periodic power on 122/270 channels; 1-45 Hz with a knee gives chi 2.40,
 % R^2 0.945 and 33. Quote chi with its range.
 % ⚠ A CLAMPED FLOOR IS THE CLAMP, NOT A MEASUREMENT: two bands below MinSnrFixed report the same floor.

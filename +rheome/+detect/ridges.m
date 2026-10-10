@@ -36,7 +36,7 @@ function out = ridges(f, S, basis, sigmas, opts)
 %
 %     ⭐ gamma = sigma_m / sigma_true = 1/sqrt(2) = 0.7071   ->   sigma_true = sqrt(2) * sigma_m
 %
-% Analytic, not fitted; confirmed at 0.735 over sigma = 8-40 mm in sphere_validate section 4. It is
+% Analytic, not fitted; confirmed at 0.735 over sigma = 8-40 mm in the sphere validation. It is
 % NOT applied here, because doing so silently would change every already-reported size -- apply it
 % at the point of reporting, and say that you have.
 %
@@ -89,7 +89,7 @@ function out = ridges(f, S, basis, sigmas, opts)
         M      = size(G,2);
         % Label members with the EXACT scale sqrt(2*t), not the gain-weighted centroid: the centroid
         % is contaminated by where the eigenvalue axis was truncated and compresses the fine end
-        % badly (on subject01 it labelled the two finest members 9.1 and 9.5 mm when they are 7.1 and
+        % badly (on a reference subject it labelled the two finest members 9.1 and 9.5 mm when they are 7.1 and
         % 9.6 mm -- two distinct scales reported as one).
         if isfield(frame,'Sigma') && ~isempty(frame.Sigma)
             sigmas = frame.Sigma;
@@ -236,7 +236,7 @@ function out = ridges(f, S, basis, sigmas, opts)
     % most detections land there, the motifs are COARSER than the bank reaches and no size has been
     % measured at all -- sigmaMode comes back Inf, which is not a number anyone should report.
     % This happens on raising K at fixed Nf: rheome.filters.frame ties t_max to lambda_max, so a richer
-    % basis shifts the WHOLE bank finer and abandons the coarse end (measured on subject01: the
+    % basis shifts the WHOLE bank finer and abandons the coarse end (measured on a reference subject: the
     % coarsest member went 46.6 mm at K=400 to 27.9 mm at K=1000, and the low-pass went from 1.7%
     % to 11.5% of the energy). The fix is more members, not more modes.
     if ~isempty(ridge)

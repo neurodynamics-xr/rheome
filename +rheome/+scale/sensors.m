@@ -4,7 +4,7 @@ function S = sensors(name, opts)
 %   S = rheome.scale.sensors(name)
 %   S = rheome.scale.sensors(name, Modality="EEG")     % sleep EEG (rheome.scale.importeeg): average reference
 %
-% The block that opens resolution_scales_omega.m, band_resolution_omega.m and the flow scripts,
+% The block that opens the single-subject resolution, band and flow analyses,
 % verbatim in effect: good MEG channels only, the unconstrained leadfield on those rows, the
 % Brainstorm noise covariance, and the plain minimum norm with SnrFixed = 3, amplitude measure.
 %

@@ -26,7 +26,7 @@ function [T, X] = measure_geometry(name, S, opts)
 % 700 modes). Both halve area per level; tile shapes differ, so the numbers are comparable, not identical.
 % The basis is the cache's own (rheome.load.bases: 1000 modes per hemisphere in rheome.scale.importsubject).
 % ⚠ The gauge's poles here are geometric (largest separation); MS1 Fig. 16B put them at the two
-% lowest-alpha faces (dirac_gauge_omega.m). The singularity count and the smoothness do not depend on
+% lowest-alpha faces. The singularity count and the smoothness do not depend on
 % where they are; the canonical (registered-sphere) frame is the atlas's (group plan P8).
 %
 % See also: rheome.geom.tree, rheome.geom.tiles, rheome.operators.gauge, rheome.ingest.rollup

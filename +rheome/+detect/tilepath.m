@@ -12,7 +12,7 @@ function out = tilepath(Y, G, opts)
 %
 %     S(k,t) = Y(k,t) - b + max(0, max_{j in {k} u adj(k)} S(j,t-1) - StepCost*[j ~= k])
 %
-% ⭐⭐ WHY NOT DETECT, THEN LINK. plant_select_omega.m: at 10 dB the peak falls under a noise blob every
+% ⭐⭐ WHY NOT DETECT, THEN LINK. Measured by planting: at 10 dB the peak falls under a noise blob every
 % few frames, so a chain of per-frame peaks (rheome.detect.tiletrack) breaks, and each fragment of a 120 mm
 % mover covered 36-88 mm -- no further than noise tracks of the same length. The information was lost
 % when each frame committed to its own peaks. Here no frame commits: a frame where noise wins costs

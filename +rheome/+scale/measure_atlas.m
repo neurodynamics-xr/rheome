@@ -1,13 +1,13 @@
 function [T, X] = measure_atlas(name, S, item, opts)
 % SCALE.MEASURE_ATLAS  MS1 group P8 (G12) on one participant: correspondence, atlas events, the shared-gauge
-% alpha tensor and the connectome roll-up -- the sub-0002 atlas, gauge and multimodal checks, per participant.
+% alpha tensor and the connectome roll-up -- the atlas, gauge and multimodal checks, per participant.
 %
 %   [T, X] = rheome.scale.measure_atlas(name, S, "correspondence")
 %   [T, X] = rheome.scale.measure_atlas(name, S, "atlasevents", NSurr=20)
 %   [T, X] = rheome.scale.measure_atlas(name, S, "gaugetensor")
 %   [T, X] = rheome.scale.measure_atlas(name, S, "connectome", Gammas=[0 0.01 0.1 1 10])
 %
-% Spec: desk/evidence/3377657c.../group-analysis-plan.md section 2 G12 (request d447727e). The geometry parts
+% Spec: the group-analysis plan, G12. The geometry parts
 % of G12 (roll-up exactness, atom-tile overlap, gauge singularity count and smoothness) are P2's
 % rheome.scale.measure_geometry; this file is the rest. Every item reads the paper's kernel, S.Res (the
 % unconstrained, noise-whitened minimum norm of rheome.scale.sensors, SnrFixed 3), never dSPM.
@@ -18,7 +18,7 @@ function [T, X] = measure_atlas(name, S, item, opts)
 % tiles are rheome.geom.tree on the template's hemispheres (depth <= max(Depths)); a participant's vertex
 % belongs to the tile of its nearest template vertex on the sphere, so tile k is the same anatomical
 % place in every participant (the atlas's group tree, VR1 2.9, with Rheome's tree instead of nsp's ladder).
-% The group gauge is rheome.geom.sphereframe: the sphere's meridian pushed to the cortex (21cc8d9b).
+% The group gauge is rheome.geom.sphereframe: the sphere's meridian pushed to the cortex.
 %
 % ITEMS (rows of T; X is the item's per-unit table, written as <item>.csv by rheome.scale.run):
 %   correspondence  per hemisphere: Desikan-Killiany agreement between the participant's own labels and the
@@ -43,7 +43,7 @@ function [T, X] = measure_atlas(name, S, item, opts)
 %                   of E' K C K' E, C the sensors' band cross-spectrum, E = [north west]. Per tile: the
 %                   trace-normalised components t11 (north-north), t22, t12, anisotropy (l1-l2)/(l1+l2), axis
 %                   (deg, 0 = north, 90 = west) and the normal share of the band power.
-%   connectome      ea515f28 per participant. (a) Destrieux -> DK against the exact dyadic roll-up (depth 6 ->
+%   connectome      the multimodal connectome per participant. (a) Destrieux -> DK against the exact dyadic roll-up (depth 6 ->
 %                   5, the participant's own rheome.geom.tree), as F11 C: area outside the parent, share of
 %                   finer units > 5 % outside, edge-weight loss ||Ag' C_fine Ag - C_coarse||_F / ||C_coarse||_F
 %                   and the CV of the finer units' areas, on the alpha co-power connectome of the kernel and,

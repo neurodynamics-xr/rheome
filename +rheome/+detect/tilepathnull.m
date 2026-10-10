@@ -19,7 +19,7 @@ function N = tilepathnull(Ysur, G, nF, rate, opts)
 %   .baseline .threshold .falseTestS (measured on the test windows) .alpha .windowS
 %   .calScores .testScores [nWin/2 x 1]
 %
-% See also: rheome.detect.tilepath, rheome.detect.tracknull, plant_tilepath_omega, alpha_grouptrack_omega
+% See also: rheome.detect.tilepath, rheome.detect.tracknull
 %
 % Author: Diellor Basha, 2026
 

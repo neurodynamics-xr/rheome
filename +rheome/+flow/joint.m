@@ -24,7 +24,7 @@ function out = joint(F, sfreq, coeffOperator, band, opts)
 % the FFT treats the record as periodic, that long tail wraps around and contaminates the retained
 % band. A raised cosine at each band edge shortens the tail and the problem goes with it.
 %
-% MEASURED (subject01, 8-13 Hz, each route against ITSELF on a longer record, so only edge effects
+% MEASURED (a reference subject, 8-13 Hz, each route against ITSELF on a longer record, so only edge effects
 % differ). Relative error in the interior, beyond a 2.5 s guard:
 %
 %   truncate, no taper .................. 0.0194
@@ -89,7 +89,7 @@ function out = joint(F, sfreq, coeffOperator, band, opts)
     % DEFAULT ON, BUT CAPPED. A raised-cosine edge is the whole fix for a narrow analysis band, but
     % a fraction-of-bandwidth rule is catastrophic on a WIDE one: 0.2*bandwidth over [1 45] Hz is
     % 8.8 Hz of taper eating the low-frequency end. Cap it.
-    % ⚠ USE edgeTaper = 0 FOR ANY PASS WHOSE SPECTRUM WILL BE FITTED. Measured on subject01, fitting
+    % ⚠ USE edgeTaper = 0 FOR ANY PASS WHOSE SPECTRUM WILL BE FITTED. Measured on a reference subject, fitting
     % the aperiodic background over 1-45 Hz: taper 0 Hz -> chi in [0.57 1.44]; taper 0.5 Hz -> chi in
     % [-5.08 -3.76]; taper 8.8 Hz -> [-5.92 -4.59]. NEGATIVE exponents, i.e. power rising with
     % frequency. The lowest bins carry most of the leverage on a 1/f slope and tapering removes them.

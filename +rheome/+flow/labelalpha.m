@@ -30,7 +30,7 @@ function L = labelalpha(name, opts)
 % disagree. The sidecar is built first if absent.
 % ⚠ ONLY BIMODAL LEAVES ARE CLASSED. A leaf whose envelope has no two states (the sidecar's
 % leafBimodal) has on/off labels that are not a state; it still contributes to its ancestors'
-% occupancy (as in alpha_jointstate_omega.m) but gets no class or onFrac rows of its own.
+% occupancy but gets no class or onFrac rows of its own.
 % ⚠ "widespread" is registered PENDING: extent through the inverse is not leakage-calibrated, so a
 % class-3/4 label says the ~130 mm node was on, not that the brain's alpha covered 130 mm.
 % ⚠ Trajectory speed is COMPRESSED near the floor (0.02 m/s reads +65%) and a 40 mm amplitude swap

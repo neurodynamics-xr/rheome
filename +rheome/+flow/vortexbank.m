@@ -9,8 +9,7 @@ function bank = vortexbank(name, varargin)
 % structure: the sensor signature is pA*a(t) + pB*b(t), and rheome.flow.vortexmatch marginalises the
 % temporal phase analytically rather than by searching it.
 %
-% ⭐⭐ WHAT THIS DICTIONARY CAN AND CANNOT SETTLE, measured at SNR 3 against real empty-room noise
-% (docs/2026-09-26-feature-table-design.md section 32):
+% ⭐⭐ WHAT THIS DICTIONARY CAN AND CANNOT SETTLE, measured at SNR 3 against real empty-room noise:
 %   LOCATION   ⭐ grid-limited, not noise-limited. An off-grid vortex is matched to the nearest
 %              atom with 0.0 mm of excess error over the grid's own best, at 31 mm spacing. Refine
 %              the grid and the answer refines with it.

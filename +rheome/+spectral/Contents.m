@@ -30,7 +30,6 @@
 % ⚠ Measuring chi on source-space coefficients does not measure the source's chi. Projected
 % sensor noise is white, so a poorly observed mode is dominated by it and its fitted exponent
 % falls toward zero: planting chi 2.40 and inverting returns 2.40 noiseless but 1.10 at SNR 3.
-% See docs/2026-09-26-feature-table-design.md section 28.
 %
 % APPLIED PER SPATIAL MODE (not per channel), the gains depend on lambda as well as omega, so the
 % resulting filter is genuinely non-separable, and the fitted exponent becomes chi(lambda) -- the

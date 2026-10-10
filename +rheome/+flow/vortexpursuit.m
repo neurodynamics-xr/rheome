@@ -18,8 +18,7 @@ function out = vortexpursuit(bank, D, varargin)
 % ⚠ IT IS A BURST MODEL. Measured on 30 s of real alpha, 40 atoms explain 24.6% of band variance
 % but the estimated-to-observed GFP ratio is 0.43 in the loudest quartile and 0.04 in the quietest,
 % and 88 of 270 channels come out WORSE than predicting zero, the worst at -133%. Matching pursuit
-% minimises TOTAL residual energy, which does not imply per-channel improvement. See
-% docs/2026-09-26-feature-table-design.md section 36.1.
+% minimises TOTAL residual energy, which does not imply per-channel improvement.
 %
 % INPUTS
 %   bank     rheome.flow.vortexbank output        D  [nCh x nT]

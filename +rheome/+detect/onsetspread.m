@@ -40,7 +40,7 @@ function R = onsetspread(Y, G, fs, seed, tPeak, opts)
 %   .planar  slowness vector magnitude (s/m)  .planarDir  unit direction  .planarR2
 %   .ok      false if too few tiles took part
 %
-% See also: rheome.detect.spindle, rheome.geom.tiles, alpha_burstspread_omega
+% See also: rheome.detect.spindle, rheome.geom.tiles
 %
 % Author: Diellor Basha, 2026
 

@@ -7,7 +7,7 @@
     S = rheome.select.schema()     struct array, one element per relation:
         .name .columns {1 x n} .types {1 x n} (Postgres) .key {1 x m} .foreign {struct: column -&gt; relation}
  
-  Design: docs/2026-09-22-select-design.md §2; the position pyramid (sensor_group and the
+  The position pyramid (sensor_group and the
   feature_group relations, internal nodes only -- leaves are the channel rows) is §2b. rheome.select.ddl prints it as Postgres DDL;
   rheome.select.rows materialises any relation from a MATLAB store.
  

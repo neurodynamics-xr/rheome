@@ -1,7 +1,7 @@
 function file = refhead(name, file)
 % SCALE.REFHEAD  A cached head, without its recording, as the reference head of measure_trackfactorial.
 %
-%   file = rheome.scale.refhead('subject01', '/path/subject01.tar.gz')   % the name must end in .tar.gz
+%   file = rheome.scale.refhead('refsubject', '/path/refsubject.tar.gz')   % the name must end in .tar.gz
 %
 % Bundles what rheome.scale.sensors reads -- bases.mat, surface.mat (with Reg.Sphere) and study.mat
 % (channels, gain, noise covariance; rec.F emptied) -- from rheome.load.root()/<name>. Unpacked into

@@ -6,7 +6,7 @@ function [T, X, G] = measure_periodicflow(name, S, opts)
 %   [T, X] = rheome.scale.measure_periodicflow(name, S, Centres=c)     % explicit tile centres (samples)
 %   [T, X, G] = rheome.scale.measure_periodicflow(...)                  % + the flow in the group gauge
 %
-% alpha_apparent_flow_omega.m and alpha_periodic_flow_omega.m with the figures removed, run on
+% The single-subject apparent-flow and periodic-flow analyses with the figures removed, run on
 % NumTiles 2 s tiles spread EVENLY across the recording instead of the single strongest one. The
 % report periodicflow_article ends by asking for exactly this: speed against amplitude ACROSS
 % tiles, where the samples are independent, because 599 frames of one tile are ~25 samples.

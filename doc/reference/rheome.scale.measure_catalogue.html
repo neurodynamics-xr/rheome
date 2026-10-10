@@ -7,11 +7,11 @@
     [T, X, strips] = rheome.scale.measure_catalogue(name, S, &quot;catalogue&quot;)     % G6 + G3 rule 11 + G16 on the plants
     [T, X]         = rheome.scale.measure_catalogue(name, S, &quot;catalognulls&quot;)  % G16 false-propagation nulls
  
-  Port of pattern_catalogue_validate.m (v18 Fig. 15A-B: subject01's gain, source noise, one hemisphere) to
+  Port of the single-subject catalogue validation (MS1 Fig. 15A-B: one reference gain, source noise, one hemisphere) to
   every participant, both hemispheres (Hemis), the participant's own leadfield and whitened minimum norm
   (S.Res: rheome.inverse.mne on the participant's noise covariance), and SENSOR noise from the
-  participant's own resting record and empty room (spec: desk/evidence/3377657c.../group-analysis-plan.md
-  section 2, G6, G3 rule 11, G16).
+  participant's own resting record and empty room (spec: the group-analysis plan,
+  G6, G3 rule 11, G16).
  
   catalogue     the 19 catalogue plants (i_catalogue: planar, source, sink, rotor, spiral, pair, saddle,
                 standing, nested, each meso and macro, and a drifting rotor) x Centres random centres per
@@ -51,10 +51,10 @@
     both band-passed there and their channel-summed powers set the noise gain; the noise is added broadband.
   ⭐ RATIOS: column ratio = recovered / ref, ref the catalogue's NOMINAL value where it has one (speed,
     wavelength, period, drift, envelope speed), otherwise truthOnMesh (the direct arm's own reading).
-  ⚠ THE CHART IS NOT v18's. v18 took the azimuth about the centre on subject01's FreeSurfer registration sphere;
+  ⚠ THE CHART IS NOT THE SINGLE-SUBJECT VALIDATION'S. That took the azimuth about the centre on the reference subject's FreeSurfer registration sphere;
     the nsp staging carries no sphere, so here theta is the azimuth in the centre's tangent plane on the cortex
     SMOOTHED over NormalSigmaMM (LBO heat kernel on the coordinates); r is the geodesic distance on the folded
-    cortex, as in v18. The drifting rotor's core moves along the geodesic from the centre towards e1, not a great
+    cortex, as there. The drifting rotor's core moves along the geodesic from the centre towards e1, not a great
     circle. Every arm is judged against the direct arm on the same chart, so the chart cancels.
   ⚠ The sampling rate is the record's (600 Hz) decimated by an integer to &gt;= SPC samples per cycle (nested: 10 per
     fast cycle), so sensor-noise windows are the participant's own samples, resampled (anti-aliased) by that integer.

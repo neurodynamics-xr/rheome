@@ -13,7 +13,7 @@ function P = movingpeak(atoms, cums, opts)
 % ⭐ BUILD THE PATH ON rheome.geom.edgegraph, NOT ON rheome.geom.geodesic. Shortest paths on edgegraph give `cums`
 % on a ruler that is symmetric and +1.4% against the analytic geodesic. Choosing waypoints by the heat
 % method -- as rheome.flow.movingvortex does -- switches between near-equal routes around a sulcus, and the
-% planted peak teleports (measured: 46.7 mm steps on a 3 mm spacing; see plant_track_omega.m).
+% planted peak teleports (measured: 46.7 mm steps on a 3 mm spacing).
 %
 % INPUTS
 %   atoms      [nV x K] one map per waypoint, peak normalised to 1 by the caller if wanted
@@ -26,7 +26,7 @@ function P = movingpeak(atoms, cums, opts)
 %   .X [nV x nT] the maps     .t [1 x nT] s     .s [nT x 1] arclength of the peak (m)
 %   .k [nT x 1] nearest waypoint to the peak   .k0, .w  the blend: waypoint k0 with weight 1-w
 %
-% See also: rheome.flow.movingvortex, rheome.geom.edgegraph, rheome.graphfilterbank/impulse, plant_tiletrack_omega
+% See also: rheome.flow.movingvortex, rheome.geom.edgegraph, rheome.graphfilterbank/impulse
 %
 % Author: Diellor Basha, 2026
 

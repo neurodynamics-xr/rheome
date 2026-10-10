@@ -64,7 +64,7 @@ classdef tScalePlantFloors < matlab.unittest.TestCase
             [~, R] = rheome.scale.measure_noisefloor(tc.Name, tc.S, "rotation", Hemis="L", Seeds=2, MomentNAm=Inf);
             % noiseless: a rotating source has quadrature between the two patterns, a standing one none.
             % (The synthetic gain is not magnetic and nearly blind to a vortex, so the size, 0.97 on
-            % sub-0002, is not checked here; the canary on real heads is.)
+            % one participant, is not checked here; the canary on real heads is.)
             tc.verifyGreaterThan(median(R.iCoh(R.kind == "rotating")), 0.05);
             tc.verifyLessThan(median(abs(R.iCoh(R.kind == "standing"))), 1e-6);
         end

@@ -18,7 +18,7 @@ function k = centroid(obj, iFrame, basis)
 % fine-scale structure, which the bank's smooth windows avoid. For a WHOLE-CORTEX centroid
 % there is no mask, so 'mode' is both correct and better resolved.
 %
-% See also: scaleEnergy, globalIndex, docs/2026-08-24-flow-descriptors-design.md
+% See also: scaleEnergy, globalIndex
 %
 % Author: Diellor Basha, 2026
 

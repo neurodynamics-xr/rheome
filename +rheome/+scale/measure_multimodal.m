@@ -1,6 +1,6 @@
 function [T, X, Cn] = measure_multimodal(name, S, opts)
 % SCALE.MEASURE_MULTIMODAL  MEG, PET and the fibre connectome through ONE surface wavelet bank on ONE set of
-% dyadic tiles, rolled up exactly across levels -- the MS1 multimodal worked example (request ea515f28).
+% dyadic tiles, rolled up exactly across levels -- the MS1 multimodal worked example.
 %
 %   [T, X, Cn] = rheome.scale.measure_multimodal(name)
 %   [T, X, Cn] = rheome.scale.measure_multimodal(name, S, Depth=6)
@@ -31,7 +31,7 @@ function [T, X, Cn] = measure_multimodal(name, S, opts)
 % ⚠ A SIGNED BAND-PASS COEFFICIENT AVERAGES TOWARD ZERO over a tile larger than its scale
 % (rheome.geom.tilemean), so for PET and fibre members j > 0 compare tiles on ms = sum(a x^2)/sum(a), the
 % coefficient energy; MEG members are powers already (compare on mean).
-% ⚠ RAW MEG POWER ACROSS TILES IS MOSTLY THE KERNEL'S DEPTH SENSITIVITY: in PREVENT-AD sub-MTL0002 the alpha
+% ⚠ RAW MEG POWER ACROSS TILES IS MOSTLY THE KERNEL'S DEPTH SENSITIVITY: in one participant the alpha
 % tile power spans ~1000x while delta/theta varies +-12 %, so rho between raw band powers (and between a raw
 % power and anything deep-vs-superficial) reads the instrument. Compare a band relative to the sum of the bands
 % (exact at any level from the stored sums) before reading MEG against PET or fibres.

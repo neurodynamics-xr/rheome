@@ -38,14 +38,14 @@
 %   rheome.detect.peaks(X, S [,opts])            - one-ring LOCAL MAXIMA of a scalar map per frame, with
 %       sub-edge position, value, local prominence, half-height width, optional tile address, and
 %       non-maximum suppression. Emits rheome.detect.track's frameFeatures. ⭐ Peaks are found at vertices
-%       and THEN addressed to tiles: a tile's maximum is not a peak. plant_track_omega.m recovers a
+%       and THEN addressed to tiles: a tile's maximum is not a peak. A planting test recovers a
 %       planted speed at slope 0.99-1.01 from 0.05 to 1 m/s through 10 dB.
 %   rheome.detect.tilepeaks / rheome.detect.tiletrack - the peak as a TILE and the trajectory as a walk on the
 %       tile graph (adjacent steps only, global assignment, margin hysteresis). Tile size is chosen
-%       from the feature (rheome.geom.jointcell); plant_tiletrack_omega.m is the validation.
+%       from the feature (rheome.geom.jointcell); a planting test is the validation.
 %   rheome.detect.tilepath - ⭐ TRACK-BEFORE-DETECT: Viterbi on the tile graph within one observation window,
 %       scoring Y - baseline along every admissible walk before deciding. At 10 dB it keeps the movers
-%       detect-then-link loses (plant_tilepath_omega.m). Use it, not tiletrack, below ~20 dB.
+%       detect-then-link loses (measured by planting). Use it, not tiletrack, below ~20 dB.
 %   rheome.detect.trackstats / tracknull / trackselect - per-track duration, net displacement, straightness,
 %       net speed; thresholds from noise-only windows at a false-trajectory RATE alpha per second.
 %   rheome.detect.blobscale  - the characteristic SIZE of structure, by scale selection over a

@@ -3,7 +3,7 @@ function tf = has(name)
 %
 %   tf = rheome.load.has(name)
 %
-% Used by the demos / rheome.source.dirac to tell a dataset NAME ('subject01') from a file PATH
+% Used by the demos / rheome.source.dirac to tell a dataset NAME ('mysubject') from a file PATH
 % ('/…/tess_cortex.mat'): a dataset name has no path separators, no .mat extension, and
 % resolves to a +data/<name>/ folder.
 %

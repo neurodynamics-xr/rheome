@@ -14,7 +14,7 @@
   between neighbours. The OPERATOR does not care, because its transport .Rt corrects for it. Any
   analysis that reads a per-component value does care, because the components then describe the
   mesh's half-edge ordering. Measured on a reference subject left hemisphere (10242 vertices), poles at
-  the faces dirac_gauge_omega chooses (18884, 14163; 70 mm apart):
+  two faces 70 mm apart:
  
     frame                        ambient angle between   transport residual   singular faces
                                      neighbours           per edge vs LC      (per-face winding)
@@ -74,7 +74,7 @@
   Both are in geometry-central and nxr-compute (smooth_field.cpp, gauge.cpp).
  
   See also: rheome.operators.trivial_connection, rheome.operators.connection_laplacian, rheome.detect.criticalPoints,
-            rheome.flow.directionfield, dirac_gauge_omega
+            rheome.flow.directionfield
  
   Author: Diellor Basha, 2026
 </pre>

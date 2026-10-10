@@ -75,7 +75,7 @@ function T = wavelettile(db, varargin)
 %   dyadicLevel, tileSec, cyclesPerTile, supportPerTile, energy, signalLength, tCenter (Positions)
 %
 % See also: rheome.selection.registry, rheome.select.ladder, rheome.geom.ladder, rheome.timefilterbank/support,
-%           @graphfilterbank/widths, wavelet_tiles_omega
+%           @graphfilterbank/widths
 %
 % Author: Diellor Basha, 2026
 

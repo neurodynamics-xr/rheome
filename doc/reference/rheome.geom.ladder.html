@@ -42,7 +42,7 @@
       n&quot; has no answer without a convention, and different conventions disagree. Global eigenmode
       bandpower (summed over the hemisphere) IS well defined -- that is the `space_band` /
       feature_space pattern the schema already uses on the sensor graph -- but it has no node index.
-    ⚠ DO NOT record a SIZE. plant_scale_omega.m planted 70-267 mm through the leadfield, noise and
+    ⚠ DO NOT record a SIZE. A planting test planted 70-267 mm through the leadfield, noise and
       inverse: recovered ~100 mm regardless, slope +0.02, R^2 0.002 below 10 dB. The octave index
       says which filter responded, never how big the source was.
  
@@ -59,7 +59,7 @@
     nodeAdmissible  is the TILE bigger than 2*r50 = 104 mm? -- can this patch be told from its
                     neighbour at all (rheome.inverse.resolution, 300 seeds)
     waveAdmissible  is the WAVELENGTH above 104 mm? -- a separate and stricter question, since
-                    plant_scale_omega.m recovers ~100 mm whatever is planted below 10 dB
+                    planting recovers ~100 mm whatever is planted below 10 dB
   A cell needs BOTH, plus `~forbidden`. ⭐⭐ MEASURED ON THIS CORTEX, AT Cycles=2, NOTHING QUALIFIES,
   and the way it fails is the result. The only candidate is the 94-189 mm octave (centre 134 mm),
   which wants a tile of 2 x 133.7 = 267.4 mm; the largest tile on the hemisphere is 267.2 mm. It
@@ -80,8 +80,7 @@
   189-378 mm octave needs a tile of 2 x 267 = 534 mm, larger than the 378 mm hemisphere. The largest
   spatial octave therefore has no tile at all and exists only as a whole-hemisphere number.
  
-  See also: rheome.select.ladder, rheome.geom.tree, rheome.flow.sweep, plant_scale_omega,
-            docs/2026-09-26-feature-table-design.md
+  See also: rheome.select.ladder, rheome.geom.tree, rheome.flow.sweep
  
   Author: Diellor Basha, 2026
 </pre>

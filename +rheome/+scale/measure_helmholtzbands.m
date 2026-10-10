@@ -4,7 +4,7 @@ function [T, X] = measure_helmholtzbands(name, opts)
 %   [T, X] = rheome.scale.measure_helmholtzbands(name)
 %   [T, X] = rheome.scale.measure_helmholtzbands(name, Plants=5, Hemis=["L" "R"], Seed=11)
 %
-% Part 1 of helmholtz_bands_omega.m (MS1 Fig. 4A-B) per hemisphere, for the group (plan G9). For every
+% Part 1 of the Helmholtz-band test (MS1 Fig. 4A-B) per hemisphere, for the group (plan G9). For every
 % interior band m0 of the tight Laplace-Beltrami bank (logitersine, 2 voices per octave; 315-23 mm on a
 % 1000-mode reference cortex) and Plants random vertices: a source field grad(psi) and a vortex field
 % N x grad(psi), psi the bank's own member m0 at the vertex, read by rheome.differential.helmholtzbands.

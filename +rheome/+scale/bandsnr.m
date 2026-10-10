@@ -4,7 +4,7 @@ function T = bandsnr(name, noise)
 %   T = rheome.scale.bandsnr(name)                 % noise from rheome.load.root()/<name>/noise.mat
 %   T = rheome.scale.bandsnr(name, nrec)           % or a rec struct (.F .sfreq .ChannelName)
 %
-% The ten octaves of band_resolution_omega.m (0.125-0.25 ... 64-128 Hz). For each: Welch power
+% Ten octaves (0.125-0.25 ... 64-128 Hz). For each: Welch power
 % of every good MEG channel in the band, the ratio rest/noise per channel, and the MEDIAN over
 % channels, in dB of power. Channels are matched by name.
 %
@@ -15,7 +15,7 @@ function T = bandsnr(name, noise)
 %
 % Returns a table: band, fLo, fHi, snr_dB, nChannels.
 %
-% See also: rheome.scale.measure_bandresolution, noise_floor_omega
+% See also: rheome.scale.measure_bandresolution
 %
 % Author: Diellor Basha, 2026
 

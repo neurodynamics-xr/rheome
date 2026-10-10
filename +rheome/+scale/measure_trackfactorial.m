@@ -2,10 +2,10 @@ function [T, X] = measure_trackfactorial(name, S, opts)
 % SCALE.MEASURE_TRACKFACTORIAL  The 0.52 diagnosis as a 2^5 factorial on this participant (MS1 G8, Fig. 9).
 %
 %   [T, X] = rheome.scale.measure_trackfactorial(name)                       % head level "own" only
-%   [T, X] = rheome.scale.measure_trackfactorial(name, S, RefHead="subject01") % both head levels
+%   [T, X] = rheome.scale.measure_trackfactorial(name, S, RefHead="refsubject") % both head levels
 %
-% MS1 v18 section 5.3: exact sphere movers tracked through subject01's leadfield read 0.52 of their speed;
-% injections into sub-0002's recording (Fig. 8, rheome.scale.measure_inject) read 0.93-1.0. The two tests
+% MS1 section 5.3: exact sphere movers tracked through a reference subject's leadfield read 0.52 of their speed;
+% injections into one participant's recording (Fig. 8, rheome.scale.measure_inject) read 0.93-1.0. The two tests
 % differ in five ways. Here each is a factor at two levels, crossed, in the same participant:
 %   ruler       "fold"   net displacement on the folded cortex (rheome.detect.trackstats, edge-graph geodesic)
 %                        over the true folded net speed (cortical geodesic from the true start to end vertex)
@@ -21,11 +21,11 @@ function [T, X] = measure_trackfactorial(name, S, opts)
 %   matching    "top3"   a passing path among the top 3 that stays within NearMM of the truth (Fig. 8's rule)
 %               "best"   the single best path only (Fig. 9's rule)                    (readout factor)
 %   head        "own"    the participant's cortex, registration sphere, gain and minimum norm
-%               "ref"    RefHead's (subject01): the mover lives on its sphere/cortex, goes through its gain and
+%               "ref"    RefHead's: the mover lives on its sphere/cortex, goes through its gain and
 %                        inverse on the channels it shares with the participant (by name); the participant's
 %                        real background enters through those channels
 % Baseline: the DIRECT arm (no instrument: the source map itself + the synthetic background, own head),
-% whose speed read 0.97-0.98 on subject01's sphere.
+% whose speed read 0.97-0.98 on the reference subject's sphere.
 %
 % MOVER (the sphere arm's): a geodesic Gaussian (SigmaMM 25, peak 1) on the participant's FreeSurfer
 % registration sphere (Reg.Sphere, R ~ 100 mm), along a random great circle at Speeds 0.05-1 m/s for
@@ -52,8 +52,7 @@ function [T, X] = measure_trackfactorial(name, S, opts)
 % ⚠ No RefHead (empty, and RHEOME_REFHEAD unset or not a cache): the head factor runs "own" only and
 %   n_head_levels = 1; the group model then has four factors.
 %
-% See also: rheome.scale.measure_inject, rheome.detect.tilepath, rheome.detect.tilepathnull,
-%           sphere_tilepath_validate (nxr-cortical-flow-matlab)
+% See also: rheome.scale.measure_inject, rheome.detect.tilepath, rheome.detect.tilepathnull
 %
 % Author: Diellor Basha, 2026
 

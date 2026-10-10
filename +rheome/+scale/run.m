@@ -50,7 +50,7 @@ function R = run(name, opts)
 %                     surrogates; the alpha orientation tensor per depth-3 group tile in the shared gauge;
 %                     Destrieux -> DK vs the dyadic roll-up and connectome-wavelet widths over a gamma sweep.
 %                     Opt-in. Needs a template cortex (RHEOME_TEMPLATE or RHEOME_BRAINSTORM's ICBM152)
-%   multimodal.csv, multimodal_assoc.csv, multimodal_connectome.mat   the MS1 multimodal example (ea515f28):
+%   multimodal.csv, multimodal_assoc.csv, multimodal_connectome.mat   the MS1 multimodal example:
 %                     rheome.scale.measure_multimodal -- MEG band power, PET SUVR and the fibre-degree density
 %                     through one wavelet bank on one dyadic tile ladder, every level an exact roll-up; the
 %                     descriptive cross-tile rho; the tile connectome per level. Opt-in. PET and fibres come
@@ -196,7 +196,7 @@ function R = run(name, opts)
                     [Tq, X.slowosc, X.slowosc_events] = rheome.scale.measure_slowosc(name, S);  M = [M; Tq]; %#ok<AGROW>
                 case {"correspondence" "atlasevents" "gaugetensor" "connectome"}   % MS1 G12 (P8, nsp cf-atlas)
                     [Ta, X.(a)] = rheome.scale.measure_atlas(name, S, a);  M = [M; Ta]; %#ok<AGROW>
-                case "multimodal"              % MS1 multimodal example (ea515f28): MEG + PET + fibres on one ladder
+                case "multimodal"              % MS1 multimodal example: MEG + PET + fibres on one ladder
                     [Tm, Xm, Cn] = rheome.scale.measure_multimodal(name, S);  M = [M; Tm]; %#ok<AGROW>
                     X.multimodal = Xm.tiles;  X.multimodal_assoc = Xm.assoc;
                     save(fullfile(od, 'multimodal_connectome.mat'), '-struct', 'Cn', '-v7');

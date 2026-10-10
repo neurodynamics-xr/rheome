@@ -12,6 +12,6 @@
 %   rheome.show.resolution  - the spatial scales of the problem on one log ruler, with rows of cortex
 %                      panels above it: the pyramid's rungs, a measured point-spread function
 %                      and real atlas scouts, all at ONE camera so the sizes compare
-%                      (resolution_scales_omega.m; measurement in rheome.inverse.resolution)
+%                      (measurement in rheome.inverse.resolution)
 %
 % Author: Diellor Basha, 2026

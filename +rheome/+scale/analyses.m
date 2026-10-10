@@ -8,9 +8,9 @@ function a = analyses(which)
 %   resolution       resolution_article        rheome.inverse.resolution, SnrFixed 3, 300 seeds
 %   bandsnr          (input to the next)        per-octave SNR vs the same-session noise run
 %   bandresolution   bandresolution_article    resolution at each octave's own SNR
-%   flowmap          flowmap_article           alpha_apparent_flow_omega: div/curl from sensors
-%   periodicflow     periodicflow_article      alpha_periodic_flow_omega: specparam split, speed
-%   grouptrack       grouptrack_article        alpha_grouptrack_omega: Viterbi paths vs swap/null
+%   flowmap          flowmap_article           div/curl from sensors
+%   periodicflow     periodicflow_article      specparam split, speed
+%   grouptrack       grouptrack_article        Viterbi paths vs swap/null
 %   fieldsmooth      MS1 Fig. 12               per-vertex vs graph-wavelet band-limited J, div, curl
 %   eventsensors     MS1 Figs. 8, 10           the tracked event's samples and channels (after grouptrack)
 %   bandperiodic     MS1 Table 5               per-band periodic fraction, oscillation SNR, floors, IAF, halves
@@ -18,8 +18,8 @@ function a = analyses(which)
 %   ownregion        MS1 rule 5                own-region fraction of div/curl per Desikan-Killiany region
 %   geometry         MS1 Figs. 2, 16, 20       atom-tile overlap, gauge singularities, roll-up exactness
 %   fusion           MS1 Section 8.2           fused kernels against reconstruct-then-differentiate
-%   inject           grouptrack_article fig 5  alpha_inject_omega: injection recovery
-%   inject           MS1 G7 (Fig. 8)           alpha_inject_omega per participant: injection recovery
+%   inject           grouptrack_article fig 5  injection recovery
+%   inject           MS1 G7 (Fig. 8)           per participant: injection recovery
 %   trackfactorial   MS1 G8 (Fig. 9)           the 0.52 diagnosis: sphere movers, 2^5 factorial
 %                    -- both run only when asked (nsp cf-track), not "ported"
 %   vortex           report_cortical_vortex    planted spin through forward + inverse
@@ -50,7 +50,7 @@ function a = analyses(which)
 %   gaugetensor      MS1 G12 (section 12.3)    alpha orientation tensor per depth-3 group tile in the shared gauge
 %   connectome       MS1 G12 (Fig. 3C)         Destrieux -> DK vs dyadic roll-up; connectome-wavelet widths, gamma sweep
 %                    -- the four run only when asked (nsp cf-atlas), not "ported"; rheome.scale.measure_atlas
-%   multimodal       MS1 multimodal (ea515f28) MEG band power, PET SUVR, fibre degree through one wavelet bank on
+%   multimodal       MS1 multimodal      MEG band power, PET SUVR, fibre degree through one wavelet bank on
 %                                              one dyadic ladder, exact roll-up; run only when asked, not "ported"
 %   coefficients     (Prognome input)          rheome.scale.coefficients: tile x scale x time envelopes;
 %                                              run only when asked (a ~200 MB file), so not "ported"

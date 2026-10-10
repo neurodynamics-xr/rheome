@@ -26,8 +26,8 @@ function t = measure(db, rows, opts)
 % dimension), which is where a time-averaged magnitude, divergence or curl under a cortical tile
 % belongs. Those are exactly the quantities that do NOT merge -- a curl on a patch is not the sum
 % of the curls of its halves -- so this relation, not a feature relation, is their home.
-% ⚠ A cortical measurement is only as good as the instrument under that node: see
-% plant_scale_omega.m. Location recovers to 43-52 mm and SIZE DOES NOT RECOVER AT ALL below ~20 dB,
+% ⚠ A cortical measurement is only as good as the instrument under that node, measured by
+% planting. Location recovers to 43-52 mm and SIZE DOES NOT RECOVER AT ALL below ~20 dB,
 % so write a magnitude or a curl here and do not write a "blob size".
 %
 % ⚠ rheome.select.labelkinds is consulted on every write: a kind registered "unmeasurable" (e.g. a blob or

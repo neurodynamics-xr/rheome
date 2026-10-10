@@ -9,8 +9,8 @@
  
   The only function that touches samples. Per channel: the whole record goes through the
   bank ONCE (wt), per-sample band series are formed from the band's scales, and every
-  series is reshaped into level-0 frames and reduced. With a timefilterbank (the default,
-  design docs/2026-09-22-timefilterbank-design.md) each member arrives at its OWN rate
+  series is reshaped into level-0 frames and reduced. With a timefilterbank (the default)
+  each member arrives at its OWN rate
   and is framed by its instants: energy is sum |coef|^2 * weight per frame (Parseval),
   envMax the max over the member's instants; a masked instant is one whose nearest
   record sample is masked. 7x faster than the full-rate path, no paging. Every output is a sum, a count, a

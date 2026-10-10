@@ -36,7 +36,7 @@ function cfg = config(opts)
 %   MinPageLength    shortest page core in seconds (16); rounded up to a grid level
 %   Bank             "frame" (timefilterbank: designed tight constant-Q frame, sub-band
 %                    evaluation; the default) | "morse" (cwtfilterbank at the full rate;
-%                    the reference, 7x slower). Design: docs/2026-09-22-timefilterbank-design.md
+%                    the reference, 7x slower)
 %   Anchor           frame bank only: absolute grid anchor in Hz (1); member k at Anchor*2^(k/V),
 %                    bands are the integer octaves of the anchor
 %   Oversample       frame bank only: sub-band samples per bin (2)

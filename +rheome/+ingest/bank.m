@@ -18,7 +18,7 @@ function [fb, bands, frame] = bank(nT, fs, cfg)
 % time: 151 scales to 0.0055 Hz, 76 to 1 Hz, at 600 Hz.
 %
 % ⚠ THE TOP SCALE IS CAPPED WHERE THE WAVELET'S GAIN AT NYQUIST FALLS TO 1e-6, about 0.7
-% of cwtfreqbounds' default. Measured (docs/2026-09-22-ingest-notes.md): a scale whose
+% of cwtfreqbounds' default. Measured: a scale whose
 % response is still appreciable at Nyquist is not band-limited on the discrete grid, and
 % its coefficients then DEPEND ON THE RECORD LENGTH -- the same filter (gain curves equal
 % to 1e-4) applied to the same samples in a 4000-sample record and in a 256-sample page

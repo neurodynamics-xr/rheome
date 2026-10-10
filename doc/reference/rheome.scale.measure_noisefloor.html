@@ -2,7 +2,7 @@
 <html><head><meta charset="utf-8"><title>rheome.scale.measure_noisefloor</title></head><body>
 <h1>rheome.scale.measure_noisefloor</h1>
 <p><em>function rheome.scale</em> &mdash; Rheome</p>
-<pre>  SCALE.MEASURE_NOISEFLOOR  What the noise floor and the inverse manufacture, in this participant (MS1 G2, v18 9.4).
+<pre>  SCALE.MEASURE_NOISEFLOOR  What the noise floor and the inverse manufacture, in this participant (MS1 G2, section 9.4).
  
     [T, X] = rheome.scale.measure_noisefloor(name, S, &quot;composition&quot;)
     items: &quot;composition&quot; | &quot;sizeruler&quot; | &quot;vortexscale&quot; | &quot;rotation&quot; | &quot;detection&quot; | &quot;diracangles&quot;
@@ -12,7 +12,7 @@
   where a background is needed, the participant's own empty room (noise.mat, channels matched BY NAME),
   on both hemispheres (Hemis). X is the per-unit table, T the rheome.scale.rows (analysis = item).
  
-  composition   v18: vortex 0.036/0.608 irr/sol before, 0.338/0.253 after; spiral 0.347/0.236; empty
+  composition   single-subject reference: vortex 0.036/0.608 irr/sol before, 0.338/0.253 after; spiral 0.347/0.236; empty
                 room 0.307/0.246; rest 0.334/0.262; gap at the focus 0.000; rows 0.427/0.127/0.348.
                 rheome.flow.seedvortex 140 mm, Phase pi/2 (vortex) and pi/4 (spiral), at Seeds random
                 vertices; read before and after leadfield + MNE (noise-free), and NumFrames strongest
@@ -21,28 +21,28 @@
                 hemisphere (&quot;whole&quot;) and over the top 10% of vertices by |J| (&quot;focus&quot;). Leadfield rows:
                 the same shares for each sensor's row. Metrics: irr_frac, sol_frac, normal_frac per
                 source x region; sol_gap_vortex_spiral and sol_gap_vortex_emptyroom at the focus.
-  sizeruler     v18: slope +0.52 R2 0.83 on the cortex -&gt; +0.02 / 0.002 at &lt;= 10 dB, plateau ~100 mm;
+  sizeruler     single-subject reference: slope +0.52 R2 0.83 on the cortex -&gt; +0.02 / 0.002 at &lt;= 10 dB, plateau ~100 mm;
                 location 35 / 43 / 89 mm at noiseless / 10 / 0 dB, 7 mm without the instrument.
-                Port of plant_scale_omega.m on the plain MNE (v18 read it through the Dirac inverse; the
+                Port of the size-ruler planting test on the plain MNE (the reference read it through the Dirac inverse; the
                 paper's estimator is now the plain MNE): heat-kernel blobs of 70-267 mm of NORMAL current
                 at Seeds depth-stratified vertices, noise from the participant's noise covariance at
                 SNR (sensor, dB), read by rheome.detect.blobscale (mexhat, 40-500 mm) at the |J| peak.
                 Metrics per condition: slope, r2, plateau_mm (median recovered size), loc_err_mm.
-  vortexscale   v18: power-weighted wavelength 115-119 mm empty room, 173 mm rest alpha, 128 mm gamma;
+  vortexscale   single-subject reference: power-weighted wavelength 115-119 mm empty room, 173 mm rest alpha, 128 mm gamma;
                 ~2.5x more vortices at the floor. NumFrames evenly spaced frames of |K x analytic| in
                 alpha (8-12 Hz) and gamma (30-45 Hz), rest and empty room: the power-weighted LBO
                 wavelength 2*pi/sqrt(sum lambda c^2 / sum c^2) (constant mode out) and the count of
                 vortex-type critical points of the real-part field with |J| &gt; 20% of its maximum.
-  rotation      v18: iCoh +0.969 noiseless, +0.960 / +0.894 / +0.596 at 10 / 3 / 1 nAm; standing |iCoh|
-                &lt;= 0.031. Port of spin_recover_omega.m: a 140 mm vortex and its pi/2-spun partner in
+  rotation      single-subject reference: iCoh +0.969 noiseless, +0.960 / +0.894 / +0.596 at 10 / 3 / 1 nAm; standing |iCoh|
+                &lt;= 0.031. Port of the spin-recovery test: a 140 mm vortex and its pi/2-spun partner in
                 quadrature at sqrt(8*16) Hz (rotating) or the vortex alone (standing), Hann-windowed 2 s,
                 scaled to MomentNAm RSS, plus empty-room windows; the MNE estimate projected onto the
                 two planted patterns, 8-16 Hz, imaginary coherence between them.
-  detection     v18: 0.09-0.56 nAm RSS across depth, a 41x range across families, rotor 140 mm 0.3 nAm.
+  detection     single-subject reference: 0.09-0.56 nAm RSS across depth, a 41x range across families, rotor 140 mm 0.3 nAm.
                 rheome.forward.simulate (the threshold against the empty room's own 95th percentile)
                 per family at Seeds median-depth vertices, and a rheome.flow.seedrotor 140 mm rotor
                 through the vertex leadfield. Needs the Dirac basis (imported here when absent).
-  diracangles   v18: rows a median 0.187 inside the 400-mode span, 4 of 270 principal angles with cos &gt;
+  diracangles   single-subject reference: rows a median 0.187 inside the 400-mode span, 4 of 270 principal angles with cos &gt;
                 0.9, mean cos^2 0.041; the basis carries 0.026 of a vortex's measurable part. Leadfield
                 rows (hemisphere columns) against the x,y,z rows of the hemisphere's Dirac modes.
  

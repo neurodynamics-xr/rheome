@@ -42,8 +42,8 @@
     Interpolation is log-log and the end values are HELD outside [min(shapeF), max(shapeF)], so
     the shape must span every band that will be read back.
  
-  ⚠ .power is the realised in-band power, so it is matched exactly. The inline version in
-    synth_background_omega.m instead set each mode's TOTAL variance to its in-band power,
+  ⚠ .power is the realised in-band power, so it is matched exactly. The earlier inline
+    version instead set each mode's TOTAL variance to its in-band power,
     which under-fills the band; prefer this one.
  
   ⭐ Shape and level are set independently: chi and knee fix the shape, opts.power fixes the

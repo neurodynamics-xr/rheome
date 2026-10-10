@@ -7,7 +7,7 @@
     [T, X] = rheome.scale.measure_fusion(name)
     [T, X] = rheome.scale.measure_fusion(name, ctx, rheome.flow.build(ctx), NumFrames=20)
  
-  fusion_exactness_omega.m (MS1 Section 8.2) as a per-subject spot check (group plan G14): on NumFrames
+  The fusion-exactness check (MS1 Section 8.2) as a per-subject spot check (group plan G14): on NumFrames
   random frames of the cached recording (seed 0), at the default minimum-norm context:
     divVertex, curlVertex   max|K.(div|curl).vertexOperator*F - differential.(divergence|curl)(currentKernel*F)| / max|staged|
     divCoeff, curlCoeff     the same for coeffOperator against Phi_LB' M (staged vertex map)

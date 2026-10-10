@@ -26,6 +26,6 @@
 %   p = rheome.pipeline.then(p, "lb_forward");       % -> coeffScalar on the mode line
 %   [g, rec] = rheome.pipeline.run(p, e, F);
 %
-% See also: rheome.domain.of, rheome.fieldtype.registry, rheome.operators.registry, docs/2026-09-25-typed-fields-design.md
+% See also: rheome.domain.of, rheome.fieldtype.registry, rheome.operators.registry
 %
 % Author: Diellor Basha, 2026

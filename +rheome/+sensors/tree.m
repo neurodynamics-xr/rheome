@@ -9,7 +9,7 @@ function T = tree(G, opts)
 % channels. On the CTF helmet the first cut follows left/right (|r| = 0.91 with the
 % lateral coordinate), the second front/back, the third dorsal/lateral -- hemispheres,
 % then quadrants, then lobe-sized patches of 18-49 sensors -- without being told any of
-% it (docs/2026-09-22-ingest-notes.md).
+% it.
 %
 % ⭐ A GROUP'S STATISTICS ARE SUMS AND MAXIMA OVER ITS SENSORS' ROWS, so the tree is a
 % roll-up along the channel axis exactly as the dyadic grid is along time: a parent
