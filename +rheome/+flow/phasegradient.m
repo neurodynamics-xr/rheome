@@ -7,7 +7,7 @@ function out = phasegradient(z, S, varargin)
 % Takes the ANALYTIC field z(v,t) -- the complex curl, or any complex scalar on the mesh --
 % and returns where its phase is heading, in space and in time. Writing z = A*exp(i*phi):
 % k = grad(phi) is the local wavevector, |k| = 2*pi/wavelength, and with omega = d(phi)/dt
-% the pattern's timing sweeps past a vertex at velocity omega*k/|k|^2.
+% the pattern's timing sweeps past a vertex at velocity -omega*k/|k|^2.
 %
 % ⭐ EDGE-WRAPPED DIFFERENCES, NOT A DIVIDED DIFFERENCE OF z. Along an edge e the wrapped
 % phase step wrap(phi_j - phi_i) equals k.e EXACTLY for a plane wave, so solving the two
@@ -48,7 +48,7 @@ function out = phasegradient(z, S, varargin)
 %   .ampgrad    [nF x 3 x nT]  grad(log A), 1/m -- the real part of the same decomposition
 %   .omega      [nV x nT]      rad/s        (Rate given)
 %   .speed      [nF x nT]      |omega|/|k|, m/s
-%   .velocity   [nF x 3 x nT]  omega*k/|k|^2
+%   .velocity   [nF x 3 x nT]  -omega*k/|k|^2, the direction the wavefronts travel
 %   .aliased    [1 x nT]       fraction of faces with an edge step past 0.9*pi
 %
 % See also: rheome.detect.phasesingularity, rheome.operators.face_gradient, rheome.flow.curl
@@ -116,7 +116,10 @@ function out = phasegradient(z, S, varargin)
         out.omega    = w;
         wf = (w(a,:) + w(b,:) + w(c,:)) / 3;
         out.speed    = abs(wf) ./ out.kmag;
-        out.velocity = kk .* permute(wf ./ out.kmag.^2, [1 3 2]);
+        % ⚠ MINUS: a wavefront phi = const moves where phi is SMALLER at fixed t, so
+        % v = -(dphi/dt) grad(phi)/|grad phi|^2. Without it .velocity pointed backwards (179.9 deg
+        % on a planted sphere wave), in either sign convention of z.
+        out.velocity = -kk .* permute(wf ./ out.kmag.^2, [1 3 2]);
     end
     out.nFace = nF;  out.nVert = size(z,1);
 end

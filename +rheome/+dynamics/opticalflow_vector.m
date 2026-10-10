@@ -1,5 +1,13 @@
 function velocityField = opticalflow_vector(currentField, surface, opts)
-% DYNAMICS.OPTICALFLOW_VECTOR  Vector optical flow of an unconstrained current field.
+% DYNAMICS.OPTICALFLOW_VECTOR  Vector optical flow of an unconstrained current field.  ⚠ RETIRED
+%
+% ⚠ RETIRED 2026-10-08: on a NORMAL current J = I*n -- what an
+% inverse returns -- it fails noise-free on the FreeSurfer sphere (direction 25-69 deg, speed 35-89%, div/curl
+% 27-64% of truth at alpha <= 1), because n turns along the flow: the static geometry of n is texture
+% that says "no motion". It is exact only when its model holds (three independently advected channels:
+% 1-5 deg, 96-104%), and there it is worse than the scalar under noise, since its data term carries no
+% mass weight and alpha below ~1e3 does not regularise. The 'covariant' transport was never implemented.
+% Use rheome.dynamics.opticalflow_scalar on the envelope. Kept callable; warns on every call.
 %
 %   velocityField = rheome.dynamics.opticalflow_vector(currentField, surface [,opts])
 %
@@ -23,6 +31,8 @@ function velocityField = opticalflow_vector(currentField, surface, opts)
 %
 % Author: Diellor Basha, 2026
 
+    warning('dynamics:opticalflow_vector:retired', ...
+        'rheome.dynamics.opticalflow_vector is retired (fails on a normal current; see its help). Use rheome.dynamics.opticalflow_scalar.');
     if nargin < 3, opts = struct(); end
     if ~isfield(opts, 'alpha')     || isempty(opts.alpha),     opts.alpha = 0.1;        end
     if ~isfield(opts, 'transport') || isempty(opts.transport), opts.transport = 'ambient'; end
