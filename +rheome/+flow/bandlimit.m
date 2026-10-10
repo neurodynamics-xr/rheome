@@ -25,7 +25,9 @@ function B = bandlimit(J, S, lbo, opts)
 % OUTPUT (struct B)
 %   .J [3nV x nT] .Div .Curl .Phi .Psi [nV x nT]  band-limited
 %   .h [K x 1] gain   .cutoffMM   .keptWavelengthMM [1 x m] band centres kept
-%   .finestSigmaMM    spatial width sigma = sqrt(2t) of the finest kept member (rheome.graphfilterbank widths)
+%   .finestSigmaMM    spatial width of the finest kept member, sigma = sqrt(2)*wavelength/(2*pi): the
+%                     sigma = sqrt(2t) of a mexhat peaking at that wavelength (the logitersine bank has
+%                     no heat scale t, so rheome.graphfilterbank widths is NaN for it)
 %   .Hb               the helmholtzbands struct (unfiltered potentials, band energies)
 %
 % See also: rheome.differential.helmholtzbands, rheome.flow.smoothness, rheome.graphfilterbank
@@ -41,14 +43,12 @@ function B = bandlimit(J, S, lbo, opts)
     end
     Hb = rheome.differential.helmholtzbands(J, S, lbo, Voices=opts.Voices);
     lam = lbo.Lambda(:);  P = lbo.Phi;
-    gfb = rheome.graphfilterbank(lam, 'Wavelet', 'logitersine', 'VoicesPerOctave', opts.Voices);
     keep = Hb.wavelengthMM >= opts.CutoffMM;
     if ~any(keep)
         error('flow:bandlimit:cutoff', 'no bank member has a wavelength >= %g mm (coarsest %.0f mm)', ...
               opts.CutoffMM, max(Hb.wavelengthMM));
     end
     h = sqrt(sum(Hb.G(:, keep).^2, 2));
-    w = 1e3 * widths(gfb);
     B.Phi = P * (h .* Hb.cPhi);   B.Psi = P * (h .* Hb.cPsi);
     B.Div = P * (-lam .* h .* Hb.cPhi);   B.Curl = P * (-lam .* h .* Hb.cPsi);
     fg = rheome.operators.face_gradient(S.Vertices, S.Faces);  Nf = fg.FaceNormal;
@@ -57,7 +57,7 @@ function B = bandlimit(J, S, lbo, opts)
     B.J = zeros(size(J));
     for c = 1:3, B.J(c:3:end, :) = fg.W * (gp{c} + ns{c}); end
     B.h = h;  B.cutoffMM = opts.CutoffMM;  B.keptWavelengthMM = Hb.wavelengthMM(keep);
-    B.finestSigmaMM = min(w(keep));  B.Hb = Hb;
+    B.finestSigmaMM = sqrt(2) * min(B.keptWavelengthMM) / (2*pi);  B.Hb = Hb;
 end
 
 % Author: Diellor Basha, 2026
