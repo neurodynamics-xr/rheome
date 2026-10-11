@@ -1,0 +1,119 @@
+function out = upstreamshare(Z, g, A, opts)
+% FLOW.UPSTREAMSHARE  Share of travel that runs UP a cortical gradient, read on the lags between adjacent tiles.
+%
+%   out = rheome.flow.upstreamshare(Z, g, A)
+%   out = rheome.flow.upstreamshare(Z, g, A, Normals=nbar, Mask=own >= 0.25)
+%
+%   Z  = cat(2, ...) of rheome.geom.tilemean of each ambient component of the ANALYTIC band-limited current:
+%        [nTile x 3 x nT] complex (the quaternion field (0, J) pooled per tile), or [nTile x nT] complex scalar
+%   g  = rheome.geom.tilemean(G, gradientMap, areas): [nTile x 1] the gradient's value per tile
+%   A  = rheome.geom.tiles(...).A: [nTile x nTile] tile adjacency (> 0 = touching)
+%
+% U is the weighted share of (adjacent tile pair, frame) samples in which the phase LEADS on the low-g tile,
+% i.e. the activity travels from low g to high g. With g the principal functional gradient (low = sensory,
+% high = association) that is "upstream" in the sense of Liu et al. 2026 (sensory -> association). 0.5 = no
+% preference; 1 = all travel runs up the gradient.
+%
+% 1. TILE PHASE (the whole tilted moment, no tangent/normal split). Per tile, the axis u_k is the leading
+%    eigenvector of real(sum_t Z_k Z_k'), the direction the tile's net current oscillates along over the
+%    recording; its sign is fixed so u_k . Normals(k,:) >= 0 (the tile's mean outward normal), which ties the
+%    polarity to anatomy identically in every participant. s_k(t) = u_k' Z_k(t), phase arg s_k.
+%    out.linearity = lambda1 / trace says how well one axis describes the tile (1 = linear, 1/3 = isotropic).
+% 2. EDGES. Every touching pair of unmasked tiles with g_k ~= g_l, oriented so g_l > g_k.
+% 3. LAG. dphi_e(t) = angle(s_k conj(s_l)) in (-pi, pi]; > 0 means k leads l: travel k -> l, up the gradient.
+%    For a wave exp(i(w t - kappa x)) the upstream position has the larger phase.
+% 4. WEIGHT. w_e(t) = (g_l - g_k) |s_k(t)| |s_l(t)|: pairs along the gradient count more than pairs across
+%    it, and frames with amplitude on both tiles count more than noise frames.
+% 5. U = sum w [dphi > 0] / sum w, with dphi exactly 0 or pi counted one half (no direction).
+%
+% ⚠ THE LAG IS AMBIGUOUS PAST HALF A CYCLE. Between tile centres d apart, travel slower than 2 d f reads
+%   backwards (aliasing): at d = 120 mm that is 1.9 m/s at 8 Hz and 0.24 m/s at 1 Hz. Zero-lag mixing from the
+%   point spread pulls U towards 0.5, it does not bias it; LAGGED generators that do not travel can bias it,
+%   which is why the readout is reported against a lagged-source surrogate read with this same function.
+% ⚠ POLARITY. A tile whose net moment is nearly tangential has a weak normal anchor (|Normals(k,:)| small);
+%   flipping one tile's axis inverts its edges' votes. The convention is the same for the surrogate, so the
+%   difference U - U_surrogate does not carry it; it costs sensitivity, not bias.
+% ⚠ MASK, NEVER DIVIDE. Pass Mask = own-tile fraction >= 0.25 (rheome.flow.crosstalk on the tile membership):
+%   a tile whose reading comes mostly from elsewhere casts no vote. Its weight is reported in out.keptWeight.
+%
+% ⭐ THE PARTICIPANT READOUT (version 1), from sensors to one number per recording. Steps 1-5 above are this
+%   function; the rest fixes its inputs so that every recording is read the same way.
+%   a. SPAN. The clean span of the recording (rheome.scale.cleanspan); at least 180 s, else the recording is not
+%      read. Split-half reliability uses its first and second halves, each through a-f on its own.
+%   b. PERIODIC PART. Per channel, a Welch PSD of the span (8 s Hann, 50%), the aperiodic background with a knee
+%      fitted on 1-45 Hz without 60/120 +- 2 Hz (rheome.spectral.decompose, fitPower = that PSD), and the periodic
+%      gain hper applied to the span's FFT. The ANALYTIC slow band is the inverse FFT of 2 hper C on the bins in
+%      [1 8] Hz (positive frequencies only), resampled to 50 frames per second. The same fit gives the aperiodic
+%      exponent and offset, and the band SNR (periodic / aperiodic power in 1-8 Hz, channel mean, dB).
+%   c. FIELD. The unconstrained minimum-norm current of that analytic sensor signal (K H(b) = H(K b)), all three
+%      components: the quaternion reading (0, J), with no tangent/normal split.
+%   d. SCALE. Tiles of rheome.geom.tree at DEPTH 3 on each hemisphere (8 per hemisphere; equivalent-disc
+%      diameters 113-149 mm, median 125-135 mm, measured on two subjects): the finest level whose every tile is
+%      >= 10 cm. Fixed for every recording, never chosen per recording (it would then follow the resolution).
+%      Z = the area-weighted tile mean of each component (rheome.geom.tilemean); Normals = the tile mean of the
+%      outward vertex normals.
+%   e. GRADIENT. g = the tile mean of the principal functional gradient (Margulies et al. 2016, gradient 1,
+%      normative map), resampled to the recording's cortex by its spherical registration, signed so that the
+%      tiles holding the primary visual and somatomotor cortex are low and those holding the angular gyrus
+%      and medial prefrontal cortex are high.
+%   f. RESOLUTION. Mask = own-tile fraction >= 0.25 (rheome.flow.crosstalk with the depth-3 membership, on the
+%      same kernel). Called once per hemisphere; a recording with out.keptWeight < 0.5 in either hemisphere is
+%      not read. U = sum_h U_h weight_h / sum_h weight_h, the share pooled over both hemispheres. The point-spread r50
+%      (rheome.inverse.resolution) is reported with U, as a covariate, never as a divisor.
+%   COMPARATOR (pattern motion). Horn-Schunck optical flow (rheome.flow.apparent, Alpha 1) of the slow-band
+%   envelope |J| from b-c, per vertex; U_of = the share of sum |v| |grad g| a over vertices and frames with
+%   v . grad g > 0. It answers a different question (how the amplitude pattern moves) and is reported, never
+%   pooled with U.
+%
+% NAME-VALUE
+%   Normals  [nTile x 3] tile mean outward normals (default: none; the axis sign is then arbitrary --
+%            acceptable only for a scalar Z or a test)
+%   Mask     [nTile x 1] logical, tiles allowed to vote (default all)
+%
+% OUTPUT out: .U  .weight (sum w)  .keptWeight (sum |g_l - g_k| over kept edges / over all touching edges)
+%             .edges [nE x 2] (k, l) with g_l > g_k   .Ue [nE x 1] per-edge share   .we [nE x 1] per-edge weight
+%             .axis [nTile x 3]  .linearity [nTile x 1]  .phase [nTile x nT]
+%
+% See also: rheome.geom.tiles, rheome.geom.tilemean, rheome.flow.crosstalk, rheome.flow.apparent,
+%           rheome.spectral.decompose
+%
+% Author: Diellor Basha, 2026
+
+    arguments
+        Z {mustBeNumeric}
+        g (:,1) double
+        A
+        opts.Normals double = []
+        opts.Mask (:,1) logical = true(numel(g), 1)
+    end
+    nTile = numel(g);
+    if ismatrix(Z), Z = reshape(Z, nTile, 1, []); end
+    assert(size(Z, 1) == nTile, 'flow:upstreamshare:size', 'Z has %d tiles, g has %d.', size(Z, 1), nTile);
+    nT = size(Z, 3);  nC = size(Z, 2);
+
+    U3 = zeros(nTile, nC);  lin = ones(nTile, 1);  s = zeros(nTile, nT);
+    for k = 1:nTile
+        Zk = reshape(Z(k, :, :), nC, nT);
+        if nC > 1
+            [V, D] = eig(real(Zk * Zk'));  [d, i] = sort(diag(D), 'descend');
+            u = V(:, i(1));  lin(k) = d(1) / max(sum(d), eps);
+            if ~isempty(opts.Normals) && u' * opts.Normals(k, :)' < 0, u = -u; end
+        else
+            u = 1;
+        end
+        U3(k, 1:nC) = u';  s(k, :) = u.' * Zk;
+    end
+
+    [k, l] = find(triu(A > 0, 1));
+    flip = g(k) > g(l);  [k(flip), l(flip)] = deal(l(flip), k(flip));
+    cand = g(l) ~= g(k);  dgAll = sum(g(l(cand)) - g(k(cand)));
+    keep = cand & opts.Mask(k) & opts.Mask(l);  k = k(keep);  l = l(keep);
+
+    dphi = angle(s(k, :) .* conj(s(l, :)));                         % > 0: k leads, travel k -> l (up g)
+    vote = double(dphi > 0) + 0.5 * (dphi == 0 | abs(dphi) == pi);
+    w = (g(l) - g(k)) .* abs(s(k, :)) .* abs(s(l, :));
+    we = sum(w, 2);
+    out = struct('U', sum(w .* vote, 'all') / sum(w, 'all'), 'weight', sum(w, 'all'), ...
+        'keptWeight', sum(g(l) - g(k)) / max(dgAll, eps), 'edges', [k l], ...
+        'Ue', sum(w .* vote, 2) ./ we, 'we', we, 'axis', U3, 'linearity', lin, 'phase', angle(s));
+end
