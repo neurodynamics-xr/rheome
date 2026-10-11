@@ -42,7 +42,7 @@ function R = run(name, opts)
 %                     sigma x speed x signal) the on-patch Viterbi rate against the held-out null, the split's
 %                     reduction, band-map errors and along-path speed; opt-in, not in the "ported" default
 %   slowosc.csv, slowosc_events.csv   MS1 G15, G16 (P7, nsp cf-slowosc): rheome.scale.measure_slowosc -- sleep
-%                     slow oscillations per event x hemisphere x condition (original, reversed, surrogate) x
+%                     slow oscillations per event x hemisphere x condition (original, reversed, surrogate, lagged) x
 %                     estimator (framework, bst_of, phasereg, sensorlatency): direction vs A->P, speed; and the
 %                     detected events. A sleep EEG subject: Modality="EEG", and Edf/Events with ProtoDir (the
 %                     template forward model) to import it (rheome.scale.importeeg); opt-in, not "ported"

@@ -16,9 +16,19 @@ function [T, X, E] = measure_slowosc(name, S, opts)
 %    window (+-(WindowS + PadS)) lies in one recorded segment and in epochs where no analysed channel carries
 %    the release's artefact mark. Up to MaxEvents are drawn with a fixed Seed, BEFORE any direction is
 %    computed, and every estimator reads the same events (G16).
-% 2. PER EVENT, three CONDITIONS on the same window: original; reversed (the window played backwards: every
+% 2. PER EVENT, four CONDITIONS on the same window: original; reversed (the window played backwards: every
 %    direction must flip exactly); surrogate (each channel's window phase-randomised independently, which keeps
-%    each channel's spectrum and destroys the inter-channel lags: no propagation should be found).
+%    each channel's spectrum and destroys the inter-channel lags: no propagation should be found); lagged (the
+%    lagged-source null, rheome.forward.laggedpair: the frontal and the posterior generator that best explain this
+%    event -- each one GenDepth tile of normal current per hemisphere, the anterior-third and posterior-third tile
+%    carrying the most reconstructed current in the window, through this participant's own gain; its position
+%    genFrontAPmm/genBackAPmm the energy-weighted mean of its tiles' -- refitted with no travel, the
+%    event's amplitude ratio and lag (|lag| <= MaxLagS), and its own residual phase-randomised as noise). The
+%    lagged null is not expected to read as "no direction": two lagged generators can look A->P. A direction
+%    claim must beat it (rheome.scale.groupslowosc: real minus lagged A->P fraction, paired over participants).
+%    E carries each event's fit (genFrontAPmm, genBackAPmm, fitR2, ratio, lagS) and, with no model, the
+%    posterior/frontal electrode thirds' amplitude ratio and lag in the event (elecRatio, elecLagS) and in its null
+%    (elecRatioLagged, elecLagSLagged): the null must reproduce them.
 % 3. ESTIMATORS (column estimator; one row per event x hemisphere x condition x estimator x param):
 %    framework      the reconstructed normal current (whitened MNE, average reference, read along normals
 %                   smoothed over NormalSigmaMM) -> its graph-wavelet band map at the member nearest BandMM
@@ -62,7 +72,8 @@ function [T, X, E] = measure_slowosc(name, S, opts)
 %
 % OUTPUT
 %   X  per row: event, hemi, condition, estimator, param, angleDeg, apCos, speedMS, R, netMM, sourceAPmm, originAPmm
-%   E  per detected event: sample, nightS, stage, nChannels, negUV, p2pUV, seedChannel, used
+%   E  per detected event: sample, nightS, stage, nChannels, negUV, p2pUV, seedChannel, used, and the lagged
+%      null's columns (NaN for unused events)
 %   T  rheome.scale.rows("slowosc"): detection counts, and per estimator/param x condition x hemi: n, circular
 %      mean angle, resultant, fraction A->P, within-participant V-test (towards 0) u and p, median speed
 %
@@ -94,7 +105,9 @@ function [T, X, E] = measure_slowosc(name, S, opts)
         opts.PatchMM (1,1) double = 40
         opts.PhaseCentres (1,1) double = 300
         opts.Hemis string = ["L" "R"]
-        opts.Conditions string = ["original" "reversed" "surrogate"]
+        opts.Conditions string = ["original" "reversed" "surrogate" "lagged"]
+        opts.GenDepth (1,1) double = 4
+        opts.MaxLagS (1,1) double = 0.3
         opts.Estimators string = ["framework" "bst_of" "phasereg" "sensorlatency"]
     end
     if isempty(S), S = rheome.scale.sensors(name, Modality="EEG"); end
@@ -123,6 +136,11 @@ function [T, X, E] = measure_slowosc(name, S, opts)
     post = opts.PosteriorAxis / norm(opts.PosteriorAxis);  lat = cross(post, opts.UpAxis);  lat = lat / norm(lat);
     C = struct([]);
     for h = opts.Hemis, C = [C, i_hemi(S, h, post, opts)]; end %#ok<AGROW>
+    ap = Loc' * post';  q3 = quantile(ap, [1 2] / 3);  eF = ap < q3(1);  eB = ap > q3(2);   % frontal, posterior thirds
+    % (not halves: under the average reference the two halves' means are exact negatives of each other)
+    for v = ["genFrontAPmm" "genBackAPmm" "fitR2" "ratio" "lagS" "elecRatio" "elecLagS" "elecRatioLagged" "elecLagSLagged"]
+        E.(v) = NaN(height(E), 1);
+    end
     rng(opts.Seed + 1);
     w = round(opts.WindowS * fs);  mid = L + 1;  crop = mid - w : mid + w;
     rows = cell(0, 1);
@@ -133,6 +151,13 @@ function [T, X, E] = measure_slowosc(name, S, opts)
                 case "original",  yl = yl0;
                 case "reversed",  yl = fliplr(yl0);
                 case "surrogate", yl = i_phaserand(yl0);
+                case "lagged"
+                    [Gp, gFront, gAP, gH] = i_generators(C, yl0);
+                    [yl, f] = rheome.forward.laggedpair(yl0, Gp, gFront, fs, MaxLagS=opts.MaxLagS, Group=gH);  e = cand(ii);
+                    E{e, ["genFrontAPmm" "genBackAPmm" "fitR2" "ratio" "lagS"]} = ...
+                        [gAP(f.front) * f.wFront.^2, gAP(f.back) * f.wBack.^2, f.r2, f.ratio, f.lagS];
+                    E{e, ["elecRatio" "elecLagS" "elecRatioLagged" "elecLagSLagged"]} = ...
+                        [i_frontback(yl0(:, crop), eF, eB, fs, opts.MaxLagS), i_frontback(yl(:, crop), eF, eB, fs, opts.MaxLagS)];
             end
             za = hilbert(yl.').';  ys = yl(:, crop);  zs = za(:, crop);
             if any(opts.Estimators == "sensorlatency")
@@ -211,6 +236,28 @@ function ok = i_cleanmask(rec, names, nS)
         bad = ~(a == "none" || a == "n/a") && any(ismember(strtrim(split(a, ",")), names));
         if ~bad, ok(ep.first(k) : min(ep.first(k) + ep.n(k) - 1, nS)) = true; end
     end
+end
+
+function [Gp, front, ap, grp] = i_generators(C, y)
+% the event's candidate generators: per hemisphere, the anterior-third and the posterior-third GenDepth tile carrying
+% the most minimum-norm current over the window. Chosen on the readout's own current, not by the best least-squares
+% fit: frontal and posterior topographies are near-collinear in EEG, and the best fit of free time courses is a
+% cancelling pair that one waveform per generator cannot keep (synthetic, 0.15 s planted: 0.25-0.28 s read; by
+% current, 0.10 s).
+    Gp = [];  front = false(1, 0);  ap = [];  grp = [];
+    for k = 1:numel(C)
+        c = C(k);  en = (c.av .* sum((c.Kn * y).^2, 2))' * c.Pg ./ (c.av' * c.Pg);
+        f = find(c.thirdF);  [~, i] = max(en(f));  b = find(c.thirdB);  [~, j] = max(en(b));
+        Gp = [Gp, c.Gp(:, [f(i) b(j)])];  front = [front, true false];  ap = [ap, c.genAP([f(i) b(j)])];  grp = [grp, k k]; %#ok<AGROW>
+    end
+end
+
+function q = i_frontback(y, eF, eB, fs, maxLagS)
+% the data's own amplitude ratio and lag, no model: posterior over frontal third's mean waveform (rms ratio) and
+% the lag of the posterior one behind the frontal one (peak of their cross-correlation within +-maxLagS)
+    a = mean(y(eF, :), 1);  b = mean(y(eB, :), 1);
+    [xc, lg] = xcorr(b, a, round(maxLagS * fs));  [~, k] = max(abs(xc));
+    q = [rms(b) / rms(a), lg(k) / fs];
 end
 
 function y = i_phaserand(y)
@@ -300,6 +347,13 @@ function c = i_hemi(S, h, post, o)
     c.Sg = struct('Vertices', c.V, 'Faces', F, 'VertNormals', Nl, 'nV', c.nV, 'Hemi', {{(1:c.nV)'}}, ...
                   'HemiLabel', {{char("Cortex " + h)}}, 'Comment', '', 'SurfaceFile', '');
     c.pc = unique(round(linspace(1, c.nV, min(o.PhaseCentres, c.nV))))';
+    if any(o.Conditions == "lagged")                               % candidate generators: GenDepth tiles of normal current
+        Gn = Nl(:,1)' .* S.G(:, 3*gv-2) + Nl(:,2)' .* S.G(:, 3*gv-1) + Nl(:,3)' .* S.G(:, 3*gv);
+        Tg = rheome.geom.tiles(Tr, Sh, o.GenDepth);
+        c.Pg = double(Tg.P);  c.Gp = Gn * (c.Pg .* c.av);  c.genAP = 1e3 * ((Tg.centroid - c.cen) * post')';
+        q = quantile(c.genAP, [1 2] / 3);  c.thirdF = c.genAP < q(1);  c.thirdB = c.genAP > q(2);
+    else, c.Pg = [];  c.Gp = [];  c.genAP = [];  c.thirdF = logical([]);  c.thirdB = logical([]);
+    end
     if any(o.Estimators == "phasereg")
         pr = rheome.flow.phaseregression(zeros(c.nV, 2), c.Sg, Rate=1, Centres=c.pc, RadiusMM=o.PatchMM);  c.nbr = pr.Neighbours;
     else, c.nbr = [];
@@ -310,6 +364,11 @@ end
 function T = i_metrics(X, E, fs, nS)
     T = rheome.scale.rows("slowosc", ["n_detected" "n_used" "density_per_min"], ...
         [height(E) nnz(E.used) height(E) / (nS / fs / 60)], ["events" "events" "1/min"]);
+    if any(isfinite(E.ratio))                                      % the lagged-source null: its fit, and the data it matches
+        v = ["fitR2" "ratio" "lagS" "elecRatio" "elecLagS" "elecRatioLagged" "elecLagSLagged"];
+        T = [T; rheome.scale.rows("slowosc", "lagged_" + v + "_median", median(E{:, v}, 1, 'omitnan'), ...
+            ["1" "1" "s" "1" "s" "1" "s"])];
+    end
     if isempty(X), return, end
     key = unique(X(:, {'estimator','param','condition','hemi'}), 'rows');
     for i = 1:height(key)
