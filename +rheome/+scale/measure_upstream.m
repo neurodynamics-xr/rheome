@@ -191,7 +191,9 @@ function H = i_geometry(name, S, V1, opts)
         sgn = sign(mean(gAll(hi), 'omitnan') - mean(gAll(lo), 'omitnan'));
     end
     for h = ["L" "R"]
-        Hh = H.(h);  g = sgn * (Hh.Pa' * Hh.gv_g);  H.(h).g = g;
+        Hh = H.(h);  has = isfinite(Hh.gv_g);                            % G1 has no value on the medial wall: the
+        g = sgn * (Hh.Pa' * (has .* fillmissing(Hh.gv_g, 'constant', 0)) ./ (Hh.Pa' * has));  H.(h).g = g;   % tile mean of the vertices that have one
+        if any(~isfinite(g)), error('scale:upstream:gradient', '%s: a %s tile has no G1 value', name, h); end
         if opts.SignCheck                                                 % the tile holding most of each region
             [~, tl] = max(Hh.P' * (lo(Hh.gv) .* Hh.a));  [~, th] = max(Hh.P' * (hi(Hh.gv) .* Hh.a));
             H.(h).tilecheck = double(g(tl) < g(th));
@@ -268,6 +270,7 @@ function gg = i_grad(Sh, g)
 % per-vertex surface gradient of g: per-face gradient, area-averaged to the vertices
     fg = rheome.operators.face_gradient(Sh.Vertices, Sh.Faces);
     gg = fg.W * [fg.Gx * g, fg.Gy * g, fg.Gz * g];
+    gg(~isfinite(gg)) = 0;                                                % next to the medial wall (no G1): no weight
 end
 
 function N = i_normals(Sf, gv, Sh)
