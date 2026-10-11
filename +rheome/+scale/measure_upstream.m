@@ -107,7 +107,15 @@ function [T, X] = measure_upstream(name, S, opts)
     for i = 1:size(spans, 1)
         sn = spans{i, 1};  sp = spans{i, 2};  bandName = "";  sfx = "";
         if sn ~= "whole", bandName = sn;  sfx = "_" + sn; end
-        B = i_band(F, fs, sp, CS.mask, V1);
+        try
+            B = i_band(F, fs, sp, CS.mask, V1);
+        catch ME                                                      % no clean Welch segment: this span is not read
+            if ~startsWith(ME.identifier, "scale:cleanwelch:"), rethrow(ME); end
+            X = [X; i_row(sn, "none", "both", NaN, NaN, NaN, 0, 0, string(ME.message))]; %#ok<AGROW>
+            if sn == "whole", T.value(T.metric == "read") = 0; end
+            fprintf('[upstream %s] %s not read: %s\n', name, sn, ME.message);
+            if sn == "whole", return, else, continue, end
+        end
         T = [T; rheome.scale.rows("upstream", ["aperiodic_exponent" "aperiodic_offset" "snr_slow_dB" "aperiodic_ok"], ...
              [B.exponent B.offset B.snr B.ok], ["chi" "log10 PSD" "dB" "flag"], bandName)]; %#ok<AGROW>
         for p = opts.Passes(:)'

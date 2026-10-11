@@ -82,6 +82,20 @@ classdef tUpstreamDriver < matlab.unittest.TestCase
             tc.verifySubstring(char(X.reason), 'clean span');
         end
 
+        function halfWithNoCleanSegmentIsNotRead(tc)
+            % OMEGA sub-CONP0136 (job 64400011_387): artefact blocks every 3 s through the second half leave h2 no
+            % clean Welch segment; that half is recorded as not read and the whole span and h1 are still read
+            f = fullfile(tc.Root, tc.Name, 'study.mat');  copyfile(f, [f '.bak']);  tc.addTeardown(@movefile, [f '.bak'], f);
+            st = load(f);  fs = st.rec.sfreq;  s = std(st.rec.F(:));
+            for t0 = 31:3:48, b = round(t0*fs) + (1:round(0.25*fs));  st.rec.F(:, b) = st.rec.F(:, b) + 50 * s; end
+            save(f, '-struct', 'st');
+            [T, X] = rheome.scale.measure_upstream(tc.Name, [], Passes="periodic", MinSpanS=10, OwnMin=0);
+            tc.verifyEqual(T.value(T.metric == "read"), 1);
+            tc.verifyTrue(all(ismember(["U" "U_h1"], T.metric)));
+            tc.verifyFalse(ismember("U_h2", T.metric));
+            tc.verifySubstring(char(X.reason(X.span == "h2")), 'Welch segments');
+        end
+
         function runWritesUpstreamCsv(tc)
             % through the per-subject driver with the frozen defaults: 60 s is under the 180 s minimum, so the
             % recording is recorded as not read, and the analysis itself succeeds
