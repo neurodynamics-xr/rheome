@@ -45,6 +45,10 @@ function a = analyses(which)
 %                                              and speed per event; framework, bst_of, phasereg, sensor latency;
 %                                              time-reversed, phase-randomised and lagged-source nulls -- run only when asked
 %                                              (nsp cf-slowosc), not "ported"
+%   slowoscplant     SLEEP-1 TP1 gate V        planted A->P / P->A slow-oscillation movers at 1, 2, 5 m/s in the
+%                                              EEG head, on the participant's own N2/N3 background at its median
+%                                              event p2p and at the detection threshold; same estimators and nulls;
+%                                              run only when asked (nsp cf-slowosc-plant), not "ported"
 %   correspondence   MS1 G12 (section 12.2)    DK through the sphere vs raw coordinates; frame vs the shared meridian
 %   atlasevents      MS1 G12 (Fig. 10)         alpha events on the group tiles, depth <= 3, vs phase-randomised surrogates
 %   gaugetensor      MS1 G12 (section 12.3)    alpha orientation tensor per depth-3 group tile in the shared gauge
@@ -62,7 +66,7 @@ function a = analyses(which)
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
            "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
            "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" ...
-           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "correspondence" "atlasevents" "gaugetensor" "connectome" "multimodal" "coefficients"];
+           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "slowoscplant" "correspondence" "atlasevents" "gaugetensor" "connectome" "multimodal" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end

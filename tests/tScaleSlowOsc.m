@@ -110,6 +110,31 @@ classdef tScaleSlowOsc < matlab.unittest.TestCase
             tc.verifyTrue(isfile(fullfile(root, 'group', 'group.csv')));
         end
 
+        function plantedMoversReadInBothDirections(tc)
+            % gate V on the synthetic head: planted A->P and P->A plane waves on the night's own background between
+            % its events. Validated here: the plant table, the levels, and the readings that do hold on this head --
+            % the sensor latency at 0.5 and 5 m/s (and its exact flip on the reversed window), the framework at
+            % 0.5 m/s. NOT asserted: the framework above ~1 m/s, which follows geometry rather than travel (measured,
+            % desk evidence 1a32c6c1), so the plant mode cannot pass a readout that does not hold.
+            d = tc.applyFixture(matlab.unittest.fixtures.TemporaryFolderFixture).Folder;
+            old = getenv('RHEOME_DATA');  setenv('RHEOME_DATA', d);  tc.addTeardown(@setenv, 'RHEOME_DATA', old);
+            scaleSynthSubject(fullfile(d, tc.Name));  tSleep(fullfile(d, tc.Name));
+            S = rheome.scale.sensors(tc.Name, Modality="EEG");
+            [T, X, P] = rheome.scale.measure_slowosc(tc.Name, S, Plant=[0.5 5], PlantsPerCell=2, PadS=0.5, ...
+                PosteriorAxis=[0 -1 0], Estimators=["framework" "sensorlatency"], Conditions=["original" "reversed"], NormalSigmaMM=5);
+            tc.verifyEqual(height(P), 2 * 2 * 2 * 2);                           % speed x direction x level x plants
+            tc.verifyEqual(P.p2pUV(P.level == "threshold"), repmat(140, 8, 1));
+            tc.verifyGreaterThan(P.p2pUV(P.level == "median"), 140);            % the night's events are above threshold
+            tc.verifyTrue(all(isfinite(P.snrDB)));
+            tc.verifyEqual(height(X), height(P) * 2 * 3);                       % framework L, R + sensorlatency
+            v = @(m, pat) T.value(T.metric == m & contains(T.band, pat));
+            tc.verifyEqual(v("frac_correct_sign", "sensorlatency/"), ones(16, 1));            % 2 cond x 2 speed x 2 dir x 2 level
+            tc.verifyLessThan(max(v("median_abs_error_deg", "sensorlatency/")), 5);
+            f = v("frac_correct_sign", "framework/" + wildcardPattern + "/original/" + wildcardPattern + "/0.5ms/");
+            tc.verifyEqual(numel(f), 8);                                        % hemi x direction x level, 2 plants each
+            tc.verifyGreaterThanOrEqual(mean(f), 0.75);                         % 15/16 measured: fragile even at 0.5 m/s
+        end
+
         function vtestMatchesItsDefinition(tc)
             [u, p] = rheome.scale.vtest(zeros(8, 1));
             tc.verifyEqual(u, 4, 'AbsTol', 1e-12);                              % 8 * sqrt(2/8)
