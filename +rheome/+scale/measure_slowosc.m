@@ -3,6 +3,7 @@ function [T, X, E] = measure_slowosc(name, S, opts)
 %
 %   [T, X, E] = rheome.scale.measure_slowosc(name)              % S = rheome.scale.sensors(name, Modality="EEG")
 %   [T, X, E] = rheome.scale.measure_slowosc(name, S, MaxEvents=200, HornSchunck=[0.01 0.1], PosteriorAxis=[-1 0 0])
+%   [T, X, P] = rheome.scale.measure_slowosc(name, S, Plant=[1 2 5])   % gate V: planted movers, section 4
 %
 % Spec: the group-analysis plan, G15 (primary: AnphySleep hd-EEG) and G16.
 % Known propagation: slow oscillations travel predominantly front to back at about 1-7 m/s (Massimini et al.
@@ -60,6 +61,24 @@ function [T, X, E] = measure_slowosc(name, S, opts)
 %                   "both", param 0 (not NaN: findgroups drops NaN keys).
 %    Field estimators (bst_of, phasereg) give one event direction as the weighted circular mean of the per-vertex
 %    directions (weight: amplitude x |velocity|, x the fit's coherence R for phasereg) and their resultant R.
+% 4. GATE V (Plant = speeds in m/s; analysis "slowoscplant"): direction accuracy for movers as fast as slow
+%    oscillations, in this head. The detected events are REPLACED by planted ones: a plane wave of normal current
+%    along PosteriorAxis (A->P and P->A) at each speed, tSleep's SO waveform at PlantHz (0.8 Hz: wavelength
+%    1.25-6.25 m at 1-5 m/s, far above 10 cm), through the same gain, scaled so its largest channel peak-to-peak is
+%    the median p2p of this participant's detected events ("median") or the detection threshold ("threshold"),
+%    added to a window of the participant's own clean N2/N3 EEG at least 2 windows from any detected event. The
+%    same conditions and estimators read it. E is then the plant table (speedMS, dirSign, level, p2pUV, sample,
+%    snrDB, and the lagged columns); T is per estimator x condition x hemi x speed x direction x level the
+%    fraction with the correct A->P sign (no direction = wrong), its one-sided 95% Clopper-Pearson lower bound,
+%    the circular mean and the median absolute direction error. On "lagged" it is how often the no-travel null
+%    still reads the plant's direction: gate N's validation on planted travel.
+%    ⚠ MEASURED LIMITS on the synthetic head (two 80 mm spheres, ~40 dB, 3 plants per cell; desk evidence 1a32c6c1):
+%      framework      right sign at 0.25-0.5 m/s; from 1 m/s on, the same reading whichever way the wave travels
+%                     (the wavelength, 1.25 m+, is ~10x the hemisphere: the band map's extremum moves with geometry)
+%      phasereg       right sign to 2 m/s (error <= 27 deg); at 5 m/s REVERSED (175 deg) in both hemispheres
+%      sensorlatency  right sign at every speed (error ~1 deg), and also on the lagged null: it reads lag, not travel
+%    ⚠ A plane wave is the simplest mover: it says what the head and inverse do to a known direction, not how
+%    real slow oscillations (origin, curvature, bilateral asymmetry) are read.
 % ⭐ DIRECTION IS AN ANGLE IN THE GAUGE, 0 = ANTERIOR -> POSTERIOR. At each vertex the velocity and the
 %   PosteriorAxis are projected on the tangent plane and expressed in the hemisphere's trivial gauge
 %   (rheome.operators.gauge, +1 at the two faces of largest separation: the MS1 gauge); angleDeg is the velocity's
@@ -109,6 +128,10 @@ function [T, X, E] = measure_slowosc(name, S, opts)
         opts.GenDepth (1,1) double = 4
         opts.MaxLagS (1,1) double = 0.3
         opts.Estimators string = ["framework" "bst_of" "phasereg" "sensorlatency"]
+        opts.Plant double = []                  % gate V: planted speeds (m/s); replaces the detected events
+        opts.PlantsPerCell (1,1) double {mustBeInteger, mustBePositive} = 10
+        opts.PlantLevels string {mustBeMember(opts.PlantLevels, ["median" "threshold"])} = ["median" "threshold"]
+        opts.PlantHz (1,1) double = 0.8
     end
     if isempty(S), S = rheome.scale.sensors(name, Modality="EEG"); end
     st = rheome.load.study(name);  rec = st.rec;  fs = rec.sfreq;
@@ -126,6 +149,7 @@ function [T, X, E] = measure_slowosc(name, S, opts)
     cand = find(fit);  rng(opts.Seed);
     if numel(cand) > opts.MaxEvents, cand = sort(cand(randperm(numel(cand), opts.MaxEvents))); end
     E.used(cand) = true;
+    if ~isempty(opts.Plant), E = i_plants(E, seg, ok, L, opts);  cand = (1:height(E))'; end
     if isfield(rec, 'epochs') && ~isempty(rec.epochs)
         ep = rec.epochs;  [~, ie] = max((E.sample >= ep.first') & (E.sample < (ep.first + ep.n)'), [], 2);
         E.nightS = ep.onsetS(ie) + (E.sample - ep.first(ie)) / fs;  E.stage = ep.stage(ie);
@@ -146,6 +170,7 @@ function [T, X, E] = measure_slowosc(name, S, opts)
     rows = cell(0, 1);
     for ii = 1:numel(cand)
         t = E.sample(cand(ii));  yl0 = Y(:, t-L : t+L);
+        if ~isempty(opts.Plant), [yl0, E.snrDB(cand(ii))] = i_plantwin(yl0, E(cand(ii), :), C, fs, L, opts); end
         for cnd = opts.Conditions
             switch cnd
                 case "original",  yl = yl0;
@@ -196,7 +221,71 @@ function [T, X, E] = measure_slowosc(name, S, opts)
     end
     X = vertcat(rows{:});
     if isempty(X), X = i_row(0, "", "", "", NaN, struct()); X(1, :) = []; end
-    T = i_metrics(X, E, fs, size(Y, 2));
+    if isempty(opts.Plant), T = i_metrics(X, E, fs, size(Y, 2)); else, T = i_plantmetrics(X, E); end
+end
+
+%% ---------- gate V: planted movers
+function P = i_plants(E, seg, ok, L, o)
+% speed x direction (+1 A->P, -1 P->A) x amplitude level x PlantsPerCell plants, each on a background window of the
+% participant's own clean N2/N3 EEG at least 2L from every detected event (no real slow oscillation under a plant).
+% Level "median": the plant's largest channel peak-to-peak is the median p2p of this participant's detected events;
+% "threshold": Massimini's P2PUV, the weakest event the detector keeps.
+    v = false(size(ok));
+    for k = 1:size(seg, 1), v(seg(k,1)+L : seg(k,2)-L) = true; end
+    v = v & movmin(double(ok), 2*L + 1) == 1;
+    for s = E.sample', v(max(1, s-2*L) : min(end, s+2*L)) = false; end
+    bg = find(v);
+    assert(~isempty(bg), 'rheome:slowosc:nobackground', 'no clean N2/N3 window of %d samples free of slow oscillations', 2*L + 1);
+    amp = dictionary(["median" "threshold"], [median(E.p2pUV) o.P2PUV]);
+    assert(isfinite(amp("median")) || ~any(o.PlantLevels == "median"), 'rheome:slowosc:noevents', ...
+        'level "median" needs detected events');
+    [sp, dr, lv, ~] = ndgrid(o.Plant, [1 -1], 1:numel(o.PlantLevels), 1:o.PlantsPerCell);
+    n = numel(sp);  lvl = reshape(o.PlantLevels(lv(:)), [], 1);  t0 = reshape(bg(randi(numel(bg), n, 1)), [], 1);
+    P = table((1:n)', sp(:), dr(:), lvl, amp(lvl), t0, NaN(n, 1), true(n, 1), ...
+        'VariableNames', {'plant','speedMS','dirSign','level','p2pUV','sample','snrDB','used'});
+end
+
+function [y, snr] = i_plantwin(bg, p, C, fs, L, o)
+% one planted slow oscillation (tSleep's waveform at PlantHz): a plane wave of normal current along the posterior
+% axis at p.speedMS in direction p.dirSign, its trough crossing the cortex's centre at the window's centre, through
+% the same gain, scaled so its largest channel peak-to-peak is p.p2pUV, added to the background window bg.
+% snr: plant power over background power in the read window (+-WindowS), all channels (dB)
+    tt = (-L:L) / fs;  w = @(tau) -cos(2*pi*o.PlantHz*tau) .* exp(-tau.^2 / (2 * 0.5^2));
+    cen = mean(vertcat(C.cen), 1);  s = 0;
+    for c = C, s = s + c.Gn * w(tt - p.dirSign * ((c.V - cen) * c.post') / p.speedMS); end
+    s = s * p.p2pUV / max(max(s, [], 2) - min(s, [], 2));
+    k = L + 1 + (-round(o.WindowS * fs) : round(o.WindowS * fs));
+    y = bg + s;  snr = 10 * log10(sum(s(:, k).^2, 'all') / sum(bg(:, k).^2, 'all'));
+end
+
+function T = i_plantmetrics(X, P)
+% per estimator/param x condition x hemi x speed x direction x level. The expected sign is the planted direction
+% (reversed: its opposite; lagged: the planted one, so frac_correct_sign there is how often the no-travel null
+% still reads the plant's direction). An event with no direction (NaN) counts as WRONG in frac_correct_sign.
+%   frac_correct_sign, correct_lo (one-sided 95% Clopper-Pearson lower bound), mean_error_deg (circular mean of
+%   the signed error), median_abs_error_deg (finite events), frac_no_direction, median_snr_db
+    X = [X, renamevars(P(X.event, {'speedMS','dirSign','level','snrDB'}), 'speedMS', 'plantMS')];   % X.speedMS is the read one
+    T = rheome.scale.rows("slowoscplant", ["n_plants" "p2p_median_uV" "p2p_threshold_uV"], ...
+        [height(P) max([P.p2pUV(P.level == "median"); NaN]) max([P.p2pUV(P.level == "threshold"); NaN])], ["events" "uV" "uV"]);
+    key = unique(X(:, {'estimator','param','condition','hemi','plantMS','dirSign','level'}), 'rows');
+    for i = 1:height(key)
+        q = key(i, :);
+        m = X.estimator == q.estimator & X.condition == q.condition & X.hemi == q.hemi & X.plantMS == q.plantMS & ...
+            X.dirSign == q.dirSign & X.level == q.level & (X.param == q.param | (isnan(X.param) & isnan(q.param)));
+        ex = q.dirSign * (1 - 2 * (q.condition == "reversed"));
+        er = mod(X.angleDeg(m) - 90 * (1 - ex) + 180, 360) - 180;  n = nnz(m);  k = nnz(ex * X.apCos(m) > 0);
+        f = isfinite(er);  d = "PA";  if q.dirSign > 0, d = "AP"; end
+        b = q.estimator + "/" + string(q.param) + "/" + q.condition + "/" + q.hemi + "/" + q.plantMS + "ms/" + d + "/" + q.level;
+        T = [T; rheome.scale.rows("slowoscplant", ["n" "frac_correct_sign" "correct_lo" "mean_error_deg" ...
+            "median_abs_error_deg" "frac_no_direction" "median_snr_db"], ...
+            [n k/n i_cplo(k, n) rad2deg(angle(mean(exp(1i * deg2rad(er(f)))))) median(abs(er(f))) mean(~f) ...
+             median(X.snrDB(m))], ["events" "fraction" "fraction" "deg" "deg" "fraction" "dB"], b)]; %#ok<AGROW>
+    end
+end
+
+function p = i_cplo(k, n)
+% one-sided 95% Clopper-Pearson lower bound of k successes in n
+    if k == 0, p = 0; else, p = betainv(0.05, k, n - k + 1); end
 end
 
 %% ---------- detection
@@ -347,8 +436,8 @@ function c = i_hemi(S, h, post, o)
     c.Sg = struct('Vertices', c.V, 'Faces', F, 'VertNormals', Nl, 'nV', c.nV, 'Hemi', {{(1:c.nV)'}}, ...
                   'HemiLabel', {{char("Cortex " + h)}}, 'Comment', '', 'SurfaceFile', '');
     c.pc = unique(round(linspace(1, c.nV, min(o.PhaseCentres, c.nV))))';
+    Gn = Nl(:,1)' .* S.G(:, 3*gv-2) + Nl(:,2)' .* S.G(:, 3*gv-1) + Nl(:,3)' .* S.G(:, 3*gv);  c.Gn = Gn;   % normal current -> sensors
     if any(o.Conditions == "lagged")                               % candidate generators: GenDepth tiles of normal current
-        Gn = Nl(:,1)' .* S.G(:, 3*gv-2) + Nl(:,2)' .* S.G(:, 3*gv-1) + Nl(:,3)' .* S.G(:, 3*gv);
         Tg = rheome.geom.tiles(Tr, Sh, o.GenDepth);
         c.Pg = double(Tg.P);  c.Gp = Gn * (c.Pg .* c.av);  c.genAP = 1e3 * ((Tg.centroid - c.cen) * post')';
         q = quantile(c.genAP, [1 2] / 3);  c.thirdF = c.genAP < q(1);  c.thirdB = c.genAP > q(2);

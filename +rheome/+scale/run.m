@@ -46,6 +46,8 @@ function R = run(name, opts)
 %                     estimator (framework, bst_of, phasereg, sensorlatency): direction vs A->P, speed; and the
 %                     detected events. A sleep EEG subject: Modality="EEG", and Edf/Events with ProtoDir (the
 %                     template forward model) to import it (rheome.scale.importeeg); opt-in, not "ported"
+%   slowoscplant.csv, slowoscplant_plants.csv   SLEEP-1 gate V (nsp cf-slowosc-plant): the same reading of planted
+%                     A->P / P->A movers at 1, 2, 5 m/s on the subject's own N2/N3 background (measure_slowosc, Plant)
 %   correspondence.csv, atlasevents.csv, gaugetensor.csv, connectome.csv   MS1 G12 (P8, nsp cf-atlas):
 %                     rheome.scale.measure_atlas -- DK agreement through the sphere vs raw coordinates and the
 %                     frame vs the shared meridian; alpha atlas events at depth <= 3 vs phase-randomised
@@ -197,6 +199,9 @@ function R = run(name, opts)
                     [Ta, X.aperiodic] = rheome.scale.measure_aperiodic(name, S);  M = [M; Ta]; %#ok<AGROW>
                 case "slowosc"                 % MS1 G15, G16: sleep slow oscillations, the positive control
                     [Tq, X.slowosc, X.slowosc_events] = rheome.scale.measure_slowosc(name, S);  M = [M; Tq]; %#ok<AGROW>
+                case "slowoscplant"            % SLEEP-1 gate V: planted A->P / P->A movers at 1, 2, 5 m/s, same readout
+                    [Tq, X.slowoscplant, X.slowoscplant_plants] = rheome.scale.measure_slowosc(name, S, Plant=[1 2 5]);
+                    M = [M; Tq]; %#ok<AGROW>
                 case {"correspondence" "atlasevents" "gaugetensor" "connectome"}   % MS1 G12 (P8, nsp cf-atlas)
                     [Ta, X.(a)] = rheome.scale.measure_atlas(name, S, a);  M = [M; Ta]; %#ok<AGROW>
                 case "multimodal"              % MS1 multimodal example: MEG + PET + fibres on one ladder
