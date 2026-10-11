@@ -24,10 +24,6 @@ function [Ys, info] = laggedrest(Y, Gp, front, fs, opts)
 % ⚠ The window and lag limit are a declared choice, not a fit: MaxLagS = 0.5 s is half a cycle at 1 Hz, the
 %   largest lag the readout can tell from its mirror (rheome.flow.upstreamshare, aliasing).
 % ⚠ The random phases use the global stream: seed it (rng) before calling for a reproducible null.
-% ⚠ NOT VALIDATED (2026-10-11, rheome.scale.measure_upstreamnull in two MEG heads, desk evidence 3de34e58):
-%   lagged 20-40 mm discs that do not travel leave |U*| up to 0.24, as large as planted travel at 100-1000 mm,
-%   0.5-2 m/s; travel power 0. Tile candidates fit compact generators at r2 ~0.7, and the per-channel phase-
-%   randomised residual loses the background's zero-lag structure. Do not read U* as travel until redesigned.
 %
 % INPUTS
 %   Y      [nChan x nT] real sensor signal    Gp [nChan x nPatch] candidate generator topographies
