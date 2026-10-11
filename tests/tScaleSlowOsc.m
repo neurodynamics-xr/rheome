@@ -30,12 +30,14 @@ classdef tScaleSlowOsc < matlab.unittest.TestCase
             b = tc.bst();
             if strlength(b) > 0, setenv('RHEOME_BRAINSTORM', b); est(end+1) = "bst_of"; end
             S = rheome.scale.sensors(tc.Name, Modality="EEG");
+            % MinLatencyChannels=3: on this toy head (40 channels, two 40 mm spheres) only a few channels carry a
+            % negative half-wave; the AnphySleep default is 8 of 83.
             [tc.T, tc.X, tc.E] = rheome.scale.measure_slowosc(tc.Name, S, PosteriorAxis=[0 -1 0], Estimators=est, ...
-                HornSchunck=0.01, PatchMM=20, PhaseCentres=60, MaxEvents=12, NormalSigmaMM=5);
+                HornSchunck=0.01, PatchMM=20, PhaseCentres=60, MaxEvents=12, NormalSigmaMM=5, MinLatencyChannels=3);
             tSleep(fullfile(d, tc.Name), LagS=0.15);                              % the same night from two lagged generators
             S = rheome.scale.sensors(tc.Name, Modality="EEG");
             [~, tc.XL, tc.EL] = rheome.scale.measure_slowosc(tc.Name, S, PosteriorAxis=[0 -1 0], Estimators=["framework" "sensorlatency"], ...
-                Conditions=["original" "lagged"], MaxEvents=12, NormalSigmaMM=5);
+                Conditions=["original" "lagged"], MaxEvents=12, NormalSigmaMM=5, MinLatencyChannels=3);
         end
     end
 
@@ -61,7 +63,9 @@ classdef tScaleSlowOsc < matlab.unittest.TestCase
         function everyEstimatorRunsInEveryCondition(tc)
             k = unique(tc.X(:, {'estimator','condition'}), 'rows');
             tc.verifyEqual(height(k), 4 * numel(unique(tc.X.estimator)));
-            tc.verifyTrue(all(isfinite(tc.X.angleDeg(tc.X.estimator ~= "phasereg"))));
+            tc.verifyTrue(all(isfinite(tc.X.angleDeg(~ismember(tc.X.estimator, ["phasereg" "sensorlatency"])))));
+            sl = tc.X.estimator == "sensorlatency";                             % no carrying channels -> no direction
+            tc.verifyTrue(all(isfinite(tc.X.angleDeg(sl & tc.X.condition ~= "surrogate"))));
             tc.verifyTrue(all(isfinite(tc.X.sourceAPmm(tc.X.estimator == "framework" & tc.X.condition == "original"))));
             tc.verifyTrue(any(tc.T.metric == "vtest_p"));
         end
@@ -77,9 +81,10 @@ classdef tScaleSlowOsc < matlab.unittest.TestCase
             tc.verifyGreaterThan(median(e.lagS), 0.07);                         % 0.15 planted; 0.10 read (EEG blur
             tc.verifyLessThan(median(e.lagS), 0.2);                             % pulls the back tile forward)
             tc.verifyGreaterThan(median(e.fitR2), 0.85);
-            ap = @(c) mean(tc.XL.apCos(tc.XL.estimator == "sensorlatency" & tc.XL.condition == c) > 0);
-            tc.verifyGreaterThanOrEqual(ap("lagged"), 0.8);                     % the electrodes see the same front-first lag
-            tc.verifyGreaterThanOrEqual(ap("original"), 0.8);
+            % The sensor latency of the lagged pair is not asserted: on this toy head only the frontal channels carry a
+            % negative half-wave at the event (the posterior generator's channels see it inverted under the average
+            % reference), so their delays span one generator. Before 2026-10-11 it read 1.00 A->P here only because
+            % the posterior channels' minima were pinned to the window's late edge (desk evidence 22c7b277).
         end
 
         function laggedNullKeepsTheElectrodesRatioAndLag(tc)
@@ -121,18 +126,41 @@ classdef tScaleSlowOsc < matlab.unittest.TestCase
             scaleSynthSubject(fullfile(d, tc.Name));  tSleep(fullfile(d, tc.Name));
             S = rheome.scale.sensors(tc.Name, Modality="EEG");
             [T, X, P] = rheome.scale.measure_slowosc(tc.Name, S, Plant=[0.5 5], PlantsPerCell=2, PadS=0.5, ...
-                PosteriorAxis=[0 -1 0], Estimators=["framework" "sensorlatency"], Conditions=["original" "reversed"], NormalSigmaMM=5);
+                PosteriorAxis=[0 -1 0], Estimators=["framework" "sensorlatency"], Conditions=["original" "reversed"], NormalSigmaMM=5, MinLatencyChannels=3);
             tc.verifyEqual(height(P), 2 * 2 * 2 * 2);                           % speed x direction x level x plants
             tc.verifyEqual(P.p2pUV(P.level == "threshold"), repmat(140, 8, 1));
             tc.verifyGreaterThan(P.p2pUV(P.level == "median"), 140);            % the night's events are above threshold
             tc.verifyTrue(all(isfinite(P.snrDB)));
             tc.verifyEqual(height(X), height(P) * 2 * 3);                       % framework L, R + sensorlatency
             v = @(m, pat) T.value(T.metric == m & contains(T.band, pat));
-            tc.verifyEqual(v("frac_correct_sign", "sensorlatency/"), ones(16, 1));            % 2 cond x 2 speed x 2 dir x 2 level
+            % sensorlatency is never wrong (2 cond x 2 speed x 2 dir x 2 level); on this toy head half the plants have
+            % too few carrying channels and no direction (0.50 measured). In the AnphySleep head every plane-wave plant
+            % at 1-5 m/s reads the right sign within 9 deg (desk evidence 22c7b277).
+            tc.verifyEqual(v("frac_correct_sign", "sensorlatency/") + v("frac_no_direction", "sensorlatency/"), ones(16, 1), 'AbsTol', 1e-12);
+            tc.verifyLessThanOrEqual(mean(v("frac_no_direction", "sensorlatency/")), 0.5);
             tc.verifyLessThan(max(v("median_abs_error_deg", "sensorlatency/")), 5);
             f = v("frac_correct_sign", "framework/" + wildcardPattern + "/original/" + wildcardPattern + "/0.5ms/");
             tc.verifyEqual(numel(f), 8);                                        % hemi x direction x level, 2 plants each
             tc.verifyGreaterThanOrEqual(mean(f), 0.75);                         % 15/16 measured: fragile even at 0.5 m/s
+        end
+
+        function plantRegionConfinesThePlant(tc)
+            % PlantRegion (realistic extent, e.g. the medial wall and cingulate): the plant lives on the matching
+            % atlas parcels only, so the same plants on the same background differ from the whole-cortex ones; a
+            % region no parcel matches is an error, not a silent whole-cortex plant.
+            d = tc.applyFixture(matlab.unittest.fixtures.TemporaryFolderFixture).Folder;
+            old = getenv('RHEOME_DATA');  setenv('RHEOME_DATA', d);  tc.addTeardown(@setenv, 'RHEOME_DATA', old);
+            scaleSynthSubject(fullfile(d, tc.Name));  tSleep(fullfile(d, tc.Name));
+            S = rheome.scale.sensors(tc.Name, Modality="EEG");
+            a = {S, 'Plant', 2, 'PlantsPerCell', 1, 'PlantLevels', "median", 'PadS', 0.5, 'PosteriorAxis', [0 -1 0], ...
+                'Estimators', "sensorlatency", 'Conditions', "original", 'NormalSigmaMM', 5};
+            [~, ~, Pw] = rheome.scale.measure_slowosc(tc.Name, a{:});
+            [~, Xr, Pr] = rheome.scale.measure_slowosc(tc.Name, a{:}, 'PlantRegion', "a");   % upper half of each hemisphere
+            tc.verifyEqual(Pr.sample, Pw.sample);                               % same background windows
+            tc.verifyGreaterThan(max(abs(Pr.snrDB - Pw.snrDB)), 0.1);           % a different plant on them
+            tc.verifyTrue(all(isfinite(Xr.angleDeg)));
+            tc.verifyError(@() rheome.scale.measure_slowosc(tc.Name, a{:}, 'PlantRegion', "nosuchparcel"), ...
+                'rheome:slowosc:plantregion');
         end
 
         function vtestMatchesItsDefinition(tc)
