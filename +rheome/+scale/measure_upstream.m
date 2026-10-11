@@ -4,6 +4,7 @@ function [T, X] = measure_upstream(name, S, opts)
 %   [T, X] = rheome.scale.measure_upstream(name)
 %   [T, X] = rheome.scale.measure_upstream(name, rheome.scale.sensors(name), Gradient='/path/g1_fsaverage.mat')
 %   [T, X] = rheome.scale.measure_upstream(name, S, Passes=["periodic" "surrogate" "total"])
+%   [T, X] = rheome.scale.measure_upstream(name, S, Data=Fplanted)    % a planted copy of the S.iSel rows
 %
 % Why: whether large-scale slow-band activity at rest runs up the sensory -> association gradient, and whether
 % that survives the instrument, is read per participant by ONE frozen definition: rheome.flow.upstreamshare,
@@ -77,11 +78,16 @@ function [T, X] = measure_upstream(name, S, opts)
         opts.Seed (1,1) double = 1
         opts.OfChunk (1,1) double {mustBeInteger, mustBePositive} = 500
         opts.OwnMin (1,1) double = 0.25     % v1: 0.25; lower it only on a toy head (tests)
+        opts.Data double = []               % [nSel x nT] read instead of the recording's S.iSel rows (planted copies)
     end
     V1 = struct('Depth', 3, 'Band', [1 8], 'Rate', 50, 'FitRange', [1 45], 'LineHz', 60, 'SegS', 8, ...
                 'OwnMin', opts.OwnMin, 'KeptMin', 0.5, 'EdgeS', 10, 'WindowS', 4, 'MaxLagS', 0.5, 'OfAlpha', 1);   % readout v1, frozen
     if isempty(S), S = rheome.scale.sensors(name); end
     st = rheome.load.study(name);  fs = st.rec.sfreq;  F = double(st.rec.F(S.iSel, :));  clear st
+    if ~isempty(opts.Data)
+        assert(isequal(size(opts.Data), size(F)), 'scale:upstream:data', 'Data must be [%d x %d], the recording''s selected rows', size(F, 1), size(F, 2));
+        F = opts.Data;
+    end
     CS = rheome.scale.cleanspan(F, fs, EdgeS=V1.EdgeS);
     spanS = (CS.last - CS.first + 1) / fs;
     H = i_geometry(name, S, V1, opts);
