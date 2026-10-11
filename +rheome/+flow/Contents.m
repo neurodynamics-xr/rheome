@@ -34,6 +34,10 @@
 %   bstopticalflow  - Brainstorm's own bst_opticalflow on |X|, called from a Brainstorm checkout (GPL, not copied)
 %   phaseregression - circular-linear regression of phase on geodesic distance within a patch
 %
+% Direction relative to a cortical gradient, at tiles >= 10 cm:
+%   upstreamshare   - share of tile-to-tile lags that run up a gradient (sensory -> association), with the
+%                     participant readout it belongs to (periodic slow band, depth-3 tiles, crosstalk mask)
+%
 % A rotating current can sit inside a stationary envelope (curl J large, curl v zero) and a
 % travelling bump can be irrotational everywhere (curl J zero, div v large). MEASURED on one
 % resting alpha tile: the spatial correlation of |curl v| with |curl J| is -0.11, i.e. they are

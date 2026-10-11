@@ -24,5 +24,7 @@
 %                          background, and solve for the detection threshold in nAm
 %   rheome.forward.dirac        - project an unconstrained leadfield onto the Dirac modes (ANALYSIS)
 %   rheome.forward.reconstruct  - map Dirac mode coefficients back to per-vertex 3-vectors
+%   rheome.forward.laggedpair   - the lagged-source null of one event: two fixed generators with its amplitude
+%                          ratio and lag, no travel, through the same head with its own noise
 %
 % Author: Diellor Basha, 2026

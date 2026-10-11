@@ -78,7 +78,7 @@ function out = dirac(studyDir, cortexFile, dataName, K, measure)
     end
 
     % --- select good MEG channels (consistent across leadfield / data / noisecov) ---
-    isMEG = strcmpi(chan.Type, 'MEG');
+    isMEG = rheome.sensors.ismeg(chan.Type);
     iSel  = find(isMEG(:) & (rec.ChannelFlag(:) == 1));
     Gain  = hm.Gain(iSel, :);
     F     = []; if ~isempty(rec.F), F = rec.F(iSel, :); end   % empty for raw/kernel-only studies

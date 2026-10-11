@@ -18,8 +18,12 @@ function [G, P] = groupslowosc(inDir, outDir, opts)
 %                 whose median speed lies in SpeedRange (1-7 m/s, Massimini et al. 2004, as the plan quotes it)
 % ⭐ The control passes for an estimator if, on the ORIGINAL events, the V-test rejects at alpha (Holm across
 %   estimators x params is the reader's: the p values are reported raw) AND on the REVERSED events it does not
-%   (the direction must flip), AND on the SURROGATES it does not. Column passes_* states each part; nothing is
-%   pooled across cohorts here (AnphySleep is the only cohort of the primary control).
+%   (the direction must flip), AND on the SURROGATES it does not. Nothing is pooled across cohorts here
+%   (AnphySleep is the only cohort of the primary control).
+% ⭐ THE LAGGED-SOURCE NULL (gate N) is not part of passes: two lagged generators may well read A->P. On the
+%   original rows, lagged_excess is the median over participants of (A->P fraction of the events) minus (that of
+%   their lagged nulls), lagged_p its one-sided Wilcoxon signed-rank p (real > lagged), lagged_n the pairs, and
+%   beats_lagged = lagged_p < Alpha. A direction is a travel claim only where beats_lagged holds.
 %
 % See also: rheome.scale.measure_slowosc, rheome.scale.vtest, rheome.scale.reduce
 %
@@ -45,6 +49,7 @@ function [G, P] = groupslowosc(inDir, outDir, opts)
         z = splitapply(@(a) mean(exp(1i * a(isfinite(a)))), th, gk);
         n = splitapply(@(a) nnz(isfinite(a)), th, gk);
         sp = splitapply(@(s) median(s, 'omitnan'), X.speedMS, gk);
+        key.fracAP = splitapply(@(a) mean(cos(a(isfinite(a))) > 0), th, gk);
         key.subject = repmat(string(sub), height(key), 1);
         key.nEvents = n;  key.meanAngleDeg = rad2deg(angle(z));  key.resultant = abs(z);  key.medianSpeedMS = sp;
         P = [P; key]; %#ok<AGROW>
@@ -71,9 +76,19 @@ function [G, P] = groupslowosc(inDir, outDir, opts)
     G.passes = false(height(G), 1);
     for i = find(G.condition == "original")'
         same = G.estimator == G.estimator(i) & (G.param == G.param(i) | (isnan(G.param) & isnan(G.param(i))));
-        nul = same & G.condition ~= "original";
+        nul = same & G.condition ~= "original" & G.condition ~= "lagged";
         G.passes(i) = G.rejects(i) && ~any(G.rejects(nul));
     end
+    G.lagged_n = zeros(height(G), 1);  G.lagged_excess = NaN(height(G), 1);  G.lagged_p = NaN(height(G), 1);
+    for i = find(G.condition == "original")'
+        same = P.estimator == G.estimator(i) & (P.param == G.param(i) | (isnan(P.param) & isnan(G.param(i))));
+        a = P(same & P.condition == "original", {'subject','fracAP'});  b = P(same & P.condition == "lagged", {'subject','fracAP'});
+        b.Properties.VariableNames{2} = 'fracL';  d = innerjoin(a, b, 'Keys', 'subject');
+        d = d.fracAP - d.fracL;  d = d(isfinite(d));
+        if isempty(d), continue, end
+        G.lagged_n(i) = numel(d);  G.lagged_excess(i) = median(d);  G.lagged_p(i) = signrank(d, 0, 'tail', 'right');
+    end
+    G.beats_lagged = G.lagged_p < opts.Alpha;
     i_write(outDir, G, P);
 end
 

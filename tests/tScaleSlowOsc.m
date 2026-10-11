@@ -3,6 +3,9 @@ classdef tScaleSlowOsc < matlab.unittest.TestCase
 % on the synthetic cached subject, read back by measure_slowosc. The framework must find A->P on the original
 % events and P->A on the reversed ones; the sensor latency (Massimini's reading) likewise; the group statistics
 % must pass the framework and the sensor latency; and the EEG-BIDS reader keeps only the scored N2/N3 epochs.
+% The lagged-source null (gate N, rheome.forward.laggedpair): on the travelling plant the framework separates real
+% from null; on a second plant of two lagged generators that do not travel, the fit reads the planted lag; on both,
+% the null keeps the electrodes' own amplitude ratio and lag.
 % bst_of runs only when a Brainstorm checkout is found (RHEOME_BRAINSTORM, or ../brainstorm3 next to this checkout).
 %
 % Author: Diellor Basha, 2026
@@ -13,6 +16,8 @@ classdef tScaleSlowOsc < matlab.unittest.TestCase
         T
         X
         E
+        XL
+        EL
     end
 
     methods (TestClassSetup)
@@ -27,6 +32,10 @@ classdef tScaleSlowOsc < matlab.unittest.TestCase
             S = rheome.scale.sensors(tc.Name, Modality="EEG");
             [tc.T, tc.X, tc.E] = rheome.scale.measure_slowosc(tc.Name, S, PosteriorAxis=[0 -1 0], Estimators=est, ...
                 HornSchunck=0.01, PatchMM=20, PhaseCentres=60, MaxEvents=12, NormalSigmaMM=5);
+            tSleep(fullfile(d, tc.Name), LagS=0.15);                              % the same night from two lagged generators
+            S = rheome.scale.sensors(tc.Name, Modality="EEG");
+            [~, tc.XL, tc.EL] = rheome.scale.measure_slowosc(tc.Name, S, PosteriorAxis=[0 -1 0], Estimators=["framework" "sensorlatency"], ...
+                Conditions=["original" "lagged"], MaxEvents=12, NormalSigmaMM=5);
         end
     end
 
@@ -51,10 +60,34 @@ classdef tScaleSlowOsc < matlab.unittest.TestCase
 
         function everyEstimatorRunsInEveryCondition(tc)
             k = unique(tc.X(:, {'estimator','condition'}), 'rows');
-            tc.verifyEqual(height(k), 3 * numel(unique(tc.X.estimator)));
+            tc.verifyEqual(height(k), 4 * numel(unique(tc.X.estimator)));
             tc.verifyTrue(all(isfinite(tc.X.angleDeg(tc.X.estimator ~= "phasereg"))));
             tc.verifyTrue(all(isfinite(tc.X.sourceAPmm(tc.X.estimator == "framework" & tc.X.condition == "original"))));
             tc.verifyTrue(any(tc.T.metric == "vtest_p"));
+        end
+
+        function laggedNullSeparatesFromTravel(tc)
+            ap = @(c) mean(tc.X.apCos(tc.X.estimator == "framework" & tc.X.condition == c) > 0);
+            tc.verifyEqual(ap("original"), 1);
+            tc.verifyLessThan(ap("lagged"), 0.5);                              % 0.25 measured
+        end
+
+        function laggedFitReadsThePlantedLag(tc)
+            e = tc.EL(tc.EL.used, :);
+            tc.verifyGreaterThan(median(e.lagS), 0.07);                         % 0.15 planted; 0.10 read (EEG blur
+            tc.verifyLessThan(median(e.lagS), 0.2);                             % pulls the back tile forward)
+            tc.verifyGreaterThan(median(e.fitR2), 0.85);
+            ap = @(c) mean(tc.XL.apCos(tc.XL.estimator == "sensorlatency" & tc.XL.condition == c) > 0);
+            tc.verifyGreaterThanOrEqual(ap("lagged"), 0.8);                     % the electrodes see the same front-first lag
+            tc.verifyGreaterThanOrEqual(ap("original"), 0.8);
+        end
+
+        function laggedNullKeepsTheElectrodesRatioAndLag(tc)
+            for e = {tc.E(tc.E.used, :), tc.EL(tc.EL.used, :)}
+                q = e{1};
+                tc.verifyLessThan(abs(median(q.elecRatioLagged ./ q.elecRatio) - 1), 0.15);
+                tc.verifyLessThanOrEqual(median(abs(q.elecLagSLagged - q.elecLagS)), 0.05);
+            end
         end
 
         function groupStatisticsPassTheFramework(tc)
@@ -71,7 +104,35 @@ classdef tScaleSlowOsc < matlab.unittest.TestCase
             tc.verifyTrue(g.passes);
             tc.verifyEqual(g.frac_ap, 1);
             tc.verifyLessThan(g.ap_lo, 1);                                      % Clopper-Pearson, n = 6
+            tc.verifyEqual(g.lagged_n, 6);                                      % gate N: real minus lagged, paired
+            tc.verifyGreaterThan(g.lagged_excess, 0);
+            tc.verifyTrue(g.beats_lagged);
             tc.verifyTrue(isfile(fullfile(root, 'group', 'group.csv')));
+        end
+
+        function plantedMoversReadInBothDirections(tc)
+            % gate V on the synthetic head: planted A->P and P->A plane waves on the night's own background between
+            % its events. Validated here: the plant table, the levels, and the readings that do hold on this head --
+            % the sensor latency at 0.5 and 5 m/s (and its exact flip on the reversed window), the framework at
+            % 0.5 m/s. NOT asserted: the framework above ~1 m/s, which follows geometry rather than travel (measured,
+            % desk evidence 1a32c6c1), so the plant mode cannot pass a readout that does not hold.
+            d = tc.applyFixture(matlab.unittest.fixtures.TemporaryFolderFixture).Folder;
+            old = getenv('RHEOME_DATA');  setenv('RHEOME_DATA', d);  tc.addTeardown(@setenv, 'RHEOME_DATA', old);
+            scaleSynthSubject(fullfile(d, tc.Name));  tSleep(fullfile(d, tc.Name));
+            S = rheome.scale.sensors(tc.Name, Modality="EEG");
+            [T, X, P] = rheome.scale.measure_slowosc(tc.Name, S, Plant=[0.5 5], PlantsPerCell=2, PadS=0.5, ...
+                PosteriorAxis=[0 -1 0], Estimators=["framework" "sensorlatency"], Conditions=["original" "reversed"], NormalSigmaMM=5);
+            tc.verifyEqual(height(P), 2 * 2 * 2 * 2);                           % speed x direction x level x plants
+            tc.verifyEqual(P.p2pUV(P.level == "threshold"), repmat(140, 8, 1));
+            tc.verifyGreaterThan(P.p2pUV(P.level == "median"), 140);            % the night's events are above threshold
+            tc.verifyTrue(all(isfinite(P.snrDB)));
+            tc.verifyEqual(height(X), height(P) * 2 * 3);                       % framework L, R + sensorlatency
+            v = @(m, pat) T.value(T.metric == m & contains(T.band, pat));
+            tc.verifyEqual(v("frac_correct_sign", "sensorlatency/"), ones(16, 1));            % 2 cond x 2 speed x 2 dir x 2 level
+            tc.verifyLessThan(max(v("median_abs_error_deg", "sensorlatency/")), 5);
+            f = v("frac_correct_sign", "framework/" + wildcardPattern + "/original/" + wildcardPattern + "/0.5ms/");
+            tc.verifyEqual(numel(f), 8);                                        % hemi x direction x level, 2 plants each
+            tc.verifyGreaterThanOrEqual(mean(f), 0.75);                         % 15/16 measured: fragile even at 0.5 m/s
         end
 
         function vtestMatchesItsDefinition(tc)
@@ -120,16 +181,30 @@ classdef tScaleSlowOsc < matlab.unittest.TestCase
     end
 end
 
-function tSleep(d)
+function tSleep(d, opts)
 % overwrite the synthetic study with 120 s of sleep EEG: 26 slow oscillations travelling +y -> -y at 0.5 m/s
-% in the normal current of both hemispheres, all epochs N2 (the last 30 s N3), units uV
+% in the normal current of both hemispheres, all epochs N2 (the last 30 s N3), units uV.
+% LagS: instead, two fixed generators per hemisphere (Gaussian patches, sigma 15 mm, at the +y and -y poles), the
+% -y one 0.7 x the +y one's waveform LagS later: nothing travels.
+    arguments
+        d
+        opts.LagS = []
+    end
     s = load(fullfile(d, 'study.mat'));  b = load(fullfile(d, 'bases.mat'));  sf = load(fullfile(d, 'surface.mat'));
     fs = 100;  N = 120 * fs;  t = (0:N-1) / fs;  V = sf.S.Vertices;  nV = size(V, 1);
     te = 3 + 4.4 * (0:25) + 0.3 * sin(1:26);  c = 0.5;  y0 = 0.04;
     src = zeros(nV, N);
-    for e = te
-        tau = t - e - (y0 - V(:, 2)) / c;
-        src = src - cos(2*pi*0.8*tau) .* exp(-tau.^2 / (2 * 0.5^2));
+    w = @(tau) -cos(2*pi*0.8*tau) .* exp(-tau.^2 / (2 * 0.5^2));
+    if isempty(opts.LagS)
+        for e = te, src = src + w(t - e - (y0 - V(:, 2)) / c); end
+    else
+        pf = zeros(nV, 1);  pb = zeros(nV, 1);
+        for hh = [false true]
+            m = find((V(:, 1) > 0) == hh);  [~, a] = max(V(m, 2));  [~, b] = min(V(m, 2));
+            pf(m) = exp(-vecnorm(V(m,:) - V(m(a),:), 2, 2).^2 / (2 * 0.015^2));
+            pb(m) = exp(-vecnorm(V(m,:) - V(m(b),:), 2, 2).^2 / (2 * 0.015^2));
+        end
+        for e = te, src = src + pf * w(t - e) + 0.7 * pb * w(t - e - opts.LagS); end
     end
     Nr = sf.S.VertNormals ./ vecnorm(sf.S.VertNormals, 2, 2);  G = s.hm.Gain;
     Gn = G(:, 1:3:end) .* Nr(:, 1)' + G(:, 2:3:end) .* Nr(:, 2)' + G(:, 3:3:end) .* Nr(:, 3)';
