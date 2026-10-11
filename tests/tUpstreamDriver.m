@@ -116,6 +116,14 @@ classdef tUpstreamDriver < matlab.unittest.TestCase
             tc.verifyEqual(T2.value(T2.metric == "U"), T1.value(T1.metric == "U"), 'AbsTol', 1e-12);
         end
 
+        function aMedialWallWithoutG1IsRead(tc)
+            % the normative G1 is NaN on the medial wall: tiles average the vertices that have a value, U is finite
+            G = load(tc.G1);  for h = ["L" "R"], G.(h).g(G.(h).sphere(:, 1) > 60) = NaN; end
+            f = fullfile(tc.Root, 'g1nan.mat');  save(f, '-struct', 'G');
+            T = rheome.scale.measure_upstream(tc.Name, [], Passes=["periodic" "of"], Halves=false, MinSpanS=10, OwnMin=0, Gradient=f);
+            tc.verifyTrue(all(isfinite(T.value(ismember(T.metric, ["U" "U_of"])))));
+        end
+
         function everyPassThroughTheDriver(tc)
             [T, X] = rheome.scale.measure_upstream(tc.Name, [], MinSpanS=10, OwnMin=0, OfChunk=200);
             for m = ["U" "U_surrogate" "U_total" "U_of" "U_star" "U_star_h1" "U_star_h2"]
