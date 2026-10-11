@@ -14,11 +14,13 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
 %     (iii) N4: occupancy on the periodic part - occupancy on the aperiodic part > 0
 %     (iv)  split-half ICC(2,1) of the mode's gev >= 0.5 with the lower bound of its 95 % CI > 0.3 (percentile
 %           bootstrap over participants, NBoot)
-%   Labels: standing (median pg < StandingRad); travelling or rotating (r_n3_sim - r_n3 > N3Margin under Holm --
-%     the mode is further from its best two-phase source than that source reads when simulated in the
-%     participant's own data; see rheome.modes.fit on why not pg - pg_n3 -- AND the sign
-%     of div_index -- travelling -- or of winding_net -- rotating -- shared by >= SignShare of participants);
-%     lagged-pair (neither). The label is read only for Level-1 modes and says nothing about speed.
+%   Labels: standing (median pg < StandingRad); travelling (r_n3_sim - r_n3 > N3Margin under Holm -- the mode is
+%     further from its best two-phase source than that source reads when simulated in the participant's own data;
+%     see rheome.modes.fit on why not pg - pg_n3 -- AND the sign of div_index shared by >= SignShare of
+%     participants); otherwise lagged-or-rotating. Rotation is UNRESOLVED at >= 100 mm: a planted rotation reads
+%     |r| 0.994 to its two-phase source, so it cannot be told from a lagged pair (decision aa405e9c); winding_net
+%     and winding_sign_share are reported, never labelled. N3Margin 0.02 is the amended protocol's margin, to be
+%     recalibrated on the canary's heads. The label is read only for Level-1 modes and says nothing about speed.
 %   Level 2 (dynamics beyond second order): dwell_median_ms (the mode's) and trans_entropy (overall, under
 %     mode 0) minus the N5 surrogate mean; plus the share of participants with N5 p significant at FDR q
 %     (Benjamini-Hochberg over participants) against 5 % (binomial test).
@@ -45,7 +47,7 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
         opts.Fdr (1,1) double = 0.05
         opts.NBoot (1,1) double = 2000
         opts.Seed (1,1) double = 1
-        opts.N3Margin (1,1) double = 0      % 0 = the protocol as fixed; a floor on the median N3 excess
+        opts.N3Margin (1,1) double = 0.02   % amended protocol (aa405e9c): floor on the median N3 excess
     end
     if isscalar(fitFiles) && endsWith(fitFiles, ".txt"), fitFiles = strip(splitlines(strtrim(fileread(fitFiles)))); fitFiles(fitFiles == "") = []; end
     if ~exist(outDir, 'dir'), mkdir(outDir); end
@@ -116,9 +118,8 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
         C.level1(r) = C.pass_i(r) && C.pass_ii(r) && C.pass_iii(r) && C.pass_iv(r);
         n3 = pass("n3_lagged", b, k) && Ts.median(Ts.test == "n3_lagged" & Ts.band == b & Ts.mode == k) > opts.N3Margin;
         if C.pg_median(r) < opts.StandingRad, lab = "standing";
-        elseif n3 && C.winding_sign_share(r) >= opts.SignShare, lab = "rotating";
         elseif n3 && C.div_sign_share(r) >= opts.SignShare, lab = "travelling";
-        else, lab = "lagged-pair"; end
+        else, lab = "lagged-or-rotating"; end
         C.label(r) = lab;  C.level2(r) = pass("l2_dwell", b, k) || pass("l2_entropy", b, 0);
     end
     rb = arrayfun(@(b, k) M.bands(string(b) == [M.bands.band]).r_dmd(k) >= 0.7 || M.bands(string(b) == [M.bands.band]).r_cpca(k) >= 0.7, C.band, C.mode);
