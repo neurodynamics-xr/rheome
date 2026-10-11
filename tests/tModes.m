@@ -110,7 +110,8 @@ classdef tModes < matlab.unittest.TestCase
             m = matfile(files(1));  Z = m.Z;
             tc.verifyEqual(Z.variants.cutoff_mm', [100 92 130 100 100]);
             tc.verifyTrue(all(ismember(["data" "n1_sources" "n4_aperiodic" "n5_phaserand"], Z.sources)), strjoin(string(Z.sources), ' '));
-            M = rheome.modes.discover(files, fullfile(od, 'discover'), Ks=2:3, NSplits=4, NPer=200, NPerSplit=100, Replicates=2);
+            lst = fullfile(od, 'fields.txt');  writelines(files, lst);              % a list file, as nsp passes it
+            M = rheome.modes.discover(string(lst), fullfile(od, 'discover'), Ks=2:3, NSplits=4, NPer=200, NPerSplit=100, Replicates=2);
             tc.verifyEqual(M.sha256, rheome.modes.hash(M.bands.C));
             tc.verifyEqual(strtrim(extractBefore(string(fileread(fullfile(od, 'discover', 'centroids.sha256'))), ' ')), string(M.sha256));
             [~, X] = rheome.modes.fit(char(tc.Names(1)), [], M, NSpin=20, NSurr=3);
@@ -133,7 +134,8 @@ classdef tModes < matlab.unittest.TestCase
                 t = [table(repmat(n, height(Xn.modesfit), 1), 'VariableNames', {'subject'}), Xn.modesfit];
                 writetable(t, fullfile(fo, 'modesfit.csv'));  fits(end+1) = fullfile(fo, 'modesfit.csv'); %#ok<AGROW>
             end
-            C = rheome.modes.reduce(fits, fullfile(od, 'discover', 'centroids.mat'), fullfile(od, 'reduce'), NBoot=50);
+            lst = fullfile(od, 'fits.txt');  writelines(fits, lst);
+            C = rheome.modes.reduce(string(lst), fullfile(od, 'discover', 'centroids.mat'), fullfile(od, 'reduce'), NBoot=50);
             tc.verifyEqual(height(C), sum([M.bands.K]));
             tc.verifyTrue(all(ismember(C.label, ["standing" "travelling" "lagged-or-rotating"])));
             tc.verifyTrue(all(C.speed == "unresolved"));

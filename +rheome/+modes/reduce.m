@@ -49,7 +49,7 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
         opts.Seed (1,1) double = 1
         opts.N3Margin (1,1) double = 0.02   % amended protocol (aa405e9c): floor on the median N3 excess
     end
-    if isscalar(fitFiles) && endsWith(fitFiles, ".txt"), fitFiles = strip(splitlines(strtrim(fileread(fitFiles)))); fitFiles(fitFiles == "") = []; end
+    if isscalar(fitFiles) && endsWith(fitFiles, ".txt"), fitFiles = string(strip(splitlines(strtrim(fileread(fitFiles))))); fitFiles(fitFiles == "") = []; end
     if ~exist(outDir, 'dir'), mkdir(outDir); end
     L = load(centroidsFile, 'M');  M = L.M;
     if ~strcmp(rheome.modes.hash(M.bands.C), M.sha256), error('modes:reduce:hash', 'centroids.mat does not match its own hash'); end

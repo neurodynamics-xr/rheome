@@ -57,7 +57,7 @@ function M = discover(files, outDir, opts)
         opts.Seed (1,1) double = 1
         opts.Workers (1,1) double = 0
     end
-    if isscalar(files) && ~endsWith(files, ".mat"), files = strip(splitlines(strtrim(fileread(files)))); files(files == "") = []; end
+    if isscalar(files) && ~endsWith(files, ".mat"), files = string(strip(splitlines(strtrim(fileread(files))))); files(files == "") = []; end
     if ~exist(outDir, 'dir'), mkdir(outDir); end
     if opts.Workers > 0 && isempty(gcp('nocreate')), parpool('Processes', opts.Workers); end
     t00 = tic;
