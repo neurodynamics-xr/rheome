@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.modes.fit</title></head><body>
+<h1>rheome.modes.fit</h1>
+<p><em>function rheome.modes</em> &mdash; Rheome</p>
+<pre>  MODES.FIT  Back-fit the frozen centroids to one participant: states, physical features and the per-person nulls.
+ 
+    [T, X] = rheome.modes.fit(name, S, M)                     % M = the struct in centroids.mat
+    [T, X] = rheome.modes.fit(name, S, M, Sha256=&quot;...&quot;, NSpin=1000, NSurr=99)
+ 
+  Protocol sections 4.2, 5 and 6, per participant. The fields are recomputed by rheome.modes.fields with the
+  variant and seed of the discovery (deterministic: the same commit gives the same series; the series hash
+  is in the output) and the centroids are refused unless rheome.modes.hash(M.bands.C) equals M.sha256 (and
+  Sha256 when given).
+ 
+  Per band, on every valid sample (snapshots normalised; label = argmax_k |&lt;z, c_k&gt;|^2):
+    backfit (data, h1, h2, n1_sources, n1_emptyroom, n4_aperiodic): per mode occupancy, occurrence_per_s,
+      dwell_median_ms (runs cut by an invalid sample or a recording end are not dwell times), gev (share of
+      the participant's power the mode explains, sum |&lt;z, c_k&gt;|^2 over its samples / sum |z|^2), r_centroid
+      (|&lt;m_k, c_k&gt;|, m_k the participant's own mode: principal eigenvector of its samples' scatter); overall
+      gev_total and trans_entropy (bits; entropy of the off-diagonal transitions, weighted by visits)
+    hmm (data): a K-state HMM over the SAME centroids, complex Watson emissions exp(kappa |&lt;z, c_k&gt;|^2),
+      kappa = (d-1)/(1 - mean max_k |&lt;z, c_k&gt;|^2) (its large-kappa moment), transitions by Baum-Welch
+      (10 iterations), Viterbi labels -- the same temporal features (sensitivity, protocol 4.2)
+    Level-1 per person: r_halves = |&lt;m_k(h1), m_k(h2)&gt;|, r_n1 = |&lt;m_k, m_k(n1_sources)&gt;| (and empty room);
+      occupancy minus N4 occupancy is the reduction's
+    N2 spin: r_obs = |&lt;m_k, c_k&gt;| against NSpin rotations of m_k on the template sphere (one random rotation
+      per spin, mirrored for the right hemisphere; each tile takes the value of the tile nearest its rotated
+      centre): r_spin_mean, p_spin = (1 + #{r_spin &gt;= r_obs}) / (1 + NSpin)
+    N3 lagged pair: rheome.modes.lagged -- the best source with exactly TWO phases (two disjoint, extended,
+      nonnegative generators, any ratio and lag) seen through the participant's gain and the pipeline (R, the
+      tile resolution): r_n3 = |r| of m_k to it. Then the null SIMULATED in the participant's own data: in every
+      sample of state k the mode's component is replaced by that fit (noise and the rest kept), the mode is
+      re-estimated and refitted: r_n3_sim. The reduction tests r_n3_sim - r_n3 &gt; 0 (the mode is further from
+      any lagged pair than a lagged pair in this person's data would read). pg_n3 and the lag are reported.
+      ⚠ Not the protocol's &quot;phase gradient exceeds N3&quot;: two lagged generators make a phase STEP whose mean
+      |phase difference| over edges exceeds a smooth gradient's (a planted A-&gt;P wave read pg 1.57 against its
+      pair's 2.01). ⚠ The separation is small at these scales: through OMEGA sub-0002 at depth 3 a 200 mm wave
+      reads r_n3 0.96, planted pairs 0.993-0.997, a rotation 0.994 (request 30825727 evidence, n3_prototype)
+    N3 calibration (protocol section 13, method &quot;n3cal&quot;, mode 0): on this head, a planted 200 mm A-&gt;P plane wave
+      (source planted_wave200_ap) and two planted lagged pairs (planted_pair_fo, planted_pair_lateral) through
+      W * gain replace the participant's leading component in every valid sample (noise and the rest kept); the
+      re-estimated mode goes through the same N3: r_n3, r_n3_sim, n3_excess = r_n3_sim - r_n3, r_plant. The
+      frozen N3Margin is the midpoint between the largest pair excess and the smallest wave excess (Science)
+    N5 (Level 2): NSurr multivariate phase-randomised surrogates of the periodic tile series through the same
+      band and back-fit: dwell_median_ms and trans_entropy as surrogate mean, sd and two-sided p
+    physical features of m_k (protocol 6), on the participant's tile geometry:
+      extent_mm2 / extent_radius_mm  area of the tiles at &gt;= half the maximum amplitude, equivalent radius
+      dirichlet_wavelength_mm        2 pi / sqrt(lambda), lambda the tile-graph Rayleigh quotient
+                                     2 mean_E |m_i - m_j|^2/d_ij^2 / mean_E (|m_i|^2+|m_j|^2)/2 (k^2 for a plane wave)
+      tile_spacing_mm                median centre distance of adjacent tiles: below ~2x this nothing is resolved
+      pg                             phase-gradient statistic: amplitude-weighted mean |wrap(phi_i - phi_j)| over
+                                     edges between tiles &gt;= half max; NaN with fewer than 3 such tiles
+      dir_x dir_y dir_z, dir_concentration, dir_azimuth_deg   direction of travel (-grad phi; phase lead to
+                                     lag) as the amplitude-weighted mean unit vector in template coordinates (SCS:
+                                     x anterior, y left, z up) and its sphere-frame azimuth (0 = north, 90 = u x north)
+      phase_wavelength_mm, speed_m_s, speed_resolved    f_centre x 2 pi/|grad phi|; resolved only at depth &gt;=
+                                     ResolvableDepth (MS1: speed is recovered at depths 7-8 only), so at depths
+                                     2-4 it is ALWAYS 0: &quot;direction only&quot;
+      div_index (rad/mm^2, + = diverging from a phase lead), winding_net, winding_count (signed and unsigned
+                                     phase windings around tile triangles, outward orientation). ⚠ Not s^-1: a
+                                     flow rate needs the speed, which these depths do not resolve
+ 
+  Returns T (rheome.scale.rows &quot;modesfit&quot;: per band gev_total, n_valid, kappa, ...) and X with tables
+    modesfit  (band, source, half, method, mode, metric, value, unit; mode 0 = overall)
+    modesmaps (band, source, half, mode, hemi, tile, amp, phase_rad)
+    modestrans (band, source, method, from, to, p)
+ 
+  See also: rheome.modes.discover, rheome.modes.fields, rheome.modes.reduce
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

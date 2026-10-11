@@ -2,9 +2,11 @@
 <html><head><meta charset="utf-8"><title>rheome.scale.measure_geometry</title></head><body>
 <h1>rheome.scale.measure_geometry</h1>
 <p><em>function rheome.scale</em> &mdash; Rheome</p>
-<pre>  SCALE.MEASURE_GEOMETRY  The atlas geometry checks on one subject's cortex: atom-tile overlap, gauge, roll-up.
+<pre>  SCALE.MEASURE_GEOMETRY  The atlas geometry checks on one subject's cortex: atom-tile overlap, gauge, roll-up,
+  and the size of parcels and tiles.
  
     [T, X] = rheome.scale.measure_geometry(name)
+    [T, X, Z] = rheome.scale.measure_geometry(name)     % Z.parcels, Z.tiles: G12g, G12h
     [T, X] = rheome.scale.measure_geometry(name, rheome.scale.sensors(name), Levels=2:5, RollupDepths=3:6)
  
   The geometry parts of MS1 group plan G12, per hemisphere, on rheome.geom.tree (area bisection):
@@ -23,6 +25,16 @@
      tile-summed minimum-norm current (S.Res on the whole cached recording, analytic band-pass at
      the sensors), direct at each depth in RollupDepths against block sums of the deepest. Rows (band
      &quot;L&quot; | &quot;R&quot;): rollup_max_rel_error (max over depths of max|rolled - direct| / max|direct|).
+  4. PARCEL AND TILE SIZE (G12g, G12h). One ruler for both: the equivalent-disc diameter d_eq = 2 sqrt(A/pi),
+     A the lumped vertex area (1/3 of the incident triangles) summed over the members, on this cortex.
+     Z.parcels: one row per parcel of each of opts.Atlases (Brainstorm's scouts; any unknown /
+     corpuscallosum / Medial_wall label dropped) -- atlas, label, hemi, n_vertices, area_mm2, d_eq_mm.
+     Z.tiles: one row per rheome.geom.tree tile at depths opts.SizeDepths (depth 0 = the hemisphere) --
+     hemi, depth, node_id, n_vertices, area_mm2, d_eq_mm, geodesic_diameter_mm (double-sweep on the
+     mesh edge graph: a lower bound on the longest geodesic in the tile, and specific to this Fiedler tiling).
+     Rows: hemisphere_area (cm2, band &quot;L&quot; | &quot;R&quot;); parcel_deq_median, n_parcels (band = atlas, over both
+     hemispheres); tile_deq_median, tile_area_median (band &quot;D&lt;depth&gt;&quot;). A missing atlas gives n_parcels 0.
+     The fraction of parcels below 2 r50 needs r50 (cf-scale) and is taken at the group reduction.
  
   ⚠ THE TILING IS rheome.geom.tree (Fiedler bisection), NOT THE ATLAS's EQUAL-AREA GEODESIC BISECTION that
   drew Fig. 2 (nsp atlas ladder, F13 card: lobe 0.83/0.95/0.97/0.97, energy 80/84/85/86 % at l = 2-5,
@@ -36,6 +48,6 @@
  
   Author: Diellor Basha, 2026
 </pre>
-<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
 <p><a href="index.html">Rheome reference</a></p>
 </body></html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.sensors.ismeg</title></head><body>
+<h1>rheome.sensors.ismeg</h1>
+<p><em>function rheome.sensors</em> &mdash; Rheome</p>
+<pre>  SENSORS.ISMEG  True for the Brainstorm channel types that are MEG measurement channels.
+ 
+    tf = rheome.sensors.ismeg(chan.Type)
+ 
+  'MEG' (CTF, the OMEGA / PREVENT-AD cohorts) and 'MEG MAG' / 'MEG GRAD' (MEGIN / Elekta VectorView,
+  Cam-CAN). Never 'MEG REF' (CTF reference coils): strncmpi(Type, 'MEG', 3) would take it.
+  Keep the types as they are downstream: rheome.inverse.mne whitens per type, so magnetometers (T)
+  and planar gradiometers (T/m) must not be relabelled to one 'MEG' type.
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

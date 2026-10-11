@@ -28,13 +28,15 @@
   OUTPUT (struct B)
     .J [3nV x nT] .Div .Curl .Phi .Psi [nV x nT]  band-limited
     .h [K x 1] gain   .cutoffMM   .keptWavelengthMM [1 x m] band centres kept
-    .finestSigmaMM    spatial width sigma = sqrt(2t) of the finest kept member (rheome.graphfilterbank widths)
+    .finestSigmaMM    spatial width of the finest kept member, sigma = sqrt(2)*wavelength/(2*pi): the
+                      sigma = sqrt(2t) of a mexhat peaking at that wavelength (the logitersine bank has
+                      no heat scale t, so rheome.graphfilterbank widths is NaN for it)
     .Hb               the helmholtzbands struct (unfiltered potentials, band energies)
  
   See also: rheome.differential.helmholtzbands, rheome.flow.smoothness, rheome.graphfilterbank
  
   Author: Diellor Basha, 2026
 </pre>
-<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
 <p><a href="index.html">Rheome reference</a></p>
 </body></html>

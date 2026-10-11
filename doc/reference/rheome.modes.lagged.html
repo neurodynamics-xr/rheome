@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.modes.lagged</title></head><body>
+<h1>rheome.modes.lagged</h1>
+<p><em>function rheome.modes</em> &mdash; Rheome</p>
+<pre>  MODES.LAGGED  N3: the best non-travelling two-generator model of a complex mode, as the instrument shows it.
+ 
+    L = rheome.modes.lagged(m, R)              % m [d x 1] complex mode, R [d x d] tile resolution (operator.R)
+    L = rheome.modes.lagged(m, R, StepDeg=10)
+ 
+  Two extended generators on DISJOINT sets of tiles, each a nonnegative pattern with ONE phase, any amplitude
+  ratio and any lag: the source has exactly two phases, m ~ e^{i theta} R (x1 + e^{i delta} x2), x1, x2 &gt;= 0,
+  x1 .* x2 = 0. For each theta, delta on a StepDeg grid: nonnegative least squares on [Re; Im] with both
+  generators free, each tile then given to the generator holding more of it, and refitted on that split
+  (twice); the best |r| is kept. A generator may be bilateral or span many tiles (the frontal and posterior
+  generators of rheome.forward.laggedpair, here on tiles); a travelling or rotating mode needs a continuum of
+  source phases that two phases blurred by R cannot make. ⚠ Without the disjoint split the model is empty:
+  overlapping nonnegative generators at a lag near 180 deg write any mode whose phases span &lt; 180 deg, and
+  every planted pattern (standing, travelling, rotating, lagged) read |r| = 1.000.
+ 
+    L.r_n3        |r| of m to its best two-generator fit (1 = indistinguishable from a lagged pair)
+    L.fit         [d x 1] the fit   L.lag_rad   delta   L.x1 L.x2 [d x 1] the generators' tile weights
+ 
+  Why not one tile per generator: a planted frontal-occipital pair of midline blobs (each over both
+  hemispheres) fitted by the best pair of single tiles or adjacent-tile patches reached only |r| = 0.63,
+  and the reduction called it travelling (request 30825727 evidence).
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -26,6 +26,8 @@
     helmholtzbands.csv  helmholtzbands: per hemisphere x band x plant -- Fig. 4A-B on this cortex
     ownregion.csv     ownregion: per Desikan-Killiany region -- own-region fraction of div and curl
     geometry.csv      geometry: per hemisphere x level x tile -- atom-tile overlap (Fig. 2A)
+    geometry_parcels.csv, geometry_tiles.csv   geometry: area and equivalent-disc diameter per DK and
+                      Destrieux parcel (G12g) and per tile at depths 0-3 (G12h)
     fusion.csv        fusion: per frame -- fused kernels against reconstruct-then-differentiate
                       (the five MS1 group P2 tables, nsp rheome-ms1-scale; opt-in, not in &quot;ported&quot;)
     patterns.csv, patternnulls.csv   MS1 G5 / G13 (P3, nsp cf-patterns): rheome.scale.measure_patterns --
@@ -43,10 +45,13 @@
                       sigma x speed x signal) the on-patch Viterbi rate against the held-out null, the split's
                       reduction, band-map errors and along-path speed; opt-in, not in the &quot;ported&quot; default
     slowosc.csv, slowosc_events.csv   MS1 G15, G16 (P7, nsp cf-slowosc): rheome.scale.measure_slowosc -- sleep
-                      slow oscillations per event x hemisphere x condition (original, reversed, surrogate) x
+                      slow oscillations per event x hemisphere x condition (original, reversed, surrogate, lagged) x
                       estimator (framework, bst_of, phasereg, sensorlatency): direction vs A-&gt;P, speed; and the
                       detected events. A sleep EEG subject: Modality=&quot;EEG&quot;, and Edf/Events with ProtoDir (the
                       template forward model) to import it (rheome.scale.importeeg); opt-in, not &quot;ported&quot;
+    slowoscplant.csv, slowoscplant_plants.csv   SLEEP-1 gate V (nsp cf-slowosc-plant): the same reading of planted
+                      A-&gt;P / P-&gt;A movers at 1, 2, 2.7, 5 m/s on the subject's own N2/N3 background (measure_slowosc,
+                      Plant), in three extents (column &quot;extent&quot;; metrics band &quot;&lt;extent&gt;/...&quot;): plane, cingulate, murphy
     correspondence.csv, atlasevents.csv, gaugetensor.csv, connectome.csv   MS1 G12 (P8, nsp cf-atlas):
                       rheome.scale.measure_atlas -- DK agreement through the sphere vs raw coordinates and the
                       frame vs the shared meridian; alpha atlas events at depth &lt;= 3 vs phase-randomised
@@ -58,6 +63,16 @@
                       through one wavelet bank on one dyadic tile ladder, every level an exact roll-up; the
                       descriptive cross-tile rho; the tile connectome per level. Opt-in. PET and fibres come
                       from the protocol (pet.mat, fibers_subject.mat in the cache)
+    modes_fields.mat, modesseries.csv, modesbands.csv, modesperiodic.csv   the resting-state pattern atlas,
+                      stage 1 (nsp rheome-modes-fields): rheome.modes.fields -- the complex band tile series and
+                      the nulls N1, N4, N5 (the Zm struct + one top-level variable per series); opt-in
+    modesfit.csv, modesmaps.csv, modestrans.csv, modesseries.csv   stage 3 (nsp rheome-modes-fit):
+                      rheome.modes.fit against the frozen centroids in RHEOME_MODES_CENTROIDS (hash checked,
+                      and against RHEOME_MODES_SHA256 when set); opt-in
+    upstream.csv      AGE-1 / WAVE-OR-LEAKAGE (nsp rheome-upstream): rheome.scale.measure_upstream -- the
+                      participant readout v1 of rheome.flow.upstreamshare per (span, pass, hemisphere): U
+                      (periodic), U_surrogate (lagged-source null), U_total (periodic gain off), U_of (optical
+                      flow comparator), and its covariates in metrics.csv. Needs RHEOME_G1; opt-in, not &quot;ported&quot;
     timing.csv        analysis, seconds, peak_rss_GB, status, message
     rheome_coeffs.mat Analyses=&quot;coefficients&quot; only: graph-wavelet envelopes per tile x scale x time,
                       Prognome's contract (rheome.scale.coefficients)
@@ -86,6 +101,6 @@
  
   Author: Diellor Basha, 2026
 </pre>
-<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
 <p><a href="index.html">Rheome reference</a></p>
 </body></html>

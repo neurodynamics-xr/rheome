@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_upstreamnull</title></head><body>
+<h1>rheome.scale.measure_upstreamnull</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_UPSTREAMNULL  Gate N calibration in one head: does the lagged-source null read planted non-travel as non-travel and keep planted travel?
+ 
+    [T, X] = rheome.scale.measure_upstreamnull(name)
+    [T, X] = rheome.scale.measure_upstreamnull(name, S, Gradient=f, SnrDB=[0 10], Hz=[2 5], SpeedMS=[0.5 1 2])
+ 
+  Why: U* = U - U_surrogate (rheome.scale.measure_upstream, gate N) is a claim about travel only if the null
+  (rheome.forward.laggedrest) cancels activity that does NOT travel and leaves activity that does. This plants
+  both in the participant's own head and resting recording, and reads every plant with the frozen readout v1.
+ 
+  PLANTS (normal current, area-weighted, through S.G, ADDED to the recording's selected rows S.iSel):
+    travel   a plane wave a(t) cos(2 pi f t - sigma 2 pi x / lambda) over the whole cortex, x the vertex position
+             along Axis, lambda = SpeedMS / Hz, sigma = +1 (travel along +Axis) or -1
+    lagged   per hemisphere two discs of each DiscMM radius that do not move, one in the anterior and one in the
+             posterior quarter along Axis (random centres, Locations draws): a(t) cos(2 pi f t) in front and
+             Ratio a(t) cos(2 pi f t - delta) behind, delta in LagRad; dir = -sign(delta) (the back leads:
+             the lag looks like travel along +Axis)
+    none     the recording alone, its null drawn with NullSeeds seeds (the null's own seed spread)
+    a(t) = exp(0.3 z), z a 2 s moving mean of white noise at unit SD (slow amplitude drift, as at rest).
+    SnrDB  = the plant's mean sensor power over the recording's own 1-8 Hz sensor power.
+ 
+  OUTPUT
+    X  one row per plant: kind, hz, speed_ms, lambda_mm, dir, lag_rad, disc_mm, snr_db, seed, U, U_surrogate, U_star
+    T  rheome.scale.rows(&quot;upstreamnull&quot;), per SnrDB (band &quot;snr&lt;dB&gt;&quot;): null_ustar_absmax (largest |U*| of a
+       lagged plant: the calibrated threshold), null_ustar_absmedian, lagged_dev_median (median |U - 0.5| of the
+       lagged plants: what the null had to cancel), seed_ustar_sd (the &quot;none&quot; seeds); and per lambda (band
+       &quot;snr&lt;dB&gt;_lambda&lt;mm&gt;&quot;): travel_power (share of travel plants with |U*| above the threshold and U* of
+       U - 0.5's sign), travel_dir_sign (share whose U - 0.5 has the sign sigma: only meaningful when g
+       increases along Axis)
+ 
+  ⚠ THE READOUT ALIASES PAST HALF A CYCLE between tile centres (~120 mm): lambda &lt; ~240 mm can read backwards
+    whatever the null does; travel_dir_sign shows it, travel_power does not (it compares U* with U only).
+  ⚠ A plane wave and two discs are the simplest movers and non-movers: they calibrate the null on the head and
+    the readout, not on real resting activity's geometry.
+ 
+  See also: rheome.scale.measure_upstream, rheome.forward.laggedrest, rheome.flow.upstreamshare
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

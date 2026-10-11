@@ -21,13 +21,17 @@
                   whose median speed lies in SpeedRange (1-7 m/s, Massimini et al. 2004, as the plan quotes it)
   ⭐ The control passes for an estimator if, on the ORIGINAL events, the V-test rejects at alpha (Holm across
     estimators x params is the reader's: the p values are reported raw) AND on the REVERSED events it does not
-    (the direction must flip), AND on the SURROGATES it does not. Column passes_* states each part; nothing is
-    pooled across cohorts here (AnphySleep is the only cohort of the primary control).
+    (the direction must flip), AND on the SURROGATES it does not. Nothing is pooled across cohorts here
+    (AnphySleep is the only cohort of the primary control).
+  ⭐ THE LAGGED-SOURCE NULL (gate N) is not part of passes: two lagged generators may well read A-&gt;P. On the
+    original rows, lagged_excess is the median over participants of (A-&gt;P fraction of the events) minus (that of
+    their lagged nulls), lagged_p its one-sided Wilcoxon signed-rank p (real &gt; lagged), lagged_n the pairs, and
+    beats_lagged = lagged_p &lt; Alpha. A direction is a travel claim only where beats_lagged holds.
  
   See also: rheome.scale.measure_slowosc, rheome.scale.vtest, rheome.scale.reduce
  
   Author: Diellor Basha, 2026
 </pre>
-<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
 <p><a href="index.html">Rheome reference</a></p>
 </body></html>

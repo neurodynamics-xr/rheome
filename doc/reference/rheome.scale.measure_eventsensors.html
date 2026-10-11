@@ -11,7 +11,7 @@
   rheome.detect.eventsensors on the same 8-16 Hz analytic sensor signal and the same minimum-norm kernel
   rheome.flow.envelopemodes builds the tracked envelope from (8th-order IIR band-pass, Hilbert at the
   sensors). Tracker frame f of window w at dyadic level jj covers 300-fps frames
-  (w-1)*WindowS*300 + (f-1)*2^jj + (1 : 2^jj), i.e. samples ((frame-1)*dec + 1) ... at the recording rate.
+  frame0 + (w-1)*WindowS*300 + (f-1)*2^jj + (1 : 2^jj) (frame0: grouptrack's clean-span offset), i.e. samples ((frame-1)*dec + 1) ... at the recording rate.
  
   Returns rheome.scale.rows (analysis &quot;eventsensors&quot;), band &quot;&lt;hemi&gt;/d&lt;depth&gt;/&lt;fps&gt;fps&quot;, metrics:
     n_steps, passed (1 if the path beat the surrogate threshold), carrying_channels_median (per step),
@@ -24,6 +24,6 @@
  
   Author: Diellor Basha, 2026
 </pre>
-<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
 <p><a href="index.html">Rheome reference</a></p>
 </body></html>
