@@ -200,7 +200,8 @@ function R = run(name, opts)
                 case "slowosc"                 % MS1 G15, G16: sleep slow oscillations, the positive control
                     [Tq, X.slowosc, X.slowosc_events] = rheome.scale.measure_slowosc(name, S);  M = [M; Tq]; %#ok<AGROW>
                 case "slowoscplant"            % SLEEP-1 gate V: planted A->P / P->A movers at 1, 2, 5 m/s, same readout
-                    [Tq, X.slowoscplant, X.slowoscplant_plants] = rheome.scale.measure_slowosc(name, S, Plant=[1 2 5]);
+                    [Tq, X.slowoscplant, X.slowoscplant_plants] = rheome.scale.measure_slowosc(name, S, Plant=[1 2 5], ...
+                        Conditions=["original" "reversed" "lagged"]);    % the phase-randomised null has nothing to say about a plant
                     M = [M; Tq]; %#ok<AGROW>
                 case {"correspondence" "atlasevents" "gaugetensor" "connectome"}   % MS1 G12 (P8, nsp cf-atlas)
                     [Ta, X.(a)] = rheome.scale.measure_atlas(name, S, a);  M = [M; Ta]; %#ok<AGROW>
