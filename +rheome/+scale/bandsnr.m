@@ -23,7 +23,7 @@ function T = bandsnr(name, noise)
     if nargin < 2 || isempty(noise)
         N = builtin('load', fullfile(rheome.load.root(), name, 'noise.mat'), 'nrec');  noise = N.nrec;
     end
-    isMEG = strcmpi(st.chan.Type, 'MEG');
+    isMEG = rheome.sensors.ismeg(st.chan.Type);
     names = string(st.chan.Name(:)');
     good  = find(isMEG(:) & st.rec.ChannelFlag(:) == 1);
     [tf, jn] = ismember(names(good), string(noise.ChannelName));

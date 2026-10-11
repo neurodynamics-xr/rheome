@@ -66,7 +66,7 @@ function R = dirac(Gm, dbasis, NoiseCovMat, opts)
         Csub = (C_noise(ndx,ndx) + C_noise(ndx,ndx)')/2;
         if isempty(FM), FMsub = []; else, FMsub = FM(ndx,ndx); end
         iW_noise(ndx,ndx) = whiten(Csub, opts.NoiseMethod, opts.NoiseReg, FMsub, nS);
-        NoiseRankKept = NoiseRankKept + sum(abs(diag(iW_noise(ndx,ndx))) > 0);
+        NoiseRankKept = NoiseRankKept + rank(iW_noise(ndx,ndx));   % a nonzero diagonal is not rank: tSSS keeps ~70 of 306
     end
     GainWhitened = iW_noise * Gm;
 

@@ -123,8 +123,8 @@ function out = simulate(name, varargin)
     if isfield(ctx, 'st'), st = ctx.st; else, st = rheome.load.study(name); end
     if isfield(ctx, 'er'), er = ctx.er; else, er = rheome.load.study('emptyroom'); end
     fs = er.rec.sfreq;  nT = round(o.Duration*fs);
-    okS = strcmpi(st.chan.Type,'MEG') & (st.rec.ChannelFlag(:)'==1);
-    okE = strcmpi(er.chan.Type,'MEG') & (er.rec.ChannelFlag(:)'==1);
+    okS = rheome.sensors.ismeg(st.chan.Type) & (st.rec.ChannelFlag(:)'==1);
+    okE = rheome.sensors.ismeg(er.chan.Type) & (er.rec.ChannelFlag(:)'==1);
     % ⚠ the empty-room study carries only .Name and .Type -- no .Channel struct, so
     % {chan.Channel.Name} works on the subject and errors on the background.
     nmS = string(st.chan.Name(:))';  nmE = string(er.chan.Name(:))';

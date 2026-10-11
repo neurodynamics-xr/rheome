@@ -12,6 +12,7 @@
 %   rheome.sensors.linear    - a laminar probe; the one Dim 1 array, and the only one with no faces
 %   rheome.sensors.grid      - a planar lattice; 'utah' and 'ecog' presets
 %   rheome.sensors.meg       - MEG helmet positions from a cached study or channel file
+%   rheome.sensors.ismeg     - the MEG channel types: CTF 'MEG', MEGIN 'MEG MAG' / 'MEG GRAD' (never 'MEG REF')
 %   rheome.sensors.eeg       - a spherical-cap idealisation, or positions from a channel file
 %   rheome.sensors.positions - the general case: an array from coordinates already in hand, so a
 %                       geometry that survives only in a published figure can still be
