@@ -3,6 +3,8 @@ function [own, dominant] = crosstalk(vertexOperator, Gain, Membership)
 %
 %   [own, dominant] = rheome.flow.crosstalk(kc.vertexOperator, Gain, atlas.Membership)
 %
+%   [own, dominant] = rheome.flow.crosstalk(S.Res.ImagingKernel, S.G, Membership)   % unconstrained kernel
+%
 %   own       [nROI x 1] fraction of the ROI's measured power that comes from inside it
 %   dominant  [nROI x 1] index of the ROI the measured signal ACTUALLY comes from
 %
@@ -27,6 +29,9 @@ function [own, dominant] = crosstalk(vertexOperator, Gain, Membership)
 % ⚠ COST is one [nv x 3V] product per ROI -- about 5 s for 68 scouts at 20484 vertices and
 % 270 channels. Computed once per anatomy and inverse, never per analysis.
 %
+% ⭐ AN UNCONSTRAINED KERNEL ([3nV x nChan], rows x1;y1;z1;x2;...) is read as all three current components
+% of each member vertex: the ROI's reading is then the whole vector current (the AGE-1 readout's tiles).
+%
 % See also: rheome.flow.sensitivity, rheome.flow.curl, rheome.io.read.atlas
 %
 % Author: Diellor Basha, 2026
@@ -38,12 +43,14 @@ function [own, dominant] = crosstalk(vertexOperator, Gain, Membership)
     end
     P  = double(Membership);
     nR = size(P, 1);
+    vec = size(K, 1) == 3 * size(P, 2);             % unconstrained kernel: three rows per vertex
     own = zeros(nR,1);  dominant = zeros(nR,1);
 
     for j = 1:nR
         v = find(P(j,:));
         if isempty(v), own(j) = NaN; dominant(j) = NaN; continue; end
-        p  = sum((K(v,:) * Gain).^2, 1);            % power per source COMPONENT
+        r = v;  if vec, r = reshape(3*v(:)' - [2; 1; 0], [], 1); end
+        p  = sum((K(r,:) * Gain).^2, 1);            % power per source COMPONENT
         pv = p(1:3:end) + p(2:3:end) + p(3:3:end);  % ...summed to a per-vertex source power
         tot = sum(pv);
         if ~(tot > 0), own(j) = NaN; dominant(j) = NaN; continue; end

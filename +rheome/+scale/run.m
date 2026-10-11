@@ -66,6 +66,10 @@ function R = run(name, opts)
 %   modesfit.csv, modesmaps.csv, modestrans.csv, modesseries.csv   stage 3 (nsp rheome-modes-fit):
 %                     rheome.modes.fit against the frozen centroids in RHEOME_MODES_CENTROIDS (hash checked,
 %                     and against RHEOME_MODES_SHA256 when set); opt-in
+%   upstream.csv      AGE-1 / WAVE-OR-LEAKAGE (nsp rheome-upstream): rheome.scale.measure_upstream -- the
+%                     participant readout v1 of rheome.flow.upstreamshare per (span, pass, hemisphere): U
+%                     (periodic), U_surrogate (lagged-source null), U_total (periodic gain off), U_of (optical
+%                     flow comparator), and its covariates in metrics.csv. Needs RHEOME_G1; opt-in, not "ported"
 %   timing.csv        analysis, seconds, peak_rss_GB, status, message
 %   rheome_coeffs.mat Analyses="coefficients" only: graph-wavelet envelopes per tile x scale x time,
 %                     Prognome's contract (rheome.scale.coefficients)
@@ -245,6 +249,8 @@ function R = run(name, opts)
                     for fn = string(fieldnames(Xm))'
                         X.(fn) = [table(repmat(string(name), height(Xm.(fn)), 1), 'VariableNames', {'subject'}), Xm.(fn)];
                     end
+                case "upstream"                % AGE-1 / WAVE-OR-LEAKAGE readout v1: U, U_surrogate, U_total, U_of
+                    [Tu, X.upstream] = rheome.scale.measure_upstream(name, S);  M = [M; Tu]; %#ok<AGROW>
                 case "coefficients"            % Prognome's MEG input: opt-in, not in the "ported" default
                     st0 = rheome.load.study(name);
                     Cf = rheome.scale.coefficients(S.B, S.Res.ImagingKernel, double(st0.rec.F(S.iSel,:)), st0.rec.sfreq);
