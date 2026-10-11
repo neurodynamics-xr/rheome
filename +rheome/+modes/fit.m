@@ -33,6 +33,11 @@ function [T, X] = fit(name, S, M, opts)
 %     |phase difference| over edges exceeds a smooth gradient's (a planted A->P wave read pg 1.57 against its
 %     pair's 2.01). ⚠ The separation is small at these scales: through OMEGA sub-0002 at depth 3 a 200 mm wave
 %     reads r_n3 0.96, planted pairs 0.993-0.997, a rotation 0.994 (request 30825727 evidence, n3_prototype)
+%   N3 calibration (protocol section 13, method "n3cal", mode 0): on this head, a planted 200 mm A->P plane wave
+%     (source planted_wave200_ap) and two planted lagged pairs (planted_pair_fo, planted_pair_lateral) through
+%     W * gain replace the participant's leading component in every valid sample (noise and the rest kept); the
+%     re-estimated mode goes through the same N3: r_n3, r_n3_sim, n3_excess = r_n3_sim - r_n3, r_plant. The
+%     frozen N3Margin is the midpoint between the largest pair excess and the smallest wave excess (Science)
 %   N5 (Level 2): NSurr multivariate phase-randomised surrogates of the periodic tile series through the same
 %     band and back-fit: dwell_median_ms and trans_entropy as surrogate mean, sd and two-sided p
 %   physical features of m_k (protocol 6), on the participant's tile geometry:
@@ -78,7 +83,8 @@ function [T, X] = fit(name, S, M, opts)
     end
     if isempty(S), S = rheome.scale.sensors(name); end
     vs = M.variantSpec;
-    [Z, Y] = rheome.modes.fields(name, S, CutoffMM=vs.cutoff_mm, Depth=vs.depth, SensCutoffMM=[], SensDepths=[], Seed=opts.Seed);
+    [Z, Y, Op] = rheome.modes.fields(name, S, CutoffMM=vs.cutoff_mm, Depth=vs.depth, SensCutoffMM=[], SensDepths=[], Seed=opts.Seed);
+    [Pn, Pm] = i_planted(S, Op{1}.W);  clear Op
     tl = Z.tiles{1};
     if height(tl) ~= height(M.tiles) || any(tl.tile ~= M.tiles.tile) || any(tl.hemi ~= M.tiles.hemi)
         error('modes:fit:tiles', '%s: tiles differ from the frozen centroids''', name);
@@ -149,6 +155,11 @@ function [T, X] = fit(name, S, M, opts)
             put(bn, "data", "all", "backfit", kk, "p_spin", ps, "p");
             L3 = i_lagged(m, Z.R, G, z(:, Rd.lab == kk));
             for f = string(fieldnames(L3))', put(bn, "data", "all", "backfit", kk, f, L3.(f), i_unit(f)); end
+        end
+        % N3 calibration (protocol 52798c1e section 13): planted patterns in this participant's own band data
+        for pp = 1:numel(Pn)
+            Lc = i_n3plant(Pm(:, pp), Z.R, G, z(:, valid));
+            for f = string(fieldnames(Lc))', put(bn, Pn(pp), "all", "n3cal", 0, f, Lc.(f), i_unit(f)); end
         end
         % N5: dwell and transition entropy against phase-randomised surrogates (Level 2)
         sd = nan(opts.NSurr, K + 2);
@@ -314,14 +325,37 @@ function L = i_lagged(m, R, G, zk)
     L.n3_lag_rad = F.lag_rad;  L.n3_tiles_a = nnz(F.x1 > 0);  L.n3_tiles_b = nnz(F.x2 > 0);
 end
 
+function [names, P] = i_planted(S, W)
+% the N3 calibration patterns (protocol section 13) on this head, as in the methods benchmark (request 30825727):
+% a 200 mm plane wave travelling A->P along SCS x over the whole cortex, and two lagged pairs of 30 mm blobs
+% (frontal-occipital, frontal leading by 90 deg; lateral, 60 deg) -- the normal current seen through W * gain
+    V = S.Sf.Vertices;  nr = S.Sf.VertNormals ./ vecnorm(S.Sf.VertNormals, 2, 2);  G = S.G;
+    Gn = nr(:,1)' .* G(:, 1:3:end) + nr(:,2)' .* G(:, 2:3:end) + nr(:,3)' .* G(:, 3:3:end);
+    c0 = mean(V(V(:,1) <= prctile(V(:,1), 10), :), 1);  c1 = mean(V(V(:,1) >= prctile(V(:,1), 90), :), 1);
+    g = @(c) exp(-vecnorm(V - c, 2, 2).^2 / (2 * 0.030^2));
+    P = W * Gn * [exp(1i * 2*pi/0.200 * V(:,1)), g(c1) + exp(-1i*pi/2) * g(c0), ...
+                  g(c1 + [0 0.04 0]) + exp(-1i*pi/3) * g(c0 - [0 0.04 0])];
+    names = ["planted_wave200_ap" "planted_pair_fo" "planted_pair_lateral"];
+end
+
+function L = i_n3plant(p, R, G, z)
+% the participant's leading component in every valid sample replaced by the planted pattern (its coefficients,
+% the noise and the rest kept), the mode re-estimated and read by the same N3 as a real mode: n3_excess =
+% r_n3_sim - r_n3, the quantity the travelling label tests against N3Margin
+    [V, Lm] = eig(z * z', 'vector');  [~, j] = max(real(Lm));  mu = V(:, j);
+    p = p / norm(p);  a = mu' * z;  zp = z - mu * a + p * a;
+    [V, Lm] = eig(zp * zp', 'vector');  [~, j] = max(real(Lm));  m = V(:, j);
+    L = i_lagged(m, R, G, zp);  L.r_plant = abs(p' * m);  L.n3_excess = L.r_n3_sim - L.r_n3;
+end
+
 function u = i_unit(f)
     persistent U
     if isempty(U)
         U = dictionary(["extent_mm2" "extent_radius_mm" "dirichlet_wavelength_mm" "tile_spacing_mm" "pg" ...
             "dir_x" "dir_y" "dir_z" "dir_concentration" "dir_azimuth_deg" "phase_wavelength_mm" "speed_m_s" ...
             "speed_resolved" "div_index" "winding_net" "winding_count" "pg_n3" "r_n3" "r_n3_sim" "n3_lag_rad" ...
-            "n3_tiles_a" "n3_tiles_b"], ["mm2" "mm" "mm" "mm" "rad" "unit" "unit" "unit" "r" "deg" "mm" "m/s" ...
-            "flag" "rad/mm2" "windings" "windings" "rad" "r" "r" "rad" "tiles" "tiles"]);
+            "n3_tiles_a" "n3_tiles_b" "r_plant" "n3_excess"], ["mm2" "mm" "mm" "mm" "rad" "unit" "unit" "unit" "r" "deg" "mm" "m/s" ...
+            "flag" "rad/mm2" "windings" "windings" "rad" "r" "r" "rad" "tiles" "tiles" "r" "r"]);
     end
     u = U(f);
 end

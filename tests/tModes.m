@@ -120,6 +120,8 @@ classdef tModes < matlab.unittest.TestCase
             occ = v.value(v.source == "data" & v.half == "all" & v.method == "backfit" & v.metric == "occupancy");
             tc.verifyEqual(sum(occ), numel(M.bands), 'AbsTol', 1e-9);              % occupancies sum to 1 per band
             tc.verifyTrue(all(v.value(v.metric == "speed_resolved") == 0));        % depth 3: never a speed
+            cal = v(v.method == "n3cal" & v.metric == "n3_excess", :);                % section 13 calibration, every band
+            tc.verifyEqual(height(cal), 3 * numel(M.bands));  tc.verifyTrue(all(isfinite(cal.value)));
             bad = M;  bad.bands(1).C(1) = bad.bands(1).C(1) + 1e-6;
             tc.verifyError(@() rheome.modes.fit(char(tc.Names(1)), [], bad), 'modes:fit:hash');
             % the driver writes the fit tables, then the reduction over the three
