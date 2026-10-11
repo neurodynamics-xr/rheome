@@ -26,6 +26,7 @@ function S = sensors(name, opts)
     S.Sf = rheome.load.surface(name);
     st = rheome.load.study(name);
     isMod = strcmpi(st.chan.Type, char(opts.Modality));
+    if opts.Modality == "MEG", isMod = rheome.sensors.ismeg(st.chan.Type); end   % MEGIN: 'MEG MAG' / 'MEG GRAD'
     S.iSel = find(isMod(:) & (st.rec.ChannelFlag(:) == 1));
     n = numel(S.iSel);  S.Ref = eye(n);  if opts.Modality == "EEG", S.Ref = S.Ref - 1/n; end
     S.G   = S.Ref * double(st.hm.Gain(S.iSel,:));

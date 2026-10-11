@@ -27,7 +27,7 @@ function [G, idx, names] = leadfield(study, varargin)
     p = inputParser;
     p.addParameter('GlobalVertices', [], @isnumeric);
     p.parse(varargin{:});
-    ok  = strcmpi(study.chan.Type, 'MEG') & (study.rec.ChannelFlag(:)' == 1);
+    ok  = rheome.sensors.ismeg(study.chan.Type) & (study.rec.ChannelFlag(:)' == 1);
     idx = find(ok);
     G   = double(study.hm.Gain(idx, :));
     gv  = p.Results.GlobalVertices;

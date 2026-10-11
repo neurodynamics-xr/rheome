@@ -36,7 +36,7 @@ function E = envelopemodes(name, opts)
         S = load(f);  E = S.E;  return
     end
     B = rheome.load.bases(name);  Sf = rheome.load.surface(name);  st = rheome.load.study(name);
-    isMEG = strcmpi(st.chan.Type, 'MEG');
+    isMEG = rheome.sensors.ismeg(st.chan.Type);
     iSel = find(isMEG(:) & (st.rec.ChannelFlag(:) == 1));
     G = double(st.hm.Gain(iSel, :));  ncm = struct('NoiseCov', double(st.ncov.NoiseCov(iSel, iSel)));
     chT = st.chan.Type(iSel);  fs = st.rec.sfreq;  F = double(st.rec.F(iSel, :));  clear st

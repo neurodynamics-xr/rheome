@@ -89,7 +89,7 @@ function ctx = context(name, K, Klbo, opts)
                 error('flow:context:grid', ...
                     'Leadfield grid has %d sources but the cortex has %d vertices.', st.hm.nV, S.nV);
             end
-            isMEG = strcmpi(st.chan.Type, 'MEG');
+            isMEG = rheome.sensors.ismeg(st.chan.Type);
             iSel  = find(isMEG(:) & (st.rec.ChannelFlag(:) == 1));   % same selection as rheome.source.dirac
             % ⚠ TAKE WHAT IS NEEDED AND DROP THE STUDY BEFORE THE SVD. st holds the whole
             % recording (~1 GB on a resting run); keeping it alive across an [nCh x 3nV]
