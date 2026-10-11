@@ -47,7 +47,8 @@ function R = run(name, opts)
 %                     detected events. A sleep EEG subject: Modality="EEG", and Edf/Events with ProtoDir (the
 %                     template forward model) to import it (rheome.scale.importeeg); opt-in, not "ported"
 %   slowoscplant.csv, slowoscplant_plants.csv   SLEEP-1 gate V (nsp cf-slowosc-plant): the same reading of planted
-%                     A->P / P->A movers at 1, 2, 5 m/s on the subject's own N2/N3 background (measure_slowosc, Plant)
+%                     A->P / P->A movers at 1, 2, 2.7, 5 m/s on the subject's own N2/N3 background (measure_slowosc,
+%                     Plant), in three extents (column "extent"; metrics band "<extent>/..."): plane, cingulate, murphy
 %   correspondence.csv, atlasevents.csv, gaugetensor.csv, connectome.csv   MS1 G12 (P8, nsp cf-atlas):
 %                     rheome.scale.measure_atlas -- DK agreement through the sphere vs raw coordinates and the
 %                     frame vs the shared meridian; alpha atlas events at depth <= 3 vs phase-randomised
@@ -205,10 +206,21 @@ function R = run(name, opts)
                     [Ta, X.aperiodic] = rheome.scale.measure_aperiodic(name, S);  M = [M; Ta]; %#ok<AGROW>
                 case "slowosc"                 % MS1 G15, G16: sleep slow oscillations, the positive control
                     [Tq, X.slowosc, X.slowosc_events] = rheome.scale.measure_slowosc(name, S);  M = [M; Tq]; %#ok<AGROW>
-                case "slowoscplant"            % SLEEP-1 gate V: planted A->P / P->A movers at 1, 2, 5 m/s, same readout
-                    [Tq, X.slowoscplant, X.slowoscplant_plants] = rheome.scale.measure_slowosc(name, S, Plant=[1 2 5], ...
-                        Conditions=["original" "reversed" "lagged"]);    % the phase-randomised null has nothing to say about a plant
-                    M = [M; Tq]; %#ok<AGROW>
+                case "slowoscplant"            % SLEEP-1 gate V (re-planned after audit 22c7b277): planted A->P / P->A
+                    % movers at 1, 2, 2.7 (Massimini's mean) and 5 m/s, level "median", in three extents: the whole
+                    % cortex, the cingulate highway and Murphy et al. 2009's slow-wave territory; same backgrounds
+                    % (same Seed) in each extent, so extents are paired
+                    cing = ["superiorfrontal" "anteriorcingulate" "posteriorcingulate" "isthmuscingulate" "precuneus"];
+                    ext = struct('name', {"plane" "cingulate" "murphy"}, 'region', {string.empty, cing, ...
+                        [cing "middlefrontal" "parsopercularis" "parstriangularis" "parsorbitalis" "insula"]});
+                    X.slowoscplant = table();  X.slowoscplant_plants = table();
+                    for xe = ext
+                        [Tq, Xq, Pq] = rheome.scale.measure_slowosc(name, S, Plant=[1 2 2.7 5], PlantLevels="median", ...
+                            PlantRegion=xe.region, Conditions=["original" "reversed" "lagged"]);   % the phase-randomised null has nothing to say about a plant
+                        Tq.band = xe.name + "/" + Tq.band;  M = [M; Tq]; %#ok<AGROW>
+                        X.slowoscplant = [X.slowoscplant; addvars(Xq, repmat(xe.name, height(Xq), 1), 'Before', 1, 'NewVariableNames', 'extent')];
+                        X.slowoscplant_plants = [X.slowoscplant_plants; addvars(Pq, repmat(xe.name, height(Pq), 1), 'Before', 1, 'NewVariableNames', 'extent')];
+                    end
                 case {"correspondence" "atlasevents" "gaugetensor" "connectome"}   % MS1 G12 (P8, nsp cf-atlas)
                     [Ta, X.(a)] = rheome.scale.measure_atlas(name, S, a);  M = [M; Ta]; %#ok<AGROW>
                 case "multimodal"              % MS1 multimodal example: MEG + PET + fibres on one ladder
