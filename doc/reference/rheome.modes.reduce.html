@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.modes.reduce</title></head><body>
+<h1>rheome.modes.reduce</h1>
+<p><em>function rheome.modes</em> &mdash; Rheome</p>
+<pre>  MODES.REDUCE  The keep rule per mode x band over a cohort's back-fits: Level 1, phase-layout labels, Level 2.
+ 
+    [C, Ts] = rheome.modes.reduce(fitFiles, centroidsFile, outDir)
+    [C, Ts] = rheome.modes.reduce(&quot;fits.txt&quot;, &quot;centroids.mat&quot;, outDir, Cohort=&quot;omega-H&quot;, Alpha=0.05)
+ 
+  fitFiles: the participants' modesfit.csv (rheome.modes.fit via rheome.scale.run), as paths or a text file
+  of paths. Protocol section 5, fixed before the data: every test a two-sided one-sample Wilcoxon (signrank)
+  on the participant-wise statistic minus its null, Holm across modes x bands within this cohort, Alpha.
+    Level 1 (real spatial structure), all of:
+      (i)   r_halves - r_n1_sources &gt; 0 (the participant's own mode matches across halves better than it
+            matches its leakage null) AND the centroid's |r| to every N1 centroid of the discovery &lt; N1R (0.7)
+      (ii)  N2 spin: r_spin_obs - r_spin_mean &gt; 0
+      (iii) N4: occupancy on the periodic part - occupancy on the aperiodic part &gt; 0
+      (iv)  split-half ICC(2,1) of the mode's gev &gt;= 0.5 with the lower bound of its 95 % CI &gt; 0.3 (percentile
+            bootstrap over participants, NBoot)
+    Labels: standing (median pg &lt; StandingRad); travelling (r_n3_sim - r_n3 &gt; N3Margin under Holm -- the mode is
+      further from its best two-phase source than that source reads when simulated in the participant's own data;
+      see rheome.modes.fit on why not pg - pg_n3 -- AND the sign of div_index shared by &gt;= SignShare of
+      participants); otherwise lagged-or-rotating. Rotation is UNRESOLVED at &gt;= 100 mm: a planted rotation reads
+      |r| 0.994 to its two-phase source, so it cannot be told from a lagged pair (decision aa405e9c); winding_net
+      and winding_sign_share are reported, never labelled. N3Margin 0.02 is the amended protocol's margin, to be
+      recalibrated on the canary's heads. The label is read only for Level-1 modes and says nothing about speed.
+    Level 2 (dynamics beyond second order): dwell_median_ms (the mode's) and trans_entropy (overall, under
+      mode 0) minus the N5 surrogate mean; plus the share of participants with N5 p significant at FDR q
+      (Benjamini-Hochberg over participants) against 5 % (binomial test).
+  Characterisation (protocol 6): participant medians (IQR) of extent, Dirichlet wavelength, occupancy,
+  occurrence, dwell, gev; the mean direction vector, its anatomical axis label and concentration; speed always
+  &quot;unresolved&quot; at depths below 7; the discovery's r_dmd, r_cpca, robust.
+ 
+  Writes outDir/modes_catalogue.csv (one row per band x mode), modes_tests.csv (one row per test),
+  reduce_provenance.json.
+ 
+  See also: rheome.modes.fit, rheome.modes.discover
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

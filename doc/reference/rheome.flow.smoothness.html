@@ -15,13 +15,19 @@
   the arrows across folds counts as roughness -- which is what the eye sees in a quiver plot.
   .coherence (vectors only) is the magnitude-weighted mean cosine between the vectors at the two ends
   of every mesh edge: 1 = neighbouring arrows parallel, 0 = unrelated.
+  ⭐ .transportCoherence (vectors) is the same cosine after carrying each arrow to its neighbour by
+  the Levi-Civita transport (rheome.operators.connection_laplacian .Rt), on the tangential part. It
+  does NOT count the turning of the tangent plane across folds, which bounds the two ambient
+  measures for ANY tangent field on the cortex: on OMEGA sub-0002 the tangential gradient of the 6th
+  Laplace-Beltrami mode (wavelength &gt; 300 mm) reads 16 mm and coherence 0.875 ambient, 0.960 here.
+  Read arrow smoothness here, against that ceiling.
  
-  OUTPUT (struct s): .wavelengthMM [1 x nT]   .coherence [1 x nT] (NaN for scalar maps)
+  OUTPUT (struct s): .wavelengthMM [1 x nT]   .coherence .transportCoherence [1 x nT] (NaN for scalar maps)
  
   See also: rheome.flow.bandlimit, rheome.differential.helmholtzbands
  
   Author: Diellor Basha, 2026
 </pre>
-<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
 <p><a href="index.html">Rheome reference</a></p>
 </body></html>

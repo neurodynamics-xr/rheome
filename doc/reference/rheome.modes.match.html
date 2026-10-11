@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.modes.match</title></head><body>
+<h1>rheome.modes.match</h1>
+<p><em>function rheome.modes</em> &mdash; Rheome</p>
+<pre>  MODES.MATCH  Hungarian matching of two sets of complex modes by phase-invariant |r|.
+ 
+    [r, perm] = rheome.modes.match(A, B)     % A [d x K], B [d x K2], K &lt;= K2
+ 
+  R = |A' B| after unit-normalising every column (global phase does not matter). perm(k) is the column of B
+  matched to A(:, k) (MATLAB matchpairs on 1 - R, every A column matched), r(k) = R(k, perm(k)).
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

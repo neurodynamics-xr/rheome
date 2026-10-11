@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.forward.laggedrest</title></head><body>
+<h1>rheome.forward.laggedrest</h1>
+<p><em>function rheome.forward</em> &mdash; Rheome</p>
+<pre>  FORWARD.LAGGEDREST  The lagged-source null of a resting recording: rheome.forward.laggedpair window by window.
+ 
+    [Ys, info] = rheome.forward.laggedrest(Y, Gp, front, fs)
+    [Ys, info] = rheome.forward.laggedrest(Y, Gp, front, fs, WindowS=4, MaxLagS=0.5, Group=hemi, Mask=bad)
+ 
+  Why: a resting direction reading (rheome.flow.upstreamshare) is a claim about travel only if it beats what
+  generators that do NOT travel, at the participant's own lags and amplitude ratios, produce through the same
+  head and the same readout (gate N of the AGE-1 and WAVE-OR-LEAKAGE test plans). An event has one window
+  (rheome.forward.laggedpair); a resting span has no events, so it is cut into windows and each is replaced
+  by its own lagged-pair null: generators matched to that stretch of the participant's sources, with no travel.
+ 
+  1. WINDOWS. Overlapping windows of WindowS seconds, hop WindowS - 2 MaxLagS; each window's central part (its
+     MaxLagS margins dropped, because laggedpair's delay is circular over the window) is kept, and the kept
+     parts tile the span edge to edge. The first and last windows keep their outer margin too.
+  2. NULL. In each window, rheome.forward.laggedpair: the frontal and the posterior generator (one candidate
+     patch per Group each, the best by least squares), the back one replaced by the front one's waveform at
+     the window's ratio, polarity and lag, plus the residual with each channel's phases randomised.
+  3. MASK. A window whose samples touch Mask (artefact) is not fitted: its kept part is left at zero and
+     info.read is false there; the caller must not read those samples.
+ 
+  ⚠ THE SPAN IS THE SIGNAL THE READOUT TAKES, already band-limited (AGE-1: the periodic 1-8 Hz part, real, at
+    the readout's frame rate). The surrogate is then made analytic and read exactly as the data are.
+  ⚠ The window and lag limit are a declared choice, not a fit: MaxLagS = 0.5 s is half a cycle at 1 Hz, the
+    largest lag the readout can tell from its mirror (rheome.flow.upstreamshare, aliasing).
+  ⚠ The random phases use the global stream: seed it (rng) before calling for a reproducible null.
+  ⚠ NOT VALIDATED (2026-10-11, rheome.scale.measure_upstreamnull in two MEG heads, desk evidence 3de34e58):
+    lagged 20-40 mm discs that do not travel leave |U*| up to 0.24, as large as planted travel at 100-1000 mm,
+    0.5-2 m/s; travel power 0. Tile candidates fit compact generators at r2 ~0.7, and the per-channel phase-
+    randomised residual loses the background's zero-lag structure. Do not read U* as travel until redesigned.
+ 
+  INPUTS
+    Y      [nChan x nT] real sensor signal    Gp [nChan x nPatch] candidate generator topographies
+    front  [1 x nPatch] logical, frontal candidates     fs  sampling rate (Hz)
+  NAME-VALUE
+    WindowS (4)   MaxLagS (0.5)   Group [1 x nPatch] (one group)   Mask [1 x nT] logical (none)
+  OUTPUT
+    Ys     [nChan x nT] the surrogate
+    info   .read [1 x nT] logical (samples carrying a surrogate)   .windows table: first, last, lagS, ratio,
+           r2, polarity, fitted (one row per window)
+ 
+  See also: rheome.forward.laggedpair, rheome.scale.measure_upstream, rheome.flow.upstreamshare
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

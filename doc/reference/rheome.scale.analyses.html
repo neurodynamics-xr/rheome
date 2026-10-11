@@ -46,8 +46,12 @@
                                                run only when asked (nsp cf-aperiodic), not &quot;ported&quot;
     slowosc          MS1 G15, G16              sleep slow oscillations (EEG, rheome.scale.importeeg): direction vs A-&gt;P
                                                and speed per event; framework, bst_of, phasereg, sensor latency;
-                                               time-reversed and phase-randomised nulls -- run only when asked
+                                               time-reversed, phase-randomised and lagged-source nulls -- run only when asked
                                                (nsp cf-slowosc), not &quot;ported&quot;
+    slowoscplant     SLEEP-1 TP1 gate V        planted A-&gt;P / P-&gt;A slow-oscillation movers at 1, 2, 5 m/s in the
+                                               EEG head, on the participant's own N2/N3 background at its median
+                                               event p2p and at the detection threshold; same estimators and nulls;
+                                               run only when asked (nsp cf-slowosc-plant), not &quot;ported&quot;
     correspondence   MS1 G12 (section 12.2)    DK through the sphere vs raw coordinates; frame vs the shared meridian
     atlasevents      MS1 G12 (Fig. 10)         alpha events on the group tiles, depth &lt;= 3, vs phase-randomised surrogates
     gaugetensor      MS1 G12 (section 12.3)    alpha orientation tensor per depth-3 group tile in the shared gauge
@@ -55,6 +59,13 @@
                      -- the four run only when asked (nsp cf-atlas), not &quot;ported&quot;; rheome.scale.measure_atlas
     multimodal       MS1 multimodal      MEG band power, PET SUVR, fibre degree through one wavelet bank on
                                                one dyadic ladder, exact roll-up; run only when asked, not &quot;ported&quot;
+    modesfields      resting-state pattern atlas, stage 1: complex band tile series + nulls N1, N4, N5
+    modesfit         stage 3: back-fit of the frozen centroids, features, N2, N3, N5 (RHEOME_MODES_CENTROIDS)
+                     -- both run only when asked (nsp rheome-modes-fields / rheome-modes-fit), not &quot;ported&quot;
+    upstream         AGE-1 TP2, WAVE-OR-LEAKAGE TP3   rheome.scale.measure_upstream: share of slow-band travel up
+                                               the principal gradient (upstreamshare v1) -- U, U_surrogate, U_total,
+                                               U_of and the aperiodic covariates; run only when asked (nsp
+                                               rheome-upstream), not &quot;ported&quot;
     coefficients     (Prognome input)          rheome.scale.coefficients: tile x scale x time envelopes;
                                                run only when asked (a ~200 MB file), so not &quot;ported&quot;
  
@@ -62,6 +73,6 @@
  
   Author: Diellor Basha, 2026
 </pre>
-<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
 <p><a href="index.html">Rheome reference</a></p>
 </body></html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_upstream</title></head><body>
+<h1>rheome.scale.measure_upstream</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_UPSTREAM  The AGE-1 participant readout: U, U_surrogate, U_total, U_of and their covariates per recording.
+ 
+    [T, X] = rheome.scale.measure_upstream(name)
+    [T, X] = rheome.scale.measure_upstream(name, rheome.scale.sensors(name), Gradient='/path/g1_fsaverage.mat')
+    [T, X] = rheome.scale.measure_upstream(name, S, Passes=[&quot;periodic&quot; &quot;surrogate&quot; &quot;total&quot;])
+    [T, X] = rheome.scale.measure_upstream(name, S, Data=Fplanted)    % a planted copy of the S.iSel rows
+ 
+  Why: whether large-scale slow-band activity at rest runs up the sensory -&gt; association gradient, and whether
+  that survives the instrument, is read per participant by ONE frozen definition: rheome.flow.upstreamshare,
+  &quot;participant readout (version 1)&quot; (rheome 2a2fe62; TP2 gate S). This function is that readout from sensors to
+  one row per recording, steps a-f of upstreamshare's help, and nothing in it is chosen per recording.
+ 
+    a. SPAN       rheome.scale.cleanspan; at least MinSpanS (180 s), else the recording is not read. Frames on
+                  an interior artefact block (cleanspan's .mask) cast no vote. Halves (gate G): the first and
+                  second half of the span, each through b-f on its own (its own aperiodic fit).
+    b. BAND       per channel, Welch PSD of the span (8 s Hann, 50 %; rheome.scale.cleanwelch), aperiodic fit with
+                  a knee on 1-45 Hz without 60/120 +- 2 Hz (rheome.spectral.decompose, fitPower = that PSD in the
+                  FFT's units, x fs N / 2), gain h on the span's FFT; the ANALYTIC slow band is the inverse FFT
+                  of 2 h C on the positive bins in [1 8] Hz, taken at Rate (50) frames per second.
+    c-d. FIELD    the unconstrained minimum-norm current (S.Res), all three components, as the area-weighted
+                  mean over each tile of rheome.geom.tree at DEPTH 3 per hemisphere (one [tiles x channels]
+                  operator per component: K then the tile mean, exactly linear); Normals = tile mean normal.
+    e. GRADIENT   the Margulies et al. 2016 principal gradient (G1, normative) on the FreeSurfer sphere,
+                  carried to the recording's cortex through its registered sphere (nearest vertex); signed so
+                  pericalcarine, precentral and postcentral (Desikan-Killiany) are low and inferiorparietal and
+                  medialorbitofrontal high; g = tile mean.
+    f. RESOLUTION own-tile fraction (rheome.flow.crosstalk on the kernel's three components) &gt;= 0.25 votes; a
+                  recording whose keptWeight &lt; 0.5 in either hemisphere is not read. U pools the hemispheres
+                  by their vote weight. The mask and the exclusion depend on the kernel only, so every pass
+                  reads the same tiles of the same participants.
+ 
+  PASSES (Passes=; all four by default; each is one extra reading of the same span, tiles, mask and gradient):
+    &quot;periodic&quot;   U: h = hper, the periodic gain (the primary readout)
+    &quot;surrogate&quot;  U_surrogate: gate N. The periodic slow band of step b (real, at Rate) replaced by its
+                 lagged-source null (rheome.forward.laggedrest: in 4 s windows, the frontal and posterior tile
+                 generators of each hemisphere refitted with no travel, through the participant's own gain, at
+                 the window's lag and ratio, + the phase-randomised residual), made analytic on the same bins,
+                 and read by c-f. U* = U - U_surrogate. Read on the whole span and on each half.
+    &quot;total&quot;      U_total: h = 1, the periodic gain switched off (WAVE-OR-LEAKAGE H3b, Delta_ap = U_total - U).
+                 The aperiodic fit still runs and gives the covariates. Whole span only.
+    &quot;of&quot;         U_of: the comparator (P2). Horn-Schunck optical flow (rheome.flow.apparent, Alpha 1) of the
+                 periodic slow-band envelope |J| per vertex and hemisphere; the share of sum |v| |grad g| a over
+                 vertices and frame pairs with v . grad g &gt; 0. Whole span only. Never pooled with U.
+                 ⚠ solved in chunks of OfChunk frames (each chunk normalised on its own by opticalflow_scalar).
+ 
+  COVARIATES (from the aperiodic fit of the span, whatever the pass): aperiodic_exponent and aperiodic_offset
+  (channel means, offset in log10 PSD units), snr_slow_dB (periodic / aperiodic Welch power in 1-8 Hz, per
+  channel in dB, channel mean), aperiodic_ok (gate P: every channel's fit finite). r50 is the resolution
+  analysis's (rheome.scale.measure_resolution), not repeated here.
+ 
+  OUTPUT
+    T  metrics rows (analysis &quot;upstream&quot;): read (1/0), span_s, U, U_surrogate, U_total, U_of, U_star, and the
+       halves U_h1, U_h2, U_surrogate_h1, U_surrogate_h2, U_star_h1, U_star_h2; aperiodic_exponent,
+       aperiodic_offset, snr_slow_dB, aperiodic_ok (whole span; band &quot;h1&quot;/&quot;h2&quot; for the halves);
+       kept_weight_L/_R, g1_tilecheck_L/_R, n_frames
+    X  one row per (span, pass, hemisphere|&quot;both&quot;): span, pass, hemi, U, weight, kept_weight, n_edges,
+       n_frames, reason (&quot;&quot; when read; why the recording was not read otherwise)
+ 
+  ⚠ WHAT IT CANNOT RESOLVE (state with any result): travel slower than 2 d f between tile centres reads
+    backwards (0.24 m/s at 1 Hz, 1.9 m/s at 8 Hz for d = 120 mm); 8 tiles per hemisphere make U a lobe-scale
+    share; zero-lag point spread pulls U to 0.5, lagged generators that do not travel can bias it (hence U*).
+  ⚠ GATE G READS ONLY THE ICC AND SD OF U* (rheome.scale.groupupstream), never a mean, before the plans' approval.
+ 
+  See also: rheome.flow.upstreamshare, rheome.forward.laggedrest, rheome.flow.crosstalk, rheome.scale.run,
+            rheome.scale.groupupstream
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>
