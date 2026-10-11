@@ -43,7 +43,7 @@ function a = analyses(which)
 %                                              run only when asked (nsp cf-aperiodic), not "ported"
 %   slowosc          MS1 G15, G16              sleep slow oscillations (EEG, rheome.scale.importeeg): direction vs A->P
 %                                              and speed per event; framework, bst_of, phasereg, sensor latency;
-%                                              time-reversed and phase-randomised nulls -- run only when asked
+%                                              time-reversed, phase-randomised and lagged-source nulls -- run only when asked
 %                                              (nsp cf-slowosc), not "ported"
 %   correspondence   MS1 G12 (section 12.2)    DK through the sphere vs raw coordinates; frame vs the shared meridian
 %   atlasevents      MS1 G12 (Fig. 10)         alpha events on the group tiles, depth <= 3, vs phase-randomised surrogates
