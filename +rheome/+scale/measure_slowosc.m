@@ -55,10 +55,16 @@ function [T, X, E] = measure_slowosc(name, S, opts)
 %                   at each HornSchunck (0.01 = Brainstorm's default); the time-mean velocity field.
 %    phasereg       rheome.flow.phaseregression on the analytic normal current (Hilbert of the band-passed sensors,
 %                   padded by PadS, then cropped), PatchMM patches at PhaseCentres vertices, wavelengths up to 20 m.
-%    sensorlatency  Massimini's own reading, no inverse: each channel's negative-peak latency within ClusterS of
-%                   the event regressed on the electrode's (posterior, lateral) position; the latency gradient's
-%                   direction and 1/|gradient| as speed, R = the latency plane's R^2. One row per event, hemi
-%                   "both", param 0 (not NaN: findgroups drops NaN keys).
+%    sensorlatency  Massimini's own reading, no inverse: the negative-peak latency of each channel that CARRIES the
+%                   wave -- a negative half-wave (zero crossings HalfWaveS apart, his criterion 1, no amplitude
+%                   threshold) whose negative peak lies within ClusterS of the event; at least MinLatencyChannels,
+%                   else no direction -- regressed on the electrode's (posterior, lateral) position; the latency
+%                   gradient's direction and 1/|gradient| as speed, R = the latency plane's R^2. One row per event,
+%                   hemi "both", param 0 (not NaN: findgroups drops NaN keys).
+%                   ⚠ Before 2026-10-11 every channel entered, and about half of them (the ones that see the wave
+%                   inverted under the average reference) had their minimum pinned to the window's edge, at -0.2 or
+%                   +0.2 s. On AnphySleep the posterior ones were pinned to the EARLY edge more often, which read
+%                   P->A (G15a, 24/25 participants). Desk evidence 22c7b277.
 %    Field estimators (bst_of, phasereg) give one event direction as the weighted circular mean of the per-vertex
 %    directions (weight: amplitude x |velocity|, x the fit's coherence R for phasereg) and their resultant R.
 % 4. GATE V (Plant = speeds in m/s; analysis "slowoscplant"): direction accuracy for movers as fast as slow
@@ -77,8 +83,16 @@ function [T, X, E] = measure_slowosc(name, S, opts)
 %                     (the wavelength, 1.25 m+, is ~10x the hemisphere: the band map's extremum moves with geometry)
 %      phasereg       right sign to 2 m/s (error <= 27 deg); at 5 m/s REVERSED (175 deg) in both hemispheres
 %      sensorlatency  right sign at every speed (error ~1 deg), and also on the lagged null: it reads lag, not travel
+%    ⚠ MEASURED in the AnphySleep head (EPCTL03, template ICBM152 + OpenMEEG, 3 plants per cell, level "median";
+%      desk evidence 22c7b277): framework at chance (0.33-0.67 correct, median error 55-114 deg) at 1, 2.7 and 5 m/s
+%      for plane waves and for plants confined to the medial wall and cingulate (PlantRegion); phasereg 0.67-1.00;
+%      sensorlatency (carrying channels) 1.00 within 9 deg on plane waves.
 %    ⚠ A plane wave is the simplest mover: it says what the head and inverse do to a known direction, not how
 %    real slow oscillations (origin, curvature, bilateral asymmetry) are read.
+%    PlantRegion confines the plant to atlas parcels (PlantAtlas, labels matched case-insensitively), e.g. the
+%    medial wall and cingulate where hd-EEG source models put slow waves and their anterior-posterior travel
+%    (Murphy et al. 2009, PNAS 106:1608): ["superiorfrontal" "anteriorcingulate" "posteriorcingulate"
+%    "isthmuscingulate" "precuneus"]. The wave and its amplitude rule are the same; only its extent changes.
 % ⭐ DIRECTION IS AN ANGLE IN THE GAUGE, 0 = ANTERIOR -> POSTERIOR. At each vertex the velocity and the
 %   PosteriorAxis are projected on the tangent plane and expressed in the hemisphere's trivial gauge
 %   (rheome.operators.gauge, +1 at the two faces of largest separation: the MS1 gauge); angleDeg is the velocity's
@@ -128,10 +142,13 @@ function [T, X, E] = measure_slowosc(name, S, opts)
         opts.GenDepth (1,1) double = 4
         opts.MaxLagS (1,1) double = 0.3
         opts.Estimators string = ["framework" "bst_of" "phasereg" "sensorlatency"]
+        opts.MinLatencyChannels (1,1) double = 8  % sensorlatency: fewer carrying channels -> no direction
         opts.Plant double = []                  % gate V: planted speeds (m/s); replaces the detected events
         opts.PlantsPerCell (1,1) double {mustBeInteger, mustBePositive} = 10
         opts.PlantLevels string {mustBeMember(opts.PlantLevels, ["median" "threshold"])} = ["median" "threshold"]
         opts.PlantHz (1,1) double = 0.8
+        opts.PlantRegion string = string.empty  % gate V: atlas labels the plant is confined to (empty: the whole cortex)
+        opts.PlantAtlas (1,1) string = "Desikan-Killiany"
     end
     if isempty(S), S = rheome.scale.sensors(name, Modality="EEG"); end
     st = rheome.load.study(name);  rec = st.rec;  fs = rec.sfreq;
@@ -160,6 +177,7 @@ function [T, X, E] = measure_slowosc(name, S, opts)
     post = opts.PosteriorAxis / norm(opts.PosteriorAxis);  lat = cross(post, opts.UpAxis);  lat = lat / norm(lat);
     C = struct([]);
     for h = opts.Hemis, C = [C, i_hemi(S, h, post, opts)]; end %#ok<AGROW>
+    if ~isempty(opts.Plant) && ~isempty(opts.PlantRegion), C = i_plantregion(C, name, opts); end
     ap = Loc' * post';  q3 = quantile(ap, [1 2] / 3);  eF = ap < q3(1);  eB = ap > q3(2);   % frontal, posterior thirds
     % (not halves: under the average reference the two halves' means are exact negatives of each other)
     for v = ["genFrontAPmm" "genBackAPmm" "fitR2" "ratio" "lagS" "elecRatio" "elecLagS" "elecRatioLagged" "elecLagSLagged"]
@@ -186,7 +204,7 @@ function [T, X, E] = measure_slowosc(name, S, opts)
             end
             za = hilbert(yl.').';  ys = yl(:, crop);  zs = za(:, crop);
             if any(opts.Estimators == "sensorlatency")
-                rows{end+1} = i_row(ii, "both", cnd, "sensorlatency", 0, i_latency(ys, fs, Loc, post, lat, opts)); %#ok<AGROW>
+                rows{end+1} = i_row(ii, "both", cnd, "sensorlatency", 0, i_latency(yl, fs, Loc, post, lat, opts)); %#ok<AGROW>
             end
             for c = C
                 Xn = c.Kn * ys;
@@ -252,10 +270,21 @@ function [y, snr] = i_plantwin(bg, p, C, fs, L, o)
 % snr: plant power over background power in the read window (+-WindowS), all channels (dB)
     tt = (-L:L) / fs;  w = @(tau) -cos(2*pi*o.PlantHz*tau) .* exp(-tau.^2 / (2 * 0.5^2));
     cen = mean(vertcat(C.cen), 1);  s = 0;
-    for c = C, s = s + c.Gn * w(tt - p.dirSign * ((c.V - cen) * c.post') / p.speedMS); end
+    for c = C, s = s + c.Gn * (c.plantMask .* w(tt - p.dirSign * ((c.V - cen) * c.post') / p.speedMS)); end
     s = s * p.p2pUV / max(max(s, [], 2) - min(s, [], 2));
     k = L + 1 + (-round(o.WindowS * fs) : round(o.WindowS * fs));
     y = bg + s;  snr = 10 * log10(sum(s(:, k).^2, 'all') / sum(bg(:, k).^2, 'all'));
+end
+
+function C = i_plantregion(C, name, o)
+% confine the plant to the vertices of the atlas parcels whose label contains any of o.PlantRegion (case-insensitive)
+    A = rheome.load.atlas(name, o.PlantAtlas);
+    sel = contains(lower(string(A.Label)), lower(o.PlantRegion));
+    assert(any(sel), 'rheome:slowosc:plantregion', 'no %s parcel matches %s', o.PlantAtlas, strjoin(o.PlantRegion, ', '));
+    for k = 1:numel(C)
+        C(k).plantMask = full(any(A.Membership(sel, C(k).gv), 1))';
+        assert(any(C(k).plantMask), 'rheome:slowosc:plantregion', 'the plant region is empty in hemisphere %s', C(k).h);
+    end
 end
 
 function T = i_plantmetrics(X, P)
@@ -394,10 +423,25 @@ function [ang, vt] = i_angle(v, k, c)
     ang = rad2deg(angle(exp(1i * a)));
 end
 
-function q = i_latency(ys, fs, Loc, post, lat, o)
-    q = i_nanq();  w = (size(ys, 2) - 1) / 2;  cw = round(o.ClusterS * fs);
-    [~, k] = min(ys(:, w+1-cw : w+1+cw), [], 2);  tl = (k - 1) / fs;
-    A = [ones(size(Loc, 2), 1), Loc' * post', Loc' * lat'];
+function q = i_latency(yl, fs, Loc, post, lat, o)
+% Massimini's delay map on the channels that carry the wave: each channel's negative half-wave (a negative zero
+% crossing and the next positive one HalfWaveS apart, Massimini 2004 criterion 1) whose negative peak lies within
+% ClusterS of the event centre; that peak's time is the channel's delay. A channel with no such half-wave -- one
+% that sees the wave inverted under the average reference, or none -- has no delay. yl: the padded window.
+    q = i_nanq();  mid = (size(yl, 2) + 1) / 2;  cw = round(o.ClusterS * fs);  tl = NaN(size(yl, 1), 1);
+    for k = 1:size(yl, 1)
+        y = yl(k, :);  s = sign(y);  s(s == 0) = 1;
+        dn = find(s(1:end-1) > 0 & s(2:end) < 0);  up = find(s(1:end-1) < 0 & s(2:end) > 0);
+        for i = 1:numel(dn)
+            j = find(up > dn(i), 1);  if isempty(j), break, end
+            hw = (up(j) - dn(i)) / fs;  if hw < o.HalfWaveS(1) || hw > o.HalfWaveS(2), continue, end
+            [~, pk] = min(y(dn(i):up(j)));  pk = dn(i) + pk - 1;
+            if abs(pk - mid) <= cw && ~(abs(pk - mid) >= abs(tl(k) * fs)), tl(k) = (pk - mid) / fs; end
+        end
+    end
+    c = isfinite(tl);
+    if nnz(c) < o.MinLatencyChannels, return, end
+    A = [ones(nnz(c), 1), Loc(:, c)' * post', Loc(:, c)' * lat'];  tl = tl(c);
     g = A \ tl;  gr = g(2:3);
     if norm(gr) == 0, return, end
     q.angleDeg = rad2deg(atan2(gr(2), gr(1)));  q.apCos = cosd(q.angleDeg);  q.speedMS = 1 / norm(gr);
@@ -423,7 +467,7 @@ function c = i_hemi(S, h, post, o)
     lam = H.lbo.Lambda(:);  c.Phi = H.lbo.Phi;  c.M = H.lbo.Mass;  c.av = full(sum(c.M, 2));
     hk = exp(-lam * (o.NormalSigmaMM * 1e-3)^2 / 2);  Nl = unit(Sh.VertNormals);
     Ns = unit(c.Phi * (hk .* (c.Phi' * (c.M * Nl))));
-    gv = double(H.gv(:));  K = S.Res.ImagingKernel;
+    gv = double(H.gv(:));  K = S.Res.ImagingKernel;  c.gv = gv;  c.plantMask = ones(c.nV, 1);
     c.Kn = Ns(:,1) .* K(3*gv-2, :) + Ns(:,2) .* K(3*gv-1, :) + Ns(:,3) .* K(3*gv, :);
     c.K3 = K(reshape((3*gv' - 3) + (1:3)', [], 1), :);
     gfb = rheome.graphfilterbank(lam, 'Wavelet', 'logitersine', 'VoicesPerOctave', 2);
