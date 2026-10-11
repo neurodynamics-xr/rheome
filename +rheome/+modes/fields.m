@@ -1,8 +1,9 @@
-function [Z, Y] = fields(name, S, opts)
+function [Z, Y, Op] = fields(name, S, opts)
 % MODES.FIELDS  One participant's complex band tile series z(t) and the nulls N1, N4, N5 (stage 1 of the atlas).
 %
 %   [Z, Y] = rheome.modes.fields(name)
 %   [Z, Y] = rheome.modes.fields(name, S, CutoffMM=100, Depth=3, Seed=1)
+%   [Z, Y, Op] = ...                    % Op: the rheome.modes.operator of each variant (cell, primary first)
 %
 % Steps (protocol section 4.1): the recording (good MEG channels, its clean span: rheome.scale.cleanspan) is
 % resampled to WorkRate and mapped to the group tiles by rheome.modes.operator (normal current, low-passed at
