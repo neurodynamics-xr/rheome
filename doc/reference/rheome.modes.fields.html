@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.modes.fields</title></head><body>
+<h1>rheome.modes.fields</h1>
+<p><em>function rheome.modes</em> &mdash; Rheome</p>
+<pre>  MODES.FIELDS  One participant's complex band tile series z(t) and the nulls N1, N4, N5 (stage 1 of the atlas).
+ 
+    [Z, Y] = rheome.modes.fields(name)
+    [Z, Y] = rheome.modes.fields(name, S, CutoffMM=100, Depth=3, Seed=1)
+    [Z, Y, Op] = ...                    % Op: the rheome.modes.operator of each variant (cell, primary first)
+ 
+  Steps (protocol section 4.1): the recording (good MEG channels, its clean span: rheome.scale.cleanspan) is
+  resampled to WorkRate and mapped to the group tiles by rheome.modes.operator (normal current, low-passed at
+  a wavelength cutoff, tile mean). Each tile series is split into periodic and aperiodic parts
+  (rheome.modes.split); the periodic part gives the analytic band signal (rheome.modes.analytic) per band.
+  Band edges: the fixed band, re-centred on the participant's periodic peak where the median periodic PSD
+  over primary tiles has an interior maximum above its aperiodic level (same width; one set of edges per
+  participant, used for every variant and every null). Only bands no wider than MaxRecentreHz (5 Hz: delta,
+  theta, alpha) are re-centred: the maximum of a 17 Hz beta band is not an edge, and re-centring it on a
+  20 Hz maximum moved its lower edge into alpha (11.6 Hz on OMEGA sub-0002).
+ 
+  Variants: the primary (CutoffMM, Depth) and the sensitivity cutoffs SensCutoffMM at Depth and depths
+  SensDepths at CutoffMM. Sources (primary variant only, each through the SAME pipeline):
+    data          the recording
+    n1_sources    N1 leakage: independent normal sources at every vertex (variance ~ area), coloured by the
+                  recording's mean sensor spectrum, scaled to its sensor power, through the participant's own
+                  gain and the pipeline. Generated as chol(Gn diag(a) Gn')' * white, which has exactly that
+                  sensor covariance
+    n1_emptyroom  N1 sensor noise: the participant's own empty room (noise.mat) on the channels it shares,
+                  through the same W (absent channels zero); missing when the cache holds no noise run.
+                  A run shorter than the rest span is mirror-padded to its length (Z.emptyroomS = its own)
+    n4_aperiodic  N4: the aperiodic part of the data tile series (the complement of the periodic split)
+    n5_phaserand  N5: the data's periodic tile series with one random phase per frequency bin shared by all
+                  tiles (keeps every auto- and cross-spectrum; exact at tile level because everything before
+                  is linear and spatial and everything after is linear and time-invariant). One realisation
+                  here; rheome.modes.fit draws its own NSurr from Y.yper
+ 
+  Z (metadata): .name .workRate .bands table (band, lo, hi, peak_hz, rate) .variants table (variant, cutoff_mm,
+    depth, n_tiles) .tiles {variant} tables .A .R (primary adjacency, tile resolution) .sources .series table
+    (var, source, band, variant, n_valid, sha256) .periodic table (tile x band periodic fraction, primary)
+    .seed .spanS .channels
+  Y (arrays, each a top-level variable of the saved file so MatFile reads one without the rest):
+    Y.(z_&lt;source&gt;_&lt;band&gt;_v&lt;k&gt;) single complex [nTiles x T], Y.(valid_&lt;band&gt;) logical [1 x T],
+    Y.yper [nTiles x N] single (primary periodic series at WorkRate), Y.mask [1 x N]
+ 
+  See also: rheome.modes.operator, rheome.modes.discover, rheome.modes.fit, rheome.scale.run
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

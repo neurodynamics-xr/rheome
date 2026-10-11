@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.modes.discover</title></head><body>
+<h1>rheome.modes.discover</h1>
+<p><em>function rheome.modes</em> &mdash; Rheome</p>
+<pre>  MODES.DISCOVER  Group discovery: pooled phase-invariant k-means, K by split-half reproducibility, frozen + hashed.
+ 
+    M = rheome.modes.discover(files, outDir)           % files: fields .mat paths, or a text file of them
+    M = rheome.modes.discover(files, outDir, NPer=1000, Ks=2:15, NSplits=100, Workers=16)
+ 
+  Protocol sections 4.2-4.4 on the discovery participants (whoever is listed: the fixed OMEGA-D half is the
+  caller's subject list). Per band, on one variant (default the primary: &gt;= 100 mm, depth 3):
+    snapshots   each participant gives NPer snapshots of its data series, equally spaced over the valid
+                samples whose norm is at or above the participant's MinAmpQuantile (the GFP-peak convention of
+                microstates: low-amplitude snapshots are mostly noise once normalised) -- equal samples per
+                participant, so no one dominates the pool
+    modes       rheome.modes.cluster on the pool: centroids c_k, |c_k| the amplitude topography, arg c_k the
+                phase layout
+    K           for every K in Ks: the reference clustering of the whole pool, then NSplits random participant
+                halves, each half clustered (NPerSplit snapshots per participant) and both Hungarian-matched
+                to the reference, so mode k is the same reference mode in every split; r_k = |&lt;A_k, B_k&gt;|.
+                K* = the largest K whose median r_k over splits is &gt;= RThresh for EVERY k. No K passing is
+                recorded (k_reproducible = false) and K* falls back to min(Ks), flagged
+    sensitivity (a) exact DMD per participant (top DMDModes modes by amplitude), pooled and clustered at K*,
+                Hungarian |r| to each centroid; (b) complex PCA of the mean trace-normalised cross-spectral
+                matrix, best |r| of each centroid to its top K* components (a k-means mode equal to a cPCA
+                component carries no dynamics beyond second order). robust = r_dmd &gt;= RobustR or
+                r_cpca &gt;= RobustR
+    mixtures    mixture_share: the largest share of c_k's energy in the span of two other centroids. ⚠ The K rule
+                counts reproducible MIXTURES: with three planted states (mean dwell 300 ms) the alpha band-pass
+                smears every switch, the transition snapshots form their own reproducible clusters, and K* reached
+                6 with three modes &gt;= 0.998 inside span{planted} (request 30825727 evidence). Reported, not acted on
+    null modes  the same clustering at K* on each null source's snapshots (N1 sources, N1 empty room, N4):
+                the centroid's best |r| to any of them (Level-1 (i) needs &lt; 0.7 to every N1 mode)
+  The centroids are frozen: centroids.mat (M) and centroids.sha256 = rheome.modes.hash over every band's C in
+  band order, which rheome.modes.fit checks before it reads them.
+ 
+  Writes to outDir: centroids.mat, centroids.sha256, modes_kcurve.csv, modes_centroids.csv,
+  modes_discovery.csv, discover_sources.csv, discover_provenance.json.
+ 
+  See also: rheome.modes.fields, rheome.modes.cluster, rheome.modes.match, rheome.modes.fit
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

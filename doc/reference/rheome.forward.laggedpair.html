@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.forward.laggedpair</title></head><body>
+<h1>rheome.forward.laggedpair</h1>
+<p><em>function rheome.forward</em> &mdash; Rheome</p>
+<pre>  FORWARD.LAGGEDPAIR  The lagged-source null of one event: two fixed generators fitted to it, with its amplitude ratio and lag and no travel, back through the same head with its own noise.
+ 
+    [Ys, fit] = rheome.forward.laggedpair(Y, Gp, front, fs)
+    [Ys, fit] = rheome.forward.laggedpair(Y, Gp, front, fs, MaxLagS=0.3, Group=hemi)   % bilateral generators
+ 
+  Why: a frontal and a posterior generator that only differ in lag make a field that every reader of direction can
+  call a wave (MS1 G16b: the framework declares propagation in about half of two-lagged-generator nulls). A
+  direction claim is a claim about travel only if it beats this null, matched to the participant's own event.
+ 
+  1. FIT. Every candidate is a patch with a fixed sensor topography (a column of Gp: e.g. a tile of normal current
+     through the participant's own gain). A generator is one patch per Group (e.g. per hemisphere: slow
+     oscillations are bilateral, and one patch for both hemispheres misfits them -- synthetic, lag 0.15 s planted
+     in both hemispheres: one pair reads 0.02 s, one patch per hemisphere 0.15 s). Over every combination of a
+     frontal patch (front true) and a posterior one (front false) in each group, the combination whose time courses
+     explain most of Y by least squares is kept; each generator's patches are then reduced to their first singular
+     pair (one topography, one time course: s1 front, s2 back), the rest joining the residual.
+  2. LAG AND AMPLITUDE. The lag tau is the peak of |xcorr(s2, s1)| within +-MaxLagS (tau &gt; 0: the back lags the
+     front), the amplitude ratio rms(s2)/rms(s1), the polarity the sign of that peak.
+  3. NULL. The back generator is replaced by the front one's waveform, scaled by the ratio and delayed by tau, so
+     the two generators are fixed in place and share one waveform: nothing travels. Ys = the pair's topographies x
+     [s1; ratio * polarity * s1(t - tau)] + the residual Y - fit with each channel's Fourier phases randomised
+     (matched noise: each channel keeps its spectrum of everything the pair does not explain; any travel left in
+     the residual loses its cross-channel lags).
+  ⚠ THE DELAY IS CIRCULAR over the window. Give the window a margin of at least MaxLagS beyond what is read.
+  ⚠ THE PAIR IS THE BEST OF THE CANDIDATES, not a free dipole fit: positions are as fine as the patches.
+  ⚠ The random phases use the global stream: seed it (rng) before calling for a reproducible null.
+ 
+  INPUTS
+    Y      [nChan x nT] the event window, in the sensor space and reference Gp is in
+    Gp     [nChan x nPatch] candidate generator topographies     front  [1 x nPatch] logical, frontal candidates
+    fs     sampling rate (Hz)            Group  [1 x nPatch] labels, one patch per label per generator (default: one)
+  OUTPUT
+    Ys     [nChan x nT] the surrogate
+    fit    .front .back (patch indices, one per group, in unique(Group) order) .wFront .wBack (each patch's
+           share of its generator, energy^(1/2)) .ratio (back over front, source units) .lagS .polarity .r2
+           (fraction of Y the two generators explain)
+ 
+  See also: rheome.scale.measure_slowosc, rheome.forward.leadfield
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

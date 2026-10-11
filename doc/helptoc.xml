@@ -186,6 +186,7 @@
       <tocitem target="reference/rheome.flow.stream.html">rheome.flow.stream</tocitem>
       <tocitem target="reference/rheome.flow.sweep.html">rheome.flow.sweep</tocitem>
       <tocitem target="reference/rheome.flow.synth.html">rheome.flow.synth</tocitem>
+      <tocitem target="reference/rheome.flow.upstreamshare.html">rheome.flow.upstreamshare</tocitem>
       <tocitem target="reference/rheome.flow.vortexatom.html">rheome.flow.vortexatom</tocitem>
       <tocitem target="reference/rheome.flow.vortexbank.html">rheome.flow.vortexbank</tocitem>
       <tocitem target="reference/rheome.flow.vortexmatch.html">rheome.flow.vortexmatch</tocitem>
@@ -199,6 +200,8 @@
       <tocitem target="reference/rheome.forward.analyticbank.html">rheome.forward.analyticbank</tocitem>
       <tocitem target="reference/rheome.forward.dirac.html">rheome.forward.dirac</tocitem>
       <tocitem target="reference/rheome.forward.diracgain.html">rheome.forward.diracgain</tocitem>
+      <tocitem target="reference/rheome.forward.laggedpair.html">rheome.forward.laggedpair</tocitem>
+      <tocitem target="reference/rheome.forward.laggedrest.html">rheome.forward.laggedrest</tocitem>
       <tocitem target="reference/rheome.forward.leadfield.html">rheome.forward.leadfield</tocitem>
       <tocitem target="reference/rheome.forward.measurable.html">rheome.forward.measurable</tocitem>
       <tocitem target="reference/rheome.forward.observability.html">rheome.forward.observability</tocitem>
@@ -295,6 +298,20 @@
       <tocitem target="reference/rheome.load.study.html">rheome.load.study</tocitem>
       <tocitem target="reference/rheome.load.surface.html">rheome.load.surface</tocitem>
     </tocitem>
+    <tocitem target="reference/index.html">rheome.modes
+      <tocitem target="reference/rheome.modes.analytic.html">rheome.modes.analytic</tocitem>
+      <tocitem target="reference/rheome.modes.cluster.html">rheome.modes.cluster</tocitem>
+      <tocitem target="reference/rheome.modes.discover.html">rheome.modes.discover</tocitem>
+      <tocitem target="reference/rheome.modes.fields.html">rheome.modes.fields</tocitem>
+      <tocitem target="reference/rheome.modes.fit.html">rheome.modes.fit</tocitem>
+      <tocitem target="reference/rheome.modes.hash.html">rheome.modes.hash</tocitem>
+      <tocitem target="reference/rheome.modes.lagged.html">rheome.modes.lagged</tocitem>
+      <tocitem target="reference/rheome.modes.match.html">rheome.modes.match</tocitem>
+      <tocitem target="reference/rheome.modes.operator.html">rheome.modes.operator</tocitem>
+      <tocitem target="reference/rheome.modes.phaserand.html">rheome.modes.phaserand</tocitem>
+      <tocitem target="reference/rheome.modes.reduce.html">rheome.modes.reduce</tocitem>
+      <tocitem target="reference/rheome.modes.split.html">rheome.modes.split</tocitem>
+    </tocitem>
     <tocitem target="reference/index.html">rheome.operators
       <tocitem target="reference/rheome.operators.check.html">rheome.operators.check</tocitem>
       <tocitem target="reference/rheome.operators.connection_laplacian.html">rheome.operators.connection_laplacian</tocitem>
@@ -339,6 +356,8 @@
       <tocitem target="reference/rheome.scale.cleanwelch.html">rheome.scale.cleanwelch</tocitem>
       <tocitem target="reference/rheome.scale.coefficients.html">rheome.scale.coefficients</tocitem>
       <tocitem target="reference/rheome.scale.groupslowosc.html">rheome.scale.groupslowosc</tocitem>
+      <tocitem target="reference/rheome.scale.grouptiles.html">rheome.scale.grouptiles</tocitem>
+      <tocitem target="reference/rheome.scale.groupupstream.html">rheome.scale.groupupstream</tocitem>
       <tocitem target="reference/rheome.scale.importeeg.html">rheome.scale.importeeg</tocitem>
       <tocitem target="reference/rheome.scale.importsubject.html">rheome.scale.importsubject</tocitem>
       <tocitem target="reference/rheome.scale.locate.html">rheome.scale.locate</tocitem>
@@ -364,6 +383,8 @@
       <tocitem target="reference/rheome.scale.measure_resolution.html">rheome.scale.measure_resolution</tocitem>
       <tocitem target="reference/rheome.scale.measure_slowosc.html">rheome.scale.measure_slowosc</tocitem>
       <tocitem target="reference/rheome.scale.measure_trackfactorial.html">rheome.scale.measure_trackfactorial</tocitem>
+      <tocitem target="reference/rheome.scale.measure_upstream.html">rheome.scale.measure_upstream</tocitem>
+      <tocitem target="reference/rheome.scale.measure_upstreamnull.html">rheome.scale.measure_upstreamnull</tocitem>
       <tocitem target="reference/rheome.scale.reduce.html">rheome.scale.reduce</tocitem>
       <tocitem target="reference/rheome.scale.reducegauge.html">rheome.scale.reducegauge</tocitem>
       <tocitem target="reference/rheome.scale.reducegaugeflow.html">rheome.scale.reducegaugeflow</tocitem>
@@ -371,6 +392,7 @@
       <tocitem target="reference/rheome.scale.rows.html">rheome.scale.rows</tocitem>
       <tocitem target="reference/rheome.scale.run.html">rheome.scale.run</tocitem>
       <tocitem target="reference/rheome.scale.sensors.html">rheome.scale.sensors</tocitem>
+      <tocitem target="reference/rheome.scale.template.html">rheome.scale.template</tocitem>
       <tocitem target="reference/rheome.scale.vtest.html">rheome.scale.vtest</tocitem>
     </tocitem>
     <tocitem target="reference/index.html">rheome.select
@@ -413,6 +435,7 @@
       <tocitem target="reference/rheome.sensors.generate.html">rheome.sensors.generate</tocitem>
       <tocitem target="reference/rheome.sensors.graph.html">rheome.sensors.graph</tocitem>
       <tocitem target="reference/rheome.sensors.grid.html">rheome.sensors.grid</tocitem>
+      <tocitem target="reference/rheome.sensors.ismeg.html">rheome.sensors.ismeg</tocitem>
       <tocitem target="reference/rheome.sensors.linear.html">rheome.sensors.linear</tocitem>
       <tocitem target="reference/rheome.sensors.meg.html">rheome.sensors.meg</tocitem>
       <tocitem target="reference/rheome.sensors.modes.html">rheome.sensors.modes</tocitem>

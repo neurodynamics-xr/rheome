@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.modes.analytic</title></head><body>
+<h1>rheome.modes.analytic</h1>
+<p><em>function rheome.modes</em> &mdash; Rheome</p>
+<pre>  MODES.ANALYTIC  Band-pass, Hilbert, decimate: the complex band signal of tile series.
+ 
+    [z, rate, valid] = rheome.modes.analytic(Y, fs, [8 13])
+    [z, rate, valid] = rheome.modes.analytic(Y, fs, [8 13], mask)
+ 
+  Order-8 Butterworth band-pass applied forward and backward (zero phase, as the MS1 measures), analytic
+  signal by Hilbert, decimated to the largest rate fs/m &gt;= 3 x the upper edge (the analytic signal is
+  band-limited, so no anti-alias filter is needed). valid is false on mask (decimated, any sample of the
+  block) and within 3 cycles of the lower edge of either end (filter transients).
+ 
+    z [nTiles x T] single complex   rate (Hz)   valid [1 x T] logical
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

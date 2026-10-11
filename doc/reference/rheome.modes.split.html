@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.modes.split</title></head><body>
+<h1>rheome.modes.split</h1>
+<p><em>function rheome.modes</em> &mdash; Rheome</p>
+<pre>  MODES.SPLIT  Periodic and aperiodic parts of tile series, by the Welch background fit of each row.
+ 
+    sp = rheome.modes.split(Y, fs)                 % Y [nTiles x N] real, fs Hz
+    sp = rheome.modes.split(Y, fs, mask, FitRange=[1 45], SegS=8)
+ 
+  The background of each row is fitted with a knee on its Welch PSD (8 s Hann, 50 %, segments touching an
+  artefact block in mask left out: rheome.scale.cleanwelch; rheome.spectral.aperiodic), and the complementary
+  gains of rheome.spectral.gains, hper = sqrt(max(0, 1 - Pap/P)) and hap = sqrt(Pap/P), are applied to the
+  row's whole-span FFT as zero-phase filters. Outside FitRange nothing is called rhythm: hper = 0, hap = 1.
+  The gains come from the Welch PSD, not the span's own periodogram, which is biased low in log power
+  (rheome.spectral.decompose, &quot;fit on a Welch PSD&quot;).
+ 
+    sp.per sp.ap  [nTiles x N]  the periodic and aperiodic series (power partitioned in expectation)
+    sp.f [nF x 1]  sp.P sp.Pap [nF x nTiles]  Welch PSD and fitted background on the fit range
+    sp.exponent [1 x nTiles]
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

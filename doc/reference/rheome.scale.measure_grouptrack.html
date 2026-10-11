@@ -15,6 +15,11 @@
   rheome.detect.tilepath (track-before-detect, Viterbi on the tile graph) in each 2 s window; the baseline
   is the BaseQ quantile of the surrogate, the score threshold is set on HALF the surrogate windows
   at Alpha false paths per second and the false rate tested on the other half.
+  Windows are laid inside rheome.scale.cleanspan(EdgeS) of the sensor recording (the same span
+  measure_fieldsmooth and measure_periodicflow use): the envelope is cropped to the clean span before the
+  surrogate is built, and a window that touches an interior artefact block is dropped from real and
+  surrogate alike. Without this the best path of a subject can be the recording-onset step and the
+  band-pass filter's ringing (sub-0002: window 1, 97.6% of the event's energy in the first 0.5 s).
  
   Returns rheome.scale.rows (analysis &quot;grouptrack&quot;), band = &quot;&lt;hemi&gt;/d&lt;depth&gt;/&lt;fps&gt;fps&quot;, metrics:
     tile_mm           median tile diameter                                    mm
@@ -26,9 +31,9 @@
     straight          median straightness (net / path length)                 ratio
     frac_beyond_tile  fraction of passing paths whose net exceeds one tile    fraction
     sur_n_pass, sur_net_mm, sur_speed_ms   the same for the held-out surrogate passes
-  plus &quot;n_windows&quot; (band &quot;&quot;). X is the per-configuration table (grouptrack.csv).
+  plus &quot;n_windows&quot; (band &quot;&quot;: windows used) and &quot;clean_start_s&quot;, &quot;clean_end_s&quot; (the span windows lie in). X is the per-configuration table (grouptrack.csv).
   Best (third output): per configuration, the highest-scoring REAL path -- .hemi .depth .jj .rate
-  .window .score .passed .track (rheome.detect.tilepath track, frames within its window) .G (the tiles),
+  .window .frame0 (300-fps frames before window 1: the clean-span offset) .score .passed .track (rheome.detect.tilepath track, frames within its window) .G (the tiles),
   which rheome.scale.measure_eventsensors maps onto the sensor data.
  
   ⚠ netMM is quantised to the tiling: displacement below one tile is not measured, by design.
@@ -38,6 +43,6 @@
  
   Author: Diellor Basha, 2026
 </pre>
-<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
 <p><a href="index.html">Rheome reference</a></p>
 </body></html>

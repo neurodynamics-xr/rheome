@@ -6,6 +6,7 @@
  
     [T, X, E] = rheome.scale.measure_slowosc(name)              % S = rheome.scale.sensors(name, Modality=&quot;EEG&quot;)
     [T, X, E] = rheome.scale.measure_slowosc(name, S, MaxEvents=200, HornSchunck=[0.01 0.1], PosteriorAxis=[-1 0 0])
+    [T, X, P] = rheome.scale.measure_slowosc(name, S, Plant=[1 2 5])   % gate V: planted movers, section 4
  
   Spec: the group-analysis plan, G15 (primary: AnphySleep hd-EEG) and G16.
   Known propagation: slow oscillations travel predominantly front to back at about 1-7 m/s (Massimini et al.
@@ -19,9 +20,19 @@
      window (+-(WindowS + PadS)) lies in one recorded segment and in epochs where no analysed channel carries
      the release's artefact mark. Up to MaxEvents are drawn with a fixed Seed, BEFORE any direction is
      computed, and every estimator reads the same events (G16).
-  2. PER EVENT, three CONDITIONS on the same window: original; reversed (the window played backwards: every
+  2. PER EVENT, four CONDITIONS on the same window: original; reversed (the window played backwards: every
      direction must flip exactly); surrogate (each channel's window phase-randomised independently, which keeps
-     each channel's spectrum and destroys the inter-channel lags: no propagation should be found).
+     each channel's spectrum and destroys the inter-channel lags: no propagation should be found); lagged (the
+     lagged-source null, rheome.forward.laggedpair: the frontal and the posterior generator that best explain this
+     event -- each one GenDepth tile of normal current per hemisphere, the anterior-third and posterior-third tile
+     carrying the most reconstructed current in the window, through this participant's own gain; its position
+     genFrontAPmm/genBackAPmm the energy-weighted mean of its tiles' -- refitted with no travel, the
+     event's amplitude ratio and lag (|lag| &lt;= MaxLagS), and its own residual phase-randomised as noise). The
+     lagged null is not expected to read as &quot;no direction&quot;: two lagged generators can look A-&gt;P. A direction
+     claim must beat it (rheome.scale.groupslowosc: real minus lagged A-&gt;P fraction, paired over participants).
+     E carries each event's fit (genFrontAPmm, genBackAPmm, fitR2, ratio, lagS) and, with no model, the
+     posterior/frontal electrode thirds' amplitude ratio and lag in the event (elecRatio, elecLagS) and in its null
+     (elecRatioLagged, elecLagSLagged): the null must reproduce them.
   3. ESTIMATORS (column estimator; one row per event x hemisphere x condition x estimator x param):
      framework      the reconstructed normal current (whitened MNE, average reference, read along normals
                     smoothed over NormalSigmaMM) -&gt; its graph-wavelet band map at the member nearest BandMM
@@ -47,12 +58,44 @@
                     at each HornSchunck (0.01 = Brainstorm's default); the time-mean velocity field.
      phasereg       rheome.flow.phaseregression on the analytic normal current (Hilbert of the band-passed sensors,
                     padded by PadS, then cropped), PatchMM patches at PhaseCentres vertices, wavelengths up to 20 m.
-     sensorlatency  Massimini's own reading, no inverse: each channel's negative-peak latency within ClusterS of
-                    the event regressed on the electrode's (posterior, lateral) position; the latency gradient's
-                    direction and 1/|gradient| as speed, R = the latency plane's R^2. One row per event, hemi
-                    &quot;both&quot;, param 0 (not NaN: findgroups drops NaN keys).
+     sensorlatency  Massimini's own reading, no inverse: the negative-peak latency of each channel that CARRIES the
+                    wave -- a negative half-wave (zero crossings HalfWaveS apart, his criterion 1, no amplitude
+                    threshold) whose negative peak lies within ClusterS of the event; at least MinLatencyChannels,
+                    else no direction -- regressed on the electrode's (posterior, lateral) position; the latency
+                    gradient's direction and 1/|gradient| as speed, R = the latency plane's R^2. One row per event,
+                    hemi &quot;both&quot;, param 0 (not NaN: findgroups drops NaN keys).
+                    ⚠ Before 2026-10-11 every channel entered, and about half of them (the ones that see the wave
+                    inverted under the average reference) had their minimum pinned to the window's edge, at -0.2 or
+                    +0.2 s. On AnphySleep the posterior ones were pinned to the EARLY edge more often, which read
+                    P-&gt;A (G15a, 24/25 participants). Desk evidence 22c7b277.
      Field estimators (bst_of, phasereg) give one event direction as the weighted circular mean of the per-vertex
      directions (weight: amplitude x |velocity|, x the fit's coherence R for phasereg) and their resultant R.
+  4. GATE V (Plant = speeds in m/s; analysis &quot;slowoscplant&quot;): direction accuracy for movers as fast as slow
+     oscillations, in this head. The detected events are REPLACED by planted ones: a plane wave of normal current
+     along PosteriorAxis (A-&gt;P and P-&gt;A) at each speed, tSleep's SO waveform at PlantHz (0.8 Hz: wavelength
+     1.25-6.25 m at 1-5 m/s, far above 10 cm), through the same gain, scaled so its largest channel peak-to-peak is
+     the median p2p of this participant's detected events (&quot;median&quot;) or the detection threshold (&quot;threshold&quot;),
+     added to a window of the participant's own clean N2/N3 EEG at least 2 windows from any detected event. The
+     same conditions and estimators read it. E is then the plant table (speedMS, dirSign, level, p2pUV, sample,
+     snrDB, and the lagged columns); T is per estimator x condition x hemi x speed x direction x level the
+     fraction with the correct A-&gt;P sign (no direction = wrong), its one-sided 95% Clopper-Pearson lower bound,
+     the circular mean and the median absolute direction error. On &quot;lagged&quot; it is how often the no-travel null
+     still reads the plant's direction: gate N's validation on planted travel.
+     ⚠ MEASURED LIMITS on the synthetic head (two 80 mm spheres, ~40 dB, 3 plants per cell; desk evidence 1a32c6c1):
+       framework      right sign at 0.25-0.5 m/s; from 1 m/s on, the same reading whichever way the wave travels
+                      (the wavelength, 1.25 m+, is ~10x the hemisphere: the band map's extremum moves with geometry)
+       phasereg       right sign to 2 m/s (error &lt;= 27 deg); at 5 m/s REVERSED (175 deg) in both hemispheres
+       sensorlatency  right sign at every speed (error ~1 deg), and also on the lagged null: it reads lag, not travel
+     ⚠ MEASURED in the AnphySleep head (EPCTL03, template ICBM152 + OpenMEEG, 3 plants per cell, level &quot;median&quot;;
+       desk evidence 22c7b277): framework at chance (0.33-0.67 correct, median error 55-114 deg) at 1, 2.7 and 5 m/s
+       for plane waves and for plants confined to the medial wall and cingulate (PlantRegion); phasereg 0.67-1.00;
+       sensorlatency (carrying channels) 1.00 within 9 deg on plane waves.
+     ⚠ A plane wave is the simplest mover: it says what the head and inverse do to a known direction, not how
+     real slow oscillations (origin, curvature, bilateral asymmetry) are read.
+     PlantRegion confines the plant to atlas parcels (PlantAtlas, labels matched case-insensitively), e.g. the
+     medial wall and cingulate where hd-EEG source models put slow waves and their anterior-posterior travel
+     (Murphy et al. 2009, PNAS 106:1608): [&quot;superiorfrontal&quot; &quot;anteriorcingulate&quot; &quot;posteriorcingulate&quot;
+     &quot;isthmuscingulate&quot; &quot;precuneus&quot;]. The wave and its amplitude rule are the same; only its extent changes.
   ⭐ DIRECTION IS AN ANGLE IN THE GAUGE, 0 = ANTERIOR -&gt; POSTERIOR. At each vertex the velocity and the
     PosteriorAxis are projected on the tangent plane and expressed in the hemisphere's trivial gauge
     (rheome.operators.gauge, +1 at the two faces of largest separation: the MS1 gauge); angleDeg is the velocity's
@@ -65,7 +108,8 @@
  
   OUTPUT
     X  per row: event, hemi, condition, estimator, param, angleDeg, apCos, speedMS, R, netMM, sourceAPmm, originAPmm
-    E  per detected event: sample, nightS, stage, nChannels, negUV, p2pUV, seedChannel, used
+    E  per detected event: sample, nightS, stage, nChannels, negUV, p2pUV, seedChannel, used, and the lagged
+       null's columns (NaN for unused events)
     T  rheome.scale.rows(&quot;slowosc&quot;): detection counts, and per estimator/param x condition x hemi: n, circular
        mean angle, resultant, fraction A-&gt;P, within-participant V-test (towards 0) u and p, median speed
  
@@ -74,6 +118,6 @@
  
   Author: Diellor Basha, 2026
 </pre>
-<hr><p><small>Generated from the help text at commit <code>v1.0.1</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
 <p><a href="index.html">Rheome reference</a></p>
 </body></html>

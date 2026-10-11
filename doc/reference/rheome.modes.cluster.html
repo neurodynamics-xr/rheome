@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.modes.cluster</title></head><body>
+<h1>rheome.modes.cluster</h1>
+<p><em>function rheome.modes</em> &mdash; Rheome</p>
+<pre>  MODES.CLUSTER  Phase-invariant complex k-means: complex spatial modes from amplitude-normalised snapshots.
+ 
+    [C, lab] = rheome.modes.cluster(X, K)               % X [d x n] complex snapshots (columns)
+    [C, lab, info] = rheome.modes.cluster(X, K, Replicates=5, MaxIter=200, Seed=1)
+ 
+  Each snapshot is normalised to unit length and assigned to the centroid with the largest |&lt;x, c_k&gt;|^2, which
+  does not depend on the snapshot's global phase. The centroid that maximises sum |&lt;x, c&gt;|^2 over its members
+  is the principal eigenvector of their scatter sum x x' -- the complex analogue of the polarity-invariant
+  (&quot;modified&quot;) k-means of EEG microstates. |c_k| is the mode's amplitude topography and arg c_k its phase
+  layout, defined up to one global phase, fixed here so the largest-amplitude element is real and positive.
+  k-means++ seeding on 1 - |&lt;x, c&gt;|^2; the best of Replicates runs (largest explained share) is returned.
+ 
+    C     [d x K] unit-norm centroids, ordered by decreasing membership
+    lab   [1 x n] labels
+    info  .gev  sum_n max_k |&lt;x_n, c_k&gt;|^2 / n (explained share, 1 = every snapshot equals a centroid)
+          .iter  iterations of the returned run   .converged
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

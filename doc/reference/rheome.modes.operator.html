@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.modes.operator</title></head><body>
+<h1>rheome.modes.operator</h1>
+<p><em>function rheome.modes</em> &mdash; Rheome</p>
+<pre>  MODES.OPERATOR  Sensors -&gt; group tiles: the normal current, low-passed at a declared wavelength, per tile.
+ 
+    Op = rheome.modes.operator(S, rheome.scale.template(4))                  % &gt;= 100 mm, depth 3
+    Op = rheome.modes.operator(S, Tp, CutoffMM=130, Depth=2)
+ 
+  Three linear maps in one matrix, so a tile series is W * recording:
+    1. the unconstrained kernel (S.Res, the paper's whitened minimum norm) projected on each vertex's normal:
+       the signed cortical current q, which keeps its sign across a sulcus where the 3-vector flips;
+    2. a scalar Laplace-Beltrami low-pass keeping wavelengths &gt;= CutoffMM: the gain of the TIGHT logitersine
+       bank's members at or above the cutoff, h = sqrt(sum_kept g_m^2) -- the gain rheome.flow.bandlimit uses
+       (h &lt;= 1, h = 1 on the kept band), here on q instead of on the tangential potentials. ⚠ flow.bandlimit
+       itself rebuilds only the TANGENTIAL current (grad Phi + n x grad Psi) and drops the normal part, i.e.
+       the cortical dipole; that is right for flow, wrong for a mode of the current;
+    3. the area-weighted mean over each group tile of depth Depth (rheome.scale.grouptiles: the template's tiles
+       carried through the registered sphere, so tile k is the same place in every participant).
+ 
+  Op.W [nTiles x nSel]   Op.tiles table: hemi, tile (code), area_mm2, x_mm y_mm z_mm (participant centroid),
+    u1 u2 u3 (template sphere centre), tx ty tz (template coordinates, mm; SCS: x anterior, y left, z up)
+  Op.A [nTiles x nTiles] adjacency (within hemisphere)
+  Op.R [nTiles x nTiles] tile resolution: column i = what W reads from a uniform normal current over tile i,
+    through the participant's gain (S.G) -- the instrument's view of one tile generator (leakage, N3)
+  Op.C1 [nSel x nSel] sensor covariance of independent normal sources at every vertex, variance ~ area (N1)
+  Op.keptWavelengthMM, Op.cutoffMM, Op.depth
+ 
+  See also: rheome.modes.fields, rheome.flow.bandlimit, rheome.scale.grouptiles
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>
