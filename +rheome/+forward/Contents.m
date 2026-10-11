@@ -26,5 +26,6 @@
 %   rheome.forward.reconstruct  - map Dirac mode coefficients back to per-vertex 3-vectors
 %   rheome.forward.laggedpair   - the lagged-source null of one event: two fixed generators with its amplitude
 %                          ratio and lag, no travel, through the same head with its own noise
+%   rheome.forward.laggedrest   - the lagged-source null of a resting span: laggedpair window by window
 %
 % Author: Diellor Basha, 2026
