@@ -136,6 +136,17 @@ classdef tUpstreamDriver < matlab.unittest.TestCase
             tc.verifyFalse(any(contains(lower(fieldnames(G)), "mean")));
         end
 
+        function nullCalibrationPlantsAndReads(tc)
+            % gate N calibration (rheome.scale.measure_upstreamnull) on the toy head: g = z, travel along +z and -z
+            [T, X] = rheome.scale.measure_upstreamnull(tc.Name, [], Hz=4, SpeedMS=2, LagRad=[-pi/2 pi/2], Locations=1, DiscMM=20, ...
+                NullSeeds=2, SnrDB=10, Axis=[0 0 1], MinSpanS=10, OwnMin=0);
+            tc.verifyEqual(height(X), 2 + 2 + 2);
+            tc.verifyEqual(X.U_star, X.U - X.U_surrogate, 'AbsTol', 1e-12);
+            tc.verifyEqual(sort(X.dir(X.kind == "lagged"))', [-1 1]);           % the back leads: dir +1
+            % no sign check on travel here: two 40 mm spheres at OwnMin 0 are all crosstalk (the real heads: desk 3de34e58)
+            tc.verifyTrue(all(ismember(["null_ustar_absmax" "travel_power" "travel_dir_sign" "seed_ustar_sd"], T.metric)));
+        end
+
         function laggedRestTilesTheSpan(tc)
             rng(2);  fs = 50;  t = (0:fs*30-1) / fs;  Gp = randn(20, 4);  front = logical([1 0 1 0]);
             Y = Gp(:, 1) * sin(2*pi*3*t) + 0.6 * Gp(:, 2) * sin(2*pi*3*t - 1) + 0.01 * randn(20, numel(t));

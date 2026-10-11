@@ -23,6 +23,7 @@
 %   rheome.scale.measure_periodicflow   - Apparent alpha flow on the TOTAL and the PERIODIC envelope, over many tiles.
 %   rheome.scale.measure_resolution     - The resolution report's headline numbers for one subject.
 %   rheome.scale.measure_upstream       - The AGE-1 participant readout: U, U_surrogate, U_total, U_of and covariates per recording.
+%   rheome.scale.measure_upstreamnull   - Gate N calibration in one head: planted travel vs lagged pairs read by the AGE-1 readout.
 %   rheome.scale.groupupstream          - Gate G of AGE-1 / WAVE-OR-LEAKAGE: ICC(2,1) and SD of U*, and no mean.
 %   rheome.scale.reduce                 - Per-subject tables -> group distributions, the anchor's place, cohort contrasts.
 %   rheome.scale.reducegauge            - Per-subject gaugetensor.csv -> the group alpha orientation tensor per shared tile.
