@@ -59,6 +59,12 @@ function R = run(name, opts)
 %                     through one wavelet bank on one dyadic tile ladder, every level an exact roll-up; the
 %                     descriptive cross-tile rho; the tile connectome per level. Opt-in. PET and fibres come
 %                     from the protocol (pet.mat, fibers_subject.mat in the cache)
+%   modes_fields.mat, modesseries.csv, modesbands.csv, modesperiodic.csv   the resting-state pattern atlas,
+%                     stage 1 (nsp rheome-modes-fields): rheome.modes.fields -- the complex band tile series and
+%                     the nulls N1, N4, N5 (the Zm struct + one top-level variable per series); opt-in
+%   modesfit.csv, modesmaps.csv, modestrans.csv, modesseries.csv   stage 3 (nsp rheome-modes-fit):
+%                     rheome.modes.fit against the frozen centroids in RHEOME_MODES_CENTROIDS (hash checked,
+%                     and against RHEOME_MODES_SHA256 when set); opt-in
 %   timing.csv        analysis, seconds, peak_rss_GB, status, message
 %   rheome_coeffs.mat Analyses="coefficients" only: graph-wavelet envelopes per tile x scale x time,
 %                     Prognome's contract (rheome.scale.coefficients)
@@ -209,6 +215,24 @@ function R = run(name, opts)
                     [Tm, Xm, Cn] = rheome.scale.measure_multimodal(name, S);  M = [M; Tm]; %#ok<AGROW>
                     X.multimodal = Xm.tiles;  X.multimodal_assoc = Xm.assoc;
                     save(fullfile(od, 'multimodal_connectome.mat'), '-struct', 'Cn', '-v7');
+                case "modesfields"             % resting-state pattern atlas, stage 1 (nsp rheome-modes-fields)
+                    [Zm, Ym] = rheome.modes.fields(name, S);
+                    f = fullfile(od, 'modes_fields.mat');  save(f, '-struct', 'Ym', '-v7.3');
+                    Z = Zm;  save(f, 'Z', '-append');  clear Z  % the metadata as Z: rheome.modes.discover reads m.Z
+                    X.modesseries = Zm.series(:, {'source','band','variant','n_valid','sha256'});
+                    X.modesbands = Zm.bands;  X.modesperiodic = Zm.periodic;
+                    M = [M; rheome.scale.rows("modesfields", ["span_s" "n_sources" "n_series"], ...
+                         [Zm.spanS numel(Zm.sources) height(Zm.series)], ["s" "sources" "series"])]; %#ok<AGROW>
+                    clear Ym
+                case "modesfit"                % resting-state pattern atlas, stage 3 (nsp rheome-modes-fit)
+                    cf = getenv('RHEOME_MODES_CENTROIDS');
+                    if isempty(cf) || ~isfile(cf), error('scale:run:centroids', 'modesfit needs RHEOME_MODES_CENTROIDS (a frozen centroids.mat), got "%s"', cf); end
+                    Lc = load(cf, 'M');
+                    [Tm, Xm] = rheome.modes.fit(name, S, Lc.M, Sha256=getenv('RHEOME_MODES_SHA256'));
+                    M = [M; Tm]; %#ok<AGROW>
+                    for fn = string(fieldnames(Xm))'
+                        X.(fn) = [table(repmat(string(name), height(Xm.(fn)), 1), 'VariableNames', {'subject'}), Xm.(fn)];
+                    end
                 case "coefficients"            % Prognome's MEG input: opt-in, not in the "ported" default
                     st0 = rheome.load.study(name);
                     Cf = rheome.scale.coefficients(S.B, S.Res.ImagingKernel, double(st0.rec.F(S.iSel,:)), st0.rec.sfreq);

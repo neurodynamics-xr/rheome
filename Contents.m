@@ -40,6 +40,7 @@
 %   rheome.fieldtype         - What a field is.
 %   rheome.pipeline          - Operators chained by their arrows, run against an environment.
 %   rheome.scale             - The per-participant driver and the group reduction.
+%   rheome.modes             - Resting-state pattern atlas: large-scale complex modes, their nulls and the keep rule.
 %   rheome.qc                - Quality control of raw MEG.
 %   rheome.report            - A measured result written up as a mini-article, with its provenance.
 %   rheome.io                - Read Brainstorm files from disk.

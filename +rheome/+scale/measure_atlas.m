@@ -87,9 +87,9 @@ function [T, X] = measure_atlas(name, S, item, opts)
     if isempty(S), S = rheome.scale.sensors(name); end
     dmax = max([opts.Depths opts.TensorDepth]);
     switch item
-        case "correspondence", Tp = i_template(opts, dmax);  [T, X] = i_correspondence(name, S, Tp, opts);
-        case "atlasevents",    Tp = i_template(opts, dmax);  [T, X] = i_events(name, S, Tp, opts);
-        case "gaugetensor",    Tp = i_template(opts, dmax);  [T, X] = i_tensor(name, S, Tp, opts);
+        case "correspondence", Tp = rheome.scale.template(dmax, Template=opts.Template, Hemis=opts.Hemis);  [T, X] = i_correspondence(name, S, Tp, opts);
+        case "atlasevents",    Tp = rheome.scale.template(dmax, Template=opts.Template, Hemis=opts.Hemis);  [T, X] = i_events(name, S, Tp, opts);
+        case "gaugetensor",    Tp = rheome.scale.template(dmax, Template=opts.Template, Hemis=opts.Hemis);  [T, X] = i_tensor(name, S, Tp, opts);
         case "connectome",     [T, X] = i_connectome(name, S, opts);
     end
 end
@@ -145,7 +145,7 @@ function [T, X] = i_events(name, S, Tp, o)
     for h = o.Hemis(:)'
         gv = S.B.(h).gv(:);
         for l = o.Depths
-            [P, A] = i_tiles(S, Tp, h, l);  r0 = size(Y, 1);
+            [P, A] = rheome.scale.grouptiles(S, Tp, h, l);  r0 = size(Y, 1);
             for k = 1:3, Y = [Y; (P' * K((gv - 1)*3 + k, :)) * F]; end %#ok<AGROW>
             blk(end+1) = struct('h', h, 'l', l, 'rows', r0 + (1:3*size(P, 2)), 'A', A); %#ok<AGROW>
         end
@@ -229,7 +229,7 @@ function [T, X] = i_tensor(name, S, Tp, o)
         K1 = pr(e1);  K2 = pr(e2);  Kn = pr(Nv ./ vecnorm(Nv, 2, 2));
         K1C = K1 * C;  q = @(x) x .* a;
         t11 = q(sum(K1C .* K1, 2));  t12 = q(sum(K1C .* K2, 2));  t22 = q(sum((K2 * C) .* K2, 2));  tn = q(sum((Kn * C) .* Kn, 2));
-        [P, ~, ids] = i_tiles(S, Tp, h, o.TensorDepth);
+        [P, ~, ids] = rheome.scale.grouptiles(S, Tp, h, o.TensorDepth);
         s11 = P' * t11;  s22 = P' * t22;  s12 = P' * t12;  sn = P' * tn;  tr = s11 + s22;
         an = sqrt((s11 - s22).^2 + 4*s12.^2) ./ tr;  ax = 0.5 * atan2d(2*s12, s11 - s22);
         cl = arrayfun(@(k) median(fr.colat(P(:, k) > 0)) * 180/pi, (1:size(P, 2))');
@@ -321,43 +321,6 @@ function T = i_zoom(lab, Pf, Pc, a, Cf, Cc, src)
 end
 
 %% ---------- shared helpers
-function Tp = i_template(o, dmax)
-    persistent cache key
-    d = o.Template;
-    if isempty(d), d = getenv('RHEOME_TEMPLATE'); end
-    if isempty(d) && ~isempty(getenv('RHEOME_BRAINSTORM')), d = fullfile(getenv('RHEOME_BRAINSTORM'), 'defaults', 'anatomy', 'ICBM152'); end
-    k = string(d) + "|" + dmax + "|" + strjoin(o.Hemis, ",");
-    if isequal(key, k), Tp = cache;  return; end
-    f = fullfile(d, 'tess_cortex_pial_low.mat');
-    if ~isfile(f)
-        error('scale:atlas:template', ['No template cortex at "%s": pass Template=, or set RHEOME_TEMPLATE, or ' ...
-              'RHEOME_BRAINSTORM (a Brainstorm checkout with defaults/anatomy/ICBM152).'], f);
-    end
-    Tp.S = rheome.io.read.surface(f);
-    if isempty(Tp.S.Sphere) || isempty(Tp.S.Hemi), error('scale:atlas:template', '%s has no Reg.Sphere or no L/R split', f); end
-    A = rheome.io.read.atlas(f);  Tp.dk = i_labels(A(strcmpi({A.Name}, 'Desikan-Killiany')), Tp.S.nV);
-    Tp.mri = [];  mf = fullfile(d, 'subjectimage_T1.mat');  if isfile(mf), Tp.mri = load(mf, 'SCS', 'NCS'); end
-    Tp.file = f;
-    for h = o.Hemis(:)'
-        Sh = rheome.utils.hemisphere(Tp.S, [], char(h));
-        Tr = rheome.geom.tree(Sh, MaxDepth=dmax);  G = rheome.geom.tiles(Tr, Sh, dmax);
-        if ~G.heap || any(G.depth ~= dmax), error('scale:atlas:heap', 'template hemisphere %s: tree not full to depth %d', h, dmax); end
-        Tp.(h) = struct('gv', Sh.GlobalVertices(:), 'u', i_unit(Tp.S.Sphere(Sh.GlobalVertices, :)), ...
-                        'code', G.node_id(G.tileOf), 'dmax', dmax);
-    end
-    cache = Tp;  key = k;
-end
-
-function [P, A, ids] = i_tiles(S, Tp, h, l)
-% the participant's vertices in the group tiles of depth l (nearest template vertex on the sphere)
-    th = Tp.(h);  gv = S.B.(h).gv(:);  Fc = double(S.B.(h).S.Faces);
-    c = th.code(knnsearch(th.u, i_unit(S.Sf.Sphere(gv, :))));  sh = 2^(th.dmax - l);
-    ids = unique(floor(th.code / sh));  [~, ti] = ismember(floor(c / sh), ids);
-    P = sparse(1:numel(gv), ti, 1, numel(gv), numel(ids));
-    E = [Fc(:,[1 2]); Fc(:,[2 3]); Fc(:,[3 1])];  x = ti(E(:,1)) ~= ti(E(:,2));
-    A = sparse(ti(E(x,1)), ti(E(x,2)), 1, numel(ids), numel(ids));  A = (A + A') > 0;
-end
-
 function lab = i_labels(A, nV)
 % one label per vertex; unknown / medial wall / corpus callosum left empty
     keep = ~contains(lower(string(A.Label(:))), ["unknown" "medial" "corpus"]);

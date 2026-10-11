@@ -56,6 +56,9 @@ function a = analyses(which)
 %                    -- the four run only when asked (nsp cf-atlas), not "ported"; rheome.scale.measure_atlas
 %   multimodal       MS1 multimodal      MEG band power, PET SUVR, fibre degree through one wavelet bank on
 %                                              one dyadic ladder, exact roll-up; run only when asked, not "ported"
+%   modesfields      resting-state pattern atlas, stage 1: complex band tile series + nulls N1, N4, N5
+%   modesfit         stage 3: back-fit of the frozen centroids, features, N2, N3, N5 (RHEOME_MODES_CENTROIDS)
+%                    -- both run only when asked (nsp rheome-modes-fields / rheome-modes-fit), not "ported"
 %   coefficients     (Prognome input)          rheome.scale.coefficients: tile x scale x time envelopes;
 %                                              run only when asked (a ~200 MB file), so not "ported"
 %
@@ -66,7 +69,7 @@ function a = analyses(which)
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
            "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
            "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" ...
-           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "slowoscplant" "correspondence" "atlasevents" "gaugetensor" "connectome" "multimodal" "coefficients"];
+           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "slowoscplant" "correspondence" "atlasevents" "gaugetensor" "connectome" "multimodal" "modesfields" "modesfit" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end
