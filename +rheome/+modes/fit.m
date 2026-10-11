@@ -23,9 +23,16 @@ function [T, X] = fit(name, S, M, opts)
 %   N2 spin: r_obs = |<m_k, c_k>| against NSpin rotations of m_k on the template sphere (one random rotation
 %     per spin, mirrored for the right hemisphere; each tile takes the value of the tile nearest its rotated
 %     centre): r_spin_mean, p_spin = (1 + #{r_spin >= r_obs}) / (1 + NSpin)
-%   N3 lagged pair: the best two-generator fit of m_k, m_k ~ R(:, [i j]) beta over all tile pairs (R = the
-%     tile resolution through the participant's gain and the pipeline: two fixed, phase-lagged, non-travelling
-%     generators as the instrument sees them); pg_n3 its phase-gradient statistic, r_n3, lag_rad, ratio
+%   N3 lagged pair: rheome.modes.lagged -- the best source with exactly TWO phases (two disjoint, extended,
+%     nonnegative generators, any ratio and lag) seen through the participant's gain and the pipeline (R, the
+%     tile resolution): r_n3 = |r| of m_k to it. Then the null SIMULATED in the participant's own data: in every
+%     sample of state k the mode's component is replaced by that fit (noise and the rest kept), the mode is
+%     re-estimated and refitted: r_n3_sim. The reduction tests r_n3_sim - r_n3 > 0 (the mode is further from
+%     any lagged pair than a lagged pair in this person's data would read). pg_n3 and the lag are reported.
+%     ⚠ Not the protocol's "phase gradient exceeds N3": two lagged generators make a phase STEP whose mean
+%     |phase difference| over edges exceeds a smooth gradient's (a planted A->P wave read pg 1.57 against its
+%     pair's 2.01). ⚠ The separation is small at these scales: through OMEGA sub-0002 at depth 3 a 200 mm wave
+%     reads r_n3 0.96, planted pairs 0.993-0.997, a rotation 0.994 (request 30825727 evidence, n3_prototype)
 %   N5 (Level 2): NSurr multivariate phase-randomised surrogates of the periodic tile series through the same
 %     band and back-fit: dwell_median_ms and trans_entropy as surrogate mean, sd and two-sided p
 %   physical features of m_k (protocol 6), on the participant's tile geometry:
@@ -83,19 +90,19 @@ function [T, X] = fit(name, S, M, opts)
         F(end+1, :) = {b, src, half, meth, k, metric, v, unit};
     end
     function maps(b, src, half, Mk)
-        for kk = 1:size(Mk, 2)
+        for jj = 1:size(Mk, 2)
             Mp = [Mp; table(repmat(b, height(tl), 1), repmat(src, height(tl), 1), repmat(half, height(tl), 1), ...
-                  repmat(kk, height(tl), 1), tl.hemi, tl.tile, abs(Mk(:, kk)), angle(Mk(:, kk)), 'VariableNames', ...
+                  repmat(jj, height(tl), 1), tl.hemi, tl.tile, abs(Mk(:, jj)), angle(Mk(:, jj)), 'VariableNames', ...
                   {'band','source','half','mode','hemi','tile','amp','phase_rad'})];
         end
     end
     function feats(b, src, half, meth, R, K)
-        for kk = 1:K
-            put(b, src, half, meth, kk, "occupancy", R.occ(kk), "fraction");
-            put(b, src, half, meth, kk, "occurrence_per_s", R.rate(kk), "1/s");
-            put(b, src, half, meth, kk, "dwell_median_ms", R.dwell(kk), "ms");
-            put(b, src, half, meth, kk, "gev", R.gev(kk), "fraction");
-            put(b, src, half, meth, kk, "r_centroid", R.rc(kk), "r");
+        for jj = 1:K
+            put(b, src, half, meth, jj, "occupancy", R.occ(jj), "fraction");
+            put(b, src, half, meth, jj, "occurrence_per_s", R.rate(jj), "1/s");
+            put(b, src, half, meth, jj, "dwell_median_ms", R.dwell(jj), "ms");
+            put(b, src, half, meth, jj, "gev", R.gev(jj), "fraction");
+            put(b, src, half, meth, jj, "r_centroid", R.rc(jj), "r");
         end
         put(b, src, half, meth, 0, "gev_total", sum(R.gev), "fraction");
         put(b, src, half, meth, 0, "trans_entropy", R.H, "bits");
@@ -140,7 +147,7 @@ function [T, X] = fit(name, S, M, opts)
             [ro, rsm, ps] = i_spin(m, C(:, kk), G, opts.NSpin, rs);
             put(bn, "data", "all", "backfit", kk, "r_spin_obs", ro, "r");  put(bn, "data", "all", "backfit", kk, "r_spin_mean", rsm, "r");
             put(bn, "data", "all", "backfit", kk, "p_spin", ps, "p");
-            L3 = i_lagged(m, Z.R, G);
+            L3 = i_lagged(m, Z.R, G, z(:, Rd.lab == kk));
             for f = string(fieldnames(L3))', put(bn, "data", "all", "backfit", kk, f, L3.(f), i_unit(f)); end
         end
         % N5: dwell and transition entropy against phase-randomised surrogates (Level 2)
@@ -172,7 +179,7 @@ end
 function R = i_backfit(z, valid, C, rate, lab)
     K = size(C, 2);  n = vecnorm(z, 2, 1);  Pw = abs(C' * z).^2;
     if nargin < 5, [~, lab] = max(Pw, [], 1); end
-    lab(~valid) = 0;  nv = nnz(valid);  tot = sum(n(valid).^2);
+    lab(~valid) = 0;  nv = nnz(valid);  tot = sum(n(valid).^2);  R.lab = lab;
     R.occ = accumarray(lab(valid)', 1, [K 1])' / nv;
     R.gev = arrayfun(@(k) sum(Pw(k, lab == k)), 1:K) / tot;
     % runs: a run touching an invalid sample or an end is not a dwell time
@@ -296,19 +303,15 @@ function [ro, rm, p] = i_spin(m, c, G, n, rs)
     rm = mean(r);  p = (1 + nnz(r >= ro)) / (1 + n);
 end
 
-function L = i_lagged(m, R, G)
-% best two fixed generators (complex amplitudes: any lag, nothing travels) as the pipeline sees them
-    best = Inf;  n = numel(m);
-    for i = 1:n-1
-        for j = i+1:n
-            B = R(:, [i j]);  bt = B \ m;  e = norm(m - B * bt);
-            if e < best, best = e;  bb = bt;  pr = [i j]; end
-        end
-    end
-    f = R(:, pr) * bb;
-    L.pg_n3 = i_pg(f, G);  L.r_n3 = abs(f' * m) / (norm(f) * norm(m));
-    L.n3_lag_rad = abs(angle(bb(2) / bb(1)));  L.n3_ratio = abs(bb(2) / bb(1));
-    L.n3_tile_a = pr(1);  L.n3_tile_b = pr(2);
+function L = i_lagged(m, R, G, zk)
+% N3: the best two-phase source through the instrument (rheome.modes.lagged), and the same model SIMULATED in
+% the participant's own data -- the mode's component of every sample in its state replaced by the fit, the rest
+% (noise, other structure) kept -- re-estimated and refitted, so the estimator's own misfit is the null's
+    F = rheome.modes.lagged(m, R);  f = F.fit / norm(F.fit);  f = f * exp(-1i * angle(m' * f));  mu = m / norm(m);
+    a = mu' * zk;  zs = zk - mu * a + f * a;
+    [V, Lm] = eig(zs * zs', 'vector');  [~, j] = max(real(Lm));  Fs = rheome.modes.lagged(V(:, j), R);
+    L.r_n3 = F.r_n3;  L.r_n3_sim = Fs.r_n3;  L.pg_n3 = i_pg(F.fit, G);
+    L.n3_lag_rad = F.lag_rad;  L.n3_tiles_a = nnz(F.x1 > 0);  L.n3_tiles_b = nnz(F.x2 > 0);
 end
 
 function u = i_unit(f)
@@ -316,9 +319,9 @@ function u = i_unit(f)
     if isempty(U)
         U = dictionary(["extent_mm2" "extent_radius_mm" "dirichlet_wavelength_mm" "tile_spacing_mm" "pg" ...
             "dir_x" "dir_y" "dir_z" "dir_concentration" "dir_azimuth_deg" "phase_wavelength_mm" "speed_m_s" ...
-            "speed_resolved" "div_index" "winding_net" "winding_count" "pg_n3" "r_n3" "n3_lag_rad" "n3_ratio" ...
-            "n3_tile_a" "n3_tile_b"], ["mm2" "mm" "mm" "mm" "rad" "unit" "unit" "unit" "r" "deg" "mm" "m/s" ...
-            "flag" "rad/mm2" "windings" "windings" "rad" "r" "rad" "ratio" "tile" "tile"]);
+            "speed_resolved" "div_index" "winding_net" "winding_count" "pg_n3" "r_n3" "r_n3_sim" "n3_lag_rad" ...
+            "n3_tiles_a" "n3_tiles_b"], ["mm2" "mm" "mm" "mm" "rad" "unit" "unit" "unit" "r" "deg" "mm" "m/s" ...
+            "flag" "rad/mm2" "windings" "windings" "rad" "r" "r" "rad" "tiles" "tiles"]);
     end
     u = U(f);
 end

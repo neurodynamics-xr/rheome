@@ -22,6 +22,10 @@ function M = discover(files, outDir, opts)
 %               matrix, best |r| of each centroid to its top K* components (a k-means mode equal to a cPCA
 %               component carries no dynamics beyond second order). robust = r_dmd >= RobustR or
 %               r_cpca >= RobustR
+%   mixtures    mixture_share: the largest share of c_k's energy in the span of two other centroids. ⚠ The K rule
+%               counts reproducible MIXTURES: with three planted states (mean dwell 300 ms) the alpha band-pass
+%               smears every switch, the transition snapshots form their own reproducible clusters, and K* reached
+%               6 with three modes >= 0.998 inside span{planted} (request 30825727 evidence). Reported, not acted on
 %   null modes  the same clustering at K* on each null source's snapshots (N1 sources, N1 empty room, N4):
 %               the centroid's best |r| to any of them (Level-1 (i) needs < 0.7 to every N1 mode)
 % The centroids are frozen: centroids.mat (M) and centroids.sha256 = rheome.modes.hash over every band's C in
@@ -89,7 +93,7 @@ function M = discover(files, outDir, opts)
     %% 2. per band: K curve, centroids, sensitivity, null modes
     kc = table();  cent = table();  disc = table();  Bd = struct([]);
     for b = 1:nb
-        Xd = [X{:, b, 1}];  own = repelem(1:P, cellfun(@(x) size(x, 2), X(:, b, 1)));
+        Xd = [X{:, b, 1}];
         Ks = opts.Ks(opts.Ks <= size(Xd, 2));  med = nan(numel(Ks), max(Ks));  ref = cell(numel(Ks), 1);
         for ik = 1:numel(Ks)
             K = Ks(ik);  ref{ik} = rheome.modes.cluster(Xd, K, Replicates=opts.Replicates, Seed=opts.Seed);
@@ -116,6 +120,11 @@ function M = discover(files, outDir, opts)
         if size(Dm, 2) >= K, Cd = rheome.modes.cluster(Dm, K, Replicates=opts.Replicates, Seed=opts.Seed);  rd = rheome.modes.match(C, Cd); end
         [V, L] = eig((CSD(:, :, b) + CSD(:, :, b)') / 2, 'vector');  [~, o] = sort(real(L), 'descend');  V = V(:, o(1:min(K, d)));
         rc = max(abs(C' * V), [], 2);
+        mix = zeros(K, 1);                         % share of c_k in the span of two other modes (1 = a mixture)
+        for k = 1:K
+            o = setdiff(1:K, k);
+            for i = o, for j = o(o > i), mix(k) = max(mix(k), norm(orth(C(:, [i j]))' * C(:, k))^2); end, end
+        end
         nullr = struct();  nullC = struct();
         for s = 2:numel(src)
             Xn = [X{:, b, s}];  nullr.(src(s)) = nan(K, 1);
@@ -124,10 +133,10 @@ function M = discover(files, outDir, opts)
             nullr.(src(s)) = max(abs(C' * nullC.(src(s))), [], 2);
         end
         Bd(b).band = bands(b);  Bd(b).K = K;  Bd(b).k_reproducible = repro;  Bd(b).C = C;  Bd(b).nullC = nullC;
-        Bd(b).occupancy = occ;  Bd(b).r_dmd = rd;  Bd(b).r_cpca = rc;  Bd(b).cpca = V;
+        Bd(b).occupancy = occ;  Bd(b).r_dmd = rd;  Bd(b).r_cpca = rc;  Bd(b).cpca = V;  Bd(b).mixture_share = mix;
         T = table(repmat(bands(b), K, 1), (1:K)', repmat(K, K, 1), repmat(repro, K, 1), occ, rd, rc, ...
-                  (rd >= opts.RobustR) | (rc >= opts.RobustR), 'VariableNames', ...
-                  {'band','mode','K','k_reproducible','occupancy_pooled','r_dmd','r_cpca','robust'});
+                  (rd >= opts.RobustR) | (rc >= opts.RobustR), mix, 'VariableNames', ...
+                  {'band','mode','K','k_reproducible','occupancy_pooled','r_dmd','r_cpca','robust','mixture_share'});
         for s = 2:numel(src), T.("r_" + src(s) + "_max") = nullr.(src(s)); end
         disc = [disc; T]; %#ok<AGROW>
         for k = 1:K

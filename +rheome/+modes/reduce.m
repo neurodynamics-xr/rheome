@@ -14,7 +14,9 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
 %     (iii) N4: occupancy on the periodic part - occupancy on the aperiodic part > 0
 %     (iv)  split-half ICC(2,1) of the mode's gev >= 0.5 with the lower bound of its 95 % CI > 0.3 (percentile
 %           bootstrap over participants, NBoot)
-%   Labels: standing (median pg < StandingRad); travelling or rotating (pg - pg_n3 > 0 under Holm AND the sign
+%   Labels: standing (median pg < StandingRad); travelling or rotating (r_n3_sim - r_n3 > N3Margin under Holm --
+%     the mode is further from its best two-phase source than that source reads when simulated in the
+%     participant's own data; see rheome.modes.fit on why not pg - pg_n3 -- AND the sign
 %     of div_index -- travelling -- or of winding_net -- rotating -- shared by >= SignShare of participants);
 %     lagged-pair (neither). The label is read only for Level-1 modes and says nothing about speed.
 %   Level 2 (dynamics beyond second order): dwell_median_ms (the mode's) and trans_entropy (overall, under
@@ -43,6 +45,7 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
         opts.Fdr (1,1) double = 0.05
         opts.NBoot (1,1) double = 2000
         opts.Seed (1,1) double = 1
+        opts.N3Margin (1,1) double = 0      % 0 = the protocol as fixed; a floor on the median N3 excess
     end
     if isscalar(fitFiles) && endsWith(fitFiles, ".txt"), fitFiles = strip(splitlines(strtrim(fileread(fitFiles)))); fitFiles(fitFiles == "") = []; end
     if ~exist(outDir, 'dir'), mkdir(outDir); end
@@ -66,7 +69,7 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
             s1 = dd("r_halves") - dd("r_n1_sources");
             s2 = dd("r_spin_obs") - dd("r_spin_mean");
             s3 = dd("occupancy") - get(bn, "n4_aperiodic", "all", "backfit", k, "occupancy");
-            sN3 = dd("pg") - dd("pg_n3");
+            sN3 = dd("r_n3_sim") - dd("r_n3");
             sL2 = dd("dwell_median_ms") - get(bn, "n5_phaserand", "all", "backfit", k, "dwell_median_ms");
             for tst = {"i_n1", s1; "ii_spin", s2; "iii_n4", s3; "n3_lagged", sN3; "l2_dwell", sL2}'
                 [p, md] = i_wilcox(tst{2});
@@ -111,7 +114,7 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
         C.pass_ii(r) = pass("ii_spin", b, k);  C.pass_iii(r) = pass("iii_n4", b, k);
         C.pass_iv(r) = C.icc_gev(r) >= 0.5 && C.icc_lo(r) > 0.3;
         C.level1(r) = C.pass_i(r) && C.pass_ii(r) && C.pass_iii(r) && C.pass_iv(r);
-        n3 = pass("n3_lagged", b, k);
+        n3 = pass("n3_lagged", b, k) && Ts.median(Ts.test == "n3_lagged" & Ts.band == b & Ts.mode == k) > opts.N3Margin;
         if C.pg_median(r) < opts.StandingRad, lab = "standing";
         elseif n3 && C.winding_sign_share(r) >= opts.SignShare, lab = "rotating";
         elseif n3 && C.div_sign_share(r) >= opts.SignShare, lab = "travelling";
@@ -119,7 +122,9 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
         C.label(r) = lab;  C.level2(r) = pass("l2_dwell", b, k) || pass("l2_entropy", b, 0);
     end
     rb = arrayfun(@(b, k) M.bands(string(b) == [M.bands.band]).r_dmd(k) >= 0.7 || M.bands(string(b) == [M.bands.band]).r_cpca(k) >= 0.7, C.band, C.mode);
-    C.robust = rb;  C.centroids_sha256 = repmat(string(M.sha256), height(C), 1);
+    C.robust = rb;
+    C.mixture_share = arrayfun(@(b, k) M.bands(string(b) == [M.bands.band]).mixture_share(k), C.band, C.mode);
+    C.centroids_sha256 = repmat(string(M.sha256), height(C), 1);
     writetable(C, fullfile(outDir, 'modes_catalogue.csv'));  writetable(Ts, fullfile(outDir, 'modes_tests.csv'));
     pv = struct('cohort', opts.Cohort, 'participants', nS, 'sha256', M.sha256, 'options', opts, 'matlab', version);
     fid = fopen(fullfile(outDir, 'reduce_provenance.json'), 'w');  fprintf(fid, '%s', jsonencode(pv, PrettyPrint=true));  fclose(fid);

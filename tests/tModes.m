@@ -70,6 +70,17 @@ classdef tModes < matlab.unittest.TestCase
             tc.verifyGreaterThan(norm(Ys - Y, 'fro'), 0.5 * norm(Y, 'fro'));
         end
 
+        function laggedSeparatesTwoPhasesFromAGradient(tc)
+            % identity blur: a two-phase source fits exactly, a smooth phase ramp over 8 tiles does not
+            d = 8;  R = eye(d);
+            m2 = [ones(4, 1); 0.5 * exp(1i * pi/3) * ones(4, 1)];
+            L2 = rheome.modes.lagged(m2, R);  tc.verifyEqual(L2.r_n3, 1, 'AbsTol', 1e-3);
+            tc.verifyEqual(L2.lag_rad, pi/3, 'AbsTol', deg2rad(10));
+            tc.verifyTrue(all(L2.x1 .* L2.x2 == 0));                               % disjoint generators
+            mg = exp(1i * linspace(0, 1.5*pi, d)');  Lg = rheome.modes.lagged(mg, R);
+            tc.verifyLessThan(Lg.r_n3, 0.95);
+        end
+
         function analyticBandSignal(tc)
             fs = 200;  t = (0:fs*20-1)/fs;  Y = [2*cos(2*pi*10*t); cos(2*pi*10*t + 1)];
             [z, rate, valid] = rheome.modes.analytic(Y, fs, [8 13]);
