@@ -31,6 +31,8 @@ function [T, X] = measure_upstreamnull(name, S, opts)
 %      over lagged plants of 1 - |U*|/|U - 0.5|), travel_power95 (share of travel plants with |U*| above
 %      null_ustar_abs95 and U* of the planted sign sigma), and the "none" rows' U* and seed_ustar_sd.
 %   Null="v2" calibrates measure_upstream's redesigned null (Null= there); "v1" the frozen one.
+%   Readout="v2" reads every plant (U and U_surrogate alike) through measure_upstream's fwdLS readout (Readout=
+%   there), so the null is calibrated through the readout it would serve; "v1" the frozen one.
 %
 % ⚠ THE READOUT ALIASES PAST HALF A CYCLE between tile centres (~120 mm): lambda < ~240 mm can read backwards
 %   whatever the null does; travel_dir_sign shows it, travel_power does not (it compares U* with U only).
@@ -59,6 +61,7 @@ function [T, X] = measure_upstreamnull(name, S, opts)
         opts.OwnMin (1,1) double = 0.25
         opts.Seed (1,1) double = 1
         opts.Null (1,1) string {mustBeMember(opts.Null, ["v1" "v2"])} = "v1"   % measure_upstream's Null=
+        opts.Readout (1,1) string {mustBeMember(opts.Readout, ["v1" "v2"])} = "v1"   % measure_upstream's Readout=
     end
     if isempty(S), S = rheome.scale.sensors(name); end
     st = rheome.load.study(name);  fs = st.rec.sfreq;  F = double(st.rec.F(S.iSel, :));  clear st
@@ -112,7 +115,7 @@ end
 
 function u = i_read(name, S, Y, seed, opts)
     Tu = rheome.scale.measure_upstream(name, S, Data=Y, Passes=["periodic" "surrogate"], Halves=false, ...
-        Gradient=opts.Gradient, SignCheck=opts.SignCheck, MinSpanS=opts.MinSpanS, OwnMin=opts.OwnMin, Seed=seed, Null=opts.Null);
+        Gradient=opts.Gradient, SignCheck=opts.SignCheck, MinSpanS=opts.MinSpanS, OwnMin=opts.OwnMin, Seed=seed, Null=opts.Null, Readout=opts.Readout);
     v = @(m) [Tu.value(Tu.metric == m); NaN];
     u = [v("U") v("U_surrogate") v("U_star")];  u = u(1, :);           % NaN when the recording is not read
 end
