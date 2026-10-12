@@ -27,6 +27,10 @@ function [T, X] = measure_upstreamnull(name, S, opts)
 %      "snr<dB>_lambda<mm>"): travel_power (share of travel plants with |U*| above the threshold and U* of
 %      U - 0.5's sign), travel_dir_sign (share whose U - 0.5 has the sign sigma: only meaningful when g
 %      increases along Axis)
+%      TP2/TP3 gate N reads: null_ustar_abs95 (95th percentile of the lagged |U*|), lag_cancelled_median (median
+%      over lagged plants of 1 - |U*|/|U - 0.5|), travel_power95 (share of travel plants with |U*| above
+%      null_ustar_abs95 and U* of the planted sign sigma), and the "none" rows' U* and seed_ustar_sd.
+%   Null="v2" calibrates measure_upstream's redesigned null (Null= there); "v1" the frozen one.
 %
 % ⚠ THE READOUT ALIASES PAST HALF A CYCLE between tile centres (~120 mm): lambda < ~240 mm can read backwards
 %   whatever the null does; travel_dir_sign shows it, travel_power does not (it compares U* with U only).
@@ -54,6 +58,7 @@ function [T, X] = measure_upstreamnull(name, S, opts)
         opts.MinSpanS (1,1) double = 180
         opts.OwnMin (1,1) double = 0.25
         opts.Seed (1,1) double = 1
+        opts.Null (1,1) string {mustBeMember(opts.Null, ["v1" "v2"])} = "v1"   % measure_upstream's Null=
     end
     if isempty(S), S = rheome.scale.sensors(name); end
     st = rheome.load.study(name);  fs = st.rec.sfreq;  F = double(st.rec.F(S.iSel, :));  clear st
@@ -107,7 +112,7 @@ end
 
 function u = i_read(name, S, Y, seed, opts)
     Tu = rheome.scale.measure_upstream(name, S, Data=Y, Passes=["periodic" "surrogate"], Halves=false, ...
-        Gradient=opts.Gradient, SignCheck=opts.SignCheck, MinSpanS=opts.MinSpanS, OwnMin=opts.OwnMin, Seed=seed);
+        Gradient=opts.Gradient, SignCheck=opts.SignCheck, MinSpanS=opts.MinSpanS, OwnMin=opts.OwnMin, Seed=seed, Null=opts.Null);
     v = @(m) [Tu.value(Tu.metric == m); NaN];
     u = [v("U") v("U_surrogate") v("U_star")];  u = u(1, :);           % NaN when the recording is not read
 end
@@ -132,15 +137,17 @@ function T = i_summary(X, snrs)
     T = rheome.scale.rows("upstreamnull", "seed_ustar_sd", std(X.U_star(X.kind == "none")), "share");
     for snr = snrs
         b = sprintf("snr%g", snr);  L = X(X.kind == "lagged" & X.snr_db == snr, :);
-        thr = max(abs(L.U_star));
-        T = [T; rheome.scale.rows("upstreamnull", ["null_ustar_absmax" "null_ustar_absmedian" "lagged_dev_median"], ...
-            [thr median(abs(L.U_star)) median(abs(L.U - 0.5))], "share", b)]; %#ok<AGROW>
+        thr = max(abs(L.U_star));  t95 = prctile(abs(L.U_star), 95);
+        T = [T; rheome.scale.rows("upstreamnull", ["null_ustar_absmax" "null_ustar_absmedian" "lagged_dev_median" "null_ustar_abs95"], ...
+            [thr median(abs(L.U_star)) median(abs(L.U - 0.5)) t95], "share", b); ...
+            rheome.scale.rows("upstreamnull", "lag_cancelled_median", median(1 - abs(L.U_star) ./ abs(L.U - 0.5)), "fraction", b)]; %#ok<AGROW>
         Tr = X(X.kind == "travel" & X.snr_db == snr, :);
         for lam = unique(Tr.lambda_mm)'
             r = Tr(Tr.lambda_mm == lam, :);
             pw = mean(abs(r.U_star) > thr & sign(r.U_star) == sign(r.U - 0.5));
-            T = [T; rheome.scale.rows("upstreamnull", ["travel_power" "travel_dir_sign"], ...
-                [pw mean(sign(r.U - 0.5) == r.dir)], "fraction", sprintf("%s_lambda%g", b, round(lam)))]; %#ok<AGROW>
+            p95 = mean(abs(r.U_star) > t95 & sign(r.U_star) == r.dir);       % TP2 gate N (ii): the planted sign
+            T = [T; rheome.scale.rows("upstreamnull", ["travel_power" "travel_dir_sign" "travel_power95"], ...
+                [pw mean(sign(r.U - 0.5) == r.dir) p95], "fraction", sprintf("%s_lambda%g", b, round(lam)))]; %#ok<AGROW>
         end
     end
 end

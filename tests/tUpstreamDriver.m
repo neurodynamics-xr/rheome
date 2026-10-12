@@ -75,6 +75,16 @@ classdef tUpstreamDriver < matlab.unittest.TestCase
             tc.verifyEqual(sort(unique(X.span))', ["h1" "h2" "whole"]);
         end
 
+        function nullV2RunsThroughTheDriver(tc)
+            % the redesigned null (depth-6 tile generators, Keep, zero-lag residual) runs through the driver.
+            % Structure only: the toy pair is two whole DEPTH-3 tiles, which one depth-6 tile does not fit (U* -0.20
+            % here); the real-head calibration is measure_upstreamnull
+            T = rheome.scale.measure_upstream(tc.Name, [], Passes=["periodic" "surrogate"], Halves=false, MinSpanS=10, OwnMin=0, Null="v2");
+            v = @(m) T.value(T.metric == m);
+            tc.verifyTrue(isfinite(v("U_surrogate")));
+            tc.verifyEqual(v("U_star"), v("U") - v("U_surrogate"), 'AbsTol', 1e-12);
+        end
+
         function shortSpanIsNotRead(tc)
             [T, X] = rheome.scale.measure_upstream(tc.Name, [], MinSpanS=1000, OwnMin=0);
             tc.verifyEqual(T.value(T.metric == "read"), 0);
