@@ -56,13 +56,16 @@ classdef tModesJoint < matlab.unittest.TestCase
                 save(f, '-struct', 'Y', '-v7.3');  save(f, 'Z', '-append');  files(end+1) = f; %#ok<AGROW>
             end
             tc.verifyEqual(Z.kind, "joint");
-            tc.verifyEqual(Z.sources, ["data" "f_fieldspread" "n4_aperiodic" "n5_phaserand"]);
+            tc.verifyEqual(Z.sources, ["data" "f_fieldspread" "f_fieldspread2" "n4_aperiodic" "n5_phaserand"]);
             tc.verifyEqual(height(Z.tiles{1}), sum(Z.scales.n_tiles));
             tc.verifyTrue(all(isfinite(Z.transfer.table.T_abs)));
             tc.verifyTrue(isfinite(Z.fspread.tile_logpower_err_median));
-            M = rheome.modes.discover(files, fullfile(od, 'discover'), NullSources=["f_fieldspread" "n4_aperiodic"], NMF=true, ...
+            M = rheome.modes.discover(files, fullfile(od, 'discover'), NullSources=["f_fieldspread" "f_fieldspread2" "n4_aperiodic"], NMF=true, ...
                                       Ks=2:3, NSplits=4, NPer=200, NPerSplit=100, Replicates=2);
             tc.verifyEqual(M.kind, "joint");
+            B = M.bands(1);                                                          % F union: every K, both realisations
+            tc.verifyEqual(B.nullK.f_fieldspread, [2;2;3;3;3]);  tc.verifyEqual(size(B.nullC.f_fieldspread2, 2), 5);
+            tc.verifyEqual(size(B.nullC.n4_aperiodic, 2), B.K);                     % other nulls stay at K*
             tc.verifyTrue(all(isfinite(M.bands(1).r_nmf)) && all(isfinite(M.bands(1).t_bar)));
             fits = strings(0);
             for n = tc.Names

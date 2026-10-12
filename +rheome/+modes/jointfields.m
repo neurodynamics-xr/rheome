@@ -45,7 +45,8 @@ function [Z, Y, Op] = jointfields(name, S, opts)
 %   pair_fo       two lagged 30 mm blobs, frontal leading occipital by 90 deg
 %   standing200   cos(2 pi z / 200 mm), a standing (zero-lag) dorsal-ventral pattern
 %   fine50        a 50 mm wave (A->P) in a 40 mm-sigma posterior-dorsal patch
-% Sources: canary, f_fieldspread, f_fieldspread2 (a second F realisation, seed + 1: the Level-1 (i) check on F).
+% Sources: canary, f_fieldspread, f_fieldspread2 (a second F realisation, seed + 1; made whenever F is: the F null
+% is the union of both realisations' atoms over every K, design §14 F union amendment, 2026-10-12).
 % Y.canary_truth [rows x 4] the noise-free joint coefficients of each plant; Z.canary the plant table.
 %
 % Z: .name .workRate .bands (band, lo, hi, peak_hz, rate) .scales (depth, n_tiles, diameter_mm, lo_mm, hi_mm,
@@ -130,13 +131,13 @@ function [Z, Y, Op] = jointfields(name, S, opts)
         E = i_emptyroom(name, chn, fw, N);
         [Xf, Z.fspread] = i_fieldspread(S, Tp, F, fw, mask, E, opts, RandStream('mt19937ar', 'Seed', opts.Seed + 17));
         add("f_fieldspread", Xf, "per");  srcs(end+1) = "f_fieldspread";
+        Xf2 = i_fieldspread(S, Tp, F, fw, mask, E, opts, RandStream('mt19937ar', 'Seed', opts.Seed + 18));
+        add("f_fieldspread2", Xf2, "per");  srcs(end+1) = "f_fieldspread2";   % F union: both realisations are the null
     end
     if opts.Canary
         [Xc, Z.canary, B] = i_canary(S, Xf, fw, opts, RandStream('mt19937ar', 'Seed', opts.Seed + 23));
         Y.canary_truth = single(Wj * B);
         add("canary", Xc, "per");  srcs = ["canary" srcs];
-        Xf2 = i_fieldspread(S, Tp, F, fw, mask, E, opts, RandStream('mt19937ar', 'Seed', opts.Seed + 18));
-        add("f_fieldspread2", Xf2, "per");  srcs(end+1) = "f_fieldspread2";
     elseif opts.Nulls
         add("n4_aperiodic", spD, "ap");  add("n5_phaserand", spD, "rand");  srcs = [srcs "n4_aperiodic" "n5_phaserand"];
     end

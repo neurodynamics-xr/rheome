@@ -13,8 +13,10 @@ function R = jointcheck(files, outDir, opts)
 %              planted coefficients over the depths (the head's own T(s), rheome.modes.scaletransfer) and of
 %              its best-matching atom
 %   F          no atom of null F passes Level-1 (i): F's own atoms (discovered at K* on f_fieldspread) are each
-%              compared with the atoms of a second, independent F realisation (f_fieldspread2); an F atom would
-%              pass (i) only with |r| < RMin to every one of them. Pass = none does
+%              compared with every atom of a second, independent F realisation (f_fieldspread2) at EVERY K of Ks
+%              (F union amendment, design §14, 2026-10-12, decision d62f84ae: at K* = 11 two of eleven F atoms
+%              had no match in the K* = 11 atoms of one other realisation); an F atom would pass (i) only with
+%              |r| < RMin to every one of them. Pass = none does
 % pass = all three recovered AND no F atom passes, read at K* = max(§4.2 rule, k_sep) -- k_sep the smallest K at which
 % all three are recovered in every head (J5 amendment, design §14, 2026-10-12); the reading at the rule's own K is
 % kept as recovered_at_k_rule. Not gated, to read a failure: joint_canary_byK.csv, the best |r|
@@ -91,9 +93,10 @@ function [rows, byK, fr, trf, heads] = i_score(M, files, rmin)
     end
     fr = table();
     for b = 1:numel(M.bands)
-        nc = M.bands(b).nullC;
+        nc = M.bands(b).nullC;  nk = M.bands(b).nullK;
         if ~isfield(nc, 'f_fieldspread') || ~isfield(nc, 'f_fieldspread2'), continue; end
-        r = max(abs(nc.f_fieldspread' * nc.f_fieldspread2), [], 2);
+        % F union amendment: F's atoms at K* against EVERY atom of the second realisation at EVERY K
+        r = max(abs(nc.f_fieldspread(:, nk.f_fieldspread == M.bands(b).K)' * nc.f_fieldspread2), [], 2);
         fr = [fr; table(repmat(M.bands(b).band, numel(r), 1), (1:numel(r))', r, r < rmin, ...
               'VariableNames', {'band','f_atom','r_max_to_f2','passes_level1_i'})]; %#ok<AGROW>
     end

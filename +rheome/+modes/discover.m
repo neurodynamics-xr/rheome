@@ -30,9 +30,11 @@ function M = discover(files, outDir, opts)
 %               6 with three modes >= 0.998 inside span{planted}. Reported, not acted on
 %   null modes  the same clustering at K* on each null source's snapshots (N1 sources, N1 empty room, N4):
 %               the centroid's best |r| to any of them (Level-1 (i) needs < 0.7 to every N1 mode)
+%               F sources (f_fieldspread*) are clustered at EVERY K of Ks and their null atoms are the union
+%               (nullC columns, nullK = each column's K; F union amendment, design §14, 2026-10-12)
 % Joint fields (rheome.modes.jointfields, protocol section 14 J2): the same code, a snapshot being the complex
 % coefficient vector over tile x scale at one frame of one octave ("bands" are the octaves); pass
-% NullSources=["f_fieldspread" "n4_aperiodic"] (F replaces N1 for joint atoms) and NMF=true:
+% NullSources=["f_fieldspread" "f_fieldspread2" "n4_aperiodic"] (F, both realisations, replaces N1 for joint atoms) and NMF=true:
 %   NMF         nonnegative factorisation of the pooled |W|^2 (snapshots x tile.scale) at K*: r_nmf = Hungarian
 %               |Pearson r| of |c_k|^2 to the components; robust also when r_nmf >= RobustR. shortcut: the
 %               2-way unfolding of the |W|^2 tensor (snapshots are not aligned across participants, so a time
@@ -147,11 +149,15 @@ function M = discover(files, outDir, opts)
             o = setdiff(1:K, k);
             for i = o, for j = o(o > i), mix(k) = max(mix(k), norm(orth(C(:, [i j]))' * C(:, k))^2); end, end
         end
-        nullr = struct();  nullC = struct();
+        nullr = struct();  nullC = struct();  nullK = struct();
         for s = 2:numel(src)
             Xn = [X{:, b, s}];  nullr.(src(s)) = nan(K, 1);
             if size(Xn, 2) < K, continue; end
-            nullC.(src(s)) = rheome.modes.cluster(Xn, K, Replicates=opts.Replicates, Seed=opts.Seed);
+            % F union amendment (design §14, 2026-10-12, decision d62f84ae): an F null is the union of its atoms
+            % at EVERY K of Ks, since k-means at one K cuts the field-spread continuum differently per realisation
+            kn = K;  if startsWith(src(s), "f_fieldspread"), kn = Ks(Ks <= size(Xn, 2)); end
+            Cn = arrayfun(@(k) rheome.modes.cluster(Xn, k, Replicates=opts.Replicates, Seed=opts.Seed), kn, 'uni', 0);
+            nullC.(src(s)) = [Cn{:}];  nullK.(src(s)) = repelem(kn(:), kn(:));
             nullr.(src(s)) = max(abs(C' * nullC.(src(s))), [], 2);
         end
         rn = nan(K, 1);
@@ -160,7 +166,7 @@ function M = discover(files, outDir, opts)
             ac = abs(C).^2;  rn = rheome.modes.match(ac - mean(ac, 1), Wn - mean(Wn, 1));
         end
         Bd(b).r_nmf = rn;  Bd(b).refC = ref;  Bd(b).refK = Ks;         % every K's reference clustering (not hashed)
-        Bd(b).band = bands(b);  Bd(b).K = K;  Bd(b).k_rule = kRule;  Bd(b).k_reproducible = repro;  Bd(b).C = C;  Bd(b).nullC = nullC;
+        Bd(b).band = bands(b);  Bd(b).K = K;  Bd(b).k_rule = kRule;  Bd(b).k_reproducible = repro;  Bd(b).C = C;  Bd(b).nullC = nullC;  Bd(b).nullK = nullK;
         Bd(b).occupancy = occ;  Bd(b).r_dmd = rd;  Bd(b).r_cpca = rc;  Bd(b).cpca = V;  Bd(b).mixture_share = mix;
         T = table(repmat(bands(b), K, 1), (1:K)', repmat(K, K, 1), repmat(repro, K, 1), occ, rd, rc, ...
                   (rd >= opts.RobustR) | (rc >= opts.RobustR) | (rn >= opts.RobustR), mix, rn, 'VariableNames', ...
