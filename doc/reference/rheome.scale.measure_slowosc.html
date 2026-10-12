@@ -67,7 +67,7 @@
                     ⚠ Before 2026-10-11 every channel entered, and about half of them (the ones that see the wave
                     inverted under the average reference) had their minimum pinned to the window's edge, at -0.2 or
                     +0.2 s. On AnphySleep the posterior ones were pinned to the EARLY edge more often, which read
-                    P-&gt;A (G15a, 24/25 participants). Desk evidence 22c7b277.
+                    P-&gt;A (24/25 participants).
      Field estimators (bst_of, phasereg) give one event direction as the weighted circular mean of the per-vertex
      directions (weight: amplitude x |velocity|, x the fit's coherence R for phasereg) and their resultant R.
   4. GATE V (Plant = speeds in m/s; analysis &quot;slowoscplant&quot;): direction accuracy for movers as fast as slow
@@ -81,13 +81,13 @@
      fraction with the correct A-&gt;P sign (no direction = wrong), its one-sided 95% Clopper-Pearson lower bound,
      the circular mean and the median absolute direction error. On &quot;lagged&quot; it is how often the no-travel null
      still reads the plant's direction: gate N's validation on planted travel.
-     ⚠ MEASURED LIMITS on the synthetic head (two 80 mm spheres, ~40 dB, 3 plants per cell; desk evidence 1a32c6c1):
+     ⚠ MEASURED LIMITS on the synthetic head (two 80 mm spheres, ~40 dB, 3 plants per cell):
        framework      right sign at 0.25-0.5 m/s; from 1 m/s on, the same reading whichever way the wave travels
                       (the wavelength, 1.25 m+, is ~10x the hemisphere: the band map's extremum moves with geometry)
        phasereg       right sign to 2 m/s (error &lt;= 27 deg); at 5 m/s REVERSED (175 deg) in both hemispheres
        sensorlatency  right sign at every speed (error ~1 deg), and also on the lagged null: it reads lag, not travel
-     ⚠ MEASURED in the AnphySleep head (EPCTL03, template ICBM152 + OpenMEEG, 3 plants per cell, level &quot;median&quot;;
-       desk evidence 22c7b277): framework at chance (0.33-0.67 correct, median error 55-114 deg) at 1, 2.7 and 5 m/s
+     ⚠ MEASURED in the AnphySleep head (one participant, template ICBM152 + OpenMEEG, 3 plants per cell,
+       level &quot;median&quot;): framework at chance (0.33-0.67 correct, median error 55-114 deg) at 1, 2.7 and 5 m/s
        for plane waves and for plants confined to the medial wall and cingulate (PlantRegion); phasereg 0.67-1.00;
        sensorlatency (carrying channels) 1.00 within 9 deg on plane waves.
      ⚠ A plane wave is the simplest mover: it says what the head and inverse do to a known direction, not how

@@ -1,7 +1,7 @@
 function info = importeeg(name, protoDir, edfFile, eventsFile, opts)
 % SCALE.IMPORTEEG  A sleep EEG subject -> the data cache the analyses load from: template forward model + scored NREM.
 %
-%   info = rheome.scale.importeeg('anphysleep_EPCTL03', '/tmp/bst', edf, eventsTsv)
+%   info = rheome.scale.importeeg('mysubject', '/tmp/bst', edf, eventsTsv)
 %   info = rheome.scale.importeeg(name, protoDir, edf, eventsTsv, Rate=100, Stages=["N2" "N3"], BadFrac=0.5)
 %
 % The EEG counterpart of rheome.scale.importsubject, for the MS1 positive control (G15; nsp cf-slowosc).

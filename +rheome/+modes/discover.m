@@ -25,7 +25,7 @@ function M = discover(files, outDir, opts)
 %   mixtures    mixture_share: the largest share of c_k's energy in the span of two other centroids. ⚠ The K rule
 %               counts reproducible MIXTURES: with three planted states (mean dwell 300 ms) the alpha band-pass
 %               smears every switch, the transition snapshots form their own reproducible clusters, and K* reached
-%               6 with three modes >= 0.998 inside span{planted} (request 30825727 evidence). Reported, not acted on
+%               6 with three modes >= 0.998 inside span{planted}. Reported, not acted on
 %   null modes  the same clustering at K* on each null source's snapshots (N1 sources, N1 empty room, N4):
 %               the centroid's best |r| to any of them (Level-1 (i) needs < 0.7 to every N1 mode)
 % The centroids are frozen: centroids.mat (M) and centroids.sha256 = rheome.modes.hash over every band's C in
