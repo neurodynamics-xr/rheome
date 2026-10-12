@@ -107,6 +107,12 @@ not under the MIT licence. So `hcp_template.mat` is attached to the release on i
 `fullfile(rheome.load.root(), 'hcp_template.mat')`, or point `RHEOME_HCP_TEMPLATE` at it.
 `rheome.connectome.build_hcp_template` rebuilds it from your own copy.
 
+## From another program (MCP)
+
+`mcp/rheome_mcp.py` is an MCP server over the public API. It runs the scale-up analyses and the pattern atlas
+as MATLAB jobs, one at a time, and reads their tables. It records the Rheome version and inputs of every call.
+See [`mcp/README.md`](mcp/README.md).
+
 ## Requirements
 
 MATLAB R2023b or later. The filterbank classes, the surface operators and the quick start need

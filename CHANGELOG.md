@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Rheome MCP server** (`mcp/`): Rheome as a product, used through its public API rather than its source.
+  It has tools for the scale-up analyses (`run`, `reduce`), the resting-state pattern atlas (`modes_discover`,
+  `modes_reduce`), their tables (`readout`), jobs and versions. Every call records the Rheome version and its
+  inputs (provenance), and MATLAB runs one at a time. It is not part of the `.mltbx`. See `mcp/README.md`.
+
 ## 1.1.0 — 2026-10-11
 
 ### Changed behaviour (check results computed with 1.0.x)
