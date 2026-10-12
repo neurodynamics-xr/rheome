@@ -34,6 +34,8 @@ function [Ys, info] = laggedrest(Y, Gp, front, fs, opts)
 %   front  [1 x nPatch] logical, frontal candidates     fs  sampling rate (Hz)
 % NAME-VALUE
 %   WindowS (4)   MaxLagS (0.5)   Group [1 x nPatch] (one group)   Mask [1 x nT] logical (none)
+%   Keep (false)  Residual ("perchan"): passed to rheome.forward.laggedpair. The null v2 of measure_upstream is
+%                 Keep=true, Residual="zerolag" on depth-6 tile candidates (see measure_upstream, Null=).
 % OUTPUT
 %   Ys     [nChan x nT] the surrogate
 %   info   .read [1 x nT] logical (samples carrying a surrogate)   .windows table: first, last, lagS, ratio,
@@ -52,6 +54,8 @@ function [Ys, info] = laggedrest(Y, Gp, front, fs, opts)
         opts.MaxLagS (1,1) double {mustBeNonnegative} = 0.5
         opts.Group (1,:) = ones(1, size(Gp, 2))
         opts.Mask (1,:) logical = false(1, size(Y, 2))
+        opts.Keep (1,1) logical = false
+        opts.Residual (1,1) string {mustBeMember(opts.Residual, ["perchan" "zerolag"])} = "perchan"
     end
     nT = size(Y, 2);  w = round(opts.WindowS * fs);  m = round(opts.MaxLagS * fs);  hop = w - 2*m;
     if hop < 1, error('rheome:laggedrest:window', 'WindowS (%g s) must exceed 2 MaxLagS (%g s)', opts.WindowS, 2*opts.MaxLagS); end
@@ -67,7 +71,8 @@ function [Ys, info] = laggedrest(Y, Gp, front, fs, opts)
         k2 = st(i) + w - 1 - m;  if i == nW, k2 = nT; end
         W.first(i) = k1;  W.last(i) = k2;  kept = k2;
         if any(opts.Mask(s)), continue; end
-        [Yw, fit] = rheome.forward.laggedpair(Y(:, s), Gp, front, fs, MaxLagS=opts.MaxLagS, Group=opts.Group);
+        [Yw, fit] = rheome.forward.laggedpair(Y(:, s), Gp, front, fs, MaxLagS=opts.MaxLagS, Group=opts.Group, ...
+            Keep=opts.Keep, Residual=opts.Residual);
         Ys(:, k1:k2) = Yw(:, k1 - st(i) + 1 : k2 - st(i) + 1);  read(k1:k2) = true;
         W{i, {'lagS','ratio','r2','polarity'}} = [fit.lagS fit.ratio fit.r2 fit.polarity];  W.fitted(i) = true;
     end

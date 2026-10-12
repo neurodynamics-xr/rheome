@@ -37,6 +37,10 @@ function [T, X] = measure_upstream(name, S, opts)
 %                generators of each hemisphere refitted with no travel, through the participant's own gain, at
 %                the window's lag and ratio, + the phase-randomised residual), made analytic on the same bins,
 %                and read by c-f. U* = U - U_surrogate. Read on the whole span and on each half.
+%                Null="v1" (default, frozen, NOT VALIDATED: gate N failed 2026-10-11) is the above. Null="v2" (the
+%                redesign, task 6935dbff): candidates are DEPTH-6 tiles (~15-20 mm, 64 per hemisphere), the two
+%                fitted generators keep their own time courses (Keep), and the residual keeps its zero-lag
+%                spatial structure and loses only its lags (Residual "zerolag"); see rheome.forward.laggedpair.
 %   "total"      U_total: h = 1, the periodic gain switched off (WAVE-OR-LEAKAGE H3b, Delta_ap = U_total - U).
 %                The aperiodic fit still runs and gives the covariates. Whole span only.
 %   "of"         U_of: the comparator (P2). Horn-Schunck optical flow (rheome.flow.apparent, Alpha 1) of the
@@ -79,6 +83,7 @@ function [T, X] = measure_upstream(name, S, opts)
         opts.OfChunk (1,1) double {mustBeInteger, mustBePositive} = 500
         opts.OwnMin (1,1) double = 0.25     % v1: 0.25; lower it only on a toy head (tests)
         opts.Data double = []               % [nSel x nT] read instead of the recording's S.iSel rows (planted copies)
+        opts.Null (1,1) string {mustBeMember(opts.Null, ["v1" "v2"])} = "v1"   % the surrogate pass's null
     end
     V1 = struct('Depth', 3, 'Band', [1 8], 'Rate', 50, 'FitRange', [1 45], 'LineHz', 60, 'SegS', 8, ...
                 'OwnMin', opts.OwnMin, 'KeptMin', 0.5, 'EdgeS', 10, 'WindowS', 4, 'MaxLagS', 0.5, 'OfAlpha', 1);   % readout v1, frozen
@@ -132,8 +137,9 @@ function [T, X] = measure_upstream(name, S, opts)
                 case "surrogate"
                     Zp = i_analytic(B, B.hper, V1);
                     rs = rng;  rng(opts.Seed + i, 'twister');            % reproducible null, global stream restored
-                    [Ys, li] = rheome.forward.laggedrest(real(Zp), H.Gp, H.front, B.rate, WindowS=V1.WindowS, ...
-                        MaxLagS=V1.MaxLagS, Group=H.group, Mask=~B.valid);
+                    Nl = H.null;
+                    [Ys, li] = rheome.forward.laggedrest(real(Zp), Nl.Gp, Nl.front, B.rate, WindowS=V1.WindowS, ...
+                        MaxLagS=V1.MaxLagS, Group=Nl.group, Mask=~B.valid, Keep=Nl.keep, Residual=Nl.residual);
                     rng(rs);
                     Za = i_reanalytic(Ys, B.rate, V1.Band);  ok = B.valid & li.read;
                 case "of"
@@ -181,6 +187,18 @@ function H = i_geometry(name, S, V1, opts)
         H.(h) = struct('gv', gv, 'S', Sh, 'P', G.P, 'Pa', Pa, 'W', [Wc{1}; Wc{2}; Wc{3}], 'N', N, 'A', G.A, ...
                        'mask', own >= V1.OwnMin, 'own', own, 'a', a, 'gv_g', gvx, 'tilecheck', NaN);
         H.Gp = [H.Gp Gp];  H.front = [H.front (xc > median(xc))'];  H.group = [H.group repmat(double(h == "R") + 1, 1, numel(xc))];
+    end
+    H.null = struct('Gp', H.Gp, 'front', H.front, 'group', H.group, 'keep', false, 'residual', "perchan");
+    if opts.Null == "v2"                                                  % depth-6 tile generators, fitted the same way
+        H.null = struct('Gp', [], 'front', false(1, 0), 'group', zeros(1, 0), 'keep', true, 'residual', "zerolag");
+        for h = ["L" "R"]
+            Hh = H.(h);  Tr = rheome.geom.tree(Hh.S, L=S.B.(h).lbo.L, M=S.B.(h).lbo.M, MaxDepth=6);
+            G6 = rheome.geom.tiles(Tr, Hh.S, 6);  P6 = double(G6.P) .* Hh.a;  nrm = i_normals(S.Sf, Hh.gv, Hh.S);  gv = Hh.gv;
+            Gh = nrm(:,1)' .* S.G(:, (gv-1)*3 + 1) + nrm(:,2)' .* S.G(:, (gv-1)*3 + 2) + nrm(:,3)' .* S.G(:, (gv-1)*3 + 3);
+            xc = ((P6 ./ sum(P6, 1))' * double(Hh.S.Vertices(:, 1)))';
+            H.null.Gp = [H.null.Gp Gh * P6];  H.null.front = [H.null.front xc > median(xc)];
+            H.null.group = [H.null.group repmat(double(h == "R") + 1, 1, numel(xc))];
+        end
     end
     sgn = 1;
     if opts.SignCheck                                                     % G1's sign is arbitrary in the normative map

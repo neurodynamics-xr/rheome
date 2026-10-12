@@ -22,6 +22,14 @@ function [Ys, fit] = laggedpair(Y, Gp, front, fs, opts)
 %    [s1; ratio * polarity * s1(t - tau)] + the residual Y - fit with each channel's Fourier phases randomised
 %    (matched noise: each channel keeps its spectrum of everything the pair does not explain; any travel left in
 %    the residual loses its cross-channel lags).
+% OPTIONS (default = the null above):
+%    Keep=true        the two generators keep their OWN fitted time courses s1 and s2 (still two fixed topographies:
+%                     nothing travels), instead of the back one becoming the front one's lagged copy.
+%    Residual="zerolag"  the residual's Fourier phases are randomised by ONE phase per frequency for every channel,
+%                     applied to the real part of that frequency's spatial pattern: it keeps the residual's zero-lag
+%                     cross-spectrum (field spread) and drops its lags. "perchan" (default) randomises each channel.
+%    MaxCombos (1e4)  above this many candidate combinations the best one is found by coordinate ascent (each
+%                     slot in turn takes its best candidate, the others fixed), not by trying every one.
 % ⚠ THE DELAY IS CIRCULAR over the window. Give the window a margin of at least MaxLagS beyond what is read.
 % ⚠ THE PAIR IS THE BEST OF THE CANDIDATES, not a free dipole fit: positions are as fine as the patches.
 % ⚠ The random phases use the global stream: seed it (rng) before calling for a reproducible null.
@@ -47,6 +55,9 @@ function [Ys, fit] = laggedpair(Y, Gp, front, fs, opts)
         fs (1,1) double
         opts.MaxLagS (1,1) double = 0.3
         opts.Group (1,:) = ones(1, size(Gp, 2))
+        opts.Keep (1,1) logical = false
+        opts.Residual (1,1) string {mustBeMember(opts.Residual, ["perchan" "zerolag"])} = "perchan"
+        opts.MaxCombos (1,1) double {mustBePositive} = 1e4
     end
     K = Gp' * Gp;  B = Gp' * Y;  C = B * B';                      % explained energy of a set c: trace(K_cc \ C_cc)
     gr = unique(opts.Group, 'stable');  nG = numel(gr);  cand = cell(1, 2 * nG);
@@ -55,10 +66,14 @@ function [Ys, fit] = laggedpair(Y, Gp, front, fs, opts)
     end
     cand = cand(~cellfun(@isempty, cand));  nG = numel(cand) / 2;
     assert(nG == round(nG) && nG >= 1, 'rheome:laggedpair:candidates', 'every group needs a frontal and a posterior candidate');
-    I = cell(1, 2 * nG);  [I{:}] = ndgrid(cand{:});  I = cell2mat(cellfun(@(x) x(:), I, 'UniformOutput', false));
-    e = zeros(size(I, 1), 1);
-    for r = 1:size(I, 1), c = I(r, :);  e(r) = trace(K(c, c) \ C(c, c)); end
-    [~, r] = max(e);  c = I(r, :);  fit.front = c(1:nG);  fit.back = c(nG+1:end);
+    if prod(cellfun(@numel, cand)) <= opts.MaxCombos                    % every combination
+        I = cell(1, 2 * nG);  [I{:}] = ndgrid(cand{:});  I = cell2mat(cellfun(@(x) x(:), I, 'UniformOutput', false));
+        e = zeros(size(I, 1), 1);
+        for r = 1:size(I, 1), c = I(r, :);  e(r) = i_E(K, C, c); end
+        [~, r] = max(e);  c = I(r, :);
+    else, c = i_ascent(K, C, cand);                                    % too many: coordinate ascent
+    end
+    fit.front = c(1:nG);  fit.back = c(nG+1:end);
     s = Gp(:, c) \ Y;
     [AF, s1, fit.wFront] = i_rank1(Gp(:, fit.front), s(1:nG, :));
     [AB, s2, fit.wBack] = i_rank1(Gp(:, fit.back), s(nG+1:end, :));
@@ -67,7 +82,29 @@ function [Ys, fit] = laggedpair(Y, Gp, front, fs, opts)
     m = round(opts.MaxLagS * fs);  [xc, lg] = xcorr(s2, s1, m);
     [~, k] = max(abs(xc));  fit.lagS = lg(k) / fs;  fit.polarity = sign(xc(k));
     fit.ratio = rms(s2) / rms(s1);
-    Ys = AF * s1 + AB * (fit.ratio * fit.polarity * circshift(s1, lg(k))) + i_phaserand(R);
+    if opts.Residual == "zerolag", R = i_zerolag(R); else, R = i_phaserand(R); end
+    if opts.Keep, Ys = AF * s1 + AB * s2 + R;
+    else, Ys = AF * s1 + AB * (fit.ratio * fit.polarity * circshift(s1, lg(k))) + R; end
+end
+
+function e = i_E(K, C, c)
+% the energy of Y that the candidate set c explains by least squares (a repeated candidate explains nothing new)
+    if numel(unique(c)) < numel(c), e = -Inf; else, e = trace(K(c, c) \ C(c, c)); end
+end
+
+function c = i_ascent(K, C, cand)
+% each slot (a group's front or back) starts at its best single candidate; then each slot in turn takes the
+% candidate that, with the others fixed, explains most, until a sweep changes nothing (at most 10 sweeps)
+    ns = numel(cand);  c = zeros(1, ns);
+    for s = 1:ns, [~, j] = max(arrayfun(@(k) i_E(K, C, k), cand{s}));  c(s) = cand{s}(j); end
+    for sweep = 1:10
+        moved = false;
+        for s = 1:ns
+            e = arrayfun(@(k) i_E(K, C, [c(1:s-1) k c(s+1:end)]), cand{s});  [~, j] = max(e);
+            if cand{s}(j) ~= c(s), c(s) = cand{s}(j);  moved = true; end
+        end
+        if ~moved, break; end
+    end
 end
 
 function [a, s, w] = i_rank1(A, S)
@@ -87,6 +124,15 @@ function y = i_phaserand(y)
     ph = exp(2i * pi * rand(size(y, 1), h));
     Fy(:, 2:h+1) = Fy(:, 2:h+1) .* ph;  Fy(:, n:-1:n-h+1) = Fy(:, n:-1:n-h+1) .* conj(ph);
     y = real(ifft(Fy, [], 2));
+end
+
+function y = i_zerolag(y)
+% one random phase per frequency, common to every channel, applied to the REAL part of that frequency's spatial
+% pattern: the zero-lag cross-spectrum (field spread, in-phase sources) is kept in expectation, every lag between
+% channels (its imaginary part) is dropped
+    n = size(y, 2);  h = floor((n - 1) / 2);  Fy = fft(y, [], 2);
+    X = sqrt(2) * real(Fy(:, 2:h+1) .* exp(2i * pi * rand(1, h))) .* exp(2i * pi * rand(1, h));
+    Fy(:, 2:h+1) = X;  Fy(:, n:-1:n-h+1) = conj(X);  y = real(ifft(Fy, [], 2));
 end
 
 % Author: Diellor Basha, 2026
