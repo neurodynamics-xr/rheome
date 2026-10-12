@@ -1,4 +1,4 @@
-function [T, X, Best] = measure_grouptrack(name, S, opts)
+function [T, X, Best, Win] = measure_grouptrack(name, S, opts)
 % SCALE.MEASURE_GROUPTRACK  Viterbi tile tracking of the alpha envelope, real against the mode-shift surrogate.
 %
 %   [T, X] = rheome.scale.measure_grouptrack(name)
@@ -32,6 +32,9 @@ function [T, X, Best] = measure_grouptrack(name, S, opts)
 % Best (third output): per configuration, the highest-scoring REAL path -- .hemi .depth .jj .rate
 % .window .frame0 (300-fps frames before window 1: the clean-span offset) .score .passed .track (rheome.detect.tilepath track, frames within its window) .G (the tiles),
 % which rheome.scale.measure_eventsensors maps onto the sensor data.
+% Win (fourth output, grouptrackwindows.csv): one row per configuration x 2 s window -- the best real and surrogate
+% path scores, the window's start (s from the recording start), whether it is used (clean), its surrogate half
+% (calibration | test) and the configuration's threshold: the detection behind frac_pass and false_rate_test.
 %
 % ⚠ netMM is quantised to the tiling: displacement below one tile is not measured, by design.
 % ⚠ Everything is through the instrument -- a trajectory is the trajectory of the RENDERED blob.
@@ -58,7 +61,7 @@ function [T, X, Best] = measure_grouptrack(name, S, opts)
     B = S.B;
     st = rheome.load.study(name);  fs = st.rec.sfreq;  CS = rheome.scale.cleanspan(double(st.rec.F(S.iSel, :)), fs, EdgeS=opts.EdgeS);  clear st
     E = rheome.flow.envelopemodes(name, Band=[8 16], Rate=opts.Rate);
-    FR = opts.Rate;  W = opts.WindowS;  res = [];  nWin = NaN;  Best = struct([]);
+    FR = opts.Rate;  W = opts.WindowS;  res = [];  nWin = NaN;  Best = struct([]);  Win = table();
     dec = round(fs / FR);                                     % envelope frame k is sample (k-1)*dec + 1
     f1 = ceil((CS.first - 1) / dec) + 1;  f2 = floor((CS.last - 1) / dec) + 1;
     badF = CS.mask(1:dec:end);
@@ -90,6 +93,13 @@ function [T, X, Best] = measure_grouptrack(name, S, opts)
                     if pth.nTracks, rs(w) = pth.tracks(1).score; rst{w} = i_stats(pth, G, rate); end
                 end
                 pr = false(nWin, 1);  pr(ok) = rs(ok) > thr;  ps = ss(tst) > thr;
+                if nargout > 3
+                    wi = (1:nWin)';  hv = repmat("", nWin, 1);  hv(cal) = "calibration";  hv(tst) = "test";
+                    Win = [Win; table(repmat(hh, nWin, 1), repmat(d, nWin, 1), repmat(rate, nWin, 1), wi, ...
+                        (f1 - 1)/FR + (wi - 1)*W, ismember(wi, ok), hv, rs, ss, repmat(thr, nWin, 1), ...
+                        'VariableNames', {'hemi','depth','rate','window','start_s','used','surrogate_half', ...
+                        'real_score','surrogate_score','thr'})]; %#ok<AGROW>
+                end
                 [bs, bw] = max(rs);
                 if bs > 0
                     pth = rheome.detect.tilepath(Yr(:, (bw-1)*nF + (1:nF)), G, Baseline=b0, SampleRate=rate);

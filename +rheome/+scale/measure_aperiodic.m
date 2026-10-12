@@ -1,4 +1,4 @@
-function [T, X] = measure_aperiodic(name, S, opts)
+function [T, X, Ex] = measure_aperiodic(name, S, opts)
 % SCALE.MEASURE_APERIODIC  A moving change of the aperiodic (1/f) background planted through this participant's
 % MEG: when does it read as a wave, and does the periodic split remove it? (MS1 G10, Fig. 14; section 10.1)
 %
@@ -59,6 +59,10 @@ function [T, X] = measure_aperiodic(name, S, opts)
 % ⚠ The fit-window PSD mixes the window's own Welch PSD at weight 6/L with the background's over the L span (the
 %   rest record; or the empty room + the cortical background's mean PSD) -- the plant exists only in the window,
 %   so this is the record's Welch PSD up to the segments straddling the window's edges.
+% Ex (third output, figure data): the first offset plant at the largest OffsetX of the first arm, rep 1, first sigma,
+% first speed > 0 (else the first): the hemisphere's cortex, the path, the patch gain at the window's centre and the
+% patch centre per envelope frame, and at the sensors the channel-mean Welch PSDs (2 s Hann) of the background, the
+% forwarded plant, their sum (total) and the sum's periodic split per fit window (aperiodic = total - periodic).
 %
 % See also: rheome.spectral.decompose, rheome.detect.tilepath, rheome.differential.helmholtzbands,
 %           rheome.scale.measure_movingvortex
@@ -162,7 +166,7 @@ function [T, X] = measure_aperiodic(name, S, opts)
     sigs = ["total" "p" + i_wlab(opts.FitWindowsS)];
     plants = [struct('mode', "offset", 'level', num2cell(opts.OffsetX)), ...
               struct('mode', "exponent", 'level', num2cell(opts.ExponentChange)), struct('mode', "control", 'level', 0)];
-    rows = {};
+    rows = {};  Ex = struct([]);  vEx = opts.SpeedsMS(find(opts.SpeedsMS > 0, 1));  if isempty(vEx), vEx = opts.SpeedsMS(1); end
     for arm = arms
         rng(opts.Seed + find(arm == ["emptyroom" "rest"]));
         if arm == "rest", rec = REST; else, rec = ER; end
@@ -218,6 +222,18 @@ function [T, X] = measure_aperiodic(name, S, opts)
                         Bp = Gn*Xp;  Y = BG{r} + Bp;
                         pdB = 10*log10(i_bpow(Bp, fs, opts.Band, pc) / i_bpow(BG{r}, fs, opts.Band, pc));
                         [Ys, Hp] = i_split(Y, fs, fit(Y, r), fw, FITR);
+                        if nargout > 2 && isempty(Ex) && r == 1 && s == 1 && v == vEx && pl(ip).mode == "offset" ...
+                                && pl(ip).level == max(opts.OffsetX)
+                            psd = @(Z) mean(pwelch(Z.', wfun, nseg/2, nseg, fs), 2).';
+                            Ex = struct('arm', arm, 'mode', "offset", 'offset_x', pl(ip).level, 'sigma_mm', opts.SigmaMM(s), ...
+                                'speed_ms', v, 'hemi', opts.Hemi, 'vertices_mm', 1e3*Sh.Vertices, 'faces', double(Sh.Faces), ...
+                                'path_vertices', pp.v(:)', 'patch_gain_mid', g(:, keep(round(end/2))), ...
+                                'centre_per_frame_mm', 1e3*cpos, 'present_per_frame', pres, 'frame_rate', FE, ...
+                                'plant_inband_dB', pdB, 'band_Hz', opts.Band, 'freq_Hz', fw(:)', ...
+                                'psd_background', psd(BG{r}), 'psd_plant', psd(Bp), 'psd_total', psd(Y), ...
+                                'psd_periodic', cell2mat(cellfun(psd, Ys(2:end).', 'uni', 0)), 'fit_windows_s', opts.FitWindowsS, ...
+                                'psd_unit', "sensor units^2/Hz, mean over channels");
+                        end
                         Fb = fft(Bp, [], 2);  e0 = i_inbandF(Fb, fs, opts.Band);
                         for si = 1:numel(sigs)
                             red = 0;  if si > 1, red = 1 - i_inbandF(Fb.*Hp{si-1}, fs, opts.Band)/e0; end
