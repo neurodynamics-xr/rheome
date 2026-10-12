@@ -29,7 +29,7 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
 % "unresolved" at depths below 7; the discovery's r_dmd, r_cpca, robust.
 %
 % JOINT ATOMS (M.kind "joint", protocol section 14 J3): (i) reads F instead of N1 (r_halves - r_f_fieldspread,
-% test "i_f"; the centroid's |r| to every F centroid < N1R); N3 is tested and reported (median, raw p) but is
+% test "i_f"; the centroid's |r| to every F centroid < N1R -- every K, both realisations: F union amendment, design §14); N3 is tested and reported (median, raw p) but is
 % outside the Holm family and never gated; atoms are not labelled (label "not_labelled": phase layout and flow
 % are derived summaries, J7); t_bar, scale_mm, scale_edge_mm (participant medians) and dominant_depth (the
 % most common) are added; robust includes r_nmf. The Holm family is atoms x octaves (J6).
@@ -66,7 +66,7 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
         D = [D; t(:, {'subject','band','source','half','method','mode','metric','value'})]; %#ok<AGROW>
     end
     jt = isfield(M, 'kind') && M.kind == "joint";  n1 = "n1_sources";  ti = "i_n1";  nn = ["n1_sources" "n1_emptyroom"];
-    if jt, n1 = "f_fieldspread";  ti = "i_f";  nn = "f_fieldspread"; end
+    if jt, n1 = "f_fieldspread";  ti = "i_f";  nn = ["f_fieldspread" "f_fieldspread2"]; end   % every F atom, every K, both realisations
     subs = unique(D.subject);  nS = numel(subs);  rs = RandStream('mt19937ar', 'Seed', opts.Seed);
     get = @(b, src, half, meth, k, metric) i_vec(D, subs, b, src, half, meth, k, metric);
     Ts = table();  C = table();
