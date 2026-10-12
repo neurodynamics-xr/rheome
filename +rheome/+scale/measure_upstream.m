@@ -6,6 +6,7 @@ function [T, X] = measure_upstream(name, S, opts)
 %   [T, X] = rheome.scale.measure_upstream(name, S, Passes=["periodic" "surrogate" "total"])
 %   [T, X] = rheome.scale.measure_upstream(name, S, Data=Fplanted)    % a planted copy of the S.iSel rows
 %   [T, X] = rheome.scale.measure_upstream(name, S, Readout="v2")     % tile values by fwdLS (see READOUT)
+%   H = rheome.scale.measure_upstream(name, S, Readout="v2", Geometry=true)   % the readout's head geometry only
 %
 % Why: whether large-scale slow-band activity at rest runs up the sensory -> association gradient, and whether
 % that survives the instrument, is read per participant by ONE frozen definition: rheome.flow.upstreamshare,
@@ -111,10 +112,12 @@ function [T, X] = measure_upstream(name, S, opts)
         opts.Data double = []               % [nSel x nT] read instead of the recording's S.iSel rows (planted copies)
         opts.Null (1,1) string {mustBeMember(opts.Null, ["v1" "v2"])} = "v1"   % the surrogate pass's null
         opts.Readout (1,1) string {mustBeMember(opts.Readout, ["v1" "v2"])} = "v1"   % the tile values (READOUT)
+        opts.Geometry (1,1) logical = false % return the readout's head geometry H as T; reads no samples
     end
     V1 = struct('Depth', 3, 'Band', [1 8], 'Rate', 50, 'FitRange', [1 45], 'LineHz', 60, 'SegS', 8, ...
                 'OwnMin', opts.OwnMin, 'KeptMin', 0.5, 'EdgeS', 10, 'WindowS', 4, 'MaxLagS', 0.5, 'OfAlpha', 1);   % readout v1, frozen
     if isempty(S), S = rheome.scale.sensors(name); end
+    if opts.Geometry, T = i_geometry(name, S, V1, opts);  X = table();  return, end   % rheome.scale.measure_lambdaedge
     st = rheome.load.study(name);  fs = st.rec.sfreq;  F = double(st.rec.F(S.iSel, :));  clear st
     if ~isempty(opts.Data)
         assert(isequal(size(opts.Data), size(F)), 'scale:upstream:data', 'Data must be [%d x %d], the recording''s selected rows', size(F, 1), size(F, 2));
@@ -240,6 +243,7 @@ function H = i_geometry(name, S, V1, opts)
         if ~any(lo) || ~any(hi), error('scale:upstream:sign', '%s: no Desikan-Killiany labels for the G1 sign check', name); end
         sgn = sign(mean(gAll(hi), 'omitnan') - mean(gAll(lo), 'omitnan'));
     end
+    H.sgn = sgn;
     for h = ["L" "R"]
         Hh = H.(h);  has = isfinite(Hh.gv_g);                            % G1 has no value on the medial wall: the
         g = sgn * (Hh.Pa' * (has .* fillmissing(Hh.gv_g, 'constant', 0)) ./ (Hh.Pa' * has));  H.(h).g = g;   % tile mean of the vertices that have one

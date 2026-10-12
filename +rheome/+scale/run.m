@@ -4,6 +4,7 @@ function R = run(name, opts)
 %   R = rheome.scale.run('sub02', ProtoDir='/path/to/protocol', Cohort="norm", Dataset="mydata")
 %   R = rheome.scale.run('sub01')                       % already cached: skip the import
 %   R = rheome.scale.run(name, ..., Analyses=["resolution" "bandresolution"], OutDir=...)
+%   R = rheome.scale.run(name, ProtoDir=..., Analyses="lambdaedge", Import="head")   % the head only, no samples
 %
 % Writes to OutDir/<name>/ (default rheome.load.outroot()/scale/<name>):
 %   metrics.csv       long format: subject, cohort, dataset, analysis, metric, band, value, unit
@@ -72,6 +73,9 @@ function R = run(name, opts)
 %                     flow comparator), and its covariates in metrics.csv. Needs RHEOME_G1; opt-in, not "ported".
 %                     RHEOME_UPSTREAM_READOUT="v2" reads the tiles by fwdLS (measure_upstream Readout=; default
 %                     v1); metrics.csv records it as readout_version
+%   lambdaedge.csv    TP2/TP3 gate S (nsp rheome-lambdaedge): rheome.scale.measure_lambdaedge -- per (lambda, dir)
+%                     how readout v2 reads a noiseless plane wave along G1 on this head; edge_mm and the grid in
+%                     metrics.csv. Needs RHEOME_G1; reads no recording (use Import="head"); opt-in, not "ported"
 %   timing.csv        analysis, seconds, peak_rss_GB, status, message
 %   rheome_coeffs.mat Analyses="coefficients" only: graph-wavelet envelopes per tile x scale x time,
 %                     Prognome's contract (rheome.scale.coefficients)
@@ -114,6 +118,7 @@ function R = run(name, opts)
         opts.Modality (1,1) string = "MEG" % "EEG": sleep EEG (rheome.scale.importeeg), average reference
         opts.Edf char = ''                 % with Events: import from EEG-BIDS + ProtoDir's forward model
         opts.Events char = ''
+        opts.Import (1,1) string {mustBeMember(opts.Import, ["full" "head"])} = "full"   % "head": read no samples
     end
     if isempty(opts.OutDir), opts.OutDir = fullfile(rheome.load.outroot(), 'scale'); end
     od = fullfile(opts.OutDir, name);  if ~exist(od, 'dir'), mkdir(od); end
@@ -129,7 +134,7 @@ function R = run(name, opts)
         t0 = tic;
         try
             if isempty(opts.Edf)
-                P.import = rheome.scale.importsubject(name, opts.ProtoDir, DurationS=opts.DurationS, Sub=opts.Sub);
+                P.import = rheome.scale.importsubject(name, opts.ProtoDir, DurationS=opts.DurationS, Sub=opts.Sub, Import=opts.Import);
             else
                 P.import = rheome.scale.importeeg(name, opts.ProtoDir, opts.Edf, opts.Events);
             end
@@ -254,6 +259,8 @@ function R = run(name, opts)
                 case "upstream"                % AGE-1 / WAVE-OR-LEAKAGE readout v1: U, U_surrogate, U_total, U_of
                     ro = string(getenv('RHEOME_UPSTREAM_READOUT'));  if ro == "", ro = "v1"; end
                     [Tu, X.upstream] = rheome.scale.measure_upstream(name, S, Readout=ro);  M = [M; Tu]; %#ok<AGROW>
+                case "lambdaedge"              % TP2/TP3 gate S: readout v2's short-lambda edge on this head
+                    [Tl, X.lambdaedge] = rheome.scale.measure_lambdaedge(name, S);  M = [M; Tl]; %#ok<AGROW>
                 case "coefficients"            % Prognome's MEG input: opt-in, not in the "ported" default
                     st0 = rheome.load.study(name);
                     Cf = rheome.scale.coefficients(S.B, S.Res.ImagingKernel, double(st0.rec.F(S.iSel,:)), st0.rec.sfreq);
