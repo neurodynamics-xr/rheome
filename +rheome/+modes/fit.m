@@ -31,8 +31,8 @@ function [T, X] = fit(name, S, M, opts)
 %     any lagged pair than a lagged pair in this person's data would read). pg_n3 and the lag are reported.
 %     ⚠ Not the protocol's "phase gradient exceeds N3": two lagged generators make a phase STEP whose mean
 %     |phase difference| over edges exceeds a smooth gradient's (a planted A->P wave read pg 1.57 against its
-%     pair's 2.01). ⚠ The separation is small at these scales: through OMEGA sub-0002 at depth 3 a 200 mm wave
-%     reads r_n3 0.96, planted pairs 0.993-0.997, a rotation 0.994 (request 30825727 evidence, n3_prototype)
+%     pair's 2.01). ⚠ The separation is small at these scales: through one MEG participant's head at depth 3 a 200 mm wave
+%     reads r_n3 0.96, planted pairs 0.993-0.997, a rotation 0.994
 %   N3 calibration (protocol section 13, method "n3cal", mode 0): on this head, a planted 200 mm A->P plane wave
 %     (source planted_wave200_ap) and two planted lagged pairs (planted_pair_fo, planted_pair_lateral) through
 %     W * gain replace the participant's leading component in every valid sample (noise and the rest kept); the
@@ -156,7 +156,7 @@ function [T, X] = fit(name, S, M, opts)
             L3 = i_lagged(m, Z.R, G, z(:, Rd.lab == kk));
             for f = string(fieldnames(L3))', put(bn, "data", "all", "backfit", kk, f, L3.(f), i_unit(f)); end
         end
-        % N3 calibration (protocol 52798c1e section 13): planted patterns in this participant's own band data
+        % N3 calibration (protocol section 13): planted patterns in this participant's own band data
         for pp = 1:numel(Pn)
             Lc = i_n3plant(Pm(:, pp), Z.R, G, z(:, valid));
             for f = string(fieldnames(Lc))', put(bn, Pn(pp), "all", "n3cal", 0, f, Lc.(f), i_unit(f)); end
@@ -326,7 +326,7 @@ function L = i_lagged(m, R, G, zk)
 end
 
 function [names, P] = i_planted(S, W)
-% the N3 calibration patterns (protocol section 13) on this head, as in the methods benchmark (request 30825727):
+% the N3 calibration patterns (protocol section 13) on this head, as in the methods benchmark:
 % a 200 mm plane wave travelling A->P along SCS x over the whole cortex, and two lagged pairs of 30 mm blobs
 % (frontal-occipital, frontal leading by 90 deg; lateral, 60 deg) -- the normal current seen through W * gain
     V = S.Sf.Vertices;  nr = S.Sf.VertNormals ./ vecnorm(S.Sf.VertNormals, 2, 2);  G = S.G;

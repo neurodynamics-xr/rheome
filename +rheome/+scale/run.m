@@ -210,7 +210,7 @@ function R = run(name, opts)
                     [Ta, X.aperiodic] = rheome.scale.measure_aperiodic(name, S);  M = [M; Ta]; %#ok<AGROW>
                 case "slowosc"                 % MS1 G15, G16: sleep slow oscillations, the positive control
                     [Tq, X.slowosc, X.slowosc_events] = rheome.scale.measure_slowosc(name, S);  M = [M; Tq]; %#ok<AGROW>
-                case "slowoscplant"            % SLEEP-1 gate V (re-planned after audit 22c7b277): planted A->P / P->A
+                case "slowoscplant"            % direction plants (re-planned after a direction audit): planted A->P / P->A
                     % movers at 1, 2, 2.7 (Massimini's mean) and 5 m/s, level "median", in three extents: the whole
                     % cortex, the cingulate highway and Murphy et al. 2009's slow-wave territory; same backgrounds
                     % (same Seed) in each extent, so extents are paired

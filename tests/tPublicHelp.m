@@ -15,6 +15,8 @@ properties (Constant)
         'desk/evidence|docs/\d{4}-\d\d-\d\d-|docs/atlas/'                   % internal notes
         '(?<![\w-])(?=[0-9a-f]{0,7}[a-f])(?=[0-9a-f]{0,7}\d)[0-9a-f]{8}(?![\w-])'   % ledger request / task IDs
         '(?<!\w)v18(?!\w)'                                                  % manuscript version
+        '(?i)desk evidence|(request|decision|protocol|audit|evidence) [0-9a-f]{8}(?![\w-])'   % ledger refs, digits-only IDs too
+        'EPCTL\d'                                                          % AnphySleep participant IDs
         }
 end
 
@@ -40,7 +42,7 @@ methods (Test)
 
     function patternsCatchTheKnownCases(tc)
         cases = ["see plant_scale_omega.m" "on sub-0002" "PREVENT-AD sub-MTL0002" "sub-PD1201" "nxr-cortical-flow-matlab" ...
-                 "desk/evidence/x/plan.md" "See docs/2026-09-22-ingest-notes.md" "(request ea515f28)" "v18 Fig. 8"];
+                 "desk/evidence/x/plan.md" "See docs/2026-09-22-ingest-notes.md" "(request ea515f28)" "v18 Fig. 8" "(request 30825727 evidence)" "Desk evidence 22c7b277." "anphysleep_EPCTL03"];
         clean = ["omega_l = l*Omega" "i_omega(fs,nT)" "sub-01_task-noise" "sub-band" "rng(20260905)" "v1.0.0"];
         hits = @(s) any(cellfun(@(p) ~isempty(regexp(s, p, 'once')), tc.Patterns));
         for s = cases, tc.verifyTrue(hits(s), s); end

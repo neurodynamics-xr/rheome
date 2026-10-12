@@ -18,6 +18,6 @@
 %   match     - Hungarian matching of two mode sets by |r|
 %   hash      - SHA-256 of frozen centroids
 %
-% Design: the resting-state pattern atlas study protocol (request 52798c1e), sections 4-7.
+% Design: the resting-state pattern atlas study protocol, sections 4-7.
 %
 % Author: Diellor Basha, 2026
