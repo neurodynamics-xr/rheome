@@ -17,3 +17,6 @@ build/out/
 
 # per-machine agent settings (local paths, env): never in the public repo
 .claude/
+
+# Python (mcp/)
+__pycache__/
