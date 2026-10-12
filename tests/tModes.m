@@ -137,7 +137,8 @@ classdef tModes < matlab.unittest.TestCase
             lst = fullfile(od, 'fits.txt');  writelines(fits, lst);
             C = rheome.modes.reduce(string(lst), fullfile(od, 'discover', 'centroids.mat'), fullfile(od, 'reduce'), NBoot=50);
             tc.verifyEqual(height(C), sum([M.bands.K]));
-            tc.verifyTrue(all(ismember(C.label, ["standing" "travelling" "lagged-or-rotating"])));
+            tc.verifyTrue(all(ismember(C.label, ["standing" "lagged-or-rotating"])));   % no propagation label (section 13)
+            tc.verifyTrue(ismember("n3_excess_median", string(C.Properties.VariableNames)));
             tc.verifyTrue(all(C.speed == "unresolved"));
             tc.verifyTrue(isfile(fullfile(od, 'reduce', 'modes_tests.csv')));
         end
