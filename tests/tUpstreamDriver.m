@@ -54,6 +54,32 @@ classdef tUpstreamDriver < matlab.unittest.TestCase
     end
 
     methods (Test)
+        function lambdaEdgeReadsTheHeadOnly(tc)
+            % structure only (the toy tiles cannot carry the sign): every lambda x dir is read, the edge follows
+            % its rule on right_v2, the reported lambdas stay out of it, and no outcome of a recording appears
+            [T, X] = rheome.scale.measure_lambdaedge(tc.Name, [], OwnMin=0, Lambda=[300 200 1000], Reported=1500);
+            v = @(m) T.value(T.metric == m);
+            tc.verifyEqual(height(X), 8);
+            tc.verifyEqual(X.in_grid', [true true true true true true false false]);
+            tc.verifyEqual(v("lambda_grid_mm")', [200 300 1000]);
+            tc.verifyEqual(v("readout_version"), 2);
+            tc.verifyEqual(v("samples_read"), 60 * 600);                      % the toy cache holds a recording
+            r = arrayfun(@(l) all(X.right_v2(X.lambda_mm == l)), [200 300 1000]);
+            if ~r(3), e = NaN; elseif ~r(2), e = 1000; elseif ~r(1), e = 300; else, e = 200; end   % the rule, spelled out
+            tc.verifyEqual(v("edge_mm"), e);
+            tc.verifyTrue(all(X.right_truth(X.lambda_mm >= 1000)));            % the plant itself travels up for dir +1
+            tc.verifyFalse(any(contains(T.metric, "U")));
+        end
+
+        function runWritesLambdaEdgeOnly(tc)
+            od = fullfile(tc.Root, 'outle');
+            R = rheome.scale.run(tc.Name, Analyses="lambdaedge", OutDir=od);
+            tc.verifyEqual(R.timing.status, "ok");
+            tc.verifyTrue(isfile(fullfile(od, tc.Name, 'lambdaedge.csv')));
+            tc.verifyFalse(isfile(fullfile(od, tc.Name, 'upstream.csv')));
+            tc.verifyTrue(ismember("edge_mm", R.metrics.metric));
+        end
+
         function totalReadsUWithoutBackground(tc)
             % no aperiodic background: the periodic gain is ~1 where the power is, so h = 1 changes nothing
             [T, X] = rheome.scale.measure_upstream(tc.Name, [], Passes=["periodic" "total"], Halves=false, MinSpanS=10, OwnMin=0);
