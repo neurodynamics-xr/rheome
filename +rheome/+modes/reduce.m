@@ -28,6 +28,12 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
 % occurrence, dwell, gev; the mean direction vector, its anatomical axis label and concentration; speed always
 % "unresolved" at depths below 7; the discovery's r_dmd, r_cpca, robust.
 %
+% JOINT ATOMS (M.kind "joint", protocol section 14 J3): (i) reads F instead of N1 (r_halves - r_f_fieldspread,
+% test "i_f"; the centroid's |r| to every F centroid < N1R); N3 is tested and reported (median, raw p) but is
+% outside the Holm family and never gated; atoms are not labelled (label "not_labelled": phase layout and flow
+% are derived summaries, J7); t_bar, scale_mm, scale_edge_mm (participant medians) and dominant_depth (the
+% most common) are added; robust includes r_nmf. The Holm family is atoms x octaves (J6).
+%
 % Writes outDir/modes_catalogue.csv (one row per band x mode), modes_tests.csv (one row per test),
 % reduce_provenance.json.
 %
@@ -59,6 +65,8 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
         if ~ismember("subject", t.Properties.VariableNames), t.subject = repmat(string(f), height(t), 1); end
         D = [D; t(:, {'subject','band','source','half','method','mode','metric','value'})]; %#ok<AGROW>
     end
+    jt = isfield(M, 'kind') && M.kind == "joint";  n1 = "n1_sources";  ti = "i_n1";  nn = ["n1_sources" "n1_emptyroom"];
+    if jt, n1 = "f_fieldspread";  ti = "i_f";  nn = "f_fieldspread"; end
     subs = unique(D.subject);  nS = numel(subs);  rs = RandStream('mt19937ar', 'Seed', opts.Seed);
     get = @(b, src, half, meth, k, metric) i_vec(D, subs, b, src, half, meth, k, metric);
     Ts = table();  C = table();
@@ -68,17 +76,17 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
             dd = @(m) get(bn, "data", "all", "backfit", k, m);
             row = table(opts.Cohort, bn, k, K, nS, 'VariableNames', {'cohort','band','mode','K','n'});
             % Level 1
-            s1 = dd("r_halves") - dd("r_n1_sources");
+            s1 = dd("r_halves") - dd("r_" + n1);
             s2 = dd("r_spin_obs") - dd("r_spin_mean");
             s3 = dd("occupancy") - get(bn, "n4_aperiodic", "all", "backfit", k, "occupancy");
             sN3 = dd("r_n3_sim") - dd("r_n3");
             sL2 = dd("dwell_median_ms") - get(bn, "n5_phaserand", "all", "backfit", k, "dwell_median_ms");
-            for tst = {"i_n1", s1; "ii_spin", s2; "iii_n4", s3; "n3_lagged", sN3; "l2_dwell", sL2}'
+            for tst = {ti, s1; "ii_spin", s2; "iii_n4", s3; "n3_lagged", sN3; "l2_dwell", sL2}'
                 [p, md] = i_wilcox(tst{2});
                 Ts = [Ts; table(opts.Cohort, bn, k, string(tst{1}), md, p, nnz(isfinite(tst{2})), 'VariableNames', ...
                       {'cohort','band','mode','test','median','p','n'})]; %#ok<AGROW>
             end
-            r1 = max([0; i_nullr(M.bands(b), k, "n1_sources"); i_nullr(M.bands(b), k, "n1_emptyroom")]);
+            r1 = max([0; cell2mat(arrayfun(@(s) i_nullr(M.bands(b), k, s), nn(:), 'uni', 0))]);
             g1 = get(bn, "data", "h1", "backfit", k, "gev");  g2 = get(bn, "data", "h2", "backfit", k, "gev");
             [icc, lo, hi] = i_icc(g1, g2, opts.NBoot, rs);
             pgm = median(dd("pg"), 'omitnan');
@@ -99,6 +107,11 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
                    'extent_mm2','extent_radius_mm','dirichlet_wavelength_mm','tile_spacing_mm','occupancy', ...
                    'occurrence_per_s','dwell_median_ms','gev','r_centroid','div_index','winding_net','speed', ...
                    'r_dmd','r_cpca'})]; %#ok<AGROW>
+            if jt
+                dom = dd("dominant_depth");
+                row = [row, table(median(dd("t_bar"), 'omitnan'), median(dd("scale_mm"), 'omitnan'), median(dd("scale_edge_mm"), 'omitnan'), ...
+                       mode(dom(isfinite(dom))), 'VariableNames', {'t_bar','scale_mm','scale_edge_mm','dominant_depth'})]; %#ok<AGROW>
+            end
             C = [C; row]; %#ok<AGROW>
         end
         % overall transition entropy against N5 (mode 0)
@@ -108,21 +121,25 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
     end
     % Holm within each test family across modes x bands, then the rule
     Ts.p_holm = nan(height(Ts), 1);
-    for tst = unique(Ts.test)', j = Ts.test == tst;  Ts.p_holm(j) = i_holm(Ts.p(j)); end
+    for tst = unique(Ts.test)'
+        if jt && tst == "n3_lagged", continue; end                      % joint atoms: N3 reported, not in the family
+        j = Ts.test == tst;  Ts.p_holm(j) = i_holm(Ts.p(j));
+    end
     pass = @(tst, b, k) i_pass(Ts, tst, b, k, opts.Alpha);
     for r = 1:height(C)
         b = C.band(r);  k = C.mode(r);
-        C.pass_i(r) = pass("i_n1", b, k) && C.r_n1_centroid_max(r) < opts.N1R;
+        C.pass_i(r) = pass(ti, b, k) && C.r_n1_centroid_max(r) < opts.N1R;
         C.pass_ii(r) = pass("ii_spin", b, k);  C.pass_iii(r) = pass("iii_n4", b, k);
         C.pass_iv(r) = C.icc_gev(r) >= 0.5 && C.icc_lo(r) > 0.3;
         C.level1(r) = C.pass_i(r) && C.pass_ii(r) && C.pass_iii(r) && C.pass_iv(r);
         n3 = pass("n3_lagged", b, k) && Ts.median(Ts.test == "n3_lagged" & Ts.band == b & Ts.mode == k) > opts.N3Margin;
-        if C.pg_median(r) < opts.StandingRad, lab = "standing";
+        if jt, lab = "not_labelled";
+        elseif C.pg_median(r) < opts.StandingRad, lab = "standing";
         elseif n3 && C.div_sign_share(r) >= opts.SignShare, lab = "travelling";
         else, lab = "lagged-or-rotating"; end
         C.label(r) = lab;  C.level2(r) = pass("l2_dwell", b, k) || pass("l2_entropy", b, 0);
     end
-    rb = arrayfun(@(b, k) M.bands(string(b) == [M.bands.band]).r_dmd(k) >= 0.7 || M.bands(string(b) == [M.bands.band]).r_cpca(k) >= 0.7, C.band, C.mode);
+    rb = arrayfun(@(b, k) i_robust(M.bands(string(b) == [M.bands.band]), k), C.band, C.mode);
     C.robust = rb;
     C.mixture_share = arrayfun(@(b, k) M.bands(string(b) == [M.bands.band]).mixture_share(k), C.band, C.mode);
     C.centroids_sha256 = repmat(string(M.sha256), height(C), 1);
@@ -173,6 +190,10 @@ function [sh, p] = i_share(pv, q)
     if m == 0, return; end
     ps = sort(pv);  k = find(ps <= (1:m)' / m * q, 1, 'last');  if isempty(k), k = 0; end
     sh = k / m;  p = 1 - binocdf(k - 1, m, 0.05);
+end
+
+function ok = i_robust(B, k)
+    ok = B.r_dmd(k) >= 0.7 || B.r_cpca(k) >= 0.7 || (isfield(B, 'r_nmf') && B.r_nmf(k) >= 0.7);
 end
 
 function r = i_nullr(B, k, src)

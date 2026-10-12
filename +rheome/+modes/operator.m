@@ -22,6 +22,11 @@ function Op = operator(S, Tp, opts)
 %   through the participant's gain (S.G) -- the instrument's view of one tile generator (leakage, N3)
 % Op.C1 [nSel x nSel] sensor covariance of independent normal sources at every vertex, variance ~ area (N1)
 % Op.keptWavelengthMM, Op.cutoffMM, Op.depth
+% Op.Cgen [nSel x nSel x nTiles] (GenCov=true only) the sensor covariance of independent normal sources at the
+%   vertices of each tile (variance ~ area): Op.C1 split by tile, the generators of the field-spread null F
+%
+% MaxWavelengthMM (default Inf) closes the kept band from above: members with CutoffMM <= wavelength <
+% MaxWavelengthMM, a graph BAND-pass, one depth of the joint field (rheome.modes.jointfields).
 %
 % See also: rheome.modes.fields, rheome.flow.bandlimit, rheome.scale.grouptiles
 %
@@ -31,12 +36,14 @@ function Op = operator(S, Tp, opts)
         S (1,1) struct
         Tp (1,1) struct
         opts.CutoffMM (1,1) double {mustBePositive} = 100
-        opts.Depth (1,1) double {mustBeInteger, mustBePositive} = 3
+        opts.Depth (1,1) double {mustBeInteger, mustBeNonnegative} = 3
         opts.Voices (1,1) double {mustBePositive} = 2
         opts.Hemis string = ["L" "R"]
+        opts.MaxWavelengthMM (1,1) double {mustBePositive} = Inf
+        opts.GenCov (1,1) logical = false
     end
     K = S.Res.ImagingKernel;  W = [];  R = [];  A = [];  tiles = table();  Pall = [];  kept = [];
-    Gn = zeros(size(S.G, 1), 0);  C1 = 0;
+    Gn = zeros(size(S.G, 1), 0);  C1 = 0;  Cg = zeros(size(S.G, 1), size(S.G, 1), 0);
     for h = opts.Hemis(:)'
         Hh = S.B.(h);  gv = double(Hh.gv(:));  lbo = Hh.lbo;
         nrm = i_normals(S.Sf, gv, Hh.S);
@@ -44,8 +51,8 @@ function Op = operator(S, Tp, opts)
         lam = lbo.Lambda(:);
         gfb = rheome.graphfilterbank(lam, 'Wavelet', 'logitersine', 'VoicesPerOctave', opts.Voices);
         G = cell2mat(arrayfun(@(m) feval(gain(gfb, m), lam), 1:gfb.NumMembers, 'uni', 0));
-        wl = 1e3 * wavelengths(gfb);  keep = wl >= opts.CutoffMM;
-        if ~any(keep), error('modes:operator:cutoff', 'no bank member has a wavelength >= %g mm (coarsest %.0f mm)', opts.CutoffMM, max(wl)); end
+        wl = 1e3 * wavelengths(gfb);  keep = wl >= opts.CutoffMM & wl < opts.MaxWavelengthMM;
+        if ~any(keep), error('modes:operator:cutoff', 'no bank member has a wavelength in [%g, %g) mm (members %s mm)', opts.CutoffMM, opts.MaxWavelengthMM, mat2str(round(wl))); end
         hg = sqrt(sum(G(:, keep).^2, 2));  kept = union(kept, wl(keep));
         [P, Ah, ids, C] = rheome.scale.grouptiles(S, Tp, h, opts.Depth);
         a = full(sum(lbo.Mass, 2));  Pa = (P .* a) ./ full(sum(P .* a, 1));      % area-weighted mean
@@ -54,6 +61,9 @@ function Op = operator(S, Tp, opts)
         Gh = nrm(:,1)' .* S.G(:, (gv-1)*3 + 1) + nrm(:,2)' .* S.G(:, (gv-1)*3 + 2) + nrm(:,3)' .* S.G(:, (gv-1)*3 + 3);
         Gn = [Gn, Gh * (P .* a)]; %#ok<AGROW>                                    % uniform current density per tile
         C1 = C1 + (Gh .* a') * Gh';                                              % independent sources, variance ~ area
+        if opts.GenCov
+            for j = 1:size(P, 2), in = find(P(:, j));  Gj = Gh(:, in);  Cg(:, :, end+1) = (Gj .* a(in)') * Gj'; end %#ok<AGROW>
+        end
         A = blkdiag(A, full(Ah));
         V = double(Hh.S.Vertices);  xc = full(Pa' * V) * 1e3;
         tiles = [tiles; table(repmat(h, numel(ids), 1), ids(:), full(sum(P .* a, 1))' * 1e6, xc(:,1), xc(:,2), xc(:,3), ...
@@ -63,6 +73,7 @@ function Op = operator(S, Tp, opts)
     R = W * Gn;  R = R ./ max(abs(R), [], 1);
     Op = struct('W', W, 'A', logical(A), 'R', R, 'C1', (C1 + C1') / 2, 'tiles', tiles, 'keptWavelengthMM', kept(:)', ...
                 'cutoffMM', opts.CutoffMM, 'depth', opts.Depth);
+    if opts.GenCov, Op.Cgen = (Cg + permute(Cg, [2 1 3])) / 2; end
 end
 
 function N = i_normals(Sf, gv, Sh)

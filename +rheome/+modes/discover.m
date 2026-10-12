@@ -28,6 +28,18 @@ function M = discover(files, outDir, opts)
 %               6 with three modes >= 0.998 inside span{planted}. Reported, not acted on
 %   null modes  the same clustering at K* on each null source's snapshots (N1 sources, N1 empty room, N4):
 %               the centroid's best |r| to any of them (Level-1 (i) needs < 0.7 to every N1 mode)
+% Joint fields (rheome.modes.jointfields, protocol section 14 J2): the same code, a snapshot being the complex
+% coefficient vector over tile x scale at one frame of one octave ("bands" are the octaves); pass
+% NullSources=["f_fieldspread" "n4_aperiodic"] (F replaces N1 for joint atoms) and NMF=true:
+%   NMF         nonnegative factorisation of the pooled |W|^2 (snapshots x tile.scale) at K*: r_nmf = Hungarian
+%               |Pearson r| of |c_k|^2 to the components; robust also when r_nmf >= RobustR. shortcut: the
+%               2-way unfolding of the |W|^2 tensor (snapshots are not aligned across participants, so a time
+%               factor shared by participants has no meaning); a 3-way CP over tile x scale x octave would
+%               need a common frame grid across octaves
+%   resolution  when the fields carry Z.transfer (J4): per atom t_bar = sum_s e_k(s) T(s) / sum_s e_k(s), e_k(s)
+%               the atom's energy at depth s and T the participants' mean scale transfer; scale_mm (energy-
+%               weighted geometric mean of the depths' scales) and the mean scale edge (edge_mm)
+% Source picks the series discovered on ("data"; "canary" for the J5 check, rheome.modes.jointcheck).
 % The centroids are frozen: centroids.mat (M) and centroids.sha256 = rheome.modes.hash over every band's C in
 % band order, which rheome.modes.fit checks before it reads them.
 %
@@ -56,6 +68,9 @@ function M = discover(files, outDir, opts)
         opts.NullSources string = ["n1_sources" "n1_emptyroom" "n4_aperiodic"]
         opts.Seed (1,1) double = 1
         opts.Workers (1,1) double = 0
+        opts.Source (1,1) string = "data"
+        opts.NMF (1,1) logical = false
+        opts.NMFIter (1,1) double = 300
     end
     if isscalar(files) && ~endsWith(files, ".mat"), files = string(strip(splitlines(strtrim(fileread(files))))); files(files == "") = []; end
     if ~exist(outDir, 'dir'), mkdir(outDir); end
@@ -65,7 +80,8 @@ function M = discover(files, outDir, opts)
     %% 1. per participant: snapshots, cross-spectra, DMD modes (one file open at a time)
     P = numel(files);  m0 = matfile(files(1));  Z0 = m0.Z;  bands = Z0.bands.band;
     if ~isempty(opts.Bands), bands = intersect(bands, opts.Bands, 'stable'); end
-    tiles = Z0.tiles{opts.Variant};  d = height(tiles);  nb = numel(bands);  src = ["data" opts.NullSources];
+    tiles = Z0.tiles{opts.Variant};  d = height(tiles);  nb = numel(bands);  src = [opts.Source opts.NullSources];
+    hasT = isfield(Z0, 'transfer') && ismember('depth', tiles.Properties.VariableNames);  Tt = [];  edg = [];
     X = cell(P, nb, numel(src));  CSD = zeros(d, d, nb);  DM = cell(P, nb);  info = table();
     for p = 1:P
         m = matfile(files(p));  Z = m.Z;  tp = Z.tiles{opts.Variant};
@@ -87,6 +103,7 @@ function M = discover(files, outDir, opts)
                 end
             end
         end
+        if hasT, Tt(:, p) = Z.transfer.table.T; edg(p) = Z.transfer.edge_mm; end %#ok<AGROW>
         fprintf('[modes.discover] %d/%d %s\n', p, P, Z.name);
     end
 
@@ -132,11 +149,25 @@ function M = discover(files, outDir, opts)
             nullC.(src(s)) = rheome.modes.cluster(Xn, K, Replicates=opts.Replicates, Seed=opts.Seed);
             nullr.(src(s)) = max(abs(C' * nullC.(src(s))), [], 2);
         end
+        rn = nan(K, 1);
+        if opts.NMF
+            Wn = i_nmf(abs(Xd ./ vecnorm(Xd)).^2, K, opts.NMFIter, opts.Seed);
+            ac = abs(C).^2;  rn = rheome.modes.match(ac - mean(ac, 1), Wn - mean(Wn, 1));
+        end
+        Bd(b).r_nmf = rn;  Bd(b).refC = ref;  Bd(b).refK = Ks;         % every K's reference clustering (not hashed)
         Bd(b).band = bands(b);  Bd(b).K = K;  Bd(b).k_reproducible = repro;  Bd(b).C = C;  Bd(b).nullC = nullC;
         Bd(b).occupancy = occ;  Bd(b).r_dmd = rd;  Bd(b).r_cpca = rc;  Bd(b).cpca = V;  Bd(b).mixture_share = mix;
         T = table(repmat(bands(b), K, 1), (1:K)', repmat(K, K, 1), repmat(repro, K, 1), occ, rd, rc, ...
-                  (rd >= opts.RobustR) | (rc >= opts.RobustR), mix, 'VariableNames', ...
-                  {'band','mode','K','k_reproducible','occupancy_pooled','r_dmd','r_cpca','robust','mixture_share'});
+                  (rd >= opts.RobustR) | (rc >= opts.RobustR) | (rn >= opts.RobustR), mix, rn, 'VariableNames', ...
+                  {'band','mode','K','k_reproducible','occupancy_pooled','r_dmd','r_cpca','robust','mixture_share','r_nmf'});
+        if hasT
+            [ud, ~, id] = unique(tiles.depth);  e = zeros(numel(ud), K);
+            for k = 1:K, e(:, k) = accumarray(id, abs(C(:, k)).^2, [numel(ud) 1]); end
+            Tm = mean(Tt, 2, 'omitnan');  sd = accumarray(id, tiles.scale_mm, [numel(ud) 1], @mean);
+            [~, ia] = ismember(ud, Z0.transfer.table.depth);  e = e ./ sum(e, 1);
+            T.t_bar = (Tm(ia)' * e)';  T.scale_mm = exp(log(sd)' * e)';  T.edge_mm = repmat(mean(edg, 'omitnan'), K, 1);
+            Bd(b).t_bar = T.t_bar;
+        end
         for s = 2:numel(src), T.("r_" + src(s) + "_max") = nullr.(src(s)); end
         disc = [disc; T]; %#ok<AGROW>
         for k = 1:K
@@ -149,6 +180,8 @@ function M = discover(files, outDir, opts)
     %% 3. freeze
     M = struct('bands', Bd, 'tiles', tiles, 'variant', opts.Variant, 'variantSpec', Z0.variants(opts.Variant, :), ...
                'participants', string(files(:)), 'options', opts, 'created', char(datetime('now', 'TimeZone', 'UTC', 'Format', 'yyyy-MM-dd''T''HH:mm:ss''Z''')));
+    M.kind = "band";  if isfield(Z0, 'kind'), M.kind = string(Z0.kind); end
+    if isfield(Z0, 'options'), M.fieldOptions = Z0.options; end
     M.sha256 = rheome.modes.hash(Bd.C);
     save(fullfile(outDir, 'centroids.mat'), 'M', '-v7');
     fid = fopen(fullfile(outDir, 'centroids.sha256'), 'w');  fprintf(fid, '%s  centroids.mat:M.bands.C\n', M.sha256);  fclose(fid);
@@ -164,6 +197,16 @@ function [S, nAv] = i_snap(z, valid, o)
     a = vecnorm(z, 2, 1);  ok = valid & a >= quantile(a(valid), o.MinAmpQuantile);  idx = find(ok);  nAv = numel(idx);
     idx = idx(unique(round(linspace(1, nAv, min(o.NPer, nAv)))));
     S = z(:, idx) ./ a(idx);
+end
+
+function W = i_nmf(V, K, nit, seed)
+% Lee-Seung multiplicative NMF (Frobenius) of V [d x n] >= 0: the K columns of W [d x K], unit sum
+    rs = RandStream('mt19937ar', 'Seed', seed);  [d, n] = size(V);
+    W = rand(rs, d, K) + 0.1;  H = rand(rs, K, n) + 0.1;
+    for it = 1:nit
+        H = H .* (W' * V) ./ max(W' * W * H, eps);  W = W .* (V * H') ./ max(W * (H * H'), eps);
+        s = sum(W, 1);  W = W ./ s;  H = H .* s';
+    end
 end
 
 function sub = i_sub(Xc, n)

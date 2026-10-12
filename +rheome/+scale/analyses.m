@@ -59,6 +59,8 @@ function a = analyses(which)
 %   modesfields      resting-state pattern atlas, stage 1: complex band tile series + nulls N1, N4, N5
 %   modesfit         stage 3: back-fit of the frozen centroids, features, N2, N3, N5 (RHEOME_MODES_CENTROIDS)
 %                    -- both run only when asked (nsp rheome-modes-fields / rheome-modes-fit), not "ported"
+%   jointfields      H4 ATLAS-1: joint graph-time wavelet field + null F, N4, N5 + scale transfer T(s) (opt-in)
+%   jointcanary      H4 ATLAS-1 J5: the four plants on null F, no real-data series (opt-in)
 %   upstream         AGE-1 TP2, WAVE-OR-LEAKAGE TP3   rheome.scale.measure_upstream: share of slow-band travel up
 %                                              the principal gradient (upstreamshare v1) -- U, U_surrogate, U_total,
 %                                              U_of and the aperiodic covariates; run only when asked (nsp
@@ -73,7 +75,7 @@ function a = analyses(which)
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
            "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
            "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" ...
-           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "slowoscplant" "correspondence" "atlasevents" "gaugetensor" "connectome" "multimodal" "modesfields" "modesfit" "upstream" "coefficients"];
+           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "slowoscplant" "correspondence" "atlasevents" "gaugetensor" "connectome" "multimodal" "modesfields" "modesfit" "jointfields" "jointcanary" "upstream" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end
