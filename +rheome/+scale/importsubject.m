@@ -3,11 +3,16 @@ function info = importsubject(name, protoDir, opts)
 %
 %   info = rheome.scale.importsubject('sub02', '/tmp/bst')
 %   info = rheome.scale.importsubject(name, protoDir, DurationS=300, Rate=600, K=1000, Kc=400)
+%   info = rheome.scale.importsubject(name, protoDir, Import="head")   % the head only: no sample is read
 %
 % Writes, under rheome.load.root()/<name>/ (set RHEOME_DATA to put it on node-local disk):
 %   surface.mat   rheome.import.surface on tess_cortex_pial_low (the leadfield's own surface)
 %   study.mat     chan, hm (unconstrained os_meg leadfield), ncov (noisecov_full), rec
 %   noise.mat     the same-session noise run, same rate and projector treatment as rec
+%
+% Import="head": study.mat's rec holds the raw link's header only (channel flags, names, native rate, no
+% samples: rec.F is [nCh x 0]) and no noise.mat is written -- for analyses of the head alone
+% (rheome.scale.measure_lambdaedge). Every other file is written as for "full".
 %   bases.mat     rheome.import.bases(name, K, Kc)  -- rheome.load.bases picks it up as the richest LBO cache
 %   atlas.mat     rheome.import.atlas(name)
 %   mri.mat       SCS, NCS of the subject's MRI, when the protocol staged it (rheome.scale.measure_atlas: MNI)
@@ -43,6 +48,7 @@ function info = importsubject(name, protoDir, opts)
         opts.K (1,1) double = 1000
         opts.Kc (1,1) double = 400
         opts.Sub char = ''
+        opts.Import (1,1) string {mustBeMember(opts.Import, ["full" "head"])} = "full"
     end
     L = rheome.scale.locate(protoDir, opts.Sub);
     d = fullfile(rheome.load.root(), name);  if ~exist(d, 'dir'), mkdir(d); end
@@ -54,14 +60,15 @@ function info = importsubject(name, protoDir, opts)
     chan = rheome.io.read.channel(L.channel);                    %#ok<NASGU>
     hm   = rheome.io.read.headmodel(L.headmodel);
     ncov = rheome.io.read.noisecov(L.noisecov);                  %#ok<NASGU>
-    [rec, info.rest] = i_raw(L.restRaw, opts);            %#ok<ASGLU>
+    if opts.Import == "head", [rec, info.rest] = i_header(L.restRaw);
+    else, [rec, info.rest] = i_raw(L.restRaw, opts); end
     studyDir = L.restDir;  dataName = L.restRaw;           %#ok<NASGU>
     builtin('save', fullfile(d, 'study.mat'), 'chan', 'hm', 'rec', 'ncov', 'studyDir', 'dataName', '-v7.3');
     info.nChannels = rec.nCh;  info.leadfield = size(hm.Gain);
     clear rec hm
 
     info.noise = struct('file', '', 'durationS', 0);
-    if ~isempty(L.noiseRaw)
+    if ~isempty(L.noiseRaw) && opts.Import == "full"
         [nrec, info.noise] = i_raw(L.noiseRaw, opts);      %#ok<ASGLU>
         builtin('save', fullfile(d, 'noise.mat'), 'nrec', '-v7.3');
         clear nrec
@@ -94,6 +101,15 @@ function i_pet(files, out)
         pet(end+1) = struct('name', nm, 'x', double(r.ImageGridAmp(:, 1)), 'units', char(r.DisplayUnits), 'file', files{k}); %#ok<AGROW>
     end
     builtin('save', out, 'pet');
+end
+
+function [rec, meta] = i_header(rawFile)
+% the raw link's header only (Import="head"): channel flags and names, no samples
+    H = rheome.io.read.rawbst(rawFile);
+    rec = struct('F', zeros(H.nCh, 0), 'Time', zeros(1, 0), 'ChannelFlag', H.ChannelFlag(:), ...
+                 'nCh', H.nCh, 'nT', 0, 'sfreq', H.sfreq, 'Comment', H.Comment, ...
+                 'Events', [], 'nAvg', 1, 'ChannelName', {H.ChannelName}, 'ChannelType', {H.ChannelType});
+    meta = struct('file', rawFile, 'nativeRate', H.sfreq, 'durationS', 0, 'availableS', H.nT / H.sfreq, 'nProjector', 0);
 end
 
 function [rec, meta] = i_raw(rawFile, opts)

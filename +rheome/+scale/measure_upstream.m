@@ -5,6 +5,8 @@ function [T, X] = measure_upstream(name, S, opts)
 %   [T, X] = rheome.scale.measure_upstream(name, rheome.scale.sensors(name), Gradient='/path/g1_fsaverage.mat')
 %   [T, X] = rheome.scale.measure_upstream(name, S, Passes=["periodic" "surrogate" "total"])
 %   [T, X] = rheome.scale.measure_upstream(name, S, Data=Fplanted)    % a planted copy of the S.iSel rows
+%   [T, X] = rheome.scale.measure_upstream(name, S, Readout="v2")     % tile values by fwdLS (see READOUT)
+%   H = rheome.scale.measure_upstream(name, S, Readout="v2", Geometry=true)   % the readout's head geometry only
 %
 % Why: whether large-scale slow-band activity at rest runs up the sensory -> association gradient, and whether
 % that survives the instrument, is read per participant by ONE frozen definition: rheome.flow.upstreamshare,
@@ -25,10 +27,30 @@ function [T, X] = measure_upstream(name, S, opts)
 %                 carried to the recording's cortex through its registered sphere (nearest vertex); signed so
 %                 pericalcarine, precentral and postcentral (Desikan-Killiany) are low and inferiorparietal and
 %                 medialorbitofrontal high; g = tile mean.
+%                 Readout="v2" ("fwdLS") replaces this step only, see READOUT below.
 %   f. RESOLUTION own-tile fraction (rheome.flow.crosstalk on the kernel's three components) >= 0.25 votes; a
 %                 recording whose keptWeight < 0.5 in either hemisphere is not read. U pools the hemispheres
 %                 by their vote weight. The mask and the exclusion depend on the kernel only, so every pass
 %                 reads the same tiles of the same participants.
+%
+% READOUT (Readout=; "v1" by default, frozen):
+%   "v1"  steps c-d as above: the MNE tile means of the three components.
+%   "v2"  "fwdLS": the tile values are the regularised least-squares amplitudes of the tiles' OWN forward fields,
+%         q = (Gp'Gp + mu I)^-1 Gp' Za, Gp = [L | R] the sensor field of uniform normal current over each depth-3
+%         tile (the v1 null's generators), mu = 1e-3 trace(Gp'Gp)/nTiles; upstreamshare on the scalar q per
+%         hemisphere. Everything else (a, b, e, f -- the mask and exclusion stay the MNE kernel's) is v1's.
+%         Why: a folded depth-3 tile carrying uniform current is near-silent at the sensors, so the MNE tile-mean
+%         kernel has almost no zero order and each tile's phase follows a kernel centroid hundreds of mm away.
+%         Gate S on the Margulies G1 axis (planted plane waves, 0 and 10 dB, four MEG heads, 2026-10-12): v1
+%         reads the planted direction right at every lambda 200-1000 mm in one head at 0 dB only. v2 reads it right at
+%         every lambda 200-1000 mm in three, also when the plant's gain (+-10 %) or normals (~17 deg) differ
+%         from the readout's. In the fourth head v2 reads 200-400 mm REVERSED, noiseless too, where the tile
+%         means of the true current read right: its short-lambda edge is a property of the head (~500 mm there).
+%         Every pass that reads tiles (periodic, surrogate, total) uses the same readout; "of" is unchanged.
+%         v2 is the approved gate S readout for TP2/TP3 (2026-10-12), frozen at the merge of the PR that added
+%         it; v1 stays the default here. Its lambda range is stated per sample from each head's short-lambda edge
+%         (measured noiselessly, no recording read). ⚠ The perturbations above are not a different conductivity or BEM
+%         model; it aliases at lambda 100 mm.
 %
 % PASSES (Passes=; all four by default; each is one extra reading of the same span, tiles, mask and gradient):
 %   "periodic"   U: h = hper, the periodic gain (the primary readout)
@@ -89,10 +111,13 @@ function [T, X] = measure_upstream(name, S, opts)
         opts.OwnMin (1,1) double = 0.25     % v1: 0.25; lower it only on a toy head (tests)
         opts.Data double = []               % [nSel x nT] read instead of the recording's S.iSel rows (planted copies)
         opts.Null (1,1) string {mustBeMember(opts.Null, ["v1" "v2"])} = "v1"   % the surrogate pass's null
+        opts.Readout (1,1) string {mustBeMember(opts.Readout, ["v1" "v2"])} = "v1"   % the tile values (READOUT)
+        opts.Geometry (1,1) logical = false % return the readout's head geometry H as T; reads no samples
     end
     V1 = struct('Depth', 3, 'Band', [1 8], 'Rate', 50, 'FitRange', [1 45], 'LineHz', 60, 'SegS', 8, ...
                 'OwnMin', opts.OwnMin, 'KeptMin', 0.5, 'EdgeS', 10, 'WindowS', 4, 'MaxLagS', 0.5, 'OfAlpha', 1);   % readout v1, frozen
     if isempty(S), S = rheome.scale.sensors(name); end
+    if opts.Geometry, T = i_geometry(name, S, V1, opts);  X = table();  return, end   % rheome.scale.measure_lambdaedge
     st = rheome.load.study(name);  fs = st.rec.sfreq;  F = double(st.rec.F(S.iSel, :));  clear st
     if ~isempty(opts.Data)
         assert(isequal(size(opts.Data), size(F)), 'scale:upstream:data', 'Data must be [%d x %d], the recording''s selected rows', size(F, 1), size(F, 2));
@@ -101,8 +126,9 @@ function [T, X] = measure_upstream(name, S, opts)
     CS = rheome.scale.cleanspan(F, fs, EdgeS=V1.EdgeS);
     spanS = (CS.last - CS.first + 1) / fs;
     H = i_geometry(name, S, V1, opts);
-    T = rheome.scale.rows("upstream", ["span_s" "kept_weight_L" "kept_weight_R" "g1_tilecheck_L" "g1_tilecheck_R"], ...
-        [spanS H.L.keptWeight H.R.keptWeight H.L.tilecheck H.R.tilecheck], ["s" "fraction" "fraction" "flag" "flag"]);
+    T = rheome.scale.rows("upstream", ["span_s" "kept_weight_L" "kept_weight_R" "g1_tilecheck_L" "g1_tilecheck_R" "readout_version"], ...
+        [spanS H.L.keptWeight H.R.keptWeight H.L.tilecheck H.R.tilecheck str2double(extractAfter(opts.Readout, 1))], ...
+        ["s" "fraction" "fraction" "flag" "flag" "version"]);
     X = table();
     why = "";
     if spanS < opts.MinSpanS, why = sprintf("clean span %.1f s < %g s", spanS, opts.MinSpanS); end
@@ -193,6 +219,10 @@ function H = i_geometry(name, S, V1, opts)
                        'mask', own >= V1.OwnMin, 'own', own, 'a', a, 'gv_g', gvx, 'tilecheck', NaN);
         H.Gp = [H.Gp Gp];  H.front = [H.front (xc > median(xc))'];  H.group = [H.group repmat(double(h == "R") + 1, 1, numel(xc))];
     end
+    H.Pinv = [];
+    if opts.Readout == "v2"                                               % fwdLS: the tiles' own forward fields
+        LL = H.Gp' * H.Gp;  H.Pinv = (LL + 1e-3 * trace(LL) / size(LL, 1) * eye(size(LL, 1))) \ H.Gp';
+    end
     H.null = struct('Gp', H.Gp, 'front', H.front, 'group', H.group, 'keep', false, 'residual', "perchan");
     if opts.Null == "v2"                                                  % depth-6 tile generators, fitted the same way
         H.null = struct('Gp', [], 'front', false(1, 0), 'group', zeros(1, 0), 'keep', true, 'residual', "zerolag");
@@ -213,6 +243,7 @@ function H = i_geometry(name, S, V1, opts)
         if ~any(lo) || ~any(hi), error('scale:upstream:sign', '%s: no Desikan-Killiany labels for the G1 sign check', name); end
         sgn = sign(mean(gAll(hi), 'omitnan') - mean(gAll(lo), 'omitnan'));
     end
+    H.sgn = sgn;
     for h = ["L" "R"]
         Hh = H.(h);  has = isfinite(Hh.gv_g);                            % G1 has no value on the medial wall: the
         g = sgn * (Hh.Pa' * (has .* fillmissing(Hh.gv_g, 'constant', 0)) ./ (Hh.Pa' * has));  H.(h).g = g;   % tile mean of the vertices that have one
@@ -258,11 +289,18 @@ function Za = i_reanalytic(Y, rate, band)
 end
 
 function [U, X] = i_read(H, Za, sn, p)
-% steps c-f: tile means of the three components, upstreamshare per hemisphere, hemispheres pooled by weight
-    X = table();  num = 0;  den = 0;
+% steps c-f: tile values (v1: MNE tile means of the three components; v2: fwdLS), upstreamshare per hemisphere,
+% hemispheres pooled by weight
+    X = table();  num = 0;  den = 0;  off = 0;
+    if ~isempty(H.Pinv), q = H.Pinv * Za; end
     for h = ["L" "R"]
-        Hh = H.(h);  n = numel(Hh.g);  Z = reshape(Hh.W * Za, n, 3, []);
-        o = rheome.flow.upstreamshare(Z, Hh.g, Hh.A, Normals=Hh.N, Mask=Hh.mask);
+        Hh = H.(h);  n = numel(Hh.g);
+        if isempty(H.Pinv)
+            o = rheome.flow.upstreamshare(reshape(Hh.W * Za, n, 3, []), Hh.g, Hh.A, Normals=Hh.N, Mask=Hh.mask);
+        else                                                              % H.Gp's columns: L tiles, then R tiles
+            o = rheome.flow.upstreamshare(reshape(q(off + (1:n), :), n, 1, []), Hh.g, Hh.A, Mask=Hh.mask);
+        end
+        off = off + n;
         num = num + o.U * o.weight;  den = den + o.weight;
         X = [X; i_row(sn, p, h, o.U, o.weight, o.keptWeight, size(o.edges, 1), size(Za, 2), "")]; %#ok<AGROW>
     end

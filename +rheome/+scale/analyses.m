@@ -65,6 +65,9 @@ function a = analyses(which)
 %                                              the principal gradient (upstreamshare v1) -- U, U_surrogate, U_total,
 %                                              U_of and the aperiodic covariates; run only when asked (nsp
 %                                              rheome-upstream), not "ported"
+%   lambdaedge       TP2/TP3 gate S            rheome.scale.measure_lambdaedge: readout v2's short-lambda edge on
+%                                              the head alone, noiseless, no recording read; run only when asked
+%                                              (nsp rheome-lambdaedge), not "ported"
 %   coefficients     (Prognome input)          rheome.scale.coefficients: tile x scale x time envelopes;
 %                                              run only when asked (a ~200 MB file), so not "ported"
 %
@@ -75,7 +78,7 @@ function a = analyses(which)
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
            "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
            "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" ...
-           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "slowoscplant" "correspondence" "atlasevents" "gaugetensor" "connectome" "multimodal" "modesfields" "modesfit" "jointfields" "jointcanary" "upstream" "coefficients"];
+           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "slowoscplant" "correspondence" "atlasevents" "gaugetensor" "connectome" "multimodal" "modesfields" "modesfit" "jointfields" "jointcanary" "upstream" "lambdaedge" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end

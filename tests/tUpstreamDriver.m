@@ -54,6 +54,32 @@ classdef tUpstreamDriver < matlab.unittest.TestCase
     end
 
     methods (Test)
+        function lambdaEdgeReadsTheHeadOnly(tc)
+            % structure only (the toy tiles cannot carry the sign): every lambda x dir is read, the edge follows
+            % its rule on right_v2, the reported lambdas stay out of it, and no outcome of a recording appears
+            [T, X] = rheome.scale.measure_lambdaedge(tc.Name, [], OwnMin=0, Lambda=[300 200 1000], Reported=1500);
+            v = @(m) T.value(T.metric == m);
+            tc.verifyEqual(height(X), 8);
+            tc.verifyEqual(X.in_grid', [true true true true true true false false]);
+            tc.verifyEqual(v("lambda_grid_mm")', [200 300 1000]);
+            tc.verifyEqual(v("readout_version"), 2);
+            tc.verifyEqual(v("samples_read"), 60 * 600);                      % the toy cache holds a recording
+            r = arrayfun(@(l) all(X.right_v2(X.lambda_mm == l)), [200 300 1000]);
+            if ~r(3), e = NaN; elseif ~r(2), e = 1000; elseif ~r(1), e = 300; else, e = 200; end   % the rule, spelled out
+            tc.verifyEqual(v("edge_mm"), e);
+            tc.verifyTrue(all(X.right_truth(X.lambda_mm >= 1000)));            % the plant itself travels up for dir +1
+            tc.verifyFalse(any(contains(T.metric, "U")));
+        end
+
+        function runWritesLambdaEdgeOnly(tc)
+            od = fullfile(tc.Root, 'outle');
+            R = rheome.scale.run(tc.Name, Analyses="lambdaedge", OutDir=od);
+            tc.verifyEqual(R.timing.status, "ok");
+            tc.verifyTrue(isfile(fullfile(od, tc.Name, 'lambdaedge.csv')));
+            tc.verifyFalse(isfile(fullfile(od, tc.Name, 'upstream.csv')));
+            tc.verifyTrue(ismember("edge_mm", R.metrics.metric));
+        end
+
         function totalReadsUWithoutBackground(tc)
             % no aperiodic background: the periodic gain is ~1 where the power is, so h = 1 changes nothing
             [T, X] = rheome.scale.measure_upstream(tc.Name, [], Passes=["periodic" "total"], Halves=false, MinSpanS=10, OwnMin=0);
@@ -83,6 +109,48 @@ classdef tUpstreamDriver < matlab.unittest.TestCase
             v = @(m) T.value(T.metric == m);
             tc.verifyTrue(isfinite(v("U_surrogate")));
             tc.verifyEqual(v("U_star"), v("U") - v("U_surrogate"), 'AbsTol', 1e-12);
+        end
+
+        function readoutV2ReadsTheResolvedTileField(tc)
+            % fwdLS (Readout="v2"): every depth-3 tile carries uniform normal current (the readout's own generator
+            % model) at 4 Hz, its phase lagging with the tile's height z (g = z: travel up g). Through the whole
+            % driver (band, frames, L|R column order) v2 must read what upstreamshare reads on the RESOLVED tile
+            % field R q, R = (Gp'Gp + mu I)^-1 Gp'Gp. The toy's uniform tiles are near-degenerate (closed spheres:
+            % cond(Gp) ~5e5), so R q, not q, is the truth here; real heads (cond ~100) are gate S's business.
+            S = rheome.scale.sensors(tc.Name);  st = rheome.load.study(tc.Name);  B = rheome.load.bases(tc.Name);
+            sf = load(fullfile(tc.Root, tc.Name, 'surface.mat'));  fs = st.rec.sfreq;  t = (0:size(st.rec.F, 2)-1) / fs;
+            J = zeros(size(S.G, 2), 0);  z = zeros(1, 0);  hemi = zeros(1, 0);  A = struct();  Nr = sf.S.VertNormals;
+            for h = ["L" "R"]
+                Hh = B.(h);  Tr = rheome.geom.tree(Hh.S, L=Hh.lbo.L, M=Hh.lbo.M, MaxDepth=3);  G = rheome.geom.tiles(Tr, Hh.S, 3);
+                ar = full(sum(Hh.lbo.Mass, 2));  A.(h) = G.A;
+                for k = 1:size(G.P, 2)
+                    v = Hh.gv(G.tileOf == k);  w = ar(G.tileOf == k);  j = zeros(size(J, 1), 1);
+                    for c = 1:3, j(3*v - 3 + c) = w .* Nr(v, c); end
+                    J = [J j];  z = [z G.centroid(k, 3)];  hemi = [hemi double(h == "R")]; %#ok<AGROW>
+                end
+            end
+            ph = (pi/2) * (z - min(z)) / (max(z) - min(z));                     % at most a quarter cycle: no aliasing
+            Gp = S.G * J;  LL = Gp' * Gp;  Rs = (LL + 1e-3 * trace(LL) / size(LL, 1) * eye(size(LL, 1))) \ LL;
+            q = Rs * exp(1i * (2*pi*4*t(1:12:end) - ph'));                      % the resolved tile field, 50 frames/s
+            num = 0;  den = 0;
+            for h = ["L" "R"]
+                k = hemi == double(h == "R");
+                o = rheome.flow.upstreamshare(q(k, :), z(k)', A.(h));  num = num + o.U * o.weight;  den = den + o.weight;
+            end
+            rng(7);  Y = Gp * sin(2*pi*4*t - ph');  Y = Y + 0.02 * std(Y(:)) * randn(size(Y));
+            u = @(ro) rheome.scale.measure_upstream(tc.Name, S, Data=Y, Passes="periodic", Halves=false, MinSpanS=10, OwnMin=0, Readout=ro);
+            T2 = u("v2");  T1 = u("v1");  v = @(T, m) T.value(T.metric == m);
+            tc.verifyEqual(v(T2, "U"), num / den, 'AbsTol', 0.02);
+            tc.verifyNotEqual(v(T2, "U"), v(T1, "U"));
+            tc.verifyEqual([v(T2, "readout_version") v(T1, "readout_version")], [2 1]);
+        end
+
+        function nullCalibrationThroughReadoutV2(tc)
+            % the null is calibrated through the readout it serves: Readout= reaches U and U_surrogate alike
+            [~, X] = rheome.scale.measure_upstreamnull(tc.Name, [], Hz=4, SpeedMS=2, LagRad=pi/2, Locations=1, DiscMM=20, ...
+                NullSeeds=1, SnrDB=10, Axis=[0 0 1], MinSpanS=10, OwnMin=0, Readout="v2");
+            tc.verifyTrue(all(isfinite([X.U; X.U_surrogate])));
+            tc.verifyEqual(X.U_star, X.U - X.U_surrogate, 'AbsTol', 1e-12);
         end
 
         function shortSpanIsNotRead(tc)
