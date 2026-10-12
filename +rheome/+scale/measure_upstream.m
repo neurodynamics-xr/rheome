@@ -46,8 +46,10 @@ function [T, X] = measure_upstream(name, S, opts)
 %         from the readout's. In the fourth head v2 reads 200-400 mm REVERSED, noiseless too, where the tile
 %         means of the true current read right: its short-lambda edge is a property of the head (~500 mm there).
 %         Every pass that reads tiles (periodic, surrogate, total) uses the same readout; "of" is unchanged.
-%         ⚠ v2 IS A GATE S DEVIATION awaiting approval: it is not the frozen readout. The perturbations above are
-%         not a different conductivity or BEM model; it aliases at lambda 100 mm.
+%         v2 is the approved gate S readout for TP2/TP3 (2026-10-12), frozen at the merge of the PR that added
+%         it; v1 stays the default here. Its lambda range is stated per sample from each head's short-lambda edge
+%         (measured noiselessly, no recording read). ⚠ The perturbations above are not a different conductivity or BEM
+%         model; it aliases at lambda 100 mm.
 %
 % PASSES (Passes=; all four by default; each is one extra reading of the same span, tiles, mask and gradient):
 %   "periodic"   U: h = hper, the periodic gain (the primary readout)
