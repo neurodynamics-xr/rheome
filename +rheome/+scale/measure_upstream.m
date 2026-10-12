@@ -41,7 +41,7 @@ function [T, X] = measure_upstream(name, S, opts)
 %         Why: a folded depth-3 tile carrying uniform current is near-silent at the sensors, so the MNE tile-mean
 %         kernel has almost no zero order and each tile's phase follows a kernel centroid hundreds of mm away.
 %         Gate S on the Margulies G1 axis (planted plane waves, 0 and 10 dB, four MEG heads, 2026-10-12): v1
-%         reads the planted direction right at every lambda 200-1000 mm in none of them. v2 reads it right at
+%         reads the planted direction right at every lambda 200-1000 mm in one head at 0 dB only. v2 reads it right at
 %         every lambda 200-1000 mm in three, also when the plant's gain (+-10 %) or normals (~17 deg) differ
 %         from the readout's. In the fourth head v2 reads 200-400 mm REVERSED, noiseless too, where the tile
 %         means of the true current read right: its short-lambda edge is a property of the head (~500 mm there).
