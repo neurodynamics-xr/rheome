@@ -18,7 +18,7 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
 %     further from its best two-phase source than that source reads when simulated in the participant's own data;
 %     see rheome.modes.fit on why not pg - pg_n3 -- AND the sign of div_index shared by >= SignShare of
 %     participants); otherwise lagged-or-rotating. Rotation is UNRESOLVED at >= 100 mm: a planted rotation reads
-%     |r| 0.994 to its two-phase source, so it cannot be told from a lagged pair (decision aa405e9c); winding_net
+%     |r| 0.994 to its two-phase source, so it cannot be told from a lagged pair; winding_net
 %     and winding_sign_share are reported, never labelled. N3Margin 0.02 is the amended protocol's margin, to be
 %     recalibrated on the canary's heads. The label is read only for Level-1 modes and says nothing about speed.
 %   Level 2 (dynamics beyond second order): dwell_median_ms (the mode's) and trans_entropy (overall, under
@@ -47,7 +47,7 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
         opts.Fdr (1,1) double = 0.05
         opts.NBoot (1,1) double = 2000
         opts.Seed (1,1) double = 1
-        opts.N3Margin (1,1) double = 0.02   % amended protocol (aa405e9c): floor on the median N3 excess
+        opts.N3Margin (1,1) double = 0.02   % amended protocol: floor on the median N3 excess
     end
     if isscalar(fitFiles) && endsWith(fitFiles, ".txt"), fitFiles = string(strip(splitlines(strtrim(fileread(fitFiles))))); fitFiles(fitFiles == "") = []; end
     if ~exist(outDir, 'dir'), mkdir(outDir); end

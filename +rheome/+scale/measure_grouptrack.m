@@ -16,7 +16,7 @@ function [T, X, Best] = measure_grouptrack(name, S, opts)
 % measure_fieldsmooth and measure_periodicflow use): the envelope is cropped to the clean span before the
 % surrogate is built, and a window that touches an interior artefact block is dropped from real and
 % surrogate alike. Without this the best path of a subject can be the recording-onset step and the
-% band-pass filter's ringing (sub-0002: window 1, 97.6% of the event's energy in the first 0.5 s).
+% band-pass filter's ringing (in one participant: window 1, 97.6% of the event's energy in the first 0.5 s).
 %
 % Returns rheome.scale.rows (analysis "grouptrack"), band = "<hemi>/d<depth>/<fps>fps", metrics:
 %   tile_mm           median tile diameter                                    mm
