@@ -17,6 +17,8 @@ function M = discover(files, outDir, opts)
 %               to the reference, so mode k is the same reference mode in every split; r_k = |<A_k, B_k>|.
 %               K* = the largest K whose median r_k over splits is >= RThresh for EVERY k. No K passing is
 %               recorded (k_reproducible = false) and K* falls back to min(Ks), flagged
+%               Then K* = max(K*, KMin) (design §14 J5 amendment, 2026-10-12: KMin = the smallest K at which the
+%               canary plants separate); k_rule keeps the rule's own K. KMin above max(Ks) is an error
 %   sensitivity (a) exact DMD per participant (top DMDModes modes by amplitude), pooled and clustered at K*,
 %               Hungarian |r| to each centroid; (b) complex PCA of the mean trace-normalised cross-spectral
 %               matrix, best |r| of each centroid to its top K* components (a k-means mode equal to a cPCA
@@ -59,6 +61,7 @@ function M = discover(files, outDir, opts)
         opts.NPerSplit (1,1) double = 300
         opts.MinAmpQuantile (1,1) double = 0.5
         opts.Ks double = 2:15
+        opts.KMin (1,1) double = 0
         opts.NSplits (1,1) double = 100
         opts.RThresh (1,1) double = 0.8
         opts.RobustR (1,1) double = 0.7
@@ -74,6 +77,7 @@ function M = discover(files, outDir, opts)
     end
     if isscalar(files) && ~endsWith(files, ".mat"), files = string(strip(splitlines(strtrim(fileread(files))))); files(files == "") = []; end
     if ~exist(outDir, 'dir'), mkdir(outDir); end
+    if opts.KMin > max(opts.Ks), error('modes:discover:kmin', 'KMin %d exceeds max(Ks) %d', opts.KMin, max(opts.Ks)); end
     if opts.Workers > 0 && isempty(gcp('nocreate')), parpool('Processes', opts.Workers); end
     t00 = tic;
 
@@ -130,6 +134,7 @@ function M = discover(files, outDir, opts)
         end
         ok = find(min(med, [], 2) >= opts.RThresh, 1, 'last');  repro = ~isempty(ok);
         if ~repro, ok = 1; end
+        kRule = Ks(ok);  ok = max(ok, find(Ks >= opts.KMin, 1));   % J5 amendment: K* = max(rule, KMin)
         K = Ks(ok);  C = ref{ok};
         [~, lab] = max(abs(C' * (Xd ./ vecnorm(Xd))).^2, [], 1);  occ = accumarray(lab(:), 1, [K 1]) / numel(lab);
         % sensitivity: DMD pooled and clustered at K; cPCA of the mean cross-spectrum
@@ -155,7 +160,7 @@ function M = discover(files, outDir, opts)
             ac = abs(C).^2;  rn = rheome.modes.match(ac - mean(ac, 1), Wn - mean(Wn, 1));
         end
         Bd(b).r_nmf = rn;  Bd(b).refC = ref;  Bd(b).refK = Ks;         % every K's reference clustering (not hashed)
-        Bd(b).band = bands(b);  Bd(b).K = K;  Bd(b).k_reproducible = repro;  Bd(b).C = C;  Bd(b).nullC = nullC;
+        Bd(b).band = bands(b);  Bd(b).K = K;  Bd(b).k_rule = kRule;  Bd(b).k_reproducible = repro;  Bd(b).C = C;  Bd(b).nullC = nullC;
         Bd(b).occupancy = occ;  Bd(b).r_dmd = rd;  Bd(b).r_cpca = rc;  Bd(b).cpca = V;  Bd(b).mixture_share = mix;
         T = table(repmat(bands(b), K, 1), (1:K)', repmat(K, K, 1), repmat(repro, K, 1), occ, rd, rc, ...
                   (rd >= opts.RobustR) | (rc >= opts.RobustR) | (rn >= opts.RobustR), mix, rn, 'VariableNames', ...
