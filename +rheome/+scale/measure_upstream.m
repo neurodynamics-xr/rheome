@@ -38,9 +38,14 @@ function [T, X] = measure_upstream(name, S, opts)
 %                the window's lag and ratio, + the phase-randomised residual), made analytic on the same bins,
 %                and read by c-f. U* = U - U_surrogate. Read on the whole span and on each half.
 %                Null="v1" (default, frozen, NOT VALIDATED: gate N failed 2026-10-11) is the above. Null="v2" (the
-%                redesign, task 6935dbff): candidates are DEPTH-6 tiles (~15-20 mm, 64 per hemisphere), the two
+%                redesign): candidates are DEPTH-6 tiles (64 per hemisphere), the two
 %                fitted generators keep their own time courses (Keep), and the residual keeps its zero-lag
 %                spatial structure and loses only its lags (Residual "zerolag"); see rheome.forward.laggedpair.
+%                ⚠ v2 IS NOT VALIDATED EITHER (2026-10-12, measure_upstreamnull on a held-out OMEGA MEG head):
+%                lagged 20/40 mm discs leave the 95th-pct |U*| at 0.07-0.13 (readout v1) and 0.10-0.20
+%                (v2 fwdLS), 13-44 % of the lag cancelled. With the TRUE disc generators as candidates the same
+%                null cancels 87-97 % (95th pct 0.007-0.018): the limit is that one tile does not fit a compact
+%                source's shape, not the residual. Do not read U* as travel.
 %   "total"      U_total: h = 1, the periodic gain switched off (WAVE-OR-LEAKAGE H3b, Delta_ap = U_total - U).
 %                The aperiodic fit still runs and gives the covariates. Whole span only.
 %   "of"         U_of: the comparator (P2). Horn-Schunck optical flow (rheome.flow.apparent, Alpha 1) of the
