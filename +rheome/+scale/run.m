@@ -16,6 +16,8 @@ function R = run(name, opts)
 %   fieldsmooth.csv   fieldsmooth: one row per (band, map, frame) -- Dirichlet wavelength, coherence
 %   fieldsmooth_maps.mat   fieldsmooth: the strongest frame's raw and band-limited fields (figure data)
 %   eventsensors.mat  eventsensors: the tracked event on the sensor data (figure data)
+%   grouptrackwindows.csv  grouptrack: per configuration x 2 s window, real and surrogate path scores and threshold
+%   panelexamples.mat panelexamples: MS1 Figs. 4-7 panel A examples (figure data)
 %   plantfloors.csv, movingvortex.csv, composition.csv, sizeruler.csv, vortexscale.csv, rotation.csv,
 %   detection.csv, diracangles.csv   the MS1 group plants (P1, nsp cf-plant-floors): the per-plant /
 %                     per-placement tables of rheome.scale.measure_plantfloors, measure_movingvortex and
@@ -175,8 +177,8 @@ function R = run(name, opts)
                             repmat(opts.Dataset,height(Gf),1), 'VariableNames', {'subject','cohort','dataset'}), Gf];
                     end
                 case "grouptrack"
-                    [Tg, Xg, Best] = rheome.scale.measure_grouptrack(name, S);
-                    M = [M; Tg];  X.grouptrack = Xg; %#ok<AGROW>
+                    [Tg, Xg, Best, Xw] = rheome.scale.measure_grouptrack(name, S);
+                    M = [M; Tg];  X.grouptrack = Xg;  X.grouptrackwindows = Xw; %#ok<AGROW>
                 case "fieldsmooth"
                     [Ts, Xs, maps] = rheome.scale.measure_fieldsmooth(name, S);
                     M = [M; Ts];  X.fieldsmooth = Xs; %#ok<AGROW>
@@ -218,6 +220,9 @@ function R = run(name, opts)
                     [Ti, X.inject] = rheome.scale.measure_inject(name, S);  M = [M; Ti]; %#ok<AGROW>
                 case "trackfactorial"          % MS1 G8 (Fig. 9): the 0.52 diagnosis, 2^5 factorial
                     [Tf, X.trackfactorial] = rheome.scale.measure_trackfactorial(name, S);  M = [M; Tf]; %#ok<AGROW>
+                case "panelexamples"           % MS1 Figs. 4-7 panel A: one example per figure (figure data)
+                    [Tp, ex] = rheome.scale.measure_panelexamples(name, S);  M = [M; Tp]; %#ok<AGROW>
+                    save(fullfile(od, 'panelexamples.mat'), '-struct', 'ex', '-v7');
                 case "aperiodic"               % MS1 G10: a moving 1/f change, threshold and split selectivity
                     [Ta, X.aperiodic] = rheome.scale.measure_aperiodic(name, S);  M = [M; Ta]; %#ok<AGROW>
                 case "slowosc"                 % MS1 G15, G16: sleep slow oscillations, the positive control

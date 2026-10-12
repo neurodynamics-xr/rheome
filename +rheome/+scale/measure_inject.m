@@ -1,4 +1,4 @@
-function [T, X] = measure_inject(name, S, opts)
+function [T, X, Ex] = measure_inject(name, S, opts)
 % SCALE.MEASURE_INJECT  Known movers injected into this participant's own recording, tracked back (MS1 G7, Fig. 8).
 %
 %   [T, X] = rheome.scale.measure_inject(name)
@@ -37,6 +37,9 @@ function [T, X] = measure_inject(name, S, opts)
 % ⚠ Depth 3 tiles are lobar (8 per hemisphere): there a 0.1 m/s mover crosses at most one tile boundary,
 %   so its speed ratio is quantised. It is in the design as the independence limit (MS1 section 9.5).
 % ⚠ A window holds two objects -- the injection and the recording's own alpha -- hence the top 3 paths.
+% Ex (third output, figure data): the first mover injected (first case with a speed > 0, first injection, first
+% depth and rate): the hemisphere's cortex, the planted path's vertices and cumulative length, the true vertex per
+% tracker frame, the tracked path (tiles, frames, tile centroids) chosen by the FOUND rule, and its readout.
 %
 % See also: rheome.scale.measure_grouptrack, rheome.scale.measure_trackfactorial, rheome.detect.tilepath,
 %           rheome.detect.tilepathnull, rheome.flow.movingpeak, rheome.flow.envelopemodes
@@ -69,7 +72,7 @@ function [T, X] = measure_inject(name, S, opts)
     env = i_env(tSeg, W, MARGIN, 0.25);  cIdx = (MARGIN + PAD)*fs + (1:dec:W*fs);
     uW = min(max(tSeg/W, 0), 1);
     vn = {'pass','found','near','netMM','speedMS','straight','durS'};
-    X = table();
+    X = table();  Ex = struct([]);
     for hh = opts.Hemis
         H = S.B.(char(hh));  Sh = H.S;  Phi = H.lbo.Phi;  Mm = H.lbo.Mass;  lam = H.lbo.Lambda(:);
         av = full(sum(Mm, 2));  gv = double(H.gv(:));  nV = numel(gv);  nrm = double(Sh.VertNormals);
@@ -144,7 +147,15 @@ function [T, X] = measure_inject(name, S, opts)
                         [Yi, rate, nF] = i_winblock(Wd{di}*Cin, FR, opts.JLevels(ji), W*FR, 1);
                         Yc = i_winblock(Wd{di}*Cct, FR, opts.JLevels(ji), W*FR, 1);
                         vTb = vT((0:nF-1)*2^opts.JLevels(ji) + ceil(2^opts.JLevels(ji)/2));
-                        si = i_path(Yi, Gs{di}, NUL{di, ji}, rate, Dcv{di}, vTb, opts.NearMM);
+                        [si, trk] = i_path(Yi, Gs{di}, NUL{di, ji}, rate, Dcv{di}, vTb, opts.NearMM);
+                        if nargout > 2 && isempty(Ex) && v > 0
+                            Ex = struct('hemi', hh, 'case', opts.Cases(ci), 'speed_ms', v, 'depth', opts.Depths(di), ...
+                                'rate_fps', rate, 'vertices_mm', 1e3*Sh.Vertices, 'faces', double(Sh.Faces), ...
+                                'path_vertices', pv(:)', 'path_cum_mm', 1e3*cu(:)', 'true_vertex_per_frame', vTb(:)', ...
+                                'tile_of_vertex', double(Gs{di}.tileOf(:))', 'tile_centroid_mm', 1e3*Gs{di}.centroid, 'tile_centre_vertex', double(Gs{di}.centre(:))', ...
+                                'track', trk, 'readout', array2table(si, 'VariableNames', vn), ...
+                                'threshold', NUL{di, ji}.threshold, 'amplitude_x_median_envelope', opts.KAmp);
+                        end
                         sc = i_path(Yc, Gs{di}, NUL{di, ji}, rate, Dcv{di}, vTb, opts.NearMM);
                         X = [X; i_row(hh, opts.Cases(ci), v, n, w, hf, opts.Depths(di), Gs{di}, rate, ...
                                       NUL{di, ji}, si, sc, vn)]; %#ok<AGROW>
@@ -218,8 +229,8 @@ end
 % Top 3 disjoint paths; the injection is FOUND if a passing one stays near it (>= half its frames within
 % nearMM). Returns [pass found near netMM speedMS straight durS] of the found path, else the best one.
 % Without a truth (Dcv empty: real windows) only the best path is scored.
-function r = i_path(Y, G, Nl, rate, Dcv, vTb, nearMM)
-    r = [0 0 NaN NaN NaN NaN NaN];
+function [r, trk] = i_path(Y, G, Nl, rate, Dcv, vTb, nearMM)
+    r = [0 0 NaN NaN NaN NaN NaN];  trk = struct([]);
     p = rheome.detect.tilepath(Y, G, Baseline=Nl.baseline, SampleRate=rate, NumPaths=3 - 2*isempty(Dcv));
     if p.nTracks == 0, return; end
     ok = [p.tracks.score] > Nl.threshold;  q = 1;  fnd = false;
@@ -234,7 +245,7 @@ function r = i_path(Y, G, Nl, rate, Dcv, vTb, nearMM)
     else
         nr = NaN;
     end
-    one = p;  one.tracks = p.tracks(q);  one.nTracks = 1;  st = rheome.detect.trackstats(one, G, rate);
+    one = p;  one.tracks = p.tracks(q);  one.nTracks = 1;  st = rheome.detect.trackstats(one, G, rate);  trk = p.tracks(q);
     r = [any(ok) any(fnd) nr(q) st.netMM st.speedMS st.straight st.durationS];
 end
 

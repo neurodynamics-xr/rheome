@@ -1,4 +1,4 @@
-function [T, X] = measure_plantfloors(name, S, opts)
+function [T, X, Ex] = measure_plantfloors(name, S, opts)
 % SCALE.MEASURE_PLANTFLOORS  Helmholtz-band resolution floors through this participant's MEG (MS1 G1, G9).
 %
 %   [T, X] = rheome.scale.measure_plantfloors(name)
@@ -34,6 +34,9 @@ function [T, X] = measure_plantfloors(name, S, opts)
 %   mixed_err_mm  noise-free median over all bands, per type (MS1 Fig. 4C: vortex 20, source 80)
 %   normal_frac   noise-free median spurious normal share through MEG (single-subject reference: 0.27)
 % plus the same floors per half (band "<type>_<snr>_h1|h2") for the split-half reliability.
+% Ex (third output, figure data): the first plant of the first hemisphere -- its cortex, planted vertices, the
+% planted current J0, and per condition (SNRdB..., then "direct") the scalar-potential band map at the source's
+% band and the stream-function band map at the vortex's band, with the located vertices and errors.
 %
 % See also: rheome.differential.helmholtzbands, rheome.scale.run, rheome.scale.measure_movingvortex
 %
@@ -59,7 +62,7 @@ function [T, X] = measure_plantfloors(name, S, opts)
     nS = size(Nb, 2);  edges = [fs, floor(nS/2); floor(nS/2) + 1, nS - nW - fs];   % background span per half
     rng(opts.Seed);  nL = numel(opts.LambdaMM);  ppc = opts.PlantsPerCell;  nSNR = numel(opts.SNRdB);
 
-    X = table();
+    X = table();  Ex = struct([]);
     for h = opts.Hemis
         H = S.B.(char(h));  Sh = H.S;  lbo = H.lbo;  nV = size(Sh.Vertices, 1);
         rows = reshape((double(H.gv(:))' - 1) * 3 + (1:3)', [], 1);
@@ -94,12 +97,23 @@ function [T, X] = measure_plantfloors(name, S, opts)
             assert(isequal(size(Bd.G), size(G)) && max(abs(Bd.G(:) - G(:))) < 1e-9, ...
                 'scale:plantfloors:bank', 'helmholtzbands built a different bank from the planting bank');
             ch = [d1(randi(nV)) d2(randi(nV))];
+            if nargout > 2 && isempty(Ex)
+                [~, pS] = max(abs(squeeze(Bd.PhiBand(:, ms, :))), [], 1);  [~, pV] = max(abs(squeeze(Bd.PsiBand(:, mv, :))), [], 1);
+                Ex = struct('hemi', h, 'vertices_mm', 1e3*Sh.Vertices, 'faces', double(Sh.Faces), ...
+                    'source_vertex', v1, 'vortex_vertex', v2, 'separation_mm', 1e3*d1(v2), ...
+                    'source_band_mm', wl(ms), 'vortex_band_mm', wl(mv), 'planted_current', reshape(J0, 3, []).', ...
+                    'condition', [repmat("meg", 1, nSNR) "direct"], 'snr_dB', [opts.SNRdB Inf], ...
+                    'phi_band_source', squeeze(Bd.PhiBand(:, ms, :)), 'psi_band_vortex', squeeze(Bd.PsiBand(:, mv, :)), ...
+                    'located_source_vertex', pS(:)', 'located_vortex_vertex', pV(:)', ...
+                    'source_err_mm', 1e3*d1(pS)', 'vortex_err_mm', 1e3*d2(pV)', 'normal_frac', Bd.normalFrac(:)', ...
+                    'bands_mm', wl(:)', 'Eirr', Bd.Eirr, 'Esol', Bd.Esol);
+            end
             for k = 1:nSNR + 1
                 [~, mi] = max(Bd.Eirr(:, k));  [~, mo] = max(Bd.Esol(:, k));
                 [~, pS] = max(abs(Bd.PhiBand(:, ms, k)));  [~, pV] = max(abs(Bd.PsiBand(:, mv, k)));
                 [~, pSb] = max(abs(Bd.PhiBand(:, mi, k)));  [~, pVb] = max(abs(Bd.PsiBand(:, mo, k)));
                 if k <= nSNR, cond = "meg"; snr = opts.SNRdB(k); else, cond = "direct"; snr = Inf; end
-                X = [X; table([h; h], [n; n], [hf; hf], ["source"; "vortex"], opts.LambdaMM([bs(n); bv(n)])', ...
+                X = [X; table([h; h], [n; n], [hf; hf], ["source"; "vortex"], reshape(opts.LambdaMM([bs(n) bv(n)]), [], 1), ...
                     reshape(wl([ms mv]), [], 1), [cond; cond], [snr; snr], 1e3*[d1(pS); d2(pV)], 1e3*[d1(pSb); d2(pVb)], ...
                     [mi - ms; mo - mv], 1e3*ch(:), Bd.normalFrac([k; k])', ...
                     'VariableNames', {'hemi','plant','half','type','lambdaMM','bandMM','condition','snrDB', ...
