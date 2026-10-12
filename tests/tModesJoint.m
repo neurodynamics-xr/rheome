@@ -90,6 +90,10 @@ classdef tModesJoint < matlab.unittest.TestCase
             tc.verifyEqual(size(Y.canary_truth, 2), 4);
             R = rheome.modes.jointcheck(files, fullfile(od, 'check'), NSplits=4, Ks=2:4);
             tc.verifyTrue(islogical(R.pass) && R.f_checked);
+            tc.verifyTrue(all(R.k_star >= R.k_rule) && (isnan(R.k_sep) || all(R.k_star >= R.k_sep)));   % J5 amendment
+            M = rheome.modes.discover(files, fullfile(od, 'kmin'), Source="canary", NullSources="f_fieldspread", ...
+                                      Bands=unique(Z.canary.band), NSplits=2, Ks=2:4, KMin=4);
+            tc.verifyEqual(unique([M.bands.K]), 4);  tc.verifyTrue(all([M.bands.k_rule] <= 4));
             for f = ["joint_canary.csv" "joint_canary_f.csv" "joint_canary_byK.csv" "joint_canary_transfer.csv" "joint_canary.json"]
                 tc.verifyTrue(isfile(fullfile(od, 'check', f)), f);
             end

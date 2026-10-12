@@ -15,7 +15,9 @@ function R = jointcheck(files, outDir, opts)
 %   F          no atom of null F passes Level-1 (i): F's own atoms (discovered at K* on f_fieldspread) are each
 %              compared with the atoms of a second, independent F realisation (f_fieldspread2); an F atom would
 %              pass (i) only with |r| < RMin to every one of them. Pass = none does
-% pass = all three recovered AND no F atom passes. Not gated, to read a failure: joint_canary_byK.csv, the best |r|
+% pass = all three recovered AND no F atom passes, read at K* = max(§4.2 rule, k_sep) -- k_sep the smallest K at which
+% all three are recovered in every head (J5 amendment, design §14, 2026-10-12); the reading at the rule's own K is
+% kept as recovered_at_k_rule. Not gated, to read a failure: joint_canary_byK.csv, the best |r|
 % of each plant at EVERY K's reference clustering -- a K rule that merged two plants (K* too small: with three
 % heads a split half is one or two heads) reads differently from an instrument that cannot separate them.
 % Rehearsal (two OMEGA heads that are not the canary, 20 splits): K* = 2 merged the wave and the pair (wave |r|
@@ -39,8 +41,38 @@ function R = jointcheck(files, outDir, opts)
     end
     if isscalar(files) && ~endsWith(files, ".mat"), files = string(strip(splitlines(strtrim(fileread(files))))); files(files == "") = []; end
     m0 = matfile(files(1));  Z0 = m0.Z;  pb = unique(Z0.canary.band, 'stable');
-    M = rheome.modes.discover(files, outDir, Source="canary", NullSources=["f_fieldspread" "f_fieldspread2"], ...
-                              Bands=pb, NMF=true, NSplits=opts.NSplits, Ks=opts.Ks, Workers=opts.Workers, Seed=opts.Seed);
+    dopts = {'Source', "canary", 'NullSources', ["f_fieldspread" "f_fieldspread2"], 'Bands', pb, 'NMF', true, ...
+             'NSplits', opts.NSplits, 'Ks', opts.Ks, 'Workers', opts.Workers, 'Seed', opts.Seed};
+    gated = ["wave200_ap" "pair_fo" "standing200"];
+    % pass 1: K* from the §4.2 rule alone (recorded, the J5 reading before the amendment)
+    M = rheome.modes.discover(files, outDir, dopts{:});
+    [rows, byK, fr, trf, heads] = i_score(M, files, opts.RMin);
+    rec0 = arrayfun(@(g) all(rows.r_best_atom(rows.plant == g) >= opts.RMin), gated);
+    kRule = [M.bands.K];
+    % J5 amendment (design §14, 2026-10-12, decision 09a28c49): K* = max(rule, the smallest K at which every gated
+    % plant is recovered in every head); pass 2 rediscovers at that K* (F atoms included) and gives the verdict
+    G = groupsummary(byK(ismember(byK.plant, gated), :), 'K', 'min', 'r_best_atom');
+    kSep = min(G.K(G.min_r_best_atom >= opts.RMin));  if isempty(kSep), kSep = NaN; end
+    if ~isnan(kSep) && any(kRule < kSep)
+        M = rheome.modes.discover(files, outDir, dopts{:}, 'KMin', kSep);
+        [rows, ~, fr, trf, heads] = i_score(M, files, opts.RMin);
+    end
+    rec = arrayfun(@(g) all(rows.r_best_atom(rows.plant == g) >= opts.RMin), gated);
+    fok = ~isempty(fr) && ~any(fr.passes_level1_i);
+    R = struct('pass', all(rec) && fok, 'recovered', table(gated', rec', 'VariableNames', {'plant','recovered'}), ...
+               'f_atoms_passing_level1_i', sum(fr.passes_level1_i), 'f_checked', ~isempty(fr), ...
+               'r_min', opts.RMin, 'heads', heads, 'sha256', M.sha256, 'k_rule', kRule, 'k_sep', kSep, ...
+               'k_star', [M.bands.K], 'recovered_at_k_rule', table(gated', rec0', 'VariableNames', {'plant','recovered'}));
+    R.fine50 = rows(rows.plant == "fine50", :);
+    writetable(rows, fullfile(outDir, 'joint_canary.csv'));  writetable(fr, fullfile(outDir, 'joint_canary_f.csv'));
+    writetable(trf, fullfile(outDir, 'joint_canary_transfer.csv'));  writetable(byK, fullfile(outDir, 'joint_canary_byK.csv'));
+    fid = fopen(fullfile(outDir, 'joint_canary.json'), 'w');  fprintf(fid, '%s', jsonencode(R, PrettyPrint=true));  fclose(fid);
+    fprintf('[modes.jointcheck] J5 %s: recovered %s, F atoms passing Level-1 (i) %d\n', ...
+            string(R.pass), mat2str(rec), R.f_atoms_passing_level1_i);
+end
+
+function [rows, byK, fr, trf, heads] = i_score(M, files, rmin)
+% each plant's best |r| at K* and at every K's reference clustering; F atoms against a second F realisation
     rows = table();  trf = table();  heads = strings(0);  byK = table();
     for p = 1:numel(files)
         m = matfile(files(p));  Z = m.Z;  tr = m.canary_truth;  tl = Z.tiles{1};  heads(end+1) = string(Z.name); %#ok<AGROW>
@@ -57,26 +89,14 @@ function R = jointcheck(files, outDir, opts)
                     'VariableNames', {'participant','plant','band','r_best_atom','atom','t_bar_planted','t_bar_atom'})]; %#ok<AGROW>
         end
     end
-    gated = ["wave200_ap" "pair_fo" "standing200"];
-    rec = arrayfun(@(g) all(rows.r_best_atom(rows.plant == g) >= opts.RMin), gated);
     fr = table();
     for b = 1:numel(M.bands)
         nc = M.bands(b).nullC;
         if ~isfield(nc, 'f_fieldspread') || ~isfield(nc, 'f_fieldspread2'), continue; end
         r = max(abs(nc.f_fieldspread' * nc.f_fieldspread2), [], 2);
-        fr = [fr; table(repmat(M.bands(b).band, numel(r), 1), (1:numel(r))', r, r < opts.RMin, ...
+        fr = [fr; table(repmat(M.bands(b).band, numel(r), 1), (1:numel(r))', r, r < rmin, ...
               'VariableNames', {'band','f_atom','r_max_to_f2','passes_level1_i'})]; %#ok<AGROW>
     end
-    fok = ~isempty(fr) && ~any(fr.passes_level1_i);
-    R = struct('pass', all(rec) && fok, 'recovered', table(gated', rec', 'VariableNames', {'plant','recovered'}), ...
-               'f_atoms_passing_level1_i', sum(fr.passes_level1_i), 'f_checked', ~isempty(fr), ...
-               'r_min', opts.RMin, 'heads', heads, 'sha256', M.sha256);
-    R.fine50 = rows(rows.plant == "fine50", :);
-    writetable(rows, fullfile(outDir, 'joint_canary.csv'));  writetable(fr, fullfile(outDir, 'joint_canary_f.csv'));
-    writetable(trf, fullfile(outDir, 'joint_canary_transfer.csv'));  writetable(byK, fullfile(outDir, 'joint_canary_byK.csv'));
-    fid = fopen(fullfile(outDir, 'joint_canary.json'), 'w');  fprintf(fid, '%s', jsonencode(R, PrettyPrint=true));  fclose(fid);
-    fprintf('[modes.jointcheck] J5 %s: recovered %s, F atoms passing Level-1 (i) %d\n', ...
-            string(R.pass), mat2str(rec), R.f_atoms_passing_level1_i);
 end
 
 function tb = i_tbar(x, t)
