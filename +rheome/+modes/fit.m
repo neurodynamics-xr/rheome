@@ -57,6 +57,14 @@ function [T, X] = fit(name, S, M, opts)
 %                                    phase windings around tile triangles, outward orientation). ⚠ Not s^-1: a
 %                                    flow rate needs the speed, which these depths do not resolve
 %
+% JOINT ATOMS (M.kind "joint": centroids of rheome.modes.discover on rheome.modes.jointfields; protocol section 14):
+% the joint fields are recomputed instead (same seed); F (f_fieldspread) takes N1's place (r_f_fieldspread);
+% N2 spins within each depth (the same rotation for every depth); physical features and N3 are read on the
+% atom's dominant depth (the depth holding most of its energy; dominant_depth), N3 reported and never gated;
+% per atom also scale_mm (energy-weighted geometric mean of the depths' scales), t_bar (energy-weighted T(s) of
+% this participant, rheome.modes.scaletransfer) and scale_edge_mm; N5 surrogates through rheome.modes.octave;
+% no N3 calibration plants.
+%
 % Returns T (rheome.scale.rows "modesfit": per band gev_total, n_valid, kappa, ...) and X with tables
 %   modesfit  (band, source, half, method, mode, metric, value, unit; mode 0 = overall)
 %   modesmaps (band, source, half, mode, hemi, tile, amp, phase_rad)
@@ -82,14 +90,25 @@ function [T, X] = fit(name, S, M, opts)
         error('modes:fit:hash', 'centroids hash %s does not match the frozen %s %s', h0, M.sha256, opts.Sha256);
     end
     if isempty(S), S = rheome.scale.sensors(name); end
-    vs = M.variantSpec;
-    [Z, Y, Op] = rheome.modes.fields(name, S, CutoffMM=vs.cutoff_mm, Depth=vs.depth, SensCutoffMM=[], SensDepths=[], Seed=opts.Seed);
-    [Pn, Pm] = i_planted(S, Op{1}.W);  clear Op
+    vs = M.variantSpec;  jt = isfield(M, 'kind') && M.kind == "joint";
+    if jt
+        o = M.fieldOptions;
+        [Z, Y] = rheome.modes.jointfields(name, S, Seed=opts.Seed, Depths=o.Depths, Octaves=o.Octaves, GenDepth=o.GenDepth, ...
+                                          WorkRate=o.WorkRate, FitRange=o.FitRange);  Pn = strings(0);  Pm = [];
+    else
+        [Z, Y, Op] = rheome.modes.fields(name, S, CutoffMM=vs.cutoff_mm, Depth=vs.depth, SensCutoffMM=[], SensDepths=[], Seed=opts.Seed);
+        [Pn, Pm] = i_planted(S, Op{1}.W);  clear Op
+    end
     tl = Z.tiles{1};
     if height(tl) ~= height(M.tiles) || any(tl.tile ~= M.tiles.tile) || any(tl.hemi ~= M.tiles.hemi)
         error('modes:fit:tiles', '%s: tiles differ from the frozen centroids''', name);
     end
-    G = i_geom(tl, Z.A);  rs = RandStream('mt19937ar', 'Seed', opts.Seed + 11);
+    G = i_geom(tl, Z.A);  Gd = {};  dep = 0;
+    if jt
+        dep = unique(tl.depth);  Gd = arrayfun(@(d) i_geom(tl(tl.depth == d, :), Z.A(tl.depth == d, tl.depth == d)), dep, 'uni', 0);
+        Tq = Z.transfer.table.T(arrayfun(@(d) find(Z.transfer.table.depth == d), tl.depth));
+    end
+    rs = RandStream('mt19937ar', 'Seed', opts.Seed + 11);
     F = cell(0, 8);  Mp = table();  Tr = table();  T = rheome.scale.rows("modesfit", strings(0,1), [], "");
 
     function put(b, src, half, meth, k, metric, v, unit)
@@ -132,28 +151,36 @@ function [T, X] = fit(name, S, M, opts)
         end
         [lab, kap] = i_hmm(z, valid, C, opts.HmmIter);
         feats(bn, "data", "all", "hmm", i_backfit(z, valid, C, rate, lab), K);
-        put(bn, "data", "all", "backfit", 0, "periodic_fraction_median", median(Z.periodic.periodic_fraction(Z.periodic.band == bn)), "fraction");
+        if isfield(Z, 'periodic'), put(bn, "data", "all", "backfit", 0, "periodic_fraction_median", median(Z.periodic.periodic_fraction(Z.periodic.band == bn)), "fraction"); end
         T = [T; rheome.scale.rows("modesfit", ["gev_total" "n_valid" "kappa" "K" "band_lo_hz" "band_hi_hz" "rate_hz"], ...
              [sum(Rd.gev) nnz(valid) kap K edges rate], ["fraction" "samples" "1" "modes" "Hz" "Hz" "Hz"], bn)]; %#ok<AGROW>
         for kk = 1:K
             put(bn, "data", "all", "backfit", kk, "r_halves", abs(Rh{1}.m(:, kk)' * Rh{2}.m(:, kk)), "r");
         end
         % the instrument and background nulls through the same back-fit
-        for src = Z.sources(ismember(Z.sources, ["n1_sources" "n1_emptyroom" "n4_aperiodic"]))
+        for src = Z.sources(ismember(Z.sources, ["n1_sources" "n1_emptyroom" "f_fieldspread" "n4_aperiodic"]))
             Rn = i_backfit(double(Y.(sprintf('z_%s_%s_v1', src, bn))), valid, C, rate);
             feats(bn, src, "all", "backfit", Rn, K);  maps(bn, src, "all", Rn.m);
-            if startsWith(src, "n1")
+            if startsWith(src, "n1") || src == "f_fieldspread"
                 for kk = 1:K, put(bn, "data", "all", "backfit", kk, "r_" + src, abs(Rd.m(:, kk)' * Rn.m(:, kk)), "r"); end
             end
         end
         % per-mode: physical features, N2 spin, N3 lagged pair
         for kk = 1:K
-            m = Rd.m(:, kk);  Ph = i_phys(m, G, fc, vs.depth, opts.ResolvableDepth);
+            m = Rd.m(:, kk);
+            if jt                                                       % the dominant depth carries geometry and N3
+                e = arrayfun(@(d) sum(abs(m(tl.depth == d)).^2), dep);  [~, id] = max(e);  in = tl.depth == dep(id);
+                Ph = i_phys(m(in), Gd{id}, fc, dep(id), opts.ResolvableDepth);
+                Ph.dominant_depth = dep(id);  Ph.scale_mm = exp(sum(abs(m).^2 .* log(tl.scale_mm)) / sum(abs(m).^2));
+                Ph.t_bar = sum(abs(m).^2 .* Tq) / sum(abs(m).^2);  Ph.scale_edge_mm = Z.transfer.edge_mm;
+            else
+                Ph = i_phys(m, G, fc, vs.depth, opts.ResolvableDepth);  in = true(size(m));  id = 1;
+            end
             for f = string(fieldnames(Ph))', put(bn, "data", "all", "backfit", kk, f, Ph.(f), i_unit(f)); end
             [ro, rsm, ps] = i_spin(m, C(:, kk), G, opts.NSpin, rs);
             put(bn, "data", "all", "backfit", kk, "r_spin_obs", ro, "r");  put(bn, "data", "all", "backfit", kk, "r_spin_mean", rsm, "r");
             put(bn, "data", "all", "backfit", kk, "p_spin", ps, "p");
-            L3 = i_lagged(m, Z.R, G, z(:, Rd.lab == kk));
+            if jt, L3 = i_lagged(m(in), Z.R{id}, Gd{id}, z(in, Rd.lab == kk)); else, L3 = i_lagged(m, Z.R, G, z(:, Rd.lab == kk)); end
             for f = string(fieldnames(L3))', put(bn, "data", "all", "backfit", kk, f, L3.(f), i_unit(f)); end
         end
         % N3 calibration (protocol section 13): planted patterns in this participant's own band data
@@ -164,7 +191,8 @@ function [T, X] = fit(name, S, M, opts)
         % N5: dwell and transition entropy against phase-randomised surrogates (Level 2)
         sd = nan(opts.NSurr, K + 2);
         for s = 1:opts.NSurr
-            zs = rheome.modes.analytic(rheome.modes.phaserand(double(Y.yper), rs), Z.workRate, edges, Y.mask);
+            if jt, zs = rheome.modes.octave(rheome.modes.phaserand(double(Y.yper), rs), Z.workRate, edges, Y.mask);
+            else, zs = rheome.modes.analytic(rheome.modes.phaserand(double(Y.yper), rs), Z.workRate, edges, Y.mask); end
             Rs = i_backfit(double(zs), valid, C, rate);  sd(s, :) = [Rs.dwell(:)' Rs.dwellAll Rs.H];
         end
         dv = [Rd.dwell(:)' Rd.dwellAll Rd.H];  mu = mean(sd, 1, 'omitnan');  sg = std(sd, 0, 1, 'omitnan');
@@ -241,6 +269,8 @@ end
 function G = i_geom(tl, A)
     G.A = A;  G.area = tl.area_mm2;  G.x = [tl.x_mm tl.y_mm tl.z_mm];  G.t = [tl.tx tl.ty tl.tz];
     G.u = [tl.u1 tl.u2 tl.u3];  G.u = G.u ./ vecnorm(G.u, 2, 2);  G.hemi = tl.hemi;
+    gk = tl.hemi;  if ismember('depth', tl.Properties.VariableNames), gk = gk + "_" + tl.depth; end
+    [~, ~, gi] = unique(gk);  G.groups = accumarray(gi, (1:numel(gi))', [], @(x) {x});   % spin within hemisphere x depth
     [i, j] = find(triu(A));  G.e = [i j];  G.d = vecnorm(G.x(i, :) - G.x(j, :), 2, 2);
     ax = [0 0 1];  e1 = ax - (G.u * ax') .* G.u;  G.e1 = e1 ./ vecnorm(e1, 2, 2);  G.e2 = cross(G.u, G.e1, 2);
     tri = zeros(0, 3);
@@ -301,14 +331,16 @@ function s = i_pg(m, G)
 end
 
 function [ro, rm, p] = i_spin(m, c, G, n, rs)
-% Alexander-Bloch spin on the template sphere, the right hemisphere mirrored (x -> -x)
-    nr = @(a, b) abs(a' * b) / (norm(a) * norm(b));  ro = nr(c, m);  r = zeros(n, 1);
-    L = find(G.hemi == "L");  Rh = find(G.hemi == "R");  Fx = diag([-1 1 1]);
+% Alexander-Bloch spin on the template sphere, the right hemisphere mirrored (x -> -x); within each hemisphere
+% (x depth, for joint atoms) group, one rotation per spin for all groups
+    nr = @(a, b) abs(a' * b) / (norm(a) * norm(b));  ro = nr(c, m);  r = zeros(n, 1);  Fx = diag([-1 1 1]);
     for s = 1:n
         [Q, Rq] = qr(randn(rs, 3));  Q = Q * diag(sign(diag(Rq)));  if det(Q) < 0, Q(:, 1) = -Q(:, 1); end
         ms = m;
-        if ~isempty(L), ms(L) = m(L(knnsearch(G.u(L, :), G.u(L, :) * Q))); end
-        if ~isempty(Rh), ms(Rh) = m(Rh(knnsearch(G.u(Rh, :), G.u(Rh, :) * (Fx * Q * Fx)))); end
+        for g = 1:numel(G.groups)
+            ix = G.groups{g};  Qg = Q;  if G.hemi(ix(1)) == "R", Qg = Fx * Q * Fx; end
+            ms(ix) = m(ix(knnsearch(G.u(ix, :), G.u(ix, :) * Qg)));
+        end
         r(s) = nr(c, ms);
     end
     rm = mean(r);  p = (1 + nnz(r >= ro)) / (1 + n);
@@ -354,8 +386,8 @@ function u = i_unit(f)
         U = dictionary(["extent_mm2" "extent_radius_mm" "dirichlet_wavelength_mm" "tile_spacing_mm" "pg" ...
             "dir_x" "dir_y" "dir_z" "dir_concentration" "dir_azimuth_deg" "phase_wavelength_mm" "speed_m_s" ...
             "speed_resolved" "div_index" "winding_net" "winding_count" "pg_n3" "r_n3" "r_n3_sim" "n3_lag_rad" ...
-            "n3_tiles_a" "n3_tiles_b" "r_plant" "n3_excess"], ["mm2" "mm" "mm" "mm" "rad" "unit" "unit" "unit" "r" "deg" "mm" "m/s" ...
-            "flag" "rad/mm2" "windings" "windings" "rad" "r" "r" "rad" "tiles" "tiles" "r" "r"]);
+            "n3_tiles_a" "n3_tiles_b" "r_plant" "n3_excess" "dominant_depth" "scale_mm" "t_bar" "scale_edge_mm"], ["mm2" "mm" "mm" "mm" "rad" "unit" "unit" "unit" "r" "deg" "mm" "m/s" ...
+            "flag" "rad/mm2" "windings" "windings" "rad" "r" "r" "rad" "tiles" "tiles" "r" "r" "depth" "mm" "T" "mm"]);
     end
     u = U(f);
 end

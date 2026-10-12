@@ -67,6 +67,11 @@ function R = run(name, opts)
 %   modesfit.csv, modesmaps.csv, modestrans.csv, modesseries.csv   stage 3 (nsp rheome-modes-fit):
 %                     rheome.modes.fit against the frozen centroids in RHEOME_MODES_CENTROIDS (hash checked,
 %                     and against RHEOME_MODES_SHA256 when set); opt-in
+%   joint_fields.mat, jointseries.csv, jointscales.csv, jointbands.csv, jointtransfer.csv, jointfspread.csv
+%                     H4 ATLAS-1 (nsp rheome-joint-fields): rheome.modes.jointfields -- the joint graph-time
+%                     wavelet field on tile x scale per octave, null F (field spread), N4, N5, and the scale
+%                     transfer T(s) with its edge; opt-in. "jointcanary" (nsp rheome-joint-canary): the J5 plants
+%                     on F instead of the data (no real-data series), + jointcanary.csv
 %   upstream.csv      AGE-1 / WAVE-OR-LEAKAGE (nsp rheome-upstream): rheome.scale.measure_upstream -- the
 %                     participant readout v1 of rheome.flow.upstreamshare per (span, pass, hemisphere): U
 %                     (periodic), U_surrogate (lagged-source null), U_total (periodic gain off), U_of (optical
@@ -247,6 +252,18 @@ function R = run(name, opts)
                     M = [M; rheome.scale.rows("modesfields", ["span_s" "n_sources" "n_series"], ...
                          [Zm.spanS numel(Zm.sources) height(Zm.series)], ["s" "sources" "series"])]; %#ok<AGROW>
                     clear Ym
+                case {"jointfields" "jointcanary"}   % H4 ATLAS-1 joint field, J1/J3/J4 (nsp rheome-joint-fields), J5 (rheome-joint-canary)
+                    [Zj, Yj] = rheome.modes.jointfields(name, S, Canary=(a == "jointcanary"));
+                    f = fullfile(od, 'joint_fields.mat');  save(f, '-struct', 'Yj', '-v7.3');
+                    Z = Zj;  save(f, 'Z', '-append');  clear Z Yj
+                    sub = @(t) [table(repmat(string(name), height(t), 1), 'VariableNames', {'subject'}), t];
+                    X.jointseries = sub(Zj.series(:, {'source','band','variant','n_valid','sha256'}));
+                    X.jointscales = sub(Zj.scales);  X.jointbands = sub(Zj.bands);  X.jointtransfer = sub(Zj.transfer.table);
+                    X.jointfspread = sub(struct2table(Zj.fspread, 'AsArray', true));
+                    if isfield(Zj, 'canary'), X.jointcanary = sub(Zj.canary); end
+                    M = [M; rheome.scale.rows(a, ["span_s" "n_sources" "n_series" "scale_edge_mm" "scale_centroid_mm" "fspread_logpower_err"], ...
+                         [Zj.spanS numel(Zj.sources) height(Zj.series) Zj.transfer.edge_mm Zj.transfer.centroid_mm Zj.fspread.tile_logpower_err_median], ...
+                         ["s" "sources" "series" "mm" "mm" "log"])]; %#ok<AGROW>
                 case "modesfit"                % resting-state pattern atlas, stage 3 (nsp rheome-modes-fit)
                     cf = getenv('RHEOME_MODES_CENTROIDS');
                     if isempty(cf) || ~isfile(cf), error('scale:run:centroids', 'modesfit needs RHEOME_MODES_CENTROIDS (a frozen centroids.mat), got "%s"', cf); end
