@@ -40,11 +40,14 @@ function [T, X] = measure_upstream(name, S, opts)
 %         hemisphere. Everything else (a, b, e, f -- the mask and exclusion stay the MNE kernel's) is v1's.
 %         Why: a folded depth-3 tile carrying uniform current is near-silent at the sensors, so the MNE tile-mean
 %         kernel has almost no zero order and each tile's phase follows a kernel centroid hundreds of mm away.
-%         Gate S on the Margulies G1 axis (planted plane waves, 0 and 10 dB, MEG): v1 reads the planted direction
-%         reversed at lambda 200-500 mm and right only at 1000 mm; v2 reads it right at every lambda 200-1000 mm.
+%         Gate S on the Margulies G1 axis (planted plane waves, 0 and 10 dB, four MEG heads, 2026-10-12): v1
+%         reads the planted direction right at every lambda 200-1000 mm in none of them. v2 reads it right at
+%         every lambda 200-1000 mm in three, also when the plant's gain (+-10 %) or normals (~17 deg) differ
+%         from the readout's. In the fourth head v2 reads 200-400 mm REVERSED, noiseless too, where the tile
+%         means of the true current read right: its short-lambda edge is a property of the head (~500 mm there).
 %         Every pass that reads tiles (periodic, surrogate, total) uses the same readout; "of" is unchanged.
-%         ⚠ v2 IS A GATE S DEVIATION awaiting approval: it is not the frozen readout. Plants and readout share one
-%         gain (the inverse crime), so its gate S margin is an upper bound; it aliases at lambda 100 mm.
+%         ⚠ v2 IS A GATE S DEVIATION awaiting approval: it is not the frozen readout. The perturbations above are
+%         not a different conductivity or BEM model; it aliases at lambda 100 mm.
 %
 % PASSES (Passes=; all four by default; each is one extra reading of the same span, tiles, mask and gradient):
 %   "periodic"   U: h = hper, the periodic gain (the primary readout)
