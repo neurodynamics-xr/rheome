@@ -37,7 +37,7 @@ function file = build_toolbox(outDir)
     [~, ls] = system(sprintf('git -C "%s" -c core.quotePath=false ls-files', root));
     rel = splitlines(strtrim(ls))';
     top = extractBefore(string(rel) + "/", "/");
-    keep = top == "+rheome" ...
+    keep = top == "+rheome" | top == "viewer" ...   % viewer/: the optional 3D viewer rheome.view installs, when shipped
          | (top == "doc" & ~startsWith(string(rel), ["doc/source/", "doc/tools/"])) ...
          | ismember(string(rel), ["Contents.m", "README.md", "CITATION.cff", "LICENSE"]);
     files = fullfile(root, rel(keep));
