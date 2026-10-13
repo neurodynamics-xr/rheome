@@ -125,6 +125,16 @@ classdef tModes < matlab.unittest.TestCase
             tc.verifyEqual(height(cal), 3 * numel(M.bands));  tc.verifyTrue(all(isfinite(cal.value)));
             bad = M;  bad.bands(1).C(1) = bad.bands(1).C(1) + 1e-6;
             tc.verifyError(@() rheome.modes.fit(char(tc.Names(1)), [], bad), 'modes:fit:hash');
+            % a state the back-fit gives no sample (a duplicate centroid loses every tie) has no N3: NaN, not
+            % r_n3 0 / r_n3_sim 1; with one sample its mode is NaN and rheome.modes.lagged crashed
+            em = M;  for b = 1:numel(em.bands), em.bands(b).C(:, end+1) = em.bands(b).C(:, 1); end
+            em.sha256 = rheome.modes.hash(em.bands.C);
+            [~, Xe] = rheome.modes.fit(char(tc.Names(1)), [], em, NSpin=20, NSurr=3);  ve = Xe.modesfit;
+            ke = ve.source == "data" & ve.half == "all" & ve.method == "backfit" & ve.mode == size(em.bands(1).C, 2) & ve.band == em.bands(1).band;
+            tc.verifyEqual(ve.value(ke & ve.metric == "occupancy"), 0);
+            tc.verifyTrue(all(isnan(ve.value(ke & ismember(ve.metric, ["r_n3" "r_n3_sim" "n3_lag_rad" "n3_tiles_a"])))));
+            tc.verifyEqual(nnz(ke & ve.metric == "r_n3"), 1);
+            tc.verifyTrue(isnan(rheome.modes.lagged(nan(4, 1), eye(4)).r_n3));      % a non-finite mode: NaN, no crash
             % the driver writes the fit tables, then the reduction over the three
             setenv('RHEOME_MODES_CENTROIDS', fullfile(od, 'discover', 'centroids.mat'));  tc.addTeardown(@setenv, 'RHEOME_MODES_CENTROIDS', '');
             fits = strings(0);

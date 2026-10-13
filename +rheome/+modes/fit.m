@@ -349,7 +349,12 @@ end
 function L = i_lagged(m, R, G, zk)
 % N3: the best two-phase source through the instrument (rheome.modes.lagged), and the same model SIMULATED in
 % the participant's own data -- the mode's component of every sample in its state replaced by the fit, the rest
-% (noise, other structure) kept -- re-estimated and refitted, so the estimator's own misfit is the null's
+% (noise, other structure) kept -- re-estimated and refitted, so the estimator's own misfit is the null's.
+% A state the back-fit gave < 2 samples has no mode (all zeros): no N3, every field NaN (it read r_n3 0 and
+% r_n3_sim 1 with 0 samples, and crashed rheome.modes.lagged on a NaN mode with 1 sample)
+    if ~any(m)
+        L = struct('r_n3', NaN, 'r_n3_sim', NaN, 'pg_n3', NaN, 'n3_lag_rad', NaN, 'n3_tiles_a', NaN, 'n3_tiles_b', NaN);  return
+    end
     F = rheome.modes.lagged(m, R);  f = F.fit / norm(F.fit);  f = f * exp(-1i * angle(m' * f));  mu = m / norm(m);
     a = mu' * zk;  zs = zk - mu * a + f * a;
     [V, Lm] = eig(zs * zs', 'vector');  [~, j] = max(real(Lm));  Fs = rheome.modes.lagged(V(:, j), R);
