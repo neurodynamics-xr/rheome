@@ -24,7 +24,9 @@ function [Z, Y, Op] = fields(name, S, opts)
 %                 sensor covariance
 %   n1_emptyroom  N1 sensor noise: the participant's own empty room (noise.mat) on the channels it shares,
 %                 through the same W (absent channels zero); missing when the cache holds no noise run.
-%                 A run shorter than the rest span is mirror-padded to its length (Z.emptyroomS = its own)
+%                 A run shorter than the rest span is mirror-padded to its length (Z.emptyroomS = its own).
+%                 A channel whose empty-room std exceeds 10x the rest's on that channel is dropped (a faulty
+%                 sensor flagged good; MLC11-17 in 60 OMEGA-D empty rooms) and named in Z.emptyroomDropped
 %   n4_aperiodic  N4: the aperiodic part of the data tile series (the complement of the periodic split)
 %   n5_phaserand  N5: the data's periodic tile series with one random phase per frequency bin shared by all
 %                 tiles (keeps every auto- and cross-spectrum; exact at tile level because everything before
@@ -100,10 +102,10 @@ function [Z, Y, Op] = fields(name, S, opts)
     if opts.Nulls
         rs = RandStream('mt19937ar', 'Seed', opts.Seed);
         add("n1_sources", Op{1}.W * i_sources(Op{1}.C1, F, fw, rs), 1, false);  srcs(end+1) = "n1_sources";
-        E = i_emptyroom(name, chn, fw, N);
+        E = i_emptyroom(name, chn, fw, N, F);
         if ~isempty(E)
             add("n1_emptyroom", Op{1}.W(:, E.cols) * E.F, 1, false);  srcs(end+1) = "n1_emptyroom";
-            Z.emptyroomS = E.durationS;  Z.emptyroomChannels = numel(E.cols);
+            Z.emptyroomS = E.durationS;  Z.emptyroomChannels = numel(E.cols);  Z.emptyroomDropped = E.dropped;
         end
         add("n4_aperiodic", sp.ap, 1, true);  srcs(end+1) = "n4_aperiodic";
         add("n5_phaserand", rheome.modes.phaserand(sp.per, RandStream('mt19937ar', 'Seed', opts.Seed + 5)), 1, true);
@@ -148,8 +150,10 @@ function X = i_sources(C1, F, fs, rs)
     X = X * sqrt(sum(F.^2, 'all') / sum(X.^2, 'all'));
 end
 
-function E = i_emptyroom(name, chn, fs, N)
-% the participant's own empty room (noise.mat of rheome.scale.importsubject) on the shared good channels
+function E = i_emptyroom(name, chn, fs, N, F)
+% the participant's own empty room (noise.mat of rheome.scale.importsubject) on the shared good channels, without
+% the channels whose level exceeds 10x the rest run's F on that channel (as rheome.modes.jointfields; an empty
+% room is quieter than a head: ~0.5x)
     E = [];  f = fullfile(rheome.load.root(), name, 'noise.mat');
     if ~isfile(f), return; end
     L = builtin('load', f, 'nrec');  nrec = L.nrec;
@@ -157,9 +161,12 @@ function E = i_emptyroom(name, chn, fs, N)
     [~, cols, jn] = intersect(chn, nn(ok), 'stable');  jo = find(ok);  jn = jo(jn);
     if isempty(cols), return; end
     X = resample(double(nrec.F(jn, :)).', round(fs), round(nrec.sfreq)).';  n0 = size(X, 2);
+    bad = std(X, 0, 2) > 10 * std(F(cols, :), 0, 2);
+    dropped = strjoin(chn(cols(bad)).', " ");  X = X(~bad, :);  cols = cols(~bad);
+    if isempty(cols), return; end
     % shorter than the rest span: mirror-padded (no jump at the joins); N1 tests spatial structure, not dwell
     while size(X, 2) < N, X = [X, fliplr(X)]; end %#ok<AGROW>
-    E = struct('F', X(:, 1:N), 'cols', cols, 'durationS', n0 / fs);
+    E = struct('F', X(:, 1:N), 'cols', cols, 'durationS', n0 / fs, 'dropped', dropped);
 end
 
 % Author: Diellor Basha, 2026
