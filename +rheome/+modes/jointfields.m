@@ -30,7 +30,9 @@ function [Z, Y, Op] = jointfields(name, S, opts)
 %                  (M(i,j) = W_i C_j W_i', C_j the sensor covariance of tile j's sources: Op.Cgen), per
 %                  0.5 Hz bin; then one scalar recalibration of total power. So each location keeps its own
 %                  spectrum and power, and every coupling between locations is removed (what remains is the
-%                  instrument's spread). Z.fspread: fit error, recalibration factor, empty room used
+%                  instrument's spread). An empty-room channel whose level exceeds 10x the rest run's on that
+%                  channel is a sensor fault the noise run's flags missed (OMEGA: MLC11-17 at ~1 nT) and is
+%                  dropped. Z.fspread: fit error, recalibration factor, empty room used, emptyroomDropped (names)
 %   n4_aperiodic   N4: the aperiodic complement of each row's split
 %   n5_phaserand   N5: the periodic rows with one random phase per frequency bin shared by every row (keeps
 %                  every auto- and cross-spectrum, across scales too)
@@ -129,7 +131,7 @@ function [Z, Y, Op] = jointfields(name, S, opts)
     srcs = strings(0);
     if ~opts.Canary, add("data", F, "per");  srcs = "data"; end
     if opts.Nulls || opts.Canary
-        E = i_emptyroom(name, chn, fw, N);
+        E = i_emptyroom(name, chn, fw, N, F);
         [Xf, Z.fspread] = i_fieldspread(S, Tp, F, fw, mask, E, opts, RandStream('mt19937ar', 'Seed', opts.Seed + 17));
         add("f_fieldspread", Xf, "per");  srcs(end+1) = "f_fieldspread";
         Xf2 = i_fieldspread(S, Tp, F, fw, mask, E, opts, RandStream('mt19937ar', 'Seed', opts.Seed + 18));
@@ -175,6 +177,10 @@ function [X, Q] = i_fieldspread(S, Tp, F, fw, mask, E, o, rs)
         Mn = Mx / max(Mx(:));  tn = t / max(t);  s = lsqnonneg(Mn, tn);     % both scaled: lsqnonneg's tolerance is absolute
         Sg(:, k) = s * max(t) / max(Mx(:));  res(k) = norm(Mn * s - tn) / norm(tn);  ok(k) = true;
     end
+    if nnz(ok) < 2
+        error('modes:jointfields:fspread', ['F: %d of %d 0.5 Hz bins have tile power above the empty room''s ' ...
+              '(empty room %s): F cannot be fitted'], nnz(ok), nbin, mat2str(~isempty(E)));
+    end
     fk = (0:N-1) * fw / N;  fk = min(fk, fw - fk);
     X = zeros(size(F));
     for j = 1:ng
@@ -192,7 +198,7 @@ function [X, Q] = i_fieldspread(S, Tp, F, fw, mask, E, o, rs)
     Q = struct('gen_depth', o.GenDepth, 'n_generators', ng, 'nnls_rel_err_median', median(res(ib), 'omitnan'), ...
                'recalibration', c, 'emptyroom', ~isempty(E), 'tile_logpower_err_median', ...
                median(abs(log(c * Pf(in, :) ./ Tg(in, :))), 'all', 'omitnan'));
-    if ~isempty(E), Q.emptyroomS = E.durationS;  Q.emptyroomChannels = numel(E.cols); end
+    if ~isempty(E), Q.emptyroomS = E.durationS;  Q.emptyroomChannels = numel(E.cols);  Q.emptyroomDropped = E.dropped; end
 end
 
 function [X, T, B] = i_canary(S, Xf, fw, o, rs)
@@ -224,9 +230,10 @@ function [X, T, B] = i_canary(S, Xf, fw, o, rs)
               arrayfun(@(k) mean(st == k), (1:4)'), 'VariableNames', {'plant','hz','band','occupancy'});
 end
 
-function E = i_emptyroom(name, chn, fs, N)
+function E = i_emptyroom(name, chn, fs, N, F)
 % the participant's own empty room (noise.mat of rheome.scale.importsubject) on the shared good channels
-% (as rheome.modes.fields: mirror-padded to the span when shorter)
+% (as rheome.modes.fields: mirror-padded to the span when shorter), without the channels whose level exceeds 10x
+% the rest run's F on that channel (a faulty sensor flagged good; an empty room is quieter than a head: ~0.5x)
     E = [];  f = fullfile(rheome.load.root(), name, 'noise.mat');
     if ~isfile(f), return; end
     L = builtin('load', f, 'nrec');  nrec = L.nrec;
@@ -234,8 +241,11 @@ function E = i_emptyroom(name, chn, fs, N)
     [~, cols, jn] = intersect(chn, nn(ok), 'stable');  jo = find(ok);  jn = jo(jn);
     if isempty(cols), return; end
     X = resample(double(nrec.F(jn, :)).', round(fs), round(nrec.sfreq)).';  n0 = size(X, 2);
+    bad = std(X, 0, 2) > 10 * std(F(cols, :), 0, 2);
+    dropped = strjoin(chn(cols(bad)).', " ");  X = X(~bad, :);  cols = cols(~bad);
+    if isempty(cols), return; end
     while size(X, 2) < N, X = [X, fliplr(X)]; end %#ok<AGROW>
-    E = struct('F', X(:, 1:N), 'cols', cols, 'durationS', n0 / fs);
+    E = struct('F', X(:, 1:N), 'cols', cols, 'durationS', n0 / fs, 'dropped', dropped);
 end
 
 % Author: Diellor Basha, 2026
