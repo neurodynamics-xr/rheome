@@ -100,6 +100,21 @@ classdef tModes < matlab.unittest.TestCase
             tc.verifyLessThan(pa(sp.per(2, :)), 0.5 * pa(Y(2, :)));                % 1/f alone is mostly aperiodic
         end
 
+        function emptyRoomFaultChannelsAreDropped(tc)
+            % the N1 empty room had the same faulty sensors as the joint F null (MLC11-17 at ~1e4 x in 60 of 203
+            % OMEGA-D empty rooms, request 231b9b08): such channels are dropped and named, as rheome.modes.jointfields
+            n = "synth_modesbadER";  d = fullfile(tc.Root, n);  copyfile(fullfile(tc.Root, tc.Names(1)), d);
+            L = load(fullfile(d, 'noise.mat'));  bad = [3 11 29];  L.nrec.F(bad, :) = 1e4 * L.nrec.F(bad, :);
+            nrec = L.nrec;  save(fullfile(d, 'noise.mat'), 'nrec');
+            o = {'SensCutoffMM', [], 'SensDepths', []};
+            Z = rheome.modes.fields(char(n), [], o{:});
+            tc.verifyEqual(Z.emptyroomDropped, strjoin(string(nrec.ChannelName(bad)), " "));
+            tc.verifyEqual(Z.emptyroomChannels, numel(nrec.ChannelName) - numel(bad));
+            Z0 = rheome.modes.fields(char(tc.Names(1)), [], o{:});                % a sound room: nothing dropped
+            tc.verifyEqual(Z0.emptyroomDropped, "");
+            tc.verifyEqual(Z0.emptyroomChannels, numel(nrec.ChannelName));
+        end
+
         function fourStagesEndToEnd(tc)
             od = fullfile(tc.Root, 'out');
             for n = tc.Names
