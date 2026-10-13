@@ -95,7 +95,7 @@ classdef tModesJoint < matlab.unittest.TestCase
             R = rheome.modes.jointcheck(files, fullfile(od, 'check'), NSplits=4, Ks=2:4);
             tc.verifyTrue(islogical(R.pass) && R.f_checked);
             fr = readtable(fullfile(od, 'check', 'joint_canary_f.csv'), 'TextType', 'string');      % F3 vs calibrated r_min
-            tc.verifyEqual(fr.passes_level1_i, fr.r_max_to_f12 < fr.r_min_f);
+            tc.verifyEqual(logical(fr.passes_level1_i), fr.r_max_to_f12 < fr.r_min_f);
             tc.verifyTrue(all(R.k_star >= R.k_rule) && (isnan(R.k_sep) || all(R.k_star >= R.k_sep)));   % J5 amendment
             M = rheome.modes.discover(files, fullfile(od, 'kmin'), Source="canary", NullSources="f_fieldspread", ...
                                       Bands=unique(Z.canary.band), NSplits=2, Ks=2:4, KMin=4);
