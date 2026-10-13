@@ -45,8 +45,9 @@ function [Z, Y, Op] = jointfields(name, S, opts)
 %   pair_fo       two lagged 30 mm blobs, frontal leading occipital by 90 deg
 %   standing200   cos(2 pi z / 200 mm), a standing (zero-lag) dorsal-ventral pattern
 %   fine50        a 50 mm wave (A->P) in a 40 mm-sigma posterior-dorsal patch
-% Sources: canary, f_fieldspread, f_fieldspread2 (a second F realisation, seed + 1; made whenever F is: the F null
-% is the union of both realisations' atoms over every K, design §14 F union amendment, 2026-10-12).
+% Sources: canary, f_fieldspread, f_fieldspread2, f_fieldspread3 (second and third F realisations, made whenever F
+% is: the F null is the union of the realisations' atoms over every K, design §14 F union amendment, 2026-10-12;
+% F1 vs F2 set the Level-1 (i) threshold r_min and F3 tests it, F calibration amendment, 2026-10-13).
 % Y.canary_truth [rows x 4] the noise-free joint coefficients of each plant; Z.canary the plant table.
 %
 % Z: .name .workRate .bands (band, lo, hi, peak_hz, rate) .scales (depth, n_tiles, diameter_mm, lo_mm, hi_mm,
@@ -133,6 +134,9 @@ function [Z, Y, Op] = jointfields(name, S, opts)
         add("f_fieldspread", Xf, "per");  srcs(end+1) = "f_fieldspread";
         Xf2 = i_fieldspread(S, Tp, F, fw, mask, E, opts, RandStream('mt19937ar', 'Seed', opts.Seed + 18));
         add("f_fieldspread2", Xf2, "per");  srcs(end+1) = "f_fieldspread2";   % F union: both realisations are the null
+        % F calibration amendment (design §14, 2026-10-13, decision 93764a02): F3 tests the r_min that F1 vs F2 set
+        Xf3 = i_fieldspread(S, Tp, F, fw, mask, E, opts, RandStream('mt19937ar', 'Seed', opts.Seed + 19));
+        add("f_fieldspread3", Xf3, "per");  srcs(end+1) = "f_fieldspread3";  clear Xf2 Xf3
     end
     if opts.Canary
         [Xc, Z.canary, B] = i_canary(S, Xf, fw, opts, RandStream('mt19937ar', 'Seed', opts.Seed + 23));

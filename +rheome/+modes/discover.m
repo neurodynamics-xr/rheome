@@ -31,10 +31,12 @@ function M = discover(files, outDir, opts)
 %   null modes  the same clustering at K* on each null source's snapshots (N1 sources, N1 empty room, N4):
 %               the centroid's best |r| to any of them (Level-1 (i) needs < 0.7 to every N1 mode)
 %               F sources (f_fieldspread*) are clustered at EVERY K of Ks and their null atoms are the union
-%               (nullC columns, nullK = each column's K; F union amendment, design §14, 2026-10-12)
+%               (nullC columns, nullK = each column's K; F union amendment, design §14, 2026-10-12). With F1 and F2
+%               both present, B.r_min_f = min(RMinF, f_low - FMargin) is the Level-1 (i) threshold for joint atoms,
+%               f_low the lowest F1<->F2 best |r| at K* (F calibration amendment, design §14, 2026-10-13)
 % Joint fields (rheome.modes.jointfields, protocol section 14 J2): the same code, a snapshot being the complex
 % coefficient vector over tile x scale at one frame of one octave ("bands" are the octaves); pass
-% NullSources=["f_fieldspread" "f_fieldspread2" "n4_aperiodic"] (F, both realisations, replaces N1 for joint atoms) and NMF=true:
+% NullSources=["f_fieldspread" "f_fieldspread2" "f_fieldspread3" "n4_aperiodic"] (F, three realisations, replaces N1 for joint atoms) and NMF=true:
 %   NMF         nonnegative factorisation of the pooled |W|^2 (snapshots x tile.scale) at K*: r_nmf = Hungarian
 %               |Pearson r| of |c_k|^2 to the components; robust also when r_nmf >= RobustR. shortcut: the
 %               2-way unfolding of the |W|^2 tensor (snapshots are not aligned across participants, so a time
@@ -76,6 +78,8 @@ function M = discover(files, outDir, opts)
         opts.Source (1,1) string = "data"
         opts.NMF (1,1) logical = false
         opts.NMFIter (1,1) double = 300
+        opts.RMinF (1,1) double = 0.7
+        opts.FMargin (1,1) double = 0.05
     end
     if isscalar(files) && ~endsWith(files, ".mat"), files = string(strip(splitlines(strtrim(fileread(files))))); files(files == "") = []; end
     if ~exist(outDir, 'dir'), mkdir(outDir); end
@@ -160,6 +164,16 @@ function M = discover(files, outDir, opts)
             nullC.(src(s)) = [Cn{:}];  nullK.(src(s)) = repelem(kn(:), kn(:));
             nullr.(src(s)) = max(abs(C' * nullC.(src(s))), [], 2);
         end
+        % F calibration amendment (design §14, 2026-10-13, decision 93764a02): the Level-1 (i) threshold for joint
+        % atoms is set by F1 vs F2 -- the lowest best |r| of either realisation's K* atoms to the other's atoms at
+        % every K, minus FMargin, capped at RMinF; F3 (f_fieldspread3) does not set it and tests it (jointcheck)
+        rminF = NaN;  fLow = NaN;
+        if all(isfield(nullC, ["f_fieldspread" "f_fieldspread2"]))
+            f1 = nullC.f_fieldspread;  f2 = nullC.f_fieldspread2;
+            fLow = min([max(abs(f1(:, nullK.f_fieldspread == K)' * f2), [], 2); max(abs(f2(:, nullK.f_fieldspread2 == K)' * f1), [], 2)]);
+            rminF = min(opts.RMinF, fLow - opts.FMargin);
+        end
+        Bd(b).r_min_f = rminF;  Bd(b).f_low = fLow;
         rn = nan(K, 1);
         if opts.NMF
             Wn = i_nmf(abs(Xd ./ vecnorm(Xd)).^2, K, opts.NMFIter, opts.Seed);
