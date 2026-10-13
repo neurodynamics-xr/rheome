@@ -12,11 +12,13 @@ function R = jointcheck(files, outDir, opts)
 %   fine50     reported, not gated: its best |r| and its T-bar -- the energy-weighted scale transfer of the
 %              planted coefficients over the depths (the head's own T(s), rheome.modes.scaletransfer) and of
 %              its best-matching atom
-%   F          no atom of null F passes Level-1 (i): F's own atoms (discovered at K* on f_fieldspread) are each
-%              compared with every atom of a second, independent F realisation (f_fieldspread2) at EVERY K of Ks
-%              (F union amendment, design §14, 2026-10-12, decision d62f84ae: at K* = 11 two of eleven F atoms
-%              had no match in the K* = 11 atoms of one other realisation); an F atom would pass (i) only with
-%              |r| < RMin to every one of them. Pass = none does
+%   F          no atom of null F passes Level-1 (i), with the threshold calibrated on F and tested out of sample
+%              (F calibration amendment, design §14, 2026-10-13, decision 93764a02; it follows the F union
+%              amendment, 2026-10-12, decision d62f84ae, after which 1 of 11 F atoms still read |r| 0.678 < 0.7):
+%              r_min_f = min(0.7, f_low - 0.05), f_low the lowest best |r| of F1's or F2's K* atoms to the other
+%              realisation's atoms at EVERY K (rheome.modes.discover); then each atom of a third realisation F3
+%              (f_fieldspread3, which does not set r_min_f) at K* against every F1 and F2 atom at every K: it would
+%              pass (i) with |r| < r_min_f to all of them. Pass = none does
 % pass = all three recovered AND no F atom passes, read at K* = max(§4.2 rule, k_sep) -- k_sep the smallest K at which
 % all three are recovered in every head (J5 amendment, design §14, 2026-10-12); the reading at the rule's own K is
 % kept as recovered_at_k_rule. Not gated, to read a failure: joint_canary_byK.csv, the best |r|
@@ -43,12 +45,12 @@ function R = jointcheck(files, outDir, opts)
     end
     if isscalar(files) && ~endsWith(files, ".mat"), files = string(strip(splitlines(strtrim(fileread(files))))); files(files == "") = []; end
     m0 = matfile(files(1));  Z0 = m0.Z;  pb = unique(Z0.canary.band, 'stable');
-    dopts = {'Source', "canary", 'NullSources', ["f_fieldspread" "f_fieldspread2"], 'Bands', pb, 'NMF', true, ...
+    dopts = {'Source', "canary", 'NullSources', ["f_fieldspread" "f_fieldspread2" "f_fieldspread3"], 'Bands', pb, 'NMF', true, ...
              'NSplits', opts.NSplits, 'Ks', opts.Ks, 'Workers', opts.Workers, 'Seed', opts.Seed};
     gated = ["wave200_ap" "pair_fo" "standing200"];
     % pass 1: K* from the §4.2 rule alone (recorded, the J5 reading before the amendment)
     M = rheome.modes.discover(files, outDir, dopts{:});
-    [rows, byK, fr, trf, heads] = i_score(M, files, opts.RMin);
+    [rows, byK, fr, trf, heads] = i_score(M, files);
     rec0 = arrayfun(@(g) all(rows.r_best_atom(rows.plant == g) >= opts.RMin), gated);
     kRule = [M.bands.K];
     % J5 amendment (design §14, 2026-10-12, decision 09a28c49): K* = max(rule, the smallest K at which every gated
@@ -57,13 +59,13 @@ function R = jointcheck(files, outDir, opts)
     kSep = min(G.K(G.min_r_best_atom >= opts.RMin));  if isempty(kSep), kSep = NaN; end
     if ~isnan(kSep) && any(kRule < kSep)
         M = rheome.modes.discover(files, outDir, dopts{:}, 'KMin', kSep);
-        [rows, ~, fr, trf, heads] = i_score(M, files, opts.RMin);
+        [rows, ~, fr, trf, heads] = i_score(M, files);
     end
     rec = arrayfun(@(g) all(rows.r_best_atom(rows.plant == g) >= opts.RMin), gated);
     fok = ~isempty(fr) && ~any(fr.passes_level1_i);
     R = struct('pass', all(rec) && fok, 'recovered', table(gated', rec', 'VariableNames', {'plant','recovered'}), ...
                'f_atoms_passing_level1_i', sum(fr.passes_level1_i), 'f_checked', ~isempty(fr), ...
-               'r_min', opts.RMin, 'heads', heads, 'sha256', M.sha256, 'k_rule', kRule, 'k_sep', kSep, ...
+               'r_min', opts.RMin, 'r_min_f', [M.bands.r_min_f], 'f_low', [M.bands.f_low], 'heads', heads, 'sha256', M.sha256, 'k_rule', kRule, 'k_sep', kSep, ...
                'k_star', [M.bands.K], 'recovered_at_k_rule', table(gated', rec0', 'VariableNames', {'plant','recovered'}));
     R.fine50 = rows(rows.plant == "fine50", :);
     writetable(rows, fullfile(outDir, 'joint_canary.csv'));  writetable(fr, fullfile(outDir, 'joint_canary_f.csv'));
@@ -73,8 +75,8 @@ function R = jointcheck(files, outDir, opts)
             string(R.pass), mat2str(rec), R.f_atoms_passing_level1_i);
 end
 
-function [rows, byK, fr, trf, heads] = i_score(M, files, rmin)
-% each plant's best |r| at K* and at every K's reference clustering; F atoms against a second F realisation
+function [rows, byK, fr, trf, heads] = i_score(M, files)
+% each plant's best |r| at K* and at every K's reference clustering; F3 atoms against F1 and F2
     rows = table();  trf = table();  heads = strings(0);  byK = table();
     for p = 1:numel(files)
         m = matfile(files(p));  Z = m.Z;  tr = m.canary_truth;  tl = Z.tiles{1};  heads(end+1) = string(Z.name); %#ok<AGROW>
@@ -93,12 +95,13 @@ function [rows, byK, fr, trf, heads] = i_score(M, files, rmin)
     end
     fr = table();
     for b = 1:numel(M.bands)
-        nc = M.bands(b).nullC;  nk = M.bands(b).nullK;
-        if ~isfield(nc, 'f_fieldspread') || ~isfield(nc, 'f_fieldspread2'), continue; end
-        % F union amendment: F's atoms at K* against EVERY atom of the second realisation at EVERY K
-        r = max(abs(nc.f_fieldspread(:, nk.f_fieldspread == M.bands(b).K)' * nc.f_fieldspread2), [], 2);
-        fr = [fr; table(repmat(M.bands(b).band, numel(r), 1), (1:numel(r))', r, r < rmin, ...
-              'VariableNames', {'band','f_atom','r_max_to_f2','passes_level1_i'})]; %#ok<AGROW>
+        B = M.bands(b);  nc = B.nullC;  nk = B.nullK;
+        if ~all(isfield(nc, ["f_fieldspread" "f_fieldspread2" "f_fieldspread3"])) || ~isfinite(B.r_min_f), continue; end
+        % F calibration amendment: F3's atoms at K* (F3 did not set r_min_f) against every F1 and F2 atom at every K
+        r = max(abs(nc.f_fieldspread3(:, nk.f_fieldspread3 == B.K)' * [nc.f_fieldspread nc.f_fieldspread2]), [], 2);
+        fr = [fr; table(repmat(B.band, numel(r), 1), (1:numel(r))', r, repmat(B.f_low, numel(r), 1), ...
+              repmat(B.r_min_f, numel(r), 1), r < B.r_min_f, 'VariableNames', ...
+              {'band','f3_atom','r_max_to_f12','f12_low','r_min_f','passes_level1_i'})]; %#ok<AGROW>
     end
 end
 

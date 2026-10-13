@@ -29,7 +29,8 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
 % "unresolved" at depths below 7; the discovery's r_dmd, r_cpca, robust.
 %
 % JOINT ATOMS (M.kind "joint", protocol section 14 J3): (i) reads F instead of N1 (r_halves - r_f_fieldspread,
-% test "i_f"; the centroid's |r| to every F centroid < N1R -- every K, both realisations: F union amendment, design §14); N3 is tested and reported (median, raw p) but is
+% test "i_f"; the centroid's |r| to every F centroid < N1R -- every K, every realisation: F union amendment, design §14; r_min = the discovery's calibrated B.r_min_f when
+% present, F calibration amendment, 2026-10-13); N3 is tested and reported (median, raw p) but is
 % outside the Holm family and never gated; atoms are not labelled (label "not_labelled": phase layout and flow
 % are derived summaries, J7); t_bar, scale_mm, scale_edge_mm (participant medians) and dominant_depth (the
 % most common) are added; robust includes r_nmf. The Holm family is atoms x octaves (J6).
@@ -66,7 +67,7 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
         D = [D; t(:, {'subject','band','source','half','method','mode','metric','value'})]; %#ok<AGROW>
     end
     jt = isfield(M, 'kind') && M.kind == "joint";  n1 = "n1_sources";  ti = "i_n1";  nn = ["n1_sources" "n1_emptyroom"];
-    if jt, n1 = "f_fieldspread";  ti = "i_f";  nn = ["f_fieldspread" "f_fieldspread2"]; end   % every F atom, every K, both realisations
+    if jt, n1 = "f_fieldspread";  ti = "i_f";  nn = ["f_fieldspread" "f_fieldspread2" "f_fieldspread3"]; end   % every F atom, every K, every realisation
     subs = unique(D.subject);  nS = numel(subs);  rs = RandStream('mt19937ar', 'Seed', opts.Seed);
     get = @(b, src, half, meth, k, metric) i_vec(D, subs, b, src, half, meth, k, metric);
     Ts = table();  C = table();
@@ -128,7 +129,7 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
     pass = @(tst, b, k) i_pass(Ts, tst, b, k, opts.Alpha);
     for r = 1:height(C)
         b = C.band(r);  k = C.mode(r);
-        C.pass_i(r) = pass(ti, b, k) && C.r_n1_centroid_max(r) < opts.N1R;
+        C.pass_i(r) = pass(ti, b, k) && C.r_n1_centroid_max(r) < i_rmin(M.bands([M.bands.band] == b), opts.N1R);
         C.pass_ii(r) = pass("ii_spin", b, k);  C.pass_iii(r) = pass("iii_n4", b, k);
         C.pass_iv(r) = C.icc_gev(r) >= 0.5 && C.icc_lo(r) > 0.3;
         C.level1(r) = C.pass_i(r) && C.pass_ii(r) && C.pass_iii(r) && C.pass_iv(r);
@@ -196,6 +197,11 @@ end
 
 function ok = i_robust(B, k)
     ok = B.r_dmd(k) >= 0.7 || B.r_cpca(k) >= 0.7 || (isfield(B, 'r_nmf') && B.r_nmf(k) >= 0.7);
+end
+
+function r = i_rmin(B, r)
+% F calibration amendment (design §14, 2026-10-13): joint atoms use the F1-vs-F2 calibrated threshold when it exists
+    if isfield(B, 'r_min_f') && isfinite(B.r_min_f), r = min(r, B.r_min_f); end
 end
 
 function r = i_nullr(B, k, src)
