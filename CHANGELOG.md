@@ -6,11 +6,13 @@
 
 - **`rheome.view`, optional** (needs MATLAB R2026a+ or the Cortical Flow app; Rheome works without it on R2023b+):
   a result on the cortex in the 3D viewer from one call, `rheome.view(surf, result, Name=Value)` or
-  `rheome.view(result)` with `result.surface`. Options are the viewer's settings (field, colormap, colour limits,
-  threshold, surface, hemisphere, camera, arrows, overlays, time, play and speed), checked before anything is
-  written; the window is reused. Without a viewer or WebGPU it draws the chosen field and time with `rheome.show`.
-  `rheome.io.write.bundle` writes the result (rheome.bundle@1, now with further surfaces, the hemisphere split and
-  the settings). Guide: *How to view a result in 3D*.
+  `rheome.view(result)` with `result.surface`. It opens the Cortical Flow viewer's `viewer.html` (nxr-cortical-flow
+  `editor/dist-viewer`) in a uihtml window, which is reused. Options are the viewer's settings (field, arrows,
+  colormap, colour limits, threshold band, surface, hemisphere, camera, arrow density and scale, time, play and
+  speed), checked before anything is written. `out.set(...)` changes the open view and `out.screenshot(file)` writes
+  a PNG. A setting the viewer refuses is a warning. Without a viewer or WebGPU it draws the chosen field and time with
+  `rheome.show`. `rheome.io.write.bundle` writes the result (rheome.bundle@1, with further surfaces and the
+  settings). Guide: *How to view a result in 3D*.
 
 - **Rheome MCP server** (`mcp/`): Rheome as a product, used through its public API rather than its source.
   It has tools for the scale-up analyses (`run`, `reduce`), the resting-state pattern atlas (`modes_discover`,

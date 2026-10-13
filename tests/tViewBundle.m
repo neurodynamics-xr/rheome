@@ -1,8 +1,9 @@
 classdef tViewBundle < matlab.unittest.TestCase
 % TVIEWBUNDLE  rheome.io.write.bundle writes rheome.bundle@1 as the viewer reads it; rheome.view maps its options to the
 % viewer's settings and needs no viewer: 'none' writes beneath RHEOME_VIEWER (one bundle at a time), 'show' draws with
-% rheome.show. On R2026a+ with a display, the uihtml path is run against a stand-in viewer page that answers with the
-% settings it received (round trip, figure reuse, the 'no-webgpu' fallback).
+% rheome.show. On R2026a+ with a display, the uihtml path is run against a stand-in viewer.html that answers with the
+% settings it received (round trip, a refused setting as a warning, figure reuse, set, screenshot, the 'no-webgpu'
+% fallback). The real viewer (nxr-cortical-flow editor/dist-viewer) is checked by hand: it needs WebGPU.
 %
 % Author: Diellor Basha, 2026
     properties
@@ -44,41 +45,38 @@ classdef tViewBundle < matlab.unittest.TestCase
             tc.verifyClass(out.figure, 'matlab.ui.Figure');
             tc.verifyEmpty(out.manifest);
         end
-        function writesSurfacesAndHemispheres(tc)
+        function writesSurfaces(tc)
             d = tempname;  c = onCleanup(@() rmdir(d, 's'));
-            S = tc.S;  S.Hemi = {[1 2]', [3 4]'};  S.HemiLabel = {'Cortex L', 'Cortex R'};
-            Si = S;  Si.Vertices = 2 * S.Vertices;
-            m = rheome.io.write.bundle(d, struct('pial', S, 'inflated', Si), rand(4, 2));
+            Si = tc.S;  Si.Vertices = 2 * tc.S.Vertices;
+            m = rheome.io.write.bundle(d, struct('pial', tc.S, 'inflated', Si), rand(4, 2));
             j = jsondecode(fileread(m));
             tc.verifyEqual(j.surface.name, 'pial');
-            tc.verifyEqual(j.surface.alternates(1).name, 'inflated');
-            tc.verifyEqual(reshape(rd(d, j.surface.alternates(1).positions, 'single'), 3, []), single(Si.Vertices'));
-            tc.verifyEqual(rd(d, j.surface.hemisphere, 'uint8'), uint8([0 0 1 1]'));
-            tc.verifyFalse(isfield(j, 'view'));   % no settings given, none written
+            tc.verifyEqual(j.surfaces(1).name, 'inflated');
+            tc.verifyEqual(reshape(rd(d, j.surfaces(1).positions, 'single'), 3, []), single(Si.Vertices'));
+            tc.verifyFalse(isfield(j, 'settings'));   % no settings given, none written
         end
         function mapsEveryOption(tc)
             d = tempname;  old = getenv('RHEOME_VIEWER');  setenv('RHEOME_VIEWER', d);
             c = onCleanup(@() cleanup(d, old));
-            S = tc.S;  S.Hemi = {[1 2]', [3 4]'};
-            r = struct('activity', rand(4, 5), 'velocity', rand(12, 5), 'critical', rand(4, 5));
-            out = rheome.view(struct('pial', S, 'inflated', S), r, Viewer="none", Fs=10, Field="velocity", ...
-                Colormap="viridis", CLim=[-1 2], Threshold=0.1, Surface="Inflated", Hemisphere="left", View="medial", ...
-                Arrows=true, ArrowDensity=0.25, ArrowScale=2, Overlays=["critical" "activity"], Time=0.3, Play=false, Speed=0.5);
-            want = struct('field', 'velocity', 'colormap', 'viridis', 'clim', [-1 2], 'threshold', 0.1, ...
-                'surface', 'inflated', 'hemisphere', 'left', 'camera', 'medial', ...
-                'arrows', struct('visible', true, 'density', 0.25, 'scale', 2), 'overlays', {{'critical', 'activity'}}, ...
-                'time', 0.3, 'play', false, 'speed', 0.5);
+            r = struct('activity', rand(4, 5), 'velocity', rand(12, 5));
+            out = rheome.view(struct('pial', tc.S, 'inflated', tc.S), r, Viewer="none", Fs=10, Field="activity", ...
+                Arrows=false, Colormap="viridis", CLim=[-1 2], Threshold=[0.1 NaN], Surface="Inflated", ...
+                Hemisphere="left", View="Top", ArrowDensity=0.25, ArrowScale=0.002, Time=0.26, Play=false, Speed=0.5);
+            want = struct('scalar', 'activity', 'vector', '', 'colormap', 'viridis', 'clim', [-1 2], ...
+                'threshold', struct('min', 0.1, 'max', NaN), 'surface', 'inflated', 'hemisphere', 'left', 'view', 'top', ...
+                'arrowDensity', 0.25, 'arrowScale', 0.002, 'frame', 3, 'playing', false, 'fps', 5);
             tc.verifyEqual(out.settings, want);
-            j = jsondecode(fileread(out.manifest));
-            tc.verifyEqual(j.view.clim, [-1; 2]);
-            tc.verifyEqual(j.view.overlays, {'critical'; 'activity'});
-            tc.verifyEqual(j.view.arrows, want.arrows);
-            tc.verifyEqual(rmfield(j.view, {'clim', 'overlays'}), rmfield(want, {'clim', 'overlays'}));
-            o2 = rheome.view(tc.S, rand(4, 2), Viewer="none", View=[30 -10], Colormap=gray(4));
-            tc.verifyEqual(o2.settings.camera, [30 -10]);
-            tc.verifyEqual(jsondecode(fileread(o2.manifest)).view.colormap, gray(4));
-            o3 = rheome.view(tc.S, rand(4, 2), Viewer="none");
-            tc.verifyEqual(o3.settings, struct());   % none given: the viewer's defaults
+            txt = fileread(out.manifest);
+            tc.verifySubstring(txt, '"threshold":{"min":0.1,"max":null}');   % NaN: the open side
+            j = jsondecode(txt);
+            tc.verifyEqual(j.settings.clim, [-1; 2]);
+            tc.verifyEqual(j.settings.vector, '');
+            o2 = rheome.view(tc.S, r, Viewer="none", Field="velocity");
+            tc.verifyEqual(o2.settings, struct('vector', 'velocity'));    % a vector field: the arrows
+            o3 = rheome.view(tc.S, r, Viewer="none", Arrows=true);
+            tc.verifyEqual(o3.settings, struct('vector', 'velocity'));
+            o4 = rheome.view(tc.S, rand(4, 2), Viewer="none");
+            tc.verifyEqual(o4.settings, struct());   % none given: the viewer's defaults
         end
         function refusesBadOptions(tc)
             d = tempname;  old = getenv('RHEOME_VIEWER');  setenv('RHEOME_VIEWER', d);
@@ -86,10 +84,11 @@ classdef tViewBundle < matlab.unittest.TestCase
             v = @(varargin) rheome.view(tc.S, struct('a', rand(4, 3)), 'Viewer', 'none', varargin{:});
             tc.verifyError(@() v('Field', 'b'), 'rheome:view:option');
             tc.verifyError(@() v('CLim', [1 0]), 'rheome:view:option');
-            tc.verifyError(@() v('Colormap', [2 0 0]), 'rheome:view:option');
-            tc.verifyError(@() v('Hemisphere', 'left'), 'rheome:view:option');     % no .Hemi
+            tc.verifyError(@() v('Colormap', gray(4)), 'rheome:view:option');   % the viewer takes names
+            tc.verifyError(@() v('Threshold', [1 0]), 'rheome:view:option');
+            tc.verifyError(@() v('Arrows', true), 'rheome:view:option');         % no vector field
             tc.verifyError(@() v('Surface', 'inflated'), 'rheome:view:option');
-            tc.verifyError(@() v('View', 'sideways'), 'rheome:view:option');
+            tc.verifyError(@() v('View', 'lateral'), 'rheome:view:option');
             tc.verifyError(@() v('ArrowDensity', 1.5), 'rheome:view:option');
             tc.verifyError(@() v('Time', 3), 'rheome:view:option');                % T = 3 at 1 Hz: [0, 2] s
             tc.verifyError(@() v('Speed', 0), 'rheome:view:option');
@@ -101,11 +100,11 @@ classdef tViewBundle < matlab.unittest.TestCase
             out = rheome.view(struct('surface', tc.S, 'power', rand(4, 2)), Viewer="none", Field="power");
             j = jsondecode(fileread(out.manifest));
             tc.verifyEqual({j.fields.name}, {'power'});
-            tc.verifyEqual(out.settings.field, 'power');
+            tc.verifyEqual(out.settings.scalar, 'power');
         end
         function showHonoursFieldAndTime(tc)
             r = struct('a', zeros(4, 3), 'b', [zeros(4, 2) (1:4)']);
-            out = rheome.view(tc.S, r, Viewer="show", Field="b", Time=2, CLim=[0 4], View="dorsal");
+            out = rheome.view(tc.S, r, Viewer="show", Field="b", Time=2, CLim=[0 4], View="top");
             c = onCleanup(@() close(out.figure));
             ax = findobj(out.figure, 'Type', 'axes');
             p = findobj(ax, 'Type', 'patch');
@@ -119,17 +118,24 @@ classdef tViewBundle < matlab.unittest.TestCase
             d = tempname;  mkdir(d);  old = getenv('RHEOME_VIEWER');  setenv('RHEOME_VIEWER', d);
             c = onCleanup(@() cleanup(d, old));
             writePage(d, 'echo');
-            a = rheome.view(tc.S, struct('a', rand(4, 3)), Viewer="editor", CLim=[0 1], Time=1, Timeout=30);
+            a = tc.verifyWarning(@() rheome.view(tc.S, struct('a', rand(4, 3)), Viewer="editor", CLim=[0 1], Time=1, ...
+                Timeout=30), 'rheome:view:settings');   % the page refuses one setting first: a warning, then ready
             tc.addTeardown(@() delete(a.figure));
             tc.verifyEqual(a.viewer, 'editor');
-            h = findobj(a.figure, 'Type', 'uihtml');
-            got = h.UserData.data;
-            tc.verifyEqual(got.settings.clim(:)', [0 1]);
-            tc.verifyEqual(got.settings.time, 1);
-            tc.verifyEqual(got.bytes(:)', [48 48 48]);   % positions, faces, the field: every file served
-            b = rheome.view(tc.S, struct('a', rand(4, 3)), Viewer="editor", Field="a", Timeout=30);
+            tc.verifyEqual(a.ready.settings.clim(:)', [0 1]);
+            tc.verifyEqual(a.ready.settings.frame, 1);
+            tc.verifyEqual(a.ready.bytes(:)', [48 48 48]);   % positions, faces, the field: every file served
+            b = rheome.view(tc.S, struct('a', rand(4, 3)), Viewer="editor", Field="a", Fs=100, Timeout=30);
             tc.verifySameHandle(b.figure, a.figure);    % the figure is reused
-            tc.verifyEqual(h.UserData.data.settings.field, 'a');
+            tc.verifyEqual(b.ready.settings.scalar, 'a');
+            h = findobj(b.figure, 'Type', 'uihtml');
+            b.set(View="right", Play=true, Speed=0.5);
+            t = tic;  while ~isfield(h.UserData, 'settings') && toc(t) < 30, pause(0.1); end
+            tc.verifyEqual(h.UserData.settings, struct('view', 'right', 'playing', true, 'fps', 50));   % Speed x the bundle's Fs
+            tc.verifyError(@() b.set(View="sideways"), 'rheome:view:option');
+            f = [tempname '.png'];  tc.addTeardown(@() delete(f));
+            b.screenshot(f, 2);
+            tc.verifyEqual(size(imread(f)), [1 1 3]);
         end
         function editorWithoutWebGPUShows(tc)
             tc.assumeFalse(isMATLABReleaseOlderThan('R2026a'), 'uihtml viewer path: R2026a+');
@@ -146,7 +152,8 @@ classdef tViewBundle < matlab.unittest.TestCase
 end
 
 function writePage(d, kind)
-% a stand-in for the viewer's matlab.html with its protocol: Data {bundle, settings}, DataChanged, events ready/error
+% a stand-in for the viewer's viewer.html with its protocol: Data {bundle, settings}, DataChanged, set, screenshot;
+% events ready, settings, screenshot, error (one refused setting before each ready, as the viewer does)
     if strcmp(kind, 'nogpu')
         js = 'function setup(h){ h.sendEventToMATLAB(''error'', {code: ''no-webgpu'', message: ''no adapter''}) }';
     else
@@ -155,11 +162,15 @@ function writePage(d, kind)
             ' const files = [m.surface.positions, m.surface.faces, ...m.fields.map((f) => f.values)];' ...
             ' const bytes = await Promise.all(files.map(async (f) => { const r = await fetch(new URL(f, u));' ...
             ' if (!r.ok) throw new Error(f + '': '' + r.status); return (await r.arrayBuffer()).byteLength }));' ...
+            ' h.sendEventToMATLAB(''error'', {code: ''settings'', message: ''bogus: not a setting''});' ...
             ' h.sendEventToMATLAB(''ready'', {settings: h.Data.settings, bytes}) }' ...
-            ' catch (e) { h.sendEventToMATLAB(''error'', {message: String(e)}) } };' ...
+            ' catch (e) { h.sendEventToMATLAB(''error'', {code: ''bundle'', message: String(e)}) } };' ...
+            ' h.addEventListener(''set'', (e) => h.sendEventToMATLAB(''settings'', e.Data));' ...
+            ' h.addEventListener(''screenshot'', () => h.sendEventToMATLAB(''screenshot'', {width: 1, height: 1, png:' ...
+            ' ''data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC''}));' ...
             ' h.addEventListener(''DataChanged'', go); go() }'];
     end
-    fid = fopen(fullfile(d, 'matlab.html'), 'w');
+    fid = fopen(fullfile(d, 'viewer.html'), 'w');
     fprintf(fid, '<!doctype html><html><body><script>%s</script></body></html>', js);
     fclose(fid);
 end

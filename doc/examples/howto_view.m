@@ -36,28 +36,36 @@ disp(out.viewer)
 
 %% Choose what is shown
 % The options are the viewer's settings: the field and the colours, the
-% surface and the camera, the arrows, the overlays and the time. An option
-% you do not give is left to the viewer. A wrong one (a field that is not
-% in the result, |CLim| with lo >= hi, a time after the last sample) is an
-% error before anything is written.
+% surface and the camera, the arrows and the time. An option you do not
+% give is left to the viewer. A wrong one (a field that is not in the
+% result, |CLim| with lo >= hi, a time after the last sample) is an error
+% before anything is written. |Threshold| is a band: only values in
+% [min, max] are painted (NaN leaves a side open).
 
 out = rheome.view(S, result, Fs=fs, ...
-    Field="activity", Colormap="viridis", CLim=[0 1], Threshold=0.05, ...
-    View="dorsal", Overlays="velocity", Arrows=true, ArrowDensity=0.2, ArrowScale=1.5, ...
-    Time=0.1, Play=true, Speed=0.25);
+    Field="activity", Colormap="viridis", CLim=[0 1], Threshold=[0.05 NaN], ...
+    View="top", Arrows=true, ArrowDensity=0.2, Time=0.1, Play=true, Speed=0.25);
 out.settings
+
+%% Change the open view, and save it
+% Inside MATLAB, |out.set| changes the open view with the same options,
+% without reopening it, and |out.screenshot| writes it as a PNG:
+%
+%   out.set(View="left", Play=false, Time=0.05)
+%   out.screenshot("bump.png", 2)   % 2: twice the window's pixels
 
 %% Several surfaces, one hemisphere
 % Pass a struct of surfaces of one mesh, by name (|pial|, |inflated|,
-% |sphere|, ...), and pick one with |Surface|. |Hemisphere| needs the
-% hemisphere split that |rheome.io.read.surface| reads from a Brainstorm
-% cortex (|.Hemi|); this sphere has none, so it is not used here:
+% |sphere|, ...), and pick one with |Surface|. |Hemisphere| shows one of
+% the mesh's two largest connected components (the one at larger y is the
+% left, as in Brainstorm's SCS); this sphere is one piece, so it is not
+% used here:
 %
 %   surfs = struct('pial', P, 'inflated', Pi);
-%   rheome.view(surfs, result, Surface="inflated", Hemisphere="left", View="lateral")
+%   rheome.view(surfs, result, Surface="inflated", Hemisphere="left", View="left")
 
 surfs = struct('pial', S, 'sphere', setfield(S, 'Vertices', 0.1*V)); %#ok<SFLD>
-out = rheome.view(surfs, result, Fs=fs, Surface="sphere", View=[-60 20]);
+out = rheome.view(surfs, result, Fs=fs, Surface="sphere", View="front");
 
 %% Reuse the window
 % Inside MATLAB the next call opens its result in the same viewer window,
@@ -71,7 +79,8 @@ r = result;  r.surface = S;
 out = rheome.view(r, Fs=fs, Field="velocity", Arrows=true);
 
 %% Install the viewer
-% Inside MATLAB (R2026a+) the viewer is a folder with |matlab.html|.
+% Inside MATLAB (R2026a+) the viewer is a folder with |viewer.html| (the
+% Cortical Flow viewer's build, |editor/dist-viewer|).
 % Rheome uses |RHEOME_VIEWER| if you set it, else |prefdir/rheome-viewer|,
 % which it installs from the copy shipped with Rheome (its |viewer| folder)
 % when there is one. On R2023b-R2025b, install the Cortical Flow desktop app

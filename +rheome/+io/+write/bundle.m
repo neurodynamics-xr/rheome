@@ -2,22 +2,23 @@ function manifest = bundle(folder, surf, result, varargin)
 % IO.WRITE.BUNDLE  Write a result on a surface as a rheome.bundle@1 folder (what rheome.view hands the viewer).
 %
 %   manifest = rheome.io.write.bundle(folder, surf, result)
-%   manifest = rheome.io.write.bundle(folder, surf, result, 'Fs', fs, 'Name', name)
+%   manifest = rheome.io.write.bundle(folder, surf, result, 'Fs', fs, 'Name', name, 'Settings', s)
 %
 % The folder holds raw little-endian arrays and one manifest.json, written with fwrite and nothing else:
 %   positions.bin  float32 [3 x nV]  (the vertices, meters)      faces.bin  int32 [3 x nF], 0-based
 %   field<k>.bin   float32, the field's [nV x T] ('real') or [3nV x T] ('vector', interleaved x1,y1,z1,...) as is
-%   positions_<name>.bin  float32 [3 x nV], each further surface of the same mesh (inflated, sphere ...), optional
-%   hemisphere.bin uint8 [nV], 0 left 1 right, when the surface carries the Structures split (.Hemi), optional
-% The manifest may carry 'view', the viewer's settings to open with (rheome.view writes them).
+%   positions_<name>.bin  float32 [3 x nV], each further surface of the same mesh (inflated, sphere ...), optional,
+%                         listed in the manifest's 'surfaces'
+% The manifest may carry 'settings', the viewer's settings to open with (rheome.view writes them).
 % Every file is .bin: MATLAB's uihtml server answers 404 for an extension it does not know (.f32, .i32; R2026a).
-% The reader is the Cortical Flow Editor's bundle adapter (editor/src/adapters/bundle).
+% The reader is the Cortical Flow viewer (nxr-cortical-flow editor/src/viewer/bundle.ts; format and protocol in its
+% README.md); it finds the hemispheres itself, as the mesh's two largest connected components.
 %
 % INPUTS:
 %   folder : the bundle folder (created; files in it are overwritten)
 %   surf   : surface struct with .Vertices [nV x 3] (meters) and .Faces [nF x 3] (1-based), as rheome.io.read.surface,
 %            OR a struct of such surfaces of one mesh, by name, e.g. struct('pial', S, 'inflated', Si); the first is
-%            the default, the others are written as manifest surface.alternates (same nV; the first's faces)
+%            the default, the others are written as the manifest's 'surfaces' (same nV; the first's faces)
 %   result : a [nV x T] or [3nV x T] array, OR a struct whose fields are such arrays (one bundle field each, by name),
 %            e.g. struct('activity', I, 'velocity', v) with v as rheome.dynamics.opticalflow_scalar returns it.
 %            The type follows the row count: nV rows 'real', 3nV rows 'vector'. Every field has the same T.
@@ -25,7 +26,7 @@ function manifest = bundle(folder, surf, result, varargin)
 % OPTIONS (name/value):
 %   'Fs'    sampling rate of the T columns, Hz (default 1)
 %   'Name'  the bundle's name (default 'Rheome result')
-%   'View'  struct of viewer settings, written as the manifest's 'view' (default: none)
+%   'Settings'  struct of viewer settings, written as the manifest's 'settings' (default: none)
 %
 % OUTPUT:
 %   manifest : full path of the manifest.json written.
@@ -37,7 +38,7 @@ function manifest = bundle(folder, surf, result, varargin)
     p = inputParser;
     p.addParameter('Fs', 1, @(x) isscalar(x) && x > 0);
     p.addParameter('Name', 'Rheome result', @(x) ischar(x) || isstring(x));
-    p.addParameter('View', [], @(x) isempty(x) || isstruct(x));
+    p.addParameter('Settings', [], @(x) isempty(x) || isstruct(x));
     p.parse(varargin{:});
     o = p.Results;
 
@@ -66,12 +67,6 @@ function manifest = bundle(folder, surf, result, varargin)
             if ~isequal(size(surfs{k}.Vertices), [nV 3]), error('rheome:bundle:surface', '%s: %d vertices, want nV = %d.', sname{k}, size(surfs{k}.Vertices, 1), nV); end
             put(folder, alt(k-1).positions, surfs{k}.Vertices', 'single');
         end
-        sm.alternates = num2cell(alt);   % a JSON array even for one
-    end
-    if isfield(surf, 'Hemi') && numel(surf.Hemi) == 2      % rheome.io.read.surface: {left, right}, a full partition
-        h = zeros(nV, 1);  h(surf.Hemi{2}) = 1;
-        put(folder, 'hemisphere.bin', h, 'uint8');
-        sm.hemisphere = 'hemisphere.bin';
     end
     fl = cell(1, numel(names));
     for k = 1:numel(names)
@@ -88,7 +83,8 @@ function manifest = bundle(folder, surf, result, varargin)
     end
     m = struct('format', 'rheome.bundle@1', 'name', char(o.Name), ...
         'surface', sm, 'time', struct('samples', T, 'fs', o.Fs, 'origin', 0), 'fields', {fl});
-    if ~isempty(o.View), m.view = o.View; end
+    if numel(surfs) > 1, m.surfaces = num2cell(alt); end   % a JSON array even for one
+    if ~isempty(o.Settings), m.settings = o.Settings; end
     manifest = fullfile(folder, 'manifest.json');
     fid = fopen(manifest, 'w');
     if fid < 0, error('rheome:bundle:write', 'Cannot write %s.', manifest); end
