@@ -42,6 +42,7 @@ guide = {
     'howto_flow_maps.html',         'How to compute flow maps'
     'howto_scale_run.html',         'How to run the per-participant measures'
     'howto_figures.html',           'How to make figures'
+    'howto_view.html',              'How to view a result in 3D'
     'about_sensor_to_cortex.html',  'From sensors to cortex'
     'about_helmholtz_hodge.html',   'The Helmholtz-Hodge split'
     'about_optical_flow.html',      'Surface optical flow'
