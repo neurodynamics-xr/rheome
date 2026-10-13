@@ -171,6 +171,11 @@ classdef tModes < matlab.unittest.TestCase
                 "l2_entropy_n_p_min"], string(C.Properties.VariableNames))));
             tc.verifyGreaterThanOrEqual([C.l2_p_min; C.l2_entropy_p_min], 1/4 - 1e-12);
             tc.verifyGreaterThanOrEqual(C.l2_entropy_n_p_min, 1);
+            % the signed split sums to the two-sided share; z quartiles are ordered
+            tc.verifyEqual(C.l2_entropy_share_sig_above + C.l2_entropy_share_sig_below, C.l2_entropy_share_sig, 'AbsTol', 1e-12);
+            j = C.l2_entropy_z_n > 0;  tc.verifyTrue(any(j));                      % a band can have no entropy (NaN z)
+            tc.verifyTrue(all(C.l2_entropy_z_q25(j) <= C.l2_entropy_z_median(j) & C.l2_entropy_z_median(j) <= C.l2_entropy_z_q75(j)));
+            tc.verifyLessThanOrEqual(C.l2_entropy_z_n, numel(tc.Names));
         end
     end
 end
