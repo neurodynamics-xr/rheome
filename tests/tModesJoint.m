@@ -84,6 +84,21 @@ classdef tModesJoint < matlab.unittest.TestCase
             tc.verifyTrue(any(Ts.test == "i_f"));
         end
 
+        function emptyRoomFaultChannelsAreDropped(tc)
+            % OMEGA sub-0556 / sub-0562 (request 6e1a4a13): 7 empty-room sensors at ~1 nT, 1e4 x the rest, flagged
+            % good -- through the dense tile filters they put the empty room above the data in every bin, F's NNLS had
+            % < 2 usable bins and interp1 failed. Such channels are dropped from the empty room and named.
+            n = "synth_jointbadER";  d = fullfile(tc.Root, n);  copyfile(fullfile(tc.Root, tc.Names(1)), d);
+            L = load(fullfile(d, 'noise.mat'));  bad = [3 11 29];  L.nrec.F(bad, :) = 1e4 * L.nrec.F(bad, :);
+            nrec = L.nrec;  save(fullfile(d, 'noise.mat'), 'nrec');
+            Z = rheome.modes.jointfields(char(n), [], tc.Opt{:});
+            tc.verifyEqual(Z.fspread.emptyroomDropped, strjoin(string(nrec.ChannelName(bad)), " "));
+            tc.verifyEqual(Z.fspread.emptyroomChannels, numel(nrec.ChannelName) - numel(bad));
+            tc.verifyTrue(isfinite(Z.fspread.tile_logpower_err_median));
+            Z0 = rheome.modes.jointfields(char(tc.Names(1)), [], tc.Opt{:}, Nulls=true);   % a sound room: nothing dropped
+            tc.verifyEqual(Z0.fspread.emptyroomDropped, "");
+        end
+
         function canaryPath(tc)
             od = fullfile(tc.Root, 'canary');  mkdir(od);  files = strings(0);
             for n = tc.Names
