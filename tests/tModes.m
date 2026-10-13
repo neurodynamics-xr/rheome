@@ -137,13 +137,26 @@ classdef tModes < matlab.unittest.TestCase
             tc.verifyTrue(isnan(rheome.modes.lagged(nan(4, 1), eye(4)).r_n3));      % a non-finite mode: NaN, no crash
             % the driver writes the fit tables, then the reduction over the three
             setenv('RHEOME_MODES_CENTROIDS', fullfile(od, 'discover', 'centroids.mat'));  tc.addTeardown(@setenv, 'RHEOME_MODES_CENTROIDS', '');
-            fits = strings(0);
+            fits = strings(0);  sa = strings(0);  sb = strings(0);
             for n = tc.Names
                 fo = fullfile(od, 'fit', n);  mkdir(fo);
                 [~, Xn] = rheome.modes.fit(char(n), [], M, NSpin=20, NSurr=3);
                 t = [table(repmat(n, height(Xn.modesfit), 1), 'VariableNames', {'subject'}), Xn.modesfit];
                 writetable(t, fullfile(fo, 'modesfit.csv'));  fits(end+1) = fullfile(fo, 'modesfit.csv'); %#ok<AGROW>
+                sa(end+1) = fullfile(fo, n + "_modesseries.csv");  writetable(Xn.modesseries, sa(end)); %#ok<AGROW>
+                sb(end+1) = fullfile(od, 'fields', n, n + "_modesseries.csv"); %#ok<AGROW>
+                copyfile(fullfile(od, 'fields', n, 'modesseries.csv'), sb(end));
             end
+            % the fit recomputes the discovery's series: same commit, same hashes; a changed series is caught
+            [T, ~] = rheome.modes.seriescheck(sa, sb, fullfile(od, 'seriescheck'));
+            tc.verifyTrue(all(T.equal), 'the fit''s series differ from stage 1''s on one commit');
+            tc.verifyEqual(numel(unique(T.subject)), numel(tc.Names));
+            tc.verifyTrue(all(T.variant == 1));                                     % sensitivity variants not compared
+            t = readtable(sa(1), 'TextType', 'string');  t.sha256(1) = "x";  writetable(t, sa(1));
+            T = rheome.modes.seriescheck(sa, sb, fullfile(od, 'seriescheck2'));
+            tc.verifyEqual(nnz(~T.equal), 1);
+            j = jsondecode(fileread(fullfile(od, 'seriescheck2', 'seriescheck.json')));
+            tc.verifyFalse(j.all_equal);  tc.verifyEqual(string(j.subjects_differ), tc.Names(1));
             lst = fullfile(od, 'fits.txt');  writelines(fits, lst);
             C = rheome.modes.reduce(string(lst), fullfile(od, 'discover', 'centroids.mat'), fullfile(od, 'reduce'), NBoot=50);
             tc.verifyEqual(height(C), sum([M.bands.K]));
@@ -151,6 +164,11 @@ classdef tModes < matlab.unittest.TestCase
             tc.verifyTrue(ismember("n3_excess_median", string(C.Properties.VariableNames)));
             tc.verifyTrue(all(C.speed == "unresolved"));
             tc.verifyTrue(isfile(fullfile(od, 'reduce', 'modes_tests.csv')));
+            % Level 2 shares for dwell AND transition entropy, with the N5 floor: p >= 1/(1 + NSurr)
+            tc.verifyTrue(all(ismember(["l2_entropy_share_sig" "l2_entropy_share_p" "l2_p_min" "l2_n_p_min" "l2_entropy_p_min" ...
+                "l2_entropy_n_p_min"], string(C.Properties.VariableNames))));
+            tc.verifyGreaterThanOrEqual([C.l2_p_min; C.l2_entropy_p_min], 1/4 - 1e-12);
+            tc.verifyGreaterThanOrEqual(C.l2_entropy_n_p_min, 1);
         end
     end
 end
