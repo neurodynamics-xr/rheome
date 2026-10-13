@@ -27,7 +27,7 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
 %     mode's dwell, l2_entropy_share_sig / l2_entropy_share_p for the band's transition entropy (the same on
 %     every mode row of the band). Power floor: a participant's N5 p is at least 1/(1 + NSurr) (0.01 at 99
 %     surrogates), and BH over n participants rejects nothing unless at least ceil(p_min n / Fdr) of them sit
-%     at that floor (41 of 203 at 0.01); so a share of 0 is a floor, not a measured absence, unless that many
+%     at that floor (41 of 200 at 0.01); so a share of 0 is a floor, not a measured absence, unless that many
 %     do. l2_p_min / l2_entropy_p_min (the smallest participant p) and l2_n_p_min / l2_entropy_n_p_min (how
 %     many participants have it) say which.
 % Characterisation (protocol 6): participant medians (IQR) of extent, Dirichlet wavelength, occupancy,
