@@ -7,7 +7,7 @@ function [T, S] = seriescheck(fitFiles, fieldsFiles, outDir)
 % their SHA-256 per series to modesseries.csv; stage 1 (rheome.modes.fields) wrote the same table for the
 % series the discovery clustered. Equal hashes mean the fit worked on numerically identical data, whatever
 % commit it ran on. fitFiles / fieldsFiles: the participants' modesseries.csv (paths, or a text file of
-% paths), named <subject>_modesseries.csv. A <subject>_provenance.json next to a file gives its code_commit.
+% paths), named <subject>_modesseries.csv. A <subject>_provenance.json next to a file gives its commit.
 % Series are matched on (subject, source, band, variant); the fit holds the primary variant only, so the
 % sensitivity variants of stage 1 are not compared.
 %
@@ -59,7 +59,7 @@ function D = i_read(files)
         t = readtable(f, 'TextType', 'string', 'Delimiter', ',');
         t = t(:, {'source', 'band', 'variant', 'n_valid', 'sha256'});
         cm = "unknown";  pj = fullfile(d, sub + "_provenance.json");
-        if isfile(pj), p = jsondecode(fileread(pj));  if isfield(p, 'code_commit'), cm = string(p.code_commit); end, end
+        if isfile(pj), p = jsondecode(fileread(pj));  if isfield(p, 'commit'), cm = string(p.commit); end, end   % run.m writes 'commit'
         t.subject = repmat(sub, height(t), 1);  t.commit = repmat(cm, height(t), 1);
         D = [D; t]; %#ok<AGROW>
     end

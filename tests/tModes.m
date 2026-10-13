@@ -148,7 +148,9 @@ classdef tModes < matlab.unittest.TestCase
                 copyfile(fullfile(od, 'fields', n, 'modesseries.csv'), sb(end));
             end
             % the fit recomputes the discovery's series: same commit, same hashes; a changed series is caught
+            writelines('{"commit": "abc1234"}', fullfile(od, 'fit', tc.Names(1), tc.Names(1) + "_provenance.json"));
             [T, ~] = rheome.modes.seriescheck(sa, sb, fullfile(od, 'seriescheck'));
+            tc.verifyTrue(all(T.commit_fit(T.subject == tc.Names(1)) == "abc1234"));   % run.m's provenance key
             tc.verifyTrue(all(T.equal), 'the fit''s series differ from stage 1''s on one commit');
             tc.verifyEqual(numel(unique(T.subject)), numel(tc.Names));
             tc.verifyTrue(all(T.variant == 1));                                     % sensitivity variants not compared
