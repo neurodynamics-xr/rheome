@@ -29,7 +29,7 @@ function L = lagged(m, R, opts)
         opts.StepDeg (1,1) double = 10
     end
     m = double(m);  d = numel(m);  Rr = [real(R); imag(R)];  Ri = [-imag(R); real(R)];
-    best = -Inf;  op = optimset('TolX', 1e-10);
+    best = -Inf;  op = optimset('TolX', 1e-10, 'Display', 'off');   % 'notify' printed every capped iteration: GB logs
     L = struct('r_n3', NaN, 'fit', nan(d, 1), 'lag_rad', NaN, 'x1', nan(d, 1), 'x2', nan(d, 1));   % a non-finite mode has no fit
     for th = deg2rad(0:opts.StepDeg:360-opts.StepDeg)
         y = m * exp(-1i*th);  y = [real(y); imag(y)];

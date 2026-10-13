@@ -23,7 +23,13 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
 %     winding_sign_share are reported, never labelled. The label is read only for Level-1 modes.
 %   Level 2 (dynamics beyond second order): dwell_median_ms (the mode's) and trans_entropy (overall, under
 %     mode 0) minus the N5 surrogate mean; plus the share of participants with N5 p significant at FDR q
-%     (Benjamini-Hochberg over participants) against 5 % (binomial test).
+%     (Benjamini-Hochberg over participants) against 5 % (binomial test): l2_share_sig / l2_share_p for the
+%     mode's dwell, l2_entropy_share_sig / l2_entropy_share_p for the band's transition entropy (the same on
+%     every mode row of the band). Power floor: a participant's N5 p is at least 1/(1 + NSurr) (0.01 at 99
+%     surrogates), and BH over n participants rejects nothing unless at least ceil(p_min n / Fdr) of them sit
+%     at that floor (41 of 200 at 0.01); so a share of 0 is a floor, not a measured absence, unless that many
+%     do. l2_p_min / l2_entropy_p_min (the smallest participant p) and l2_n_p_min / l2_entropy_n_p_min (how
+%     many participants have it) say which.
 % Characterisation (protocol 6): participant medians (IQR) of extent, Dirichlet wavelength, occupancy,
 % occurrence, dwell, gev; the mean direction vector, its anatomical axis label and concentration; speed always
 % "unresolved" at depths below 7; the discovery's r_dmd, r_cpca, robust.
@@ -73,6 +79,8 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
     Ts = table();  C = table();
     for b = 1:numel(M.bands)
         bn = M.bands(b).band;  K = M.bands(b).K;
+        pE = get(bn, "n5_phaserand", "all", "backfit", 0, "trans_entropy_p");
+        [shE, pbE] = i_share(pE, opts.Fdr);  [pmE, nmE] = i_floor(pE);
         for k = 1:K
             dd = @(m) get(bn, "data", "all", "backfit", k, m);
             row = table(opts.Cohort, bn, k, K, nS, 'VariableNames', {'cohort','band','mode','K','n'});
@@ -94,7 +102,7 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
             dv = dd("div_index");  wn = dd("winding_net");
             shDiv = max(mean(dv > 0, 'omitnan'), mean(dv < 0, 'omitnan'));  shRot = max(mean(wn > 0, 'omitnan'), mean(wn < 0, 'omitnan'));
             pL2 = get(bn, "n5_phaserand", "all", "backfit", k, "dwell_median_ms_p");
-            [shareL2, pBin] = i_share(pL2, opts.Fdr);
+            [shareL2, pBin] = i_share(pL2, opts.Fdr);  [pmL2, nmL2] = i_floor(pL2);
             v = [median(dd("dir_x"), 'omitnan') median(dd("dir_y"), 'omitnan') median(dd("dir_z"), 'omitnan')];
             row = [row, table(r1, icc, lo, hi, pgm, shDiv, shRot, shareL2, pBin, i_axis(v), norm(v), ...
                    median(dd("extent_mm2"), 'omitnan'), median(dd("extent_radius_mm"), 'omitnan'), ...
@@ -113,6 +121,8 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
                 row = [row, table(median(dd("t_bar"), 'omitnan'), median(dd("scale_mm"), 'omitnan'), median(dd("scale_edge_mm"), 'omitnan'), ...
                        mode(dom(isfinite(dom))), 'VariableNames', {'t_bar','scale_mm','scale_edge_mm','dominant_depth'})]; %#ok<AGROW>
             end
+            row = [row, table(pmL2, nmL2, shE, pbE, pmE, nmE, 'VariableNames', {'l2_p_min','l2_n_p_min', ...
+                   'l2_entropy_share_sig','l2_entropy_share_p','l2_entropy_p_min','l2_entropy_n_p_min'})]; %#ok<AGROW>
             C = [C; row]; %#ok<AGROW>
         end
         % overall transition entropy against N5 (mode 0)
@@ -193,6 +203,13 @@ function [sh, p] = i_share(pv, q)
     if m == 0, return; end
     ps = sort(pv);  k = find(ps <= (1:m)' / m * q, 1, 'last');  if isempty(k), k = 0; end
     sh = k / m;  p = 1 - binocdf(k - 1, m, 0.05);
+end
+
+function [pm, n] = i_floor(pv)
+% the smallest participant p and how many participants have it (the N5 floor 1/(1+NSurr) when any is outside every surrogate)
+    pv = pv(isfinite(pv));  pm = NaN;  n = 0;
+    if isempty(pv), return; end
+    pm = min(pv);  n = nnz(pv <= pm * (1 + 1e-9));
 end
 
 function ok = i_robust(B, k)
