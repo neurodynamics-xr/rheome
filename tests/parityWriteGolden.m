@@ -36,9 +36,9 @@ function out = parityWriteGolden(fixture, out)
     G.div = put(out, 'div', rheome.differential.divergence(v1, s, fg)');
     G.curl = put(out, 'curl', rheome.differential.curl(v1, s, fg)');
 
-    r = ver('rheome');
+    r = regexp(fileread(fullfile(fileparts(fileparts(mfilename('fullpath'))), 'Contents.m')), '% Version (\S+)', 'tokens', 'once');   % not ver(): the clone's folder name may differ
     m = struct('format', 'rheome.golden@1', 'fixture', 'editor/fixtures/cortex_pial_low', 'nV', size(V, 1), 'T', T, 'fs', fs, ...
-        'bump', struct('c0', c0, 'step_per_frame', step, 'sigma', sigma), 'rheome', r(1).Version, 'matlab', version('-release'), ...
+        'bump', struct('c0', c0, 'step_per_frame', step, 'sigma', sigma), 'rheome', r{1}, 'matlab', version('-release'), ...
         'seconds', struct('flow_alpha1', t1, 'flow_alpha0_01', t2), 'arrays', G);
     fid = fopen(fullfile(out, 'golden.json'), 'w'); fwrite(fid, jsonencode(m, 'PrettyPrint', true)); fclose(fid);
 end

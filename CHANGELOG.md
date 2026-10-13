@@ -4,6 +4,14 @@
 
 ### Added
 
+- **`rheome.view`, optional** (needs MATLAB R2026a+ or the Cortical Flow app; Rheome works without it on R2023b+):
+  a result on the cortex in the 3D viewer from one call, `rheome.view(surf, result, Name=Value)` or
+  `rheome.view(result)` with `result.surface`. Options are the viewer's settings (field, colormap, colour limits,
+  threshold, surface, hemisphere, camera, arrows, overlays, time, play and speed), checked before anything is
+  written; the window is reused. Without a viewer or WebGPU it draws the chosen field and time with `rheome.show`.
+  `rheome.io.write.bundle` writes the result (rheome.bundle@1, now with further surfaces, the hemisphere split and
+  the settings). Guide: *How to view a result in 3D*.
+
 - **Rheome MCP server** (`mcp/`): Rheome as a product, used through its public API rather than its source.
   It has tools for the scale-up analyses (`run`, `reduce`), the resting-state pattern atlas (`modes_discover`,
   `modes_reduce`), their tables (`readout`), jobs and versions. Every call records the Rheome version and its
