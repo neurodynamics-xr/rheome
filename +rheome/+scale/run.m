@@ -92,7 +92,8 @@ function R = run(name, opts)
 %                     the nulls N1, N4, N5 (the Zm struct + one top-level variable per series); opt-in
 %   modesfit.csv, modesmaps.csv, modestrans.csv, modesseries.csv   stage 3 (nsp rheome-modes-fit):
 %                     rheome.modes.fit against the frozen centroids in RHEOME_MODES_CENTROIDS (hash checked,
-%                     and against RHEOME_MODES_SHA256 when set); opt-in
+%                     and against RHEOME_MODES_SHA256 when set), N5 at RHEOME_MODES_NSURR surrogates (unset: 99;
+%                     recorded as metric n_surr); opt-in
 %   joint_fields.mat, jointseries.csv, jointscales.csv, jointbands.csv, jointtransfer.csv, jointfspread.csv
 %                     H4 ATLAS-1 (nsp rheome-joint-fields): rheome.modes.jointfields -- the joint graph-time
 %                     wavelet field on tile x scale per octave, null F (field spread), N4, N5, and the scale
@@ -315,8 +316,11 @@ function R = run(name, opts)
                     cf = getenv('RHEOME_MODES_CENTROIDS');
                     if isempty(cf) || ~isfile(cf), error('scale:run:centroids', 'modesfit needs RHEOME_MODES_CENTROIDS (a frozen centroids.mat), got "%s"', cf); end
                     Lc = load(cf, 'M');
-                    [Tm, Xm] = rheome.modes.fit(name, S, Lc.M, Sha256=getenv('RHEOME_MODES_SHA256'));
-                    M = [M; Tm]; %#ok<AGROW>
+                    ns = string(getenv('RHEOME_MODES_NSURR'));  if ns == "", ns = "99"; end   % unset: the registered 99
+                    ns = str2double(ns);
+                    if ~(isfinite(ns) && ns >= 1 && ns == round(ns)), error('scale:run:nsurr', 'RHEOME_MODES_NSURR must be a positive integer, got "%s"', getenv('RHEOME_MODES_NSURR')); end
+                    [Tm, Xm] = rheome.modes.fit(name, S, Lc.M, Sha256=getenv('RHEOME_MODES_SHA256'), NSurr=ns);
+                    M = [M; Tm; rheome.scale.rows(a, "n_surr", ns, "count")]; %#ok<AGROW>
                     for fn = string(fieldnames(Xm))'
                         X.(fn) = [table(repmat(string(name), height(Xm.(fn)), 1), 'VariableNames', {'subject'}), Xm.(fn)];
                     end
