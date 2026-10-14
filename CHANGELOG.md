@@ -18,6 +18,16 @@
 
 ### Added
 
+- **Scene objects for illustrations: a helmet, a scalp, electrodes or a scanner drawn around the cortex by the Cortical Flow
+  viewer.** `rheome.io.write.bundle(..., 'Objects', o)` writes the bundle's `objects`: static meshes from a struct
+  (Vertices, Faces, Unit, Transform, Role, Color, Visible), or by name from the media library
+  (`library/media/illustrations/objects/<name>`; its `object.json` gives the unit, the fsaverage RAS → SCS transform and
+  the role). `rheome.snapshot(..., 'Objects', o)` passes them on. A shot's `Settings` select the objects shown
+  (`objects`), what the camera frames (`fit`) and the look (`look`, `'illustration'`). Every render now states these
+  settings in full, so one shot's look no longer carries over to the next. A shot that shows an object has no camera read
+  from its render (the object shares the cortex's outline), so it gets no scale bar and refuses Selection, Paths and
+  Inset. The media objects sit in fsaverage's frame: a subject's cortex needs its own `Transform`.
+
 - **`rheome.snapshot` draws selections, geodesic paths and shaped insets, and returns each render's camera**
   (figure system revision 3, Diellor's board comments 24-26).
   - `Selection`: a tile (`Vertices`) or a geodesic disk (`Centre`, `RadiusMM` along the folded surface). It is

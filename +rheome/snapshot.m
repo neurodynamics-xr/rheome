@@ -31,7 +31,9 @@ function out = snapshot(surf, result, varargin)
 %   Hemisphere "both" | "left" | "right", with a viewer camera (default "both")
 %   Surface    the surface shown, a name of surf's struct (default: the first)
 %   Vector     a vector field drawn as arrows (default none); arrows show the same vector the colour shows
-%   Settings   struct of further viewer settings, applied last (README of the viewer, 'The settings')
+%   Settings   struct of further viewer settings, applied last (README of the viewer, 'The settings'), e.g. the
+%              scene objects shown ('objects', names; default those the bundle marks visible), what the camera
+%              frames ('fit': "cortex" | "scene") and the look ('look': "data" | "illustration")
 %   Name       the files' name (default "shot<k>")
 %   Inset      a MULTISCALE INSET (default none): a region of one view re-rendered by the viewer at a higher
 %              pixel ratio (and, if given, with a finer field), cut to the region's shape on the cortex and laid
@@ -80,6 +82,10 @@ function out = snapshot(surf, result, varargin)
 %   'Viewer'    the viewer folder (default as rheome.view: $RHEOME_VIEWER, else prefdir/rheome-viewer)
 %   'Chrome'    Chrome or Chromium (default $RHEOME_CHROME, else the usual install)
 %   'Node'      Node.js 22+ (default $RHEOME_NODE, else the usual install)
+%   'Objects'   SCENE OBJECTS written into the bundle (a helmet, a scalp, electrodes ...), as rheome.io.write.bundle's
+%               'Objects' (structs, or media-library object names, e.g. "meg-helmet-306"). A shot that shows any is
+%               an illustration: its camera is not read from the render (the objects share its silhouette), so it
+%               has no geodesic scale bar and takes no Selection, Paths or Inset
 %   'Scale'     the viewer's least pixel ratio (default: the tokens' cortex.viewer.pixelRatio); raised per shot so the
 %               views print at the journal's combination dpi
 %
@@ -130,6 +136,7 @@ function out = snapshot(surf, result, varargin)
     p.addParameter('Chrome', '');
     p.addParameter('Node', '');
     p.addParameter('Scale', []);
+    p.addParameter('Objects', []);
     p.addParameter('Wait', 600);
     p.addParameter('Timeout', 60);
     p.parse(varargin{:});
@@ -161,7 +168,8 @@ function out = snapshot(surf, result, varargin)
     % one bundle, one viewer run for every render
     work = tempname;  mkdir(work);  cleanWork = onCleanup(@() rmdir(work, 's'));
     if isfield(surf, 'Vertices'), bs = surf; else, bs = surfs; end
-    rheome.io.write.bundle(fullfile(work, 'bundle'), bs, result, 'Fs', o.Fs, 'Name', 'rheome.snapshot');
+    mf = rheome.io.write.bundle(fullfile(work, 'bundle'), bs, result, 'Fs', o.Fs, 'Name', 'rheome.snapshot', 'Objects', o.Objects);
+    shots = withObjects(shots, jsondecode(fileread(mf)));
     if ~isfolder(o.Out), mkdir(o.Out); end
     renders = {};
     J = tok.theme.(tok.theme.default).page;
@@ -323,6 +331,34 @@ function shots = normalise(in, result, surfs, T, fs, tok, cmaps, Sf)
         s.Inset = inset(g('Inset', []), s, k, real, nV);
         shots(k) = s;
     end
+end
+
+function shots = withObjects(shots, m)
+% each shot's flag: does it show a scene object (its 'objects' setting, else those the bundle marks visible); and every
+% render states objects, fit and look, since a render is set whole (a viewer without them is not sent them)
+    on = {};  has = isfield(m, 'objects');
+    if has
+        ob = m.objects;  if isstruct(ob), ob = num2cell(ob); end
+        on = cellfun(@(e) e.name, ob(cellfun(@(e) ~isfield(e, 'visible') || e.visible, ob)), 'UniformOutput', false);
+    end
+    look = any(arrayfun(@(s) isfield(s.renders(1).settings, 'look'), shots));
+    def = struct();
+    if has, def.objects = on;  def.fit = 'cortex'; end
+    if look, def.look = 'data'; end
+    for k = 1:numel(shots)
+        for r = 1:numel(shots(k).renders), shots(k).renders(r).settings = defaults(shots(k).renders(r).settings, def); end
+        if ~isempty(shots(k).Inset), shots(k).Inset.render.settings = defaults(shots(k).Inset.render.settings, def); end
+        st = shots(k).renders(1).settings;
+        n = on;  if isfield(st, 'objects'), n = cellstr(st.objects); end
+        shots(k).objects = ~isempty(n) && ~all(cellfun(@isempty, n));
+        if shots(k).objects && (~isempty(shots(k).Selection) || ~isempty(shots(k).Paths) || ~isempty(shots(k).Inset))
+            error('rheome:snapshot:objects', '%s: a shot that shows scene objects takes no Selection, Paths or Inset (its camera is not read).', shots(k).Name);
+        end
+    end
+end
+
+function st = defaults(st, def)
+    for f = fieldnames(def)', if ~isfield(st, f{1}), st.(f{1}) = def.(f{1}); end, end
 end
 
 function in = inset(a, s, k, real, nV)
@@ -687,6 +723,7 @@ function [r, G, job] = compose(s, surfs, F, hemi, folded, G, tok, cmaps, o)
         h = s.renders(i).hemisphere;  shown = hemi > 0;
         if ~strcmp(h, 'both'), shown = hemi == find(strcmp({'left', 'right'}, h)); end
         try
+            if s.objects, error('rheome:snapshot:camera', 'The render shows scene objects.'); end
             cam = fitCamera(al{i}, Vd(shown, :), s.renders(i).camera);
             cams(i) = struct('view', s.renders(i).view, 'render', r.renders{i}, 'R', cam.R, 's', cam.s, 'off', cam.off, ...
                 'd', cam.d, 'crop', c, 'origin_mm', [x y], 'mm_per_px', k);
@@ -704,7 +741,7 @@ function [r, G, job] = compose(s, surfs, F, hemi, folded, G, tok, cmaps, o)
             svg{end+1} = T(cx, y1 + 1.1 * fv * pt, s.renders(i).view, fv, slate, 'middle', ''); %#ok<AGROW>
         end
         % one geodesic scale bar per row: on the first view where a visible stretch is found
-        if o.ScaleBar > 0 && isempty(r.scalebar) && ~(~isempty(s.Inset) && i == s.Inset.view && nview > 1)   % not on the inset's region
+        if o.ScaleBar > 0 && ~s.objects && isempty(r.scalebar) && ~(~isempty(s.Inset) && i == s.Inset.view && nview > 1)   % not on the inset's region
             if isempty(cam), cam = fitCamera(al{i}, Vd(shown, :), s.renders(i).camera); end   % says why it fails
             [bar, G] = scaleBar(o.ScaleBar, surfs.(folded), Vd, F, shown, cam, al{i}, G);
             if ~isempty(bar)
@@ -728,7 +765,7 @@ function [r, G, job] = compose(s, surfs, F, hemi, folded, G, tok, cmaps, o)
     if ~isempty(s.Inset)
         [svg, r.inset] = drawInset(svg, s, Vd, F, hemi, img, al, crop, k, cw, gap, y0, rowH, nview, tok, J, T, pt);
     end
-    if o.ScaleBar > 0 && isempty(r.scalebar), warning('rheome:snapshot:scalebar', '%s: no visible stretch of %g mm for the scale bar; none drawn.', s.Name, o.ScaleBar); end
+    if o.ScaleBar > 0 && ~s.objects && isempty(r.scalebar), warning('rheome:snapshot:scalebar', '%s: no visible stretch of %g mm for the scale bar; none drawn.', s.Name, o.ScaleBar); end
     if strip
         ya = y1 + 1.0;  hl = 1.2;  x0 = 0.05 * W;  xe = 0.95 * W;
         svg{end+1} = sprintf('<line x1="%.3f" y1="%.3f" x2="%.3f" y2="%.3f" stroke="%s" stroke-width="%.4f"/><polygon points="%.3f,%.3f %.3f,%.3f %.3f,%.3f" fill="%s"/>', ...
