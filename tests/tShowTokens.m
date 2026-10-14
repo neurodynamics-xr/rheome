@@ -122,7 +122,8 @@ classdef tShowTokens < matlab.unittest.TestCase
                 'Spec', {struct('Start', 0, 'To', 4*pi, 'Profile', 'ramp'), struct('Start', 10, 'To', 30, 'Profile', 'ease'), ...
                          struct('Keys', struct('x', {0, 0.5}, 'v', {1, -1}, 'seg', {'hold', 'hold'}))}, ...
                 'Values', {4*pi*tt(1:20:end) + 0.2*randn(1, 20), [], []}, 'Time', {tt(1:20:end), [], []});
-            [h, V] = rheome.show.timetracks(tt, tr, 'Visible', 'off', 'Export', t.stem('timetracks'));
+            [h, V] = rheome.show.timetracks(tt, tr, 'Visible', 'off', 'Playhead', 0.3, 'Export', t.stem('timetracks'));
+            t.verifyEqual(V(1).driver, ['ramp 0' char(8594) '12.6']);  t.verifyEqual(V(3).keyT, [0 0.5]);
             t.verifyEqual({V.kind}, {'angle', 'value', 'sign'});
             t.verifyEqual(V(3).plant([1 end]), [1 -1]);
             t.passes(h, 'timetracks');
@@ -142,10 +143,11 @@ classdef tShowTokens < matlab.unittest.TestCase
         end
 
         function levelstack(t)
-            [h, G] = rheome.show.levelstack(4, 0:4, 'Slice', 2, 'Tile', [2 3], 'SpaceMM', 122 ./ 2.^(4:-1:0), ...
+            [h, G] = rheome.show.levelstack(4, 0:4, 'Slice', 2, 'Tile', [4 11], 'SpaceMM', 122 ./ 2.^(0:4), ...
                 'Visible', 'off', 'Export', t.stem('levelstack'));
-            t.verifyEqual(arrayfun(@(g) numel(g.t0), G), [16 8 4 2 1]);  % each tile of level j is two of level j-1
+            t.verifyEqual(arrayfun(@(g) numel(g.t0), G), [1 2 4 8 16]);  % level l: 2^l tiles, each two of level l+1
             t.verifyEqual(G(3).t1 - G(3).t0, ones(1, 4));
+            t.verifyError(@() rheome.show.levelstack(4, 0:4, 'Tile', [2 5], 'Visible', 'off'), 'rheome:show:levelstack');
             t.passes(h, 'levelstack');
             fld = arrayfun(@(g) rand(1, numel(g.t0)), G, 'UniformOutput', false);
             h2 = rheome.show.levelstack(4, 0:4, 'Field', fld, 'Label', 'power', 'Unit', 'dB', 'Visible', 'off', ...

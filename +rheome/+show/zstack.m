@@ -1,30 +1,38 @@
-function h = zstack(ax, n, current)
-% SHOW.ZSTACK  A z-stack indicator: n stacked planes (the dyadic levels), the current slice filled in ink.
+function h = zstack(ax, levels, shown)
+% SHOW.ZSTACK  The level indicator: the dyadic stack as rows of 2^l cells, the shown level the ink row, numbered.
 %
-%   h = rheome.show.zstack(ax, n, current)     current: 1 (finest, bottom) .. n (coarsest, top)
+%   h = rheome.show.zstack(ax, levels, shown)        e.g. rheome.show.zstack(ax, 0:5, 3)
 %
 % Beside a cortical map or a scalogram slice it says WHICH level of the constant-Q stack is shown, without a colour
-% (a level is the grid, not a field). The planes are drawn in oblique projection, outlined in slate; the current one
-% filled in ink. ax is made equal-aspect and its axes hidden.
+% (a level is the grid spacing, not a field: tokens levels.slice). Coarse on top; each row is 2^l cells outlined in
+% mist; the shown row is outlined in ink on snow and labelled "l = <level>". The same glyph as style.level_indicator
+% (Python). ax's axes are hidden.
 %
 % See also: rheome.show.levelstack
 %
 % Author: Diellor Basha, 2026
     T = tokens();
-    if ~(isscalar(n) && n >= 1 && n == round(n)) || ~(isscalar(current) && current >= 1 && current <= n)
-        error('rheome:show:zstack', 'n planes (>= 1) and current in 1..n.');
+    levels = double(levels(:)');
+    if isempty(levels) || any(levels < 0 | levels ~= round(levels)) || ~ismember(shown, levels)
+        error('rheome:show:zstack', 'levels: integers >= 0; shown: one of them.');
     end
     hold(ax, 'on');
-    sh = 0.45;  dy = 0.35;   % the oblique shear and the planes' spacing, in plane widths
-    h = gobjects(n, 1);
-    for k = 1:n
-        y = (k - 1) * dy;
-        x = [0 1 1 + sh sh];  yy = y + [0 0 0.3 0.3];
-        if k == current
-            h(k) = patch(ax, x, yy, T.rgb.neutral_ink, 'EdgeColor', T.rgb.neutral_ink, 'LineWidth', T.line.outline_pt);
-        else
-            h(k) = patch(ax, x, yy, T.rgb.neutral_paper, 'EdgeColor', T.rgb.neutral_slate, 'LineWidth', T.line.outline_pt, 'FaceAlpha', 0.9);
+    h = gobjects(0);
+    lo = 0.12;  hi = 0.88;   % a cell's bottom and top within its row
+    for i = 1:numel(levels)
+        nc = 2^levels(i);  on = levels(i) == shown;
+        for c = 0:nc-1
+            if on
+                h(end+1) = patch(ax, [c c+1 c+1 c] / nc, i - 1 + [lo lo hi hi], T.rgb.neutral_snow, 'EdgeColor', T.rgb.neutral_ink, 'LineWidth', T.line.outline_pt); %#ok<AGROW>
+            else
+                h(end+1) = patch(ax, [c c+1 c+1 c] / nc, i - 1 + [lo lo hi hi], T.rgb.neutral_paper, 'EdgeColor', T.rgb.neutral_mist, 'LineWidth', 0.75 * T.line.outline_pt); %#ok<AGROW>
+            end
+        end
+        if on
+            h(end+1) = text(ax, 1.06, i - 0.5, sprintf('%s = %d', char(8467), shown), 'FontSize', T.type.annotation.size_pt, ...
+                'Color', T.rgb.neutral_ink, 'VerticalAlignment', 'middle', 'Interpreter', 'none'); %#ok<AGROW>
         end
     end
-    axis(ax, 'equal', 'off');  hold(ax, 'off');
+    ax.YDir = 'reverse';  ax.XLim = [0 1];  ax.YLim = [0 numel(levels)];  axis(ax, 'off');
+    hold(ax, 'off');
 end
