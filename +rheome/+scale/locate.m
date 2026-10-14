@@ -20,7 +20,8 @@ function L = locate(protoDir, sub)
 %   .mri     anat/<sub>/subjectimage*.mat (not a volume atlas): its SCS/NCS place the cortex in MNI
 %   .fibers  anat/<sub>/tess_fibers*.mat: the subject's OWN tractography (nsp bst-fibers' augmented protocol)
 % and .pet, a cell of data/<sub>/PET/results_surface_PET_*.mat (nsp bst-pet / bst-multimodal: one SUVR map per
-% tracer on the cortex), {} when absent
+% tracer on the cortex), {} when absent, and .fmri, a cell of data/<sub>/fmri_*_task-rest/results_surface_fmri_*.mat
+% (nsp bst-fmri's overlay unzipped over the protocol: one BOLD run each, confounds beside it), {} when absent
 %
 % See also: rheome.scale.importsubject, rheome.scale.run
 %
@@ -65,6 +66,8 @@ function L = locate(protoDir, sub)
     L.fibers = '';  if ~isempty(b), L.fibers = fullfile(b(1).folder, b(1).name); end
     p = dir(fullfile(protoDir, 'data', L.sub, 'PET', 'results_surface_PET_*.mat'));  p = p(~startsWith({p.name}, '._'));
     L.pet = fullfile({p.folder}, {p.name});
+    b = dir(fullfile(protoDir, 'data', L.sub, 'fmri_*_task-rest', 'results_surface_fmri_*.mat'));  b = b(~startsWith({b.name}, '._'));
+    L.fmri = sort(fullfile({b.folder}, {b.name}));
 end
 
 function f = i_one(d, pat)

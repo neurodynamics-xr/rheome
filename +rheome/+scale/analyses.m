@@ -78,6 +78,11 @@ function a = analyses(which)
 %   panelexamples    MS1 Figs. 4-7 panel A      one example each (plant + band maps, PSF, injected mover, aperiodic
 %                                              patch + spectra) by the figure's own measure; run only when asked
 %                                              (nsp rheome-ms1-examples), not "ported"
+%   ambient          MS1 1.4 panel             a planted tilted field, sphere + own cortex: ambient vs tangential
+%                                              divergence, the 2H(J.n) term against its closed form (no instrument)
+%   cptrack          MS1 2.3 panel             a drifting rotor + a waxing/waning source tracked by detect.track:
+%                                              core path, curl and div against the truth (no instrument)
+%                    -- both run only when asked (nsp rheome-ms1-panels), not "ported"
 %   events           MS1 SPEC1 §8 B            the tracker's detections (depth 8, 18.75 fps) as an event table: risefall
 %                                              boundaries, peak frequency, cycles; onset/offset-locked TF vs random
 %                                              onsets; intervals and autocorrelation vs surrogate and Poisson
@@ -93,7 +98,7 @@ function a = analyses(which)
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
            "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
            "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" ...
-           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "slowoscplant" "correspondence" "atlasevents" "gaugetensor" "connectome" "atlasone" "xlevel" "scaleramp" "multimodal" "modesfields" "modesfit" "jointfields" "jointcanary" "upstream" "lambdaedge" "panelexamples" "events" "eventplants" "coefficients"];
+           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "slowoscplant" "correspondence" "atlasevents" "gaugetensor" "connectome" "atlasone" "xlevel" "scaleramp" "multimodal" "modesfields" "modesfit" "jointfields" "jointcanary" "upstream" "lambdaedge" "panelexamples" "ambient" "cptrack" "events" "eventplants" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end

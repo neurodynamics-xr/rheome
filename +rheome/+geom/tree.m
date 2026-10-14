@@ -4,6 +4,8 @@ function T = tree(S, opts)
 %   T = rheome.geom.tree(S)
 %   T = rheome.geom.tree(S, MinArea=2e-3, MaxDepth=6)
 %   T = rheome.geom.tree(S, L=L, M=M)                 % reuse a built Laplace-Beltrami pair
+%   T = rheome.geom.tree(S, Method="Ladder", MaxDepth=8)          % the atlas's tiles, re-built from S
+%   T = rheome.geom.tree(S, Codes=codes, MaxDepth=8)              % the atlas's tiles, read from the store
 %   B = rheome.load.bases(name);  T = rheome.geom.tree(B.L.S, L=B.L.lbo.L, M=B.L.lbo.M)   % from the cache
 %
 % The cortical twin of rheome.sensors.tree: split each patch by the sign of its own Fiedler
@@ -42,8 +44,20 @@ function T = tree(S, opts)
 % its diameter is the equivalent disc's, 2*sqrt(area/pi). Euclidean extent across a folded
 % sheet measures the folding, not the patch.
 %
+% ⭐⭐ THE ATLAS'S TILES ARE THE LADDER, NOT THIS BISECTION (VR1 §2.9). Fiedler-sign bisection is a
+% different partition from the atlas ladder (ARI 0.36-0.40 at depths 4-8; tile-area CV 25 % at depth
+% 8 against the ladder's 2.6 %). Method="Ladder" builds the atlas's own tree with
+% rheome.geom.surfaceladder, bit-exact to nsp's ladder.py (equal-mass cuts across the geodesic
+% diameter); Codes= reads the stored codes instead, which is the only way to be identical to an atlas
+% whose store predates the current ladder.py (3 of 10 VR1 hemispheres differ from level 7 on). Either
+% way node k's children are 2k and 2k+1, and the tile code of a node at depth d is node_id - 2^d.
+% Run it per hemisphere, as the atlas does. MinVertices and MinArea do not apply: every level is full.
+%
 % INPUTS
 %   S        surface struct (.Vertices, .Faces) or a struct with .L and .M supplied
+%   Method   "Fiedler" (default) or "Ladder" (the atlas's dyadic ladder; L and M are not used)
+%   Codes    [n x 1] the hemisphere's atlas codes at level MaxDepth, 0-based without the hemisphere
+%            offset (the store's atlas/trees/subject/codes minus h*2^MaxDepth); implies the ladder
 %   L, M     precomputed rheome.operators.laplace_beltrami output (optional)
 %   MinVertices, MinArea, MaxDepth   stopping rules (1, 0, Inf); any one of them stops a node
 %
@@ -64,6 +78,12 @@ function T = tree(S, opts)
         opts.MinArea     (1,1) double {mustBeNonnegative} = 0
         opts.MaxDepth    (1,1) double = Inf
         opts.Verbose     (1,1) logical = false
+        opts.Method      (1,1) string {mustBeMember(opts.Method, ["Fiedler", "Ladder"])} = "Fiedler"
+        opts.Codes       (:,1) double = []
+    end
+    if opts.Method == "Ladder" || ~isempty(opts.Codes)
+        T = i_ladder(S, opts);
+        return
     end
     L = opts.L;  M = opts.M;
     if isempty(L) || isempty(M)
@@ -95,6 +115,38 @@ function T = tree(S, opts)
                           mean(P(idx, :), 1), 1e3 * d};                          %#ok<AGROW>
         if opts.Verbose && mod(id, 8) == 1
             fprintf('  node %d: depth %d, %d vertices, %.1f cm^2\n', id, nd.depth, numel(idx), 1e4*ar);
+        end
+    end
+    T = cell2table(rows, 'VariableNames', {'node_id','parent_id','depth','n_vertices', ...
+        'is_leaf','members','area','diameter','centroid','wavelength_mm'});
+end
+
+% The atlas ladder as the same table: level by level, tile by tile, so node_id = 2^depth + code.
+function T = i_ladder(S, opts)
+    if opts.MinVertices ~= 1 || opts.MinArea ~= 0
+        error('rheome:geom:tree', 'MinVertices and MinArea do not apply to the ladder: every level is full');
+    end
+    P = S.Vertices;  n = size(P, 1);
+    if isempty(opts.Codes)
+        maxTiles = 2 ^ min(opts.MaxDepth, 60);
+        [lab, a] = rheome.geom.surfaceladder(P, S.Faces, maxTiles);
+        D = size(lab, 2) - 1;  code = double(lab(:, end));
+    else
+        D = opts.MaxDepth;  code = opts.Codes;
+        if ~isfinite(D), error('rheome:geom:tree', 'Codes= needs MaxDepth, the level the codes are at'); end
+        if numel(code) ~= n || any(code < 0 | code >= 2^D | code ~= round(code))
+            error('rheome:geom:tree', 'Codes must be %d integers in [0, 2^%d)', n, D);
+        end
+        [~, a] = rheome.geom.surfaceladder(P, S.Faces, 1);                   % the ladder's vertex mass
+    end
+    rows = cell(2^(D+1) - 1, 10);  r = 0;
+    for d = 0:D
+        t = floor(code / 2^(D - d));
+        mem = accumarray(t + 1, (1:n)', [2^d 1], @(v) {sort(v)'}, {zeros(1, 0)});
+        if any(cellfun(@isempty, mem)), error('rheome:geom:tree', 'an empty tile at depth %d', d); end
+        for k = 0:2^d - 1
+            idx = mem{k + 1};  ar = sum(a(idx));  dm = 2 * sqrt(ar / pi);  id = 2^d + k;  r = r + 1;
+            rows(r, :) = {id, floor(id / 2), d, numel(idx), d == D, idx, ar, dm, mean(P(idx, :), 1), 1e3 * dm};
         end
     end
     T = cell2table(rows, 'VariableNames', {'node_id','parent_id','depth','n_vertices', ...
