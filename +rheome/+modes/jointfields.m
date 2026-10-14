@@ -208,8 +208,8 @@ function [X, T, B] = i_canary(S, Xf, fw, o, rs)
     c0 = mean(V(V(:,1) <= prctile(V(:,1), 10), :), 1);  c1 = mean(V(V(:,1) >= prctile(V(:,1), 90), :), 1);
     c2 = mean(V(V(:,3) >= prctile(V(:,3), 80) & V(:,1) <= median(V(:,1)), :), 1);
     g = @(c, s) exp(-vecnorm(V - c, 2, 2).^2 / (2 * s^2));
-    Q = [exp(1i*2*pi/0.200 * V(:,1)), g(c1, 0.03) + exp(-1i*pi/2) * g(c0, 0.03), cos(2*pi/0.200 * V(:,3)), ...
-         exp(1i*2*pi/0.050 * V(:,1)) .* g(c2, 0.04)];
+    Q = rheome.geom.cortexmask(S.Sf) .* [exp(1i*2*pi/0.200 * V(:,1)), g(c1, 0.03) + exp(-1i*pi/2) * g(c0, 0.03), ...
+         cos(2*pi/0.200 * V(:,3)), exp(1i*2*pi/0.050 * V(:,1)) .* g(c2, 0.04)];          % planted on cortex only (decision 3882c4ce)
     names = ["wave200_ap"; "pair_fo"; "standing200"; "fine50"];
     B = Gn * Q;  B = B ./ vecnorm(B);  N = size(Xf, 2);  t = (0:N-1) / fw;
     oc = find(o.Octaves(:, 1) <= o.CanaryHz & o.Octaves(:, 2) > o.CanaryHz, 1);

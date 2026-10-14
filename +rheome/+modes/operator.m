@@ -13,7 +13,9 @@ function Op = operator(S, Tp, opts)
 %      itself rebuilds only the TANGENTIAL current (grad Phi + n x grad Psi) and drops the normal part, i.e.
 %      the cortical dipole; that is right for flow, wrong for a mode of the current;
 %   3. the area-weighted mean over each group tile of depth Depth (rheome.scale.grouptiles: the template's tiles
-%      carried through the registered sphere, so tile k is the same place in every participant).
+%      carried through the registered sphere, so tile k is the same place in every participant), over cortex only
+%      (rheome.geom.cortexmask; decision 3882c4ce). A tile wholly on the medial wall keeps its place with W row 0,
+%      area_mm2 0 and its closed-mesh centroid; rheome.modes.fit drops area-0 tiles from the spin.
 %
 % Op.W [nTiles x nSel]   Op.tiles table: hemi, tile (code), area_mm2, x_mm y_mm z_mm (participant centroid),
 %   u1 u2 u3 (template sphere centre), tx ty tz (template coordinates, mm; SCS: x anterior, y left, z up)
@@ -55,7 +57,9 @@ function Op = operator(S, Tp, opts)
         if ~any(keep), error('modes:operator:cutoff', 'no bank member has a wavelength in [%g, %g) mm (members %s mm)', opts.CutoffMM, opts.MaxWavelengthMM, mat2str(round(wl))); end
         hg = sqrt(sum(G(:, keep).^2, 2));  kept = union(kept, wl(keep));
         [P, Ah, ids, C] = rheome.scale.grouptiles(S, Tp, h, opts.Depth);
-        a = full(sum(lbo.Mass, 2)) .* rheome.geom.cortexmask(S.B.(h).S);  Pa = (P .* a) ./ full(sum(P .* a, 1));      % area-weighted mean
+        a0 = full(sum(lbo.Mass, 2));  a = a0 .* rheome.geom.cortexmask(S.B.(h).S);  wa = full(sum(P .* a, 1));
+        Pa = (P .* a) ./ wa;  Pa(:, wa == 0) = 0;                                % area-weighted mean over cortex; a tile wholly
+        P0 = (P .* a0) ./ full(sum(P .* a0, 1));                                 % on the wall reads 0 (depth 6: 3 of 128 tiles)
         Lw = lbo.Phi * (hg .* (lbo.Phi' * (lbo.Mass * Kq)));                    % low-passed q per vertex
         W = [W; full(Pa' * Lw)]; %#ok<AGROW>
         Gh = nrm(:,1)' .* S.G(:, (gv-1)*3 + 1) + nrm(:,2)' .* S.G(:, (gv-1)*3 + 2) + nrm(:,3)' .* S.G(:, (gv-1)*3 + 3);
@@ -65,12 +69,12 @@ function Op = operator(S, Tp, opts)
             for j = 1:size(P, 2), in = find(P(:, j));  Gj = Gh(:, in);  Cg(:, :, end+1) = (Gj .* a(in)') * Gj'; end %#ok<AGROW>
         end
         A = blkdiag(A, full(Ah));
-        V = double(Hh.S.Vertices);  xc = full(Pa' * V) * 1e3;
+        V = double(Hh.S.Vertices);  xc = full(Pa' * V + (wa == 0)' .* (P0' * V)) * 1e3;   % a wall-only tile: its closed centroid
         tiles = [tiles; table(repmat(h, numel(ids), 1), ids(:), full(sum(P .* a, 1))' * 1e6, xc(:,1), xc(:,2), xc(:,3), ...
                  C.u(:,1), C.u(:,2), C.u(:,3), 1e3*C.x(:,1), 1e3*C.x(:,2), 1e3*C.x(:,3), 'VariableNames', ...
                  {'hemi','tile','area_mm2','x_mm','y_mm','z_mm','u1','u2','u3','tx','ty','tz'})]; %#ok<AGROW>
     end
-    R = W * Gn;  R = R ./ max(abs(R), [], 1);
+    R = W * Gn;  R = R ./ max(max(abs(R), [], 1), realmin);                     % a wall-only tile generates nothing: column 0
     Op = struct('W', W, 'A', logical(A), 'R', R, 'C1', (C1 + C1') / 2, 'tiles', tiles, 'keptWavelengthMM', kept(:)', ...
                 'cutoffMM', opts.CutoffMM, 'depth', opts.Depth);
     if opts.GenCov, Op.Cgen = (Cg + permute(Cg, [2 1 3])) / 2; end
