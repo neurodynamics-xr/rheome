@@ -60,7 +60,10 @@ classdef tMovingVortex < matlab.unittest.TestCase
         end
 
         function theGeodesicAndEuclideanSpeedsDifferByTheFolding(t)
-            m = rheome.flow.movingvortex(rheomeTestSubject(), Bases=t.B, Gauge=t.g, SpeedMS=0.25);
+            % 0.1 m/s keeps the path (~126 mm) short of the clamp; 0.25 m/s reached it once geodesic
+            % distances stopped saturating (2026-10-14), and a clamped path parks the core
+            m = rheome.flow.movingvortex(rheomeTestSubject(), Bases=t.B, Gauge=t.g, SpeedMS=0.1);
+            t.verifyFalse(m.check.clamped);
             % ⚠ the core covers more SURFACE than it displaces through SPACE, so the Euclidean
             %   centroid speed must come in BELOW the geodesic one by the fold factor
             t.verifyGreaterThan(m.check.foldFactor, 1.2);
@@ -90,7 +93,7 @@ classdef tMovingVortex < matlab.unittest.TestCase
             c = onCleanup(@() warning(w));
             m = f();
             t.verifyTrue(m.check.clamped);
-            t.verifyLessThan(m.pathLengthMM, 200, 'the mesh is only ~161 mm across');
+            t.verifyLessThan(m.pathLengthMM, 350, 'a hemisphere is ~300 mm across its surface');
         end
 
     end
