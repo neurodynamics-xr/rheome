@@ -18,7 +18,11 @@
     surf  surface struct   c [K x nT] complex coefficients   Psi [N x K]   t [1 x nT] times (s)
   OPTIONS:
     'Percentile'  mark windows above this percentile of amplitude (default 90)
-    'View','Title','Visible'
+    'Unit'        unit of the amplitude (default 'a.u.')
+    'View','Visible'; 'Title' the figure's name (the legend carries it); 'Export' file stem
+    'Theme' figure theme ('' = the tokens' default, Pergammon; 'neuroimage' for MS1)
+    Sizes and colours are the figure tokens; double column x 65 mm. The windows are a labelled trace
+    (nxr_event_trace), the peak is ringed, keys sit in the panels' key bands.
  
   OUTPUT:
     info .whenPower [1 x nT] energy per frame (Parseval)   .peakT time of maximum

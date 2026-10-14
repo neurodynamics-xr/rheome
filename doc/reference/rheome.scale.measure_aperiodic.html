@@ -62,6 +62,10 @@
   ⚠ The fit-window PSD mixes the window's own Welch PSD at weight 6/L with the background's over the L span (the
     rest record; or the empty room + the cortical background's mean PSD) -- the plant exists only in the window,
     so this is the record's Welch PSD up to the segments straddling the window's edges.
+  Ex (third output, figure data): the first offset plant at the largest OffsetX of the first arm, rep 1, first sigma,
+  first speed &gt; 0 (else the first): the hemisphere's cortex, the path, the patch gain at the window's centre and the
+  patch centre per envelope frame, and at the sensors the channel-mean Welch PSDs (2 s Hann) of the background, the
+  forwarded plant, their sum (total) and the sum's periodic split per fit window (aperiodic = total - periodic).
  
   See also: rheome.spectral.decompose, rheome.detect.tilepath, rheome.differential.helmholtzbands,
             rheome.scale.measure_movingvortex

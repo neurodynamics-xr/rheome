@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_ambient</title></head><body>
+<h1>rheome.scale.measure_ambient</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_AMBIENT  A planted tilted field read ambient vs tangential, on the sphere and the subject's cortex.
+ 
+    [T, X, Ex] = rheome.scale.measure_ambient(name)            % sphere + the left hemisphere of name
+    [T, X, Ex] = rheome.scale.measure_ambient('')              % the sphere alone (closed form only)
+    [T, X, Ex] = rheome.scale.measure_ambient(name, TiltsDeg=[0 45 90], Hemis=[&quot;L&quot; &quot;R&quot;])
+ 
+  MS1 capability 1.4 (ambient-vector fields), the figure panel. The current is a moment, not a tangent
+  vector: a patch whose moment tilts away from the normal has a normal share, and on a curved sheet that
+  share reads as divergence. The two readings differ by the mean-curvature coupling,
+ 
+      div J  =  div_S J_t  +  2H (J . n)             (n outward, H = 1/R on a sphere of radius R)
+ 
+  (rheome.operators.weak_differential, about_sensor_to_cortex). This plants J = f (cos(theta) n + sin(theta) t),
+  f a Gaussian bump (SigmaMM, graph geodesic, rheome.geom.edgegraph) and t the tangential projection of a fixed
+  axis, at each tilt theta from the normal, and reads:
+    D_amb = rheome.differential.divergence(J)       the ambient reading
+    D_tan = rheome.differential.divergence(J_t)     the tangential reading, J_t = J - (J.n) n
+    C     = D_amb - D_tan                           what the normal share adds (exactly div of (J.n) n)
+    K     = 2H (J.n)                                its closed form: H = 1/R on the sphere; on the cortex
+                                                    H from the cotan mean-curvature normal, (M\L x).n / 2
+  No instrument: no gain, no inverse, no noise. Geometry and operators only.
+ 
+  X, one row per surface x tilt: surface, hemi, tilt_deg, sigma_mm, centre_vertex, n_vertices,
+    H_relerr (sphere: cotan H vs 1/R), couple_relerr (||C - K|| / ||K||, area-weighted), couple_r
+    (Pearson r of C and K), couple_relerr_60mm / couple_r_60mm (both low-passed to wavelengths &gt; 60 mm on
+    the cortex's Laplace-Beltrami modes; NaN on the sphere), normal_share (||C|| / ||D_amb||: the fraction
+    of the ambient divergence the normal share makes), curl_normal_rel (||curl of the normal part|| / ||C||;
+    closed form 0).
+  T: rheome.scale.rows(&quot;ambient&quot;), band &quot;&lt;surface&gt;/&lt;tilt&gt; deg&quot;: couple_relerr, couple_r, normal_share and
+    (cortex) couple_relerr_60mm. Ex: figure data per surface at ExampleTiltDeg (vertices_mm, faces,
+    normals, H, f, J [nV x 3], D_amb, D_tan, C, K).
+ 
+  ⚠ On the cortex the closed form uses a DIFFERENT discretisation of H (cotan) from the one the divergence
+    carries (hat gradients x vertex normals), so the per-vertex error there is the mesh's, not the
+    identity's: read it at a scale (the 60 mm columns). The sphere is the exact check (tests/tScaleAmbient).
+ 
+  See also: rheome.differential.divergence, rheome.operators.weak_differential, rheome.scale.measure_cptrack
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

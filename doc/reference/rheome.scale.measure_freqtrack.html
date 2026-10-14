@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_freqtrack</title></head><body>
+<h1>rheome.scale.measure_freqtrack</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_FREQTRACK  Planted chirps in the participant's own rest, tracked across frequency (MS1 2.5).
+ 
+    [T, X] = rheome.scale.measure_freqtrack(name)
+    [T, X] = rheome.scale.measure_freqtrack(name, S, Depth=8, JLevel=4, NPer=10, SNRs=[20 10])
+ 
+  The through-MEG test of rheome.detect.jointpath, in the injection design of rheome.scale.measure_inject (same
+  source, segment and readout), with frequency, not place, as the thing that moves:
+    bands     one octave wide, centred at 2.^LogF (half-octave steps, 4-32 Hz: 2.8-45 Hz); per band, 8th-order
+              band-pass and Hilbert at the sensors, minimum norm, |J| per vertex, LB modes, depth-Depth tile
+              means (rheome.flow.envelopemodes' chain), 300 frames/s block-averaged by 2^JLevel (the time tile)
+    source    a Laplace-Beltrami heat-kernel blob (SigmaMM 15) along the normal at a random vertex, forwarded
+              through the participant's leadfield; it stays put -- the place is not what is tested
+    cases     still (FcHz), hop (a CROSSFADE of two tones at 2.^HopLogF: both present mid-window; nothing drifts), and
+              exponential chirps at Rates octaves/s (log2 f = log2 FcHz + r (t - W/2), held at the window's ends);
+              NPer 2 s windows each from the clean span, present for the window +-1 s with 0.25 s ramps
+    amplitude per-band SNR (dB) = 20 log10 of the plant's full-height envelope on its tile in the band of its
+              instantaneous frequency (a unit tone read alone) over the null's median there (N.norm: the real
+              envelope's median over the calibration windows, circularly shifted); the chirp's
+              amplitude follows that gain in log f, so the SNR is the same at every frequency it passes
+    arms      noiseless (the plant alone at 20 dB: the instrument's own bias), each SNR in the own rest, and
+              control (the same rest segment without the plant)
+    null      each LB mode's envelope circularly shifted by ONE shift shared by every band (keeps each series'
+              spectrum and the coupling of overlapping bands; destroys alignment across places);
+              rheome.detect.jointpathnull, odd windows calibrate, even windows test: Alpha false paths/s, the
+              cross-band criterion (the 95th percentile of |netOct| over passing null paths, or CrossOct if
+              given) and the CROSS-BAND false rate at it
+    tracker   rheome.detect.jointpath, top 3 paths; FOUND = a passing path with &gt;= half its frames within NearMM
+              of the plant and a MEAN |frequency centroid - truth| &lt;= OctTol octaves over its frames (the truth
+              clamped to the band set's centres, which bound the readout). The threshold is calibrated on the
+              best path per window and the plants may use any of 3: control_found measures that specificity,
+              and hit_minus_control is the hit rate above it
+    real      every 2 s window of the clean span (rheome.scale.cleanspan: edges and bad blocks out, then a guard of
+              the lowest band's two-sided envelope response down GuardDB, guard_s; the null built on the same
+              frames) through the same tracker and threshold (case &quot;real&quot;)
+ 
+  X (freqtrack.csv): one row per hemisphere x case x plant x arm (and per real window): truth, readout (pass found
+    near octErr sweepOctS octSpan durS netMM netOct jumpOct sweepErr scoreRatio), the half of the recording, the seed, the
+    null's held-out false rates (per s and per window), its cross criterion, the number of passing calibration
+    paths that set it (nullCalN) and band occupancy, and the median adjacent-band envelope correlation of the real
+    field and of the null (realBandR, nullBandR: equal under the shared shift, the null's guard), the median null
+    calibration score over the threshold (nullScoreRatio) and the guard (guardS, s). sweepErr = the
+    read sweep - the LS slope of the (clamped) truth over the path's own frames: a perfect readout reads 0 in
+    every case (the hop's step truth has an LS slope of ~1.1 oct/s, not 0).
+  T (rheome.scale.rows, analysis &quot;freqtrack&quot;), band &quot;&lt;arm&gt;/&lt;case&gt;/d&lt;depth&gt;/&lt;fps&gt;fps&quot;:
+    hit_rate        fraction of plants FOUND                                          fraction
+    sweep_ratio     median read sweep / planted rate, found chirps ⭐                 ratio
+    sweep_oct_s     median read sweep of found plants (still: 0; hop: see sweep_err)  oct/s
+    sweep_err_med   median sweepErr of found plants (0 for a perfect readout)        oct/s
+    net_oct_med     median netOct of found plants                                     oct
+    jump_oct_med    median jumpOct of found plants (hop: one large step; chirp: small) oct
+    oct_err_med     median frequency-centroid error of found plants                   oct
+    hit_minus_control  hit_rate - control_found of the same case                      fraction
+    control_found   (arm control) fraction of plant-free segments with a FOUND path    fraction
+  and band &quot;d&lt;depth&gt;/&lt;fps&gt;fps&quot;: false_rate, cross_false_rate (1/s, held-out surrogate), false_frac_win,
+  cross_frac_win (the same per 2 s window, the unit of real_frac_*), cross_oct (the criterion), cross_cal_n (passing
+  calibration paths behind it), real_band_r and null_band_r (adjacent-band envelope correlation), real_frac_pass,
+  real_frac_cross (passing real windows with |netOct| &gt;= cross_oct), real_sweep_abs_med (oct/s),
+  real_score_ratio_med and null_score_ratio_med (median best-path score / threshold of the real and the null
+  calibration windows: equal if the null is a null of this recording; real below null = a conservative null),
+  guard_s (s); per band
+  &quot;d&lt;depth&gt;/&lt;fps&gt;fps/&lt;Hz&gt;Hz&quot;: null_band_occ; hit_rate per half (&quot;_h1&quot; / &quot;_h2&quot;). All medians over hemispheres
+  of ONE participant: the per-participant false rate.
+ 
+  ⚠ The frequency readout is the centroid over the path's band and its neighbours, so it is bounded by the
+    band set: below 2^(LogF(1)) or above 2^(LogF(end)) a chirp reads clamped, and sweep_ratio &lt; 1 there.
+  ⚠ On noise the best path's centroid spans &gt;= 1 octave in nearly every passing window: a path that crosses
+    bands is evidence only by |netOct| against cross_oct and cross_false_rate, never by its span.
+  ⚠ The null's paths sit mostly in the low bands (null_band_occ): the threshold is set by them, and the
+    sensitivity differs by band.
+  ⚠ The per-mode shift also removes the minimum norm's spatial point-spread correlation between places (as
+    measure_inject and grouptrack): the null is conservative about place, not about band.
+ 
+  See also: rheome.detect.jointpath, rheome.detect.jointpathnull, rheome.scale.measure_inject
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

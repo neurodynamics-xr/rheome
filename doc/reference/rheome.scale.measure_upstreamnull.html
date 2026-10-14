@@ -30,6 +30,12 @@
        &quot;snr&lt;dB&gt;_lambda&lt;mm&gt;&quot;): travel_power (share of travel plants with |U*| above the threshold and U* of
        U - 0.5's sign), travel_dir_sign (share whose U - 0.5 has the sign sigma: only meaningful when g
        increases along Axis)
+       TP2/TP3 gate N reads: null_ustar_abs95 (95th percentile of the lagged |U*|), lag_cancelled_median (median
+       over lagged plants of 1 - |U*|/|U - 0.5|), travel_power95 (share of travel plants with |U*| above
+       null_ustar_abs95 and U* of the planted sign sigma), and the &quot;none&quot; rows' U* and seed_ustar_sd.
+    Null=&quot;v2&quot; calibrates measure_upstream's redesigned null (Null= there); &quot;v1&quot; the frozen one.
+    Readout=&quot;v2&quot; reads every plant (U and U_surrogate alike) through measure_upstream's fwdLS readout (Readout=
+    there), so the null is calibrated through the readout it would serve; &quot;v1&quot; the frozen one.
  
   ⚠ THE READOUT ALIASES PAST HALF A CYCLE between tile centres (~120 mm): lambda &lt; ~240 mm can read backwards
     whatever the null does; travel_dir_sign shows it, travel_power does not (it compares U* with U only).

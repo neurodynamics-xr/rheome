@@ -8,6 +8,8 @@
     [T, X] = rheome.scale.measure_upstream(name, rheome.scale.sensors(name), Gradient='/path/g1_fsaverage.mat')
     [T, X] = rheome.scale.measure_upstream(name, S, Passes=[&quot;periodic&quot; &quot;surrogate&quot; &quot;total&quot;])
     [T, X] = rheome.scale.measure_upstream(name, S, Data=Fplanted)    % a planted copy of the S.iSel rows
+    [T, X] = rheome.scale.measure_upstream(name, S, Readout=&quot;v2&quot;)     % tile values by fwdLS (see READOUT)
+    H = rheome.scale.measure_upstream(name, S, Readout=&quot;v2&quot;, Geometry=true)   % the readout's head geometry only
  
   Why: whether large-scale slow-band activity at rest runs up the sensory -&gt; association gradient, and whether
   that survives the instrument, is read per participant by ONE frozen definition: rheome.flow.upstreamshare,
@@ -28,10 +30,30 @@
                   carried to the recording's cortex through its registered sphere (nearest vertex); signed so
                   pericalcarine, precentral and postcentral (Desikan-Killiany) are low and inferiorparietal and
                   medialorbitofrontal high; g = tile mean.
+                  Readout=&quot;v2&quot; (&quot;fwdLS&quot;) replaces this step only, see READOUT below.
     f. RESOLUTION own-tile fraction (rheome.flow.crosstalk on the kernel's three components) &gt;= 0.25 votes; a
                   recording whose keptWeight &lt; 0.5 in either hemisphere is not read. U pools the hemispheres
                   by their vote weight. The mask and the exclusion depend on the kernel only, so every pass
                   reads the same tiles of the same participants.
+ 
+  READOUT (Readout=; &quot;v1&quot; by default, frozen):
+    &quot;v1&quot;  steps c-d as above: the MNE tile means of the three components.
+    &quot;v2&quot;  &quot;fwdLS&quot;: the tile values are the regularised least-squares amplitudes of the tiles' OWN forward fields,
+          q = (Gp'Gp + mu I)^-1 Gp' Za, Gp = [L | R] the sensor field of uniform normal current over each depth-3
+          tile (the v1 null's generators), mu = 1e-3 trace(Gp'Gp)/nTiles; upstreamshare on the scalar q per
+          hemisphere. Everything else (a, b, e, f -- the mask and exclusion stay the MNE kernel's) is v1's.
+          Why: a folded depth-3 tile carrying uniform current is near-silent at the sensors, so the MNE tile-mean
+          kernel has almost no zero order and each tile's phase follows a kernel centroid hundreds of mm away.
+          Gate S on the Margulies G1 axis (planted plane waves, 0 and 10 dB, four MEG heads, 2026-10-12): v1
+          reads the planted direction right at every lambda 200-1000 mm in one head at 0 dB only. v2 reads it right at
+          every lambda 200-1000 mm in three, also when the plant's gain (+-10 %) or normals (~17 deg) differ
+          from the readout's. In the fourth head v2 reads 200-400 mm REVERSED, noiseless too, where the tile
+          means of the true current read right: its short-lambda edge is a property of the head (~500 mm there).
+          Every pass that reads tiles (periodic, surrogate, total) uses the same readout; &quot;of&quot; is unchanged.
+          v2 is the approved gate S readout for TP2/TP3 (2026-10-12), frozen at the merge of the PR that added
+          it; v1 stays the default here. Its lambda range is stated per sample from each head's short-lambda edge
+          (measured noiselessly, no recording read). ⚠ The perturbations above are not a different conductivity or BEM
+          model; it aliases at lambda 100 mm.
  
   PASSES (Passes=; all four by default; each is one extra reading of the same span, tiles, mask and gradient):
     &quot;periodic&quot;   U: h = hper, the periodic gain (the primary readout)
@@ -40,6 +62,15 @@
                  generators of each hemisphere refitted with no travel, through the participant's own gain, at
                  the window's lag and ratio, + the phase-randomised residual), made analytic on the same bins,
                  and read by c-f. U* = U - U_surrogate. Read on the whole span and on each half.
+                 Null=&quot;v1&quot; (default, frozen, NOT VALIDATED: gate N failed 2026-10-11) is the above. Null=&quot;v2&quot; (the
+                 redesign): candidates are DEPTH-6 tiles (64 per hemisphere), the two
+                 fitted generators keep their own time courses (Keep), and the residual keeps its zero-lag
+                 spatial structure and loses only its lags (Residual &quot;zerolag&quot;); see rheome.forward.laggedpair.
+                 ⚠ v2 IS NOT VALIDATED EITHER (2026-10-12, measure_upstreamnull on a held-out OMEGA MEG head):
+                 lagged 20/40 mm discs leave the 95th-pct |U*| at 0.07-0.13 (readout v1) and 0.10-0.20
+                 (v2 fwdLS), 13-44 % of the lag cancelled. With the TRUE disc generators as candidates the same
+                 null cancels 87-97 % (95th pct 0.007-0.018): the limit is that one tile does not fit a compact
+                 source's shape, not the residual. Do not read U* as travel.
     &quot;total&quot;      U_total: h = 1, the periodic gain switched off (WAVE-OR-LEAKAGE H3b, Delta_ap = U_total - U).
                  The aperiodic fit still runs and gives the covariates. Whole span only.
     &quot;of&quot;         U_of: the comparator (P2). Horn-Schunck optical flow (rheome.flow.apparent, Alpha 1) of the

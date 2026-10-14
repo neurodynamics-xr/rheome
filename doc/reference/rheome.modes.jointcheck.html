@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.modes.jointcheck</title></head><body>
+<h1>rheome.modes.jointcheck</h1>
+<p><em>function rheome.modes</em> &mdash; Rheome</p>
+<pre>  MODES.JOINTCHECK  The J5 canary validation of joint discovery (protocol section 14), over the canary heads.
+ 
+    R = rheome.modes.jointcheck(files, outDir)     % files: rheome.modes.jointfields(..., Canary=true) .mat paths
+    R = rheome.modes.jointcheck(files, outDir, NSplits=100, Workers=16)
+ 
+  Joint discovery (rheome.modes.discover with the §4.2 K rule, NMF and cPCA sensitivity) on the CANARY series:
+  four planted patterns on null F in each head (rheome.modes.jointfields, Canary=true; no real-data series exists
+  in those files, so no real-data atom can be inspected). Then the J5 rule:
+    recovered  for wave200_ap, pair_fo and standing200: the best |r| of any atom of the plant's octave to the
+               head's noise-free planted joint coefficients (Y.canary_truth) is &gt;= RMin (0.7) in EVERY head
+    fine50     reported, not gated: its best |r| and its T-bar -- the energy-weighted scale transfer of the
+               planted coefficients over the depths (the head's own T(s), rheome.modes.scaletransfer) and of
+               its best-matching atom
+    F          no atom of null F passes Level-1 (i), with the threshold calibrated on F and tested out of sample
+               (F calibration amendment, design §14, 2026-10-13, decision 93764a02; it follows the F union
+               amendment, 2026-10-12, decision d62f84ae, after which 1 of 11 F atoms still read |r| 0.678 &lt; 0.7):
+               r_min_f = min(0.7, f_low - 0.05), f_low the lowest best |r| of F1's or F2's K* atoms to the other
+               realisation's atoms at EVERY K (rheome.modes.discover); then each atom of a third realisation F3
+               (f_fieldspread3, which does not set r_min_f) at K* against every F1 and F2 atom at every K: it would
+               pass (i) with |r| &lt; r_min_f to all of them. Pass = none does
+  pass = all three recovered AND no F atom passes, read at K* = max(§4.2 rule, k_sep) -- k_sep the smallest K at which
+  all three are recovered in every head (J5 amendment, design §14, 2026-10-12); the reading at the rule's own K is
+  kept as recovered_at_k_rule. Not gated, to read a failure: joint_canary_byK.csv, the best |r|
+  of each plant at EVERY K's reference clustering -- a K rule that merged two plants (K* too small: with three
+  heads a split half is one or two heads) reads differently from an instrument that cannot separate them.
+  Rehearsal (two OMEGA heads that are not the canary, 20 splits): K* = 2 merged the wave and the pair (wave |r|
+  0.52, 0.63); at K = 6 the wave, pair and standing plants read 0.97-1.00 and fine50 0.25-0.33 (T-bar 0.42-0.61).
+ 
+  Writes, besides discover's files: joint_canary.csv (plant x head), joint_canary_f.csv (F atoms),
+  joint_canary_transfer.csv (T(s) per head), joint_canary_byK.csv, joint_canary.json (the verdict and its parts).
+ 
+  See also: rheome.modes.jointfields, rheome.modes.discover, rheome.modes.scaletransfer
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

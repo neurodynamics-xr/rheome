@@ -7,6 +7,8 @@
     T = rheome.geom.tree(S)
     T = rheome.geom.tree(S, MinArea=2e-3, MaxDepth=6)
     T = rheome.geom.tree(S, L=L, M=M)                 % reuse a built Laplace-Beltrami pair
+    T = rheome.geom.tree(S, Method=&quot;Ladder&quot;, MaxDepth=8)          % the atlas's tiles, re-built from S
+    T = rheome.geom.tree(S, Codes=codes, MaxDepth=8)              % the atlas's tiles, read from the store
     B = rheome.load.bases(name);  T = rheome.geom.tree(B.L.S, L=B.L.lbo.L, M=B.L.lbo.M)   % from the cache
  
   The cortical twin of rheome.sensors.tree: split each patch by the sign of its own Fiedler
@@ -45,8 +47,20 @@
   its diameter is the equivalent disc's, 2*sqrt(area/pi). Euclidean extent across a folded
   sheet measures the folding, not the patch.
  
+  ⭐⭐ THE ATLAS'S TILES ARE THE LADDER, NOT THIS BISECTION (VR1 §2.9). Fiedler-sign bisection is a
+  different partition from the atlas ladder (ARI 0.36-0.40 at depths 4-8; tile-area CV 25 % at depth
+  8 against the ladder's 2.6 %). Method=&quot;Ladder&quot; builds the atlas's own tree with
+  rheome.geom.surfaceladder, bit-exact to nsp's ladder.py (equal-mass cuts across the geodesic
+  diameter); Codes= reads the stored codes instead, which is the only way to be identical to an atlas
+  whose store predates the current ladder.py (3 of 10 VR1 hemispheres differ from level 7 on). Either
+  way node k's children are 2k and 2k+1, and the tile code of a node at depth d is node_id - 2^d.
+  Run it per hemisphere, as the atlas does. MinVertices and MinArea do not apply: every level is full.
+ 
   INPUTS
     S        surface struct (.Vertices, .Faces) or a struct with .L and .M supplied
+    Method   &quot;Fiedler&quot; (default) or &quot;Ladder&quot; (the atlas's dyadic ladder; L and M are not used)
+    Codes    [n x 1] the hemisphere's atlas codes at level MaxDepth, 0-based without the hemisphere
+             offset (the store's atlas/trees/subject/codes minus h*2^MaxDepth); implies the ladder
     L, M     precomputed rheome.operators.laplace_beltrami output (optional)
     MinVertices, MinArea, MaxDepth   stopping rules (1, 0, Inf); any one of them stops a node
  

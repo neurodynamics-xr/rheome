@@ -7,7 +7,8 @@
     R = rheome.detect.risefall(a, fs, t0, t1)                  % a candidate episode [t0, t1] s
     R = rheome.detect.risefall(a, fs, t0, t1, Margin=1, Smooth=0.1)
  
-        a(t) = b + h * S((t - tOn)/tauR) * S(-(t - tOff)/tauF),    S(x) = 1/(1 + exp(-x))
+        a(t) = b + h * S((t - tOn)/tauR) * S(-(t - tOff)/tauF),    S(x) = 1/(1 + exp(-x))      (Model &quot;linear&quot;)
+        a(t) = sqrt(b^2 + (h * S((t - tOn)/tauR) * S(-(t - tOff)/tauF))^2)                    (Model &quot;quadrature&quot;)
  
   fitted to the amplitude a over [t0 - Margin, t1 + Margin]. tOn and tOff are the HALF-rise and
   HALF-fall times -- where the episode is half built and half gone -- and tauR, tauF how fast it
@@ -26,9 +27,32 @@
     fs       samples per second          t0, t1   the candidate episode (s), e.g. from rheome.detect.spindle
     Margin   seconds either side included in the fit (1)
     Smooth   moving mean applied first, symmetric (0.1 s)
+    Model    &quot;linear&quot; (default) or &quot;quadrature&quot;. ⭐ An episode on an ongoing background adds to it in POWER,
+             not in amplitude (incoherent sources): |p + n|^2 ~ p^2 + n^2. The linear model then reads the
+             flanks of sqrt(b^2 + h^2 S^2) as sharper than the episode's own (planted through MEG at 10 dB:
+             tau x 0.65). &quot;quadrature&quot; fits the episode's own amplitude S under that sum.
+             &quot;posterior&quot;: the quadrature model, read by its POSTERIOR rather than its least-squares point.
+             The double sigmoid in power, P = B + H g, B and H solved in closed form (weights 1/P), is profiled
+             over a grid of (tOn, tOff, tauR, tauF) (flat prior on risefall's box, log-spaced tau); the
+             likelihood is tempered by the residuals' integrated autocorrelation (an envelope's samples are
+             not independent); tOn and tOff are the marginal posterior MEDIANS (the estimate that minimises the
+             absolute timing error), then tauR, tauF are refitted with tOn, tOff held there. ⭐ Why: planted
+             through MEG at 10 dB in own rest, the timing error is set by the beat between the episode and the
+             ongoing alpha of the same band (|p + n|^2 = p^2 + n^2 + 2 p n cos(dphi), a slow multiplicative
+             noise), not by the fit's start, bounds, margin or smoothing; the least-squares point then trades
+             timing error into tau (x0.7-0.8). Held-out plants, 4 participants at 10 dB, vs &quot;quadrature&quot;: median
+             |tOn| 0.13-0.14 s (0.17-0.19), |tOff| 0.11-0.18 s (0.12-0.22), tau x0.73-0.98 (x0.62-0.87), fit
+             share 0.90-0.99 (0.81-0.88); at 20 dB tau x0.97-1.02. ⚠ At 10 dB timing sits near one 165 ms tile
+             and tau can stay compressed: the beat, not the fit, sets that limit. ~0.6 s per event; bounded past a 10-s window (GridMax, FramesMax: ~10 s at 120 s).
+    GridMax  &quot;posterior&quot; only: at most this many tOn (and tOff) points per pass (400: the 25-ms grid up to a 10-s window);
+             a longer window is read coarse, then at 25 ms over its posterior's support
+    FramesMax  &quot;posterior&quot; only: at most this many frames (1200: 30 Hz up to a 40-s window, slower past it)
+    TauMax   upper bound of tauR and tauF (1 s). On two OMEGA participants tau reached 1 s at the 95th
+             percentile (labelling design section 7); a fit AT the bound is flagged (.atBound), not trusted
  
   OUTPUT (struct R)
     .tOn .tOff .tauR .tauF .b .h (seconds and amplitude units)   .r2   .ok
+    .atBound  tauR or tauF within 1% of TauMax
     .buildup .plateau .decay   [start end] s; plateau is [] when the fit leaves none
  
   See also: rheome.detect.spindle, rheome.detect.tilepath

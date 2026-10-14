@@ -14,7 +14,11 @@
   spatial scale, which a per-channel fit cannot see.
  
   INPUTS: P [nF x nS] linear power, f [nF x 1], ap from rheome.spectral.aperiodic
-  OPTIONS: 'Modes' which columns to draw (default: 5 spread across), 'Lambda', 'Title', 'Visible'
+  OPTIONS: 'Modes' which columns to draw (default: 5 spread across), 'Lambda', 'Unit' of P ('a.u.'),
+           'Visible', 'Title' (the figure's name), 'Export' file stem (&lt;stem&gt;.pdf/.svg/.png),
+           'Theme' ('' = the tokens' default, Pergammon; 'neuroimage' for MS1).
+  Sizes and colours are the figure tokens; double column x 60 mm; modes coloured low -&gt; high; the gains
+  are labelled at their curves.
  
   See also: rheome.spectral.aperiodic, rheome.spectral.decompose
  

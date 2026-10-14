@@ -60,6 +60,14 @@
                                      phase windings around tile triangles, outward orientation). ⚠ Not s^-1: a
                                      flow rate needs the speed, which these depths do not resolve
  
+  JOINT ATOMS (M.kind &quot;joint&quot;: centroids of rheome.modes.discover on rheome.modes.jointfields; protocol section 14):
+  the joint fields are recomputed instead (same seed); F (f_fieldspread) takes N1's place (r_f_fieldspread);
+  N2 spins within each depth (the same rotation for every depth); physical features and N3 are read on the
+  atom's dominant depth (the depth holding most of its energy; dominant_depth), N3 reported and never gated;
+  per atom also scale_mm (energy-weighted geometric mean of the depths' scales), t_bar (energy-weighted T(s) of
+  this participant, rheome.modes.scaletransfer) and scale_edge_mm; N5 surrogates through rheome.modes.octave;
+  no N3 calibration plants.
+ 
   Returns T (rheome.scale.rows &quot;modesfit&quot;: per band gev_total, n_valid, kappa, ...) and X with tables
     modesfit  (band, source, half, method, mode, metric, value, unit; mode 0 = overall)
     modesmaps (band, source, half, mode, hemi, tile, amp, phase_rad)

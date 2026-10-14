@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.eventlocked</title></head><body>
+<h1>rheome.detect.eventlocked</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.EVENTLOCKED  Time-frequency power around event anchors (onsets, offsets, random times).
+ 
+    P = rheome.detect.eventlocked(X, fs, anchors, filt)
+    P = rheome.detect.eventlocked(X, fs, anchors, filt, Window=[-1 1], Freqs=1:45, Cycles=5, Rate=100)
+        X        [C x nS] data (sensors)
+        anchors  [nE x 1] times (s, sample 1 = 0 s), e.g. the events' tOn
+        filt     {nE x 1} cell of [k x C] spatial filters, or one [k x C] for all (e.g. eye(C): every channel);
+                 the power is summed over the filter's k outputs -- for the event-tile source, the minimum-norm
+                 kernel rows at the event's tile centres, each tile's 3 rows scaled by sqrt(its area share)
+ 
+  Complex Morlet wavelets (Cycles cycles, Gaussian in frequency, sigma_f = f / Cycles) on a segment padded
+  by 3 sigma_t of the lowest frequency on either side, so the window carries no edge.
+  P [nF x nT x nE] power; an anchor whose padded segment leaves the data is all NaN. Times P.t below.
+  Use: average P(:,:,e) ./ B(:,e) over events, B the same event's power at matched random anchors averaged
+  over time and anchors (rheome.scale.measure_events), in dB.
+ 
+  OUTPUT struct P: .P [nF x nT x nE]   .f [nF x 1]   .t [1 x nT] s from the anchor
+ 
+  See also: rheome.detect.eventtable, rheome.scale.measure_events, rheome.scale.measure_slowosc
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

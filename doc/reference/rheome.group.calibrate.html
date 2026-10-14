@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.group.calibrate</title></head><body>
+<h1>rheome.group.calibrate</h1>
+<p><em>function rheome.group</em> &mdash; Rheome</p>
+<pre>  GROUP.CALIBRATE  Does tile-wise group inference hold its error rate and find planted effects on the real cohort tile maps? Null labels and plants.
+ 
+    [C, D] = rheome.group.calibrate(inDir, outDir)
+    [C, D] = rheome.group.calibrate(inDir, outDir, NDraw=500, NPerm=2000, NSpin=1000, Effects=[0 0.2 0.35 0.5 0.8], Nuisance=0.5)
+    [C, D] = rheome.group.calibrate(inDir, outDir, Nuisance=[0 0.5], Transform=[&quot;none&quot; &quot;rankit&quot;])
+ 
+  inDir holds per-participant gaugetensor.csv (rheome.scale.run's &lt;sub&gt;/ or nsp cf-atlas's flat &lt;sub&gt;_ files,
+  any depth) and metrics.csv, whose `dataset` column is the cohort (a participant without one is an error); no
+  draw mixes cohorts, and the same subject ID in two cohorts is two participants. The tile maps are
+  the participants' own values per group tile (Measures: anisotropy, normal_share, log10 trace). No real outcome
+  is read: the labels and covariates are random, so age and AD risk stay locked (AGE-1, ATLAS-1).
+ 
+  Each draw, per cohort x measure, takes a random half (kind &quot;group&quot;) or a standard-normal covariate (kind
+  &quot;covariate&quot;) and a random seed tile; the plant is w = exp(-theta^2 / (2 PlantDeg^2)) on the seed's hemisphere
+  (theta: angle between tile centres on the template sphere), added as effect * sd(tile) * w to the labelled half
+  (group: Cohen's d at the seed) or as effect * sd(tile) * w * z (covariate: a standardised slope). Effect 0 is
+  the null-label condition. Nuisance (rho, default 0.5; 0 = none) adds, per draw and kind, a synthetic nuisance
+  covariate c correlated rho with v and with a 1 sd effect at every tile, and the design is [1 v c]: the
+  Freedman-Lane reduced-model step is then exercised, as in the real analyses (age, sex, site...). Each map goes
+  through rheome.group.glm (Freedman-Lane, max-|t| FWER) and the t map through rheome.group.spin against w.
+  Nuisance may be a vector and Transform (&quot;none&quot;; &quot;rankit&quot;: each tile's values replaced by their rank-based
+  inverse normal scores, Blom's (r - 3/8) / (n + 1/4), before plant and nuisance, so the measure analysed is the
+  rank-normalised one) a list: every combination is run on the SAME draws (labels, seed tile, nuisance noise,
+  permutations), so conditions are compared paired. Each is a condition of its own in the gate (K grows).
+  Writes to outDir:
+    draws.csv         one row per cohort x measure x kind x effect x draw: any_fwer (any tile p_fwer &lt; Alpha),
+                      fp_outside (any tile with w &lt; 0.05 significant), detected (any tile with w &gt;= 0.5),
+                      sensitivity (share of w &gt;= 0.5 tiles), unc_rate (share of tiles with p &lt; Alpha), spin_r, spin_p
+    calibration.csv   per cohort x measure x kind x effect: n_draws and the rates with Clopper-Pearson 95 % CIs;
+                      ⭐ calibrated = no false rate is above Alpha: any_fwer and spin_p &lt; Alpha at effect 0,
+                      fp_outside at every effect. Power (detected) is reported, not gated
+ 
+  ⭐ HOW THE GATE IS READ (declared before the first fir run). A cohort has K gated rates (fp_outside in every
+  condition, any_fwer and spin at effect 0: K = 42 at the defaults). Each fails only if its Clopper-Pearson
+  lower bound at the Bonferroni level, 1 - Alpha/K two-sided, is above Alpha (column gate_lo_*). A cohort is
+  calibrated when all its K rates pass (printed per cohort); one failure means the method is fixed and re-run.
+  What the gate can see: at NDraw = 500 and K = 42 it flags an observed false rate of 43/500 = 0.086 or more
+  (36/500 = 0.072 at a single 95 % gate); a smaller excess goes unseen and is read from the rates themselves.
+  At depth 3 (8 tiles a hemisphere) the 30-degree plant covers about one tile, so sensitivity and detected
+  coincide there. The spin rotations are drawn once per cohort x measure and shared by all draws: each test is
+  valid, but the draws' spin false rates are correlated through that one rotation set.
+    tiles.csv         the tiles tested per cohort (hemi, depth, node_id, centre u1..u3)
+    participants.csv  the participants per cohort and measure (complete cases)
+    shape.csv         per cohort x measure x transform, over tiles: median and max skewness and kurtosis, the
+                      largest |z| of any value, and the mean correlation between tiles (no participant values)
+ 
+  Tiles missing in more than MaxMissing of a cohort's participants are dropped, then participants missing any
+  kept tile (shortcut: complete cases; per-tile missingness would break the permutation's shared row order).
+  Tile centres: Centres (a table hemi, node_id, u1, u2, u3) or rheome.scale.template(depth, Template=Template).
+ 
+  See also: rheome.group.glm, rheome.group.spin, rheome.scale.reducegauge
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -22,13 +22,16 @@
     'Top'        show only the N longest-lived ridges (default 12; Inf = all)
     'View'       camera [az el] (default [-90 10])
     'CLim'       shared colour limits (default from U over the shown frames)
-    'Colormap'   background colormap (default parula)
+    'Colormap'   in place of the amplitude's colormap (tokens quantity amplitude: |U|)
+    'Theme'      figure theme ('' = the tokens' default, Pergammon; 'neuroimage' for MS1)
+    'Unit'       unit of the field amplitude for the colourbar (default 'a.u.')
     'Lift'       marker/trail offset along the normal, fraction of mesh extent (default 0.012)
     'TrailFrames' how many frames of trail to draw behind the current position (default Inf)
     'Zoom'       camera zoom factor applied after rendering (default 1.8)
     'Only'       restrict to these ridge indices before the Top sort
     'Titles'     {1 x numel(frames)} panel titles (default 'frame k')
-    'Title'      overall title
+    'Title'      figure title: the figure's name (the legend carries it, not the artwork)
+    'Export'     file stem: write &lt;stem&gt;.pdf/.svg/.png at print size (nxr_save)
     'Visible'    'on' (default) | 'off'
  
   OUTPUT: hFig figure handle.

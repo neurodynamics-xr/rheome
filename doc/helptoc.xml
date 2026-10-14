@@ -15,6 +15,10 @@
   <tocitem target="about_gauge.html">The gauge</tocitem>
   <tocitem target="about_resolution_floor.html">The resolution floor</tocitem>
   <tocitem target="reference/index.html">Functions and Classes
+    <tocitem target="reference/index.html">rheome
+      <tocitem target="reference/rheome.snapshot.html">rheome.snapshot</tocitem>
+      <tocitem target="reference/rheome.view.html">rheome.view</tocitem>
+    </tocitem>
     <tocitem target="reference/index.html">Classes
       <tocitem target="reference/rheome.flowbrowser.html">rheome.flowbrowser</tocitem>
       <tocitem target="reference/rheome.flowfeatures.html">rheome.flowfeatures</tocitem>
@@ -50,7 +54,11 @@
       <tocitem target="reference/rheome.detect.chargedensity.html">rheome.detect.chargedensity</tocitem>
       <tocitem target="reference/rheome.detect.chirality.html">rheome.detect.chirality</tocitem>
       <tocitem target="reference/rheome.detect.criticalPoints.html">rheome.detect.criticalPoints</tocitem>
+      <tocitem target="reference/rheome.detect.eventlocked.html">rheome.detect.eventlocked</tocitem>
       <tocitem target="reference/rheome.detect.eventsensors.html">rheome.detect.eventsensors</tocitem>
+      <tocitem target="reference/rheome.detect.eventtable.html">rheome.detect.eventtable</tocitem>
+      <tocitem target="reference/rheome.detect.jointpath.html">rheome.detect.jointpath</tocitem>
+      <tocitem target="reference/rheome.detect.jointpathnull.html">rheome.detect.jointpathnull</tocitem>
       <tocitem target="reference/rheome.detect.occupancy.html">rheome.detect.occupancy</tocitem>
       <tocitem target="reference/rheome.detect.onsetspread.html">rheome.detect.onsetspread</tocitem>
       <tocitem target="reference/rheome.detect.onstate.html">rheome.detect.onstate</tocitem>
@@ -226,6 +234,7 @@
       <tocitem target="reference/rheome.geom.sphereframe.html">rheome.geom.sphereframe</tocitem>
       <tocitem target="reference/rheome.geom.spherepatches.html">rheome.geom.spherepatches</tocitem>
       <tocitem target="reference/rheome.geom.spiralorder.html">rheome.geom.spiralorder</tocitem>
+      <tocitem target="reference/rheome.geom.surfaceladder.html">rheome.geom.surfaceladder</tocitem>
       <tocitem target="reference/rheome.geom.tilemean.html">rheome.geom.tilemean</tocitem>
       <tocitem target="reference/rheome.geom.tiles.html">rheome.geom.tiles</tocitem>
       <tocitem target="reference/rheome.geom.tree.html">rheome.geom.tree</tocitem>
@@ -234,6 +243,11 @@
       <tocitem target="reference/rheome.graphtransform.chebyshev.html">rheome.graphtransform.chebyshev</tocitem>
       <tocitem target="reference/rheome.graphtransform.eigen.html">rheome.graphtransform.eigen</tocitem>
       <tocitem target="reference/rheome.graphtransform.validate.html">rheome.graphtransform.validate</tocitem>
+    </tocitem>
+    <tocitem target="reference/index.html">rheome.group
+      <tocitem target="reference/rheome.group.calibrate.html">rheome.group.calibrate</tocitem>
+      <tocitem target="reference/rheome.group.glm.html">rheome.group.glm</tocitem>
+      <tocitem target="reference/rheome.group.spin.html">rheome.group.spin</tocitem>
     </tocitem>
     <tocitem target="reference/index.html">rheome.import
       <tocitem target="reference/rheome.import.atlas.html">rheome.import.atlas</tocitem>
@@ -307,11 +321,16 @@
       <tocitem target="reference/rheome.modes.fields.html">rheome.modes.fields</tocitem>
       <tocitem target="reference/rheome.modes.fit.html">rheome.modes.fit</tocitem>
       <tocitem target="reference/rheome.modes.hash.html">rheome.modes.hash</tocitem>
+      <tocitem target="reference/rheome.modes.jointcheck.html">rheome.modes.jointcheck</tocitem>
+      <tocitem target="reference/rheome.modes.jointfields.html">rheome.modes.jointfields</tocitem>
       <tocitem target="reference/rheome.modes.lagged.html">rheome.modes.lagged</tocitem>
       <tocitem target="reference/rheome.modes.match.html">rheome.modes.match</tocitem>
+      <tocitem target="reference/rheome.modes.octave.html">rheome.modes.octave</tocitem>
       <tocitem target="reference/rheome.modes.operator.html">rheome.modes.operator</tocitem>
       <tocitem target="reference/rheome.modes.phaserand.html">rheome.modes.phaserand</tocitem>
       <tocitem target="reference/rheome.modes.reduce.html">rheome.modes.reduce</tocitem>
+      <tocitem target="reference/rheome.modes.scaletransfer.html">rheome.modes.scaletransfer</tocitem>
+      <tocitem target="reference/rheome.modes.seriescheck.html">rheome.modes.seriescheck</tocitem>
       <tocitem target="reference/rheome.modes.split.html">rheome.modes.split</tocitem>
     </tocitem>
     <tocitem target="reference/index.html">rheome.operators
@@ -357,32 +376,41 @@
       <tocitem target="reference/rheome.scale.cleanspan.html">rheome.scale.cleanspan</tocitem>
       <tocitem target="reference/rheome.scale.cleanwelch.html">rheome.scale.cleanwelch</tocitem>
       <tocitem target="reference/rheome.scale.coefficients.html">rheome.scale.coefficients</tocitem>
+      <tocitem target="reference/rheome.scale.groupevents.html">rheome.scale.groupevents</tocitem>
       <tocitem target="reference/rheome.scale.groupslowosc.html">rheome.scale.groupslowosc</tocitem>
       <tocitem target="reference/rheome.scale.grouptiles.html">rheome.scale.grouptiles</tocitem>
       <tocitem target="reference/rheome.scale.groupupstream.html">rheome.scale.groupupstream</tocitem>
       <tocitem target="reference/rheome.scale.importeeg.html">rheome.scale.importeeg</tocitem>
       <tocitem target="reference/rheome.scale.importsubject.html">rheome.scale.importsubject</tocitem>
       <tocitem target="reference/rheome.scale.locate.html">rheome.scale.locate</tocitem>
+      <tocitem target="reference/rheome.scale.measure_ambient.html">rheome.scale.measure_ambient</tocitem>
       <tocitem target="reference/rheome.scale.measure_aperiodic.html">rheome.scale.measure_aperiodic</tocitem>
       <tocitem target="reference/rheome.scale.measure_atlas.html">rheome.scale.measure_atlas</tocitem>
       <tocitem target="reference/rheome.scale.measure_bandperiodic.html">rheome.scale.measure_bandperiodic</tocitem>
       <tocitem target="reference/rheome.scale.measure_bandresolution.html">rheome.scale.measure_bandresolution</tocitem>
       <tocitem target="reference/rheome.scale.measure_catalogue.html">rheome.scale.measure_catalogue</tocitem>
+      <tocitem target="reference/rheome.scale.measure_cptrack.html">rheome.scale.measure_cptrack</tocitem>
+      <tocitem target="reference/rheome.scale.measure_eventplants.html">rheome.scale.measure_eventplants</tocitem>
+      <tocitem target="reference/rheome.scale.measure_events.html">rheome.scale.measure_events</tocitem>
       <tocitem target="reference/rheome.scale.measure_eventsensors.html">rheome.scale.measure_eventsensors</tocitem>
       <tocitem target="reference/rheome.scale.measure_fieldsmooth.html">rheome.scale.measure_fieldsmooth</tocitem>
+      <tocitem target="reference/rheome.scale.measure_freqtrack.html">rheome.scale.measure_freqtrack</tocitem>
       <tocitem target="reference/rheome.scale.measure_fusion.html">rheome.scale.measure_fusion</tocitem>
       <tocitem target="reference/rheome.scale.measure_geometry.html">rheome.scale.measure_geometry</tocitem>
       <tocitem target="reference/rheome.scale.measure_grouptrack.html">rheome.scale.measure_grouptrack</tocitem>
       <tocitem target="reference/rheome.scale.measure_helmholtzbands.html">rheome.scale.measure_helmholtzbands</tocitem>
       <tocitem target="reference/rheome.scale.measure_inject.html">rheome.scale.measure_inject</tocitem>
+      <tocitem target="reference/rheome.scale.measure_lambdaedge.html">rheome.scale.measure_lambdaedge</tocitem>
       <tocitem target="reference/rheome.scale.measure_movingvortex.html">rheome.scale.measure_movingvortex</tocitem>
       <tocitem target="reference/rheome.scale.measure_multimodal.html">rheome.scale.measure_multimodal</tocitem>
       <tocitem target="reference/rheome.scale.measure_noisefloor.html">rheome.scale.measure_noisefloor</tocitem>
       <tocitem target="reference/rheome.scale.measure_ownregion.html">rheome.scale.measure_ownregion</tocitem>
+      <tocitem target="reference/rheome.scale.measure_panelexamples.html">rheome.scale.measure_panelexamples</tocitem>
       <tocitem target="reference/rheome.scale.measure_patterns.html">rheome.scale.measure_patterns</tocitem>
       <tocitem target="reference/rheome.scale.measure_periodicflow.html">rheome.scale.measure_periodicflow</tocitem>
       <tocitem target="reference/rheome.scale.measure_plantfloors.html">rheome.scale.measure_plantfloors</tocitem>
       <tocitem target="reference/rheome.scale.measure_resolution.html">rheome.scale.measure_resolution</tocitem>
+      <tocitem target="reference/rheome.scale.measure_scaleramp.html">rheome.scale.measure_scaleramp</tocitem>
       <tocitem target="reference/rheome.scale.measure_slowosc.html">rheome.scale.measure_slowosc</tocitem>
       <tocitem target="reference/rheome.scale.measure_trackfactorial.html">rheome.scale.measure_trackfactorial</tocitem>
       <tocitem target="reference/rheome.scale.measure_upstream.html">rheome.scale.measure_upstream</tocitem>
@@ -478,6 +506,12 @@
     </tocitem>
     <tocitem target="reference/index.html">rheome.utils
       <tocitem target="reference/rheome.utils.hemisphere.html">rheome.utils.hemisphere</tocitem>
+      <tocitem target="reference/rheome.utils.pysort.html">rheome.utils.pysort</tocitem>
+    </tocitem>
+    <tocitem target="reference/index.html">rheome.viz
+      <tocitem target="reference/rheome.viz.marks.html">rheome.viz.marks</tocitem>
+      <tocitem target="reference/rheome.viz.points.html">rheome.viz.points</tocitem>
+      <tocitem target="reference/rheome.viz.tiles.html">rheome.viz.tiles</tocitem>
     </tocitem>
   </tocitem>
 </tocitem>

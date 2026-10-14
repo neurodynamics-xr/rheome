@@ -9,6 +9,8 @@
     [T, X] = rheome.scale.measure_atlas(name, S, &quot;atlasevents&quot;, NSurr=20)
     [T, X] = rheome.scale.measure_atlas(name, S, &quot;gaugetensor&quot;)
     [T, X] = rheome.scale.measure_atlas(name, S, &quot;connectome&quot;, Gammas=[0 0.01 0.1 1 10])
+    [T, X, Fig] = rheome.scale.measure_atlas(name, S, &quot;atlasone&quot;)    % one person's atlas, depths 0-6 (figure data)
+    [T, X, Fig] = rheome.scale.measure_atlas(name, S, &quot;xlevel&quot;)      % F23: one pattern across the levels
  
   Spec: the group-analysis plan, G12. The geometry parts
   of G12 (roll-up exactness, atom-tile overlap, gauge singularity count and smoothness) are P2's
@@ -55,6 +57,27 @@
                     (mexhat on the LB-Connectome pencil) per member at Gammas x the auto gamma, over NSeeds
                     seeds: area-weighted RMS width (mm, Euclidean from the seed), energy in the other
                     hemisphere, energy beyond 3 sigma (VR1 2.1d), and the coupling scale 2 pi / sqrt(lambda_2).
+    atlasone        MS1 3.4 (F8, F12 on the paper's kernel): one person's alpha atlas on ONE tree, the group
+                    tree of rheome.scale.template, depths 0..LeafDepth. Alpha power is computed once, on the
+                    current summed over each LEAF tile (depth LeafDepth), and every coarser node is the exact
+                    sum of its leaves -- so the levels are one measure rolled up, not a separate inversion per
+                    depth (atlasevents sums the current per depth instead). dB against each node's own median;
+                    events as atlasevents (ThresholdDB, touching tiles, consecutive time tiles) at each depth,
+                    against NSurr phase-randomised surrogates of the leaf currents. Rows per hemisphere x depth
+                    as atlasevents; Fig: per hemisphere the dB tower, the event label of every cell, the
+                    event catalogue (onset, duration, tiles, peak), tile adjacency, codes, centres and areas.
+    xlevel          MS1 2.4, F23 re-run on that tree (left hemisphere, depths 0..LeafDepth). (i) PLANTED: a
+                    heat-kernel peak carried 150 deg down a meridian of the participant's registered sphere
+                    (PlantAzimuthDeg) in NTiles time tiles while it widens 7 -&gt; 18 deg (rheome.flow.movingpeak,
+                    rheome.filters.sphere_kernel), amplitude 9 sin^2 over background 1, rolled up leaf -&gt; root.
+                    (ii) REAL: the atlasone alpha tower, NTiles time tiles from 2 before the onset of the
+                    largest depth-TrackLevel event (or from RealT0S). Both tracked by rheome.detect.tilepath at
+                    every depth (Span &quot;full&quot;); the chain is the TrackLevel track, its ancestors, and the stronger
+                    child below. Leaves also in pole-to-pole spiral order (rheome.geom.spiralorder). Fig has the
+                    fields of the F23 cache (xlevel_planted / xlevel_real).
+ 
+  ⚠ ONE TREE. atlasone and xlevel reach the tree only through rheome.scale.template (rheome.geom.tree on the
+  template), so whichever partition geom.tree builds is the one every level, participant and figure uses.
  
   ⚠ RAW COORDINATES NEED THE MRI. The subject's SCS/NCS come from the protocol's subjectimage (staged by nsp
   cf-atlas, cached as mri.mat by rheome.scale.importsubject); without it dk_agree_raw is NaN. NCS is

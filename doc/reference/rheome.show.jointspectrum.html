@@ -15,7 +15,12 @@
   OPTIONS:
     'Speed'   overlay omega = c*sqrt(lambda) lines for these speeds (m/s), e.g. [0.1 0.5 1]
     'Log'     true (default) -- log10 colour scale
-    'Title'   overall title              'Visible' 'on' (default) | 'off'
+    'Title'   the joint spectrum's panel title    'Unit' of |C|^2 ('a.u.')
+    'Visible' 'on' (default) | 'off'          'Export' file stem (&lt;stem&gt;.pdf/.svg/.png)
+    'Theme'   '' = the tokens' default (Pergammon); 'neuroimage' for MS1
+  Sizes and colours are the figure tokens; double column x 110 mm, the colourbar in A's key band: spatial
+  marginal in the space colour,
+  temporal marginal in the time colour (atlas-space / atlas-time).
  
   See also: rheome.flow.joint, rheome.filters.joint_scalogram, rheome.show.jointscalogram
  

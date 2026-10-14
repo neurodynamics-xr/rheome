@@ -25,6 +25,14 @@
      [s1; ratio * polarity * s1(t - tau)] + the residual Y - fit with each channel's Fourier phases randomised
      (matched noise: each channel keeps its spectrum of everything the pair does not explain; any travel left in
      the residual loses its cross-channel lags).
+  OPTIONS (default = the null above):
+     Keep=true        the two generators keep their OWN fitted time courses s1 and s2 (still two fixed topographies:
+                      nothing travels), instead of the back one becoming the front one's lagged copy.
+     Residual=&quot;zerolag&quot;  the residual's Fourier phases are randomised by ONE phase per frequency for every channel,
+                      applied to the real part of that frequency's spatial pattern: it keeps the residual's zero-lag
+                      cross-spectrum (field spread) and drops its lags. &quot;perchan&quot; (default) randomises each channel.
+     MaxCombos (1e4)  above this many candidate combinations the best one is found by coordinate ascent (each
+                      slot in turn takes its best candidate, the others fixed), not by trying every one.
   ⚠ THE DELAY IS CIRCULAR over the window. Give the window a margin of at least MaxLagS beyond what is read.
   ⚠ THE PAIR IS THE BEST OF THE CANDIDATES, not a free dipole fit: positions are as fine as the patches.
   ⚠ The random phases use the global stream: seed it (rng) before calling for a reproducible null.

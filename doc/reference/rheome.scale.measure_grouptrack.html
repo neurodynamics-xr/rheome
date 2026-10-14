@@ -35,6 +35,12 @@
   Best (third output): per configuration, the highest-scoring REAL path -- .hemi .depth .jj .rate
   .window .frame0 (300-fps frames before window 1: the clean-span offset) .score .passed .track (rheome.detect.tilepath track, frames within its window) .G (the tiles),
   which rheome.scale.measure_eventsensors maps onto the sensor data.
+  Win (fourth output, grouptrackwindows.csv): one row per configuration x 2 s window -- the best real and surrogate
+  path scores, the window's start (s from the recording start), whether it is used (clean), its surrogate half
+  (calibration | test) and the configuration's threshold: the detection behind frac_pass and false_rate_test.
+  Paths (fifth output): one row per configuration x used window x kind (real | surrogate) with a path -- hemi
+  depth jj rate window start_s kind score thr passed, and the best path's frames and tiles (cells): the
+  tracker's DETECTIONS, the event table rheome.scale.measure_events reads.
  
   ⚠ netMM is quantised to the tiling: displacement below one tile is not measured, by design.
   ⚠ Everything is through the instrument -- a trajectory is the trajectory of the RENDERED blob.

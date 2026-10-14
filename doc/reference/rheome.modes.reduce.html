@@ -17,19 +17,35 @@
       (iii) N4: occupancy on the periodic part - occupancy on the aperiodic part &gt; 0
       (iv)  split-half ICC(2,1) of the mode's gev &gt;= 0.5 with the lower bound of its 95 % CI &gt; 0.3 (percentile
             bootstrap over participants, NBoot)
-    Labels: standing (median pg &lt; StandingRad); travelling (r_n3_sim - r_n3 &gt; N3Margin under Holm -- the mode is
-      further from its best two-phase source than that source reads when simulated in the participant's own data;
-      see rheome.modes.fit on why not pg - pg_n3 -- AND the sign of div_index shared by &gt;= SignShare of
-      participants); otherwise lagged-or-rotating. Rotation is UNRESOLVED at &gt;= 100 mm: a planted rotation reads
-      |r| 0.994 to its two-phase source, so it cannot be told from a lagged pair; winding_net
-      and winding_sign_share are reported, never labelled. N3Margin 0.02 is the amended protocol's margin, to be
-      recalibrated on the canary's heads. The label is read only for Level-1 modes and says nothing about speed.
+    Labels: standing (median pg &lt; StandingRad), otherwise lagged-or-rotating. No label makes a propagation call
+      (design 52798c1e section 13, decision 1f8b4008): on the canary heads no single N3 margin separated a planted
+      200 mm wave from a planted lagged pair, so travelling is UNRESOLVED at &gt;= 100 mm, like rotation (a planted
+      rotation reads |r| 0.994 to its two-phase source). The N3 excess r_n3_sim - r_n3 is reported per mode as a
+      descriptive number (n3_excess_median; test n3_lagged in modes_tests.csv), and n3_above_margin says whether
+      its median exceeds the frozen N3Margin 0.02 under Holm -- descriptive, never a label. winding_net and
+      winding_sign_share are reported, never labelled. The label is read only for Level-1 modes.
     Level 2 (dynamics beyond second order): dwell_median_ms (the mode's) and trans_entropy (overall, under
       mode 0) minus the N5 surrogate mean; plus the share of participants with N5 p significant at FDR q
-      (Benjamini-Hochberg over participants) against 5 % (binomial test).
+      (Benjamini-Hochberg over participants) against 5 % (binomial test): l2_share_sig / l2_share_p for the
+      mode's dwell, l2_entropy_share_sig / l2_entropy_share_p for the band's transition entropy (the same on
+      every mode row of the band). Power floor: a participant's N5 p is at least 1/(1 + NSurr) (0.01 at 99
+      surrogates), and BH over n participants rejects nothing unless at least ceil(p_min n / Fdr) of them sit
+      at that floor (41 of 200 at 0.01); so a share of 0 is a floor, not a measured absence, unless that many
+      do. l2_p_min / l2_entropy_p_min (the smallest participant p) and l2_n_p_min / l2_entropy_n_p_min (how
+      many participants have it) say which. The N5 p is two-sided, so l2_entropy_share_sig mixes signs:
+      l2_entropy_share_sig_above / _below split it by the sign of trans_entropy - N5 mean (they sum to it), and
+      l2_entropy_z_median / _q25 / _q75 (over l2_entropy_z_n participants) describe z = (obs - N5 mean) / N5 sd.
+      Descriptive only: neither enters Level 1 or Level 2.
   Characterisation (protocol 6): participant medians (IQR) of extent, Dirichlet wavelength, occupancy,
   occurrence, dwell, gev; the mean direction vector, its anatomical axis label and concentration; speed always
   &quot;unresolved&quot; at depths below 7; the discovery's r_dmd, r_cpca, robust.
+ 
+  JOINT ATOMS (M.kind &quot;joint&quot;, protocol section 14 J3): (i) reads F instead of N1 (r_halves - r_f_fieldspread,
+  test &quot;i_f&quot;; the centroid's |r| to every F centroid &lt; N1R -- every K, every realisation: F union amendment, design §14; r_min = the discovery's calibrated B.r_min_f when
+  present, F calibration amendment, 2026-10-13); N3 is tested and reported (median, raw p) but is
+  outside the Holm family and never gated; atoms are not labelled (label &quot;not_labelled&quot;: phase layout and flow
+  are derived summaries, J7); t_bar, scale_mm, scale_edge_mm (participant medians) and dominant_depth (the
+  most common) are added; robust includes r_nmf. The Holm family is atoms x octaves (J6).
  
   Writes outDir/modes_catalogue.csv (one row per band x mode), modes_tests.csv (one row per test),
   reduce_provenance.json.

@@ -27,7 +27,9 @@
                   sensor covariance
     n1_emptyroom  N1 sensor noise: the participant's own empty room (noise.mat) on the channels it shares,
                   through the same W (absent channels zero); missing when the cache holds no noise run.
-                  A run shorter than the rest span is mirror-padded to its length (Z.emptyroomS = its own)
+                  A run shorter than the rest span is mirror-padded to its length (Z.emptyroomS = its own).
+                  A channel whose empty-room std exceeds 10x the rest's on that channel is dropped (a faulty
+                  sensor flagged good; MLC11-17 in 60 OMEGA-D empty rooms) and named in Z.emptyroomDropped
     n4_aperiodic  N4: the aperiodic part of the data tile series (the complement of the periodic split)
     n5_phaserand  N5: the data's periodic tile series with one random phase per frequency bin shared by all
                   tiles (keeps every auto- and cross-spectrum; exact at tile level because everything before

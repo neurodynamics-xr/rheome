@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.detect.eventtable</title></head><body>
+<h1>rheome.detect.eventtable</h1>
+<p><em>function rheome.detect</em> &mdash; Rheome</p>
+<pre>  DETECT.EVENTTABLE  Shape-based boundaries of each event: a double-sigmoid on the event's own envelope.
+ 
+    T = rheome.detect.eventtable(Ev, Y, A, fs)
+    T = rheome.detect.eventtable(Ev, Y, A, fs, Margin=1, Smooth=0.1, TauMax=1, R2Min=0.7, T0=0)
+ 
+  Generic over the event: one row of Ev per event, whatever detected it (the tracker's path, an atlas
+  cell event). Its envelope is the AREA-WEIGHTED MEAN of the tile envelopes over the event's space tiles,
+  at the envelope's native rate (not quantised to time tiles); rheome.detect.risefall is fitted to it over
+  the event's first-to-last time ± Margin. tOn / tOff are the half-rise / half-fall times (MS1 SPEC1 §8 A).
+ 
+  INPUTS
+    Ev   table, one row per event: hemi (string), tiles (cell of tile indices), t0, t1 (first and last
+         time of the event, s, on Y's clock)
+    Y    struct, Y.(hemi) [nTile x nT] tile envelope (e.g. tile means of rheome.flow.envelopemodes)
+    A    struct, A.(hemi) [nTile x 1] tile area (m^2)
+    fs   Y's sample rate          T0  time of Y's first sample (s)
+    R2Min  a fit counts if r2 &gt;= R2Min (0.7, as rheome.flow.labelalpha)
+    Model  risefall's model: &quot;linear&quot;, &quot;quadrature&quot; (the episode adds to the background in power) or &quot;posterior&quot;
+           (the quadrature model read by its posterior medians: rheome.detect.risefall)
+ 
+  OUTPUT T = Ev with, per event:
+    tOn tOff tauR tauF r2 (NaN without a fit)   fit  (fit made and r2 &gt;= R2Min)   atBound (tau at TauMax)
+    durS = tOff - tOn   buildupS = 4 tauR   decayS = 4 tauF   plateauS (0 when the fit leaves none)
+    height (h, envelope units)   peakAmp (max of the envelope in [tOn, tOff])   nTiles   areaMM2
+  Without an accepted fit the shape columns stay as fitted (NaN when none) and `fit` is false: the
+  unfitted share is reported, never hidden.
+ 
+  See also: rheome.detect.risefall, rheome.detect.eventlocked, rheome.scale.measure_events
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

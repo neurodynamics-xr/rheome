@@ -12,7 +12,11 @@
   the mesh and the operator, not a finding: sum(index) must equal chi on a closed manifold
   surface, so a departure means mesh trouble rather than anything about the data.
  
-  OPTIONS: 'Frame' which frame to draw (default 1), 'View', 'Title', 'Visible'
+  OPTIONS: 'Frame' which frame to draw (default 1), 'View', 'Visible', 'Title' (the figure's name),
+           'Export' file stem (&lt;stem&gt;.pdf/.svg/.png), 'Theme' ('' = Pergammon; 'neuroimage' for MS1).
+           Sizes and colours are the figure tokens; double column x 65 mm; the type key in B's key band.
+  Vortex = flow-vortex circles, source = flow-source triangles, sink = open flow-source triangles
+  (pointing down), saddle = slate squares.
  
   See also: rheome.flow.critical, rheome.detect.criticalPoints
  

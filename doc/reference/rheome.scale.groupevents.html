@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.groupevents</title></head><body>
+<h1>rheome.scale.groupevents</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.GROUPEVENTS  MS1 event statistics across participants, per cohort: medians, CIs, split-half ICC, the boundary acceptance and the group TF maps.
+ 
+    [G, A, TF] = rheome.scale.groupevents(inDir, outDir)
+    [G, A, TF] = rheome.scale.groupevents(inDir, outDir, Boot=2000, Seed=7, Accept=0.8, AcceptSNR=10)
+ 
+  inDir holds rheome.scale.run's per-participant folders (&lt;sub&gt;/metrics.csv, &lt;sub&gt;/eventtf.mat) or nsp's flat
+  files (&lt;sub&gt;_metrics.csv, &lt;sub&gt;_eventtf.mat), at any depth. Rows of analyses &quot;events&quot; and &quot;eventplants&quot;.
+  The cohort is the metrics' `dataset` column (`cohort` when empty); no number mixes cohorts (SPEC1 §5).
+  Writes to outDir:
+    group.csv          per cohort x analysis x metric x band: n, median, its 95% percentile bootstrap CI over
+                       participants (lo, hi) and, where the measure has split halves (&quot;&lt;band&gt;_h1&quot;/&quot;_h2&quot;), the
+                       split-half ICC(2,1) (Shrout &amp; Fleiss 1979) and its n
+    acceptance.csv     per cohort x &quot;&lt;snr&gt;dB/tau&lt;bound&gt;/&lt;model&gt;&quot;: participants, the share passing (eventplants
+                       participant_pass) and accepted = share &gt;= Accept. ⭐ SPEC1 §8 A's rule reads the row
+                       &quot;&lt;AcceptSNR&gt;dB/tau1/&lt;Model&gt;&quot; (measure_events' defaults): if not accepted, MS1 reports
+                       the tracker's window boundaries
+    group_eventtf.mat  per cohort (TF.&lt;cohort&gt;): f, t, n and, per alignment (on_fit off_fit on_window
+                       off_window), the median dB map over participants and its pointwise bootstrap CI
+                       (&lt;a&gt;, &lt;a&gt;_lo, &lt;a&gt;_hi)
+    participants.csv   the participant rows read
+ 
+  See also: rheome.scale.measure_events, rheome.scale.measure_eventplants, rheome.scale.groupslowosc
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>
