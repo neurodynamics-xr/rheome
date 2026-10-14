@@ -18,6 +18,12 @@ function R = run(name, opts)
 %   eventsensors.mat  eventsensors: the tracked event on the sensor data (figure data)
 %   grouptrackwindows.csv  grouptrack: per configuration x 2 s window, real and surrogate path scores and threshold
 %   panelexamples.mat panelexamples: MS1 Figs. 4-7 panel A examples (figure data)
+%   ambient.csv, ambient.mat   MS1 1.4 (nsp rheome-ms1-panels): rheome.scale.measure_ambient -- a planted tilted
+%                     field on the sphere and the subject's left hemisphere, ambient vs tangential divergence and
+%                     the 2H(J.n) coupling against its closed form, per surface x tilt; .mat: figure data. Opt-in
+%   cptrack.csv, cptrack.mat   MS1 2.3 (nsp rheome-ms1-panels): rheome.scale.measure_cptrack -- a drifting rotor
+%                     and a waxing/waning source tracked by rheome.detect.track, core path, curl and div against
+%                     the truth, per surface; .mat: figure data. Opt-in; neither reads the recording
 %   plantfloors.csv, movingvortex.csv, composition.csv, sizeruler.csv, vortexscale.csv, rotation.csv,
 %   detection.csv, diracangles.csv   the MS1 group plants (P1, nsp cf-plant-floors): the per-plant /
 %                     per-placement tables of rheome.scale.measure_plantfloors, measure_movingvortex and
@@ -68,6 +74,14 @@ function R = run(name, opts)
 %                     surrogates; the alpha orientation tensor per depth-3 group tile in the shared gauge;
 %                     Destrieux -> DK vs the dyadic roll-up and connectome-wavelet widths over a gamma sweep.
 %                     Opt-in. Needs a template cortex (RHEOME_TEMPLATE or RHEOME_BRAINSTORM's ICBM152)
+%   atlasone.csv, atlasone.mat   MS1 3.4 (F8, F12 on the paper's kernel): measure_atlas "atlasone" -- one
+%                     person's alpha atlas at depths 0-6 on one tree, every level the exact roll-up of the leaves,
+%                     events vs phase-randomised surrogates; the .mat holds the towers, event labels and catalogue
+%   xlevel.csv, xlevel.mat   MS1 2.4 (F23 re-run): measure_atlas "xlevel" -- a planted widening mover and the
+%                     largest real alpha event tracked across depths 0-6 of the same tree (the F23 cache fields)
+%   scaleramp.csv     MS1 2.4: rheome.scale.measure_scaleramp -- a peak whose size ramps 10 -> 40 mm read by
+%                     rheome.detect.ridges on a sphere and the left cortex. All three opt-in, not "ported";
+%                     atlasone and xlevel need a template cortex (as cf-atlas)
 %   multimodal.csv, multimodal_assoc.csv, multimodal_connectome.mat   the MS1 multimodal example:
 %                     rheome.scale.measure_multimodal -- MEG band power, PET SUVR and the fibre-degree density
 %                     through one wavelet bank on one dyadic tile ladder, every level an exact roll-up; the
@@ -166,7 +180,7 @@ function R = run(name, opts)
     for a = opts.Analyses(:)'
         t0 = tic;  msg = "";  st = "ok";
         try
-            if isempty(S) && ~ismember(a, ["bandsnr" "helmholtzbands"]), S = rheome.scale.sensors(name, Modality=opts.Modality); end
+            if isempty(S) && ~ismember(a, ["bandsnr" "helmholtzbands" "ambient" "cptrack"]), S = rheome.scale.sensors(name, Modality=opts.Modality); end
             if isempty(Kf) && ismember(a, ["ownregion" "fusion"])          % the fused kernels, built once
                 ctx = rheome.flow.context(name);  Kf = rheome.flow.build(ctx);
             end
@@ -240,6 +254,12 @@ function R = run(name, opts)
                 case "panelexamples"           % MS1 Figs. 4-7 panel A: one example per figure (figure data)
                     [Tp, ex] = rheome.scale.measure_panelexamples(name, S);  M = [M; Tp]; %#ok<AGROW>
                     save(fullfile(od, 'panelexamples.mat'), '-struct', 'ex', '-v7');
+                case "ambient"                 % MS1 1.4: a planted tilted field, ambient vs tangential, 2H(J.n) vs closed form
+                    [Tq, X.ambient, ex] = rheome.scale.measure_ambient(name);  M = [M; Tq]; %#ok<AGROW>
+                    save(fullfile(od, 'ambient.mat'), '-struct', 'ex', '-v7');
+                case "cptrack"                 % MS1 2.3: a drifting rotor + a waxing/waning source through detect.track
+                    [Tq, X.cptrack, ex] = rheome.scale.measure_cptrack(name);  M = [M; Tq]; %#ok<AGROW>
+                    save(fullfile(od, 'cptrack.mat'), '-struct', 'ex', '-v7');
                 case "aperiodic"               % MS1 G10: a moving 1/f change, threshold and split selectivity
                     [Ta, X.aperiodic] = rheome.scale.measure_aperiodic(name, S);  M = [M; Ta]; %#ok<AGROW>
                 case "slowosc"                 % MS1 G15, G16: sleep slow oscillations, the positive control
@@ -261,6 +281,11 @@ function R = run(name, opts)
                     end
                 case {"correspondence" "atlasevents" "gaugetensor" "connectome"}   % MS1 G12 (P8, nsp cf-atlas)
                     [Ta, X.(a)] = rheome.scale.measure_atlas(name, S, a);  M = [M; Ta]; %#ok<AGROW>
+                case {"atlasone" "xlevel"}     % MS1 3.4 one person's atlas / 2.4 F23 across levels, one tree (figure data)
+                    [Ta, X.(a), Fg] = rheome.scale.measure_atlas(name, S, a);  M = [M; Ta]; %#ok<AGROW>
+                    save(fullfile(od, a + ".mat"), '-struct', 'Fg', '-v7');
+                case "scaleramp"               % MS1 2.4: a peak whose size ramps 10 -> 40 mm, read by detect.ridges
+                    [Tr, X.scaleramp] = rheome.scale.measure_scaleramp(name, S);  M = [M; Tr]; %#ok<AGROW>
                 case "multimodal"              % MS1 multimodal example: MEG + PET + fibres on one ladder
                     [Tm, Xm, Cn] = rheome.scale.measure_multimodal(name, S);  M = [M; Tm]; %#ok<AGROW>
                     X.multimodal = Xm.tiles;  X.multimodal_assoc = Xm.assoc;

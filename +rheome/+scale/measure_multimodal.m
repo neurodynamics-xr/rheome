@@ -1,5 +1,5 @@
 function [T, X, Cn] = measure_multimodal(name, S, opts)
-% SCALE.MEASURE_MULTIMODAL  MEG, PET and the fibre connectome through ONE surface wavelet bank on ONE set of
+% SCALE.MEASURE_MULTIMODAL  MEG, fMRI, PET and the fibre connectome through ONE surface wavelet bank on ONE set of
 % dyadic tiles, rolled up exactly across levels -- the MS1 multimodal worked example.
 %
 %   [T, X, Cn] = rheome.scale.measure_multimodal(name)
@@ -18,6 +18,11 @@ function [T, X, Cn] = measure_multimodal(name, S, opts)
 %          K the paper's kernel S.Res (unconstrained whitened minimum norm, SnrFixed 3).    unit (A m)^2
 %   PET    per tracer (pet.mat, cached by rheome.scale.importsubject from the protocol's PET study): the SUVR map
 %          and its wavelet coefficients c_j = Phi g_j Phi' M x (signed).                    unit SUVR
+%   fMRI   the resting BOLD (fmri.mat, cached by rheome.scale.importsubject from nsp bst-fmri): its INFRA-SLOW band
+%          power (BoldBand, 0.01-0.1 Hz). Per run: percent signal change about each vertex's temporal mean, the
+%          BoldConfounds (fMRIPrep: 6 motion, CSF, white matter) and a linear trend regressed out, band-pass
+%          (Butterworth, order 4, zero phase). As for MEG the wavelet acts on the signal, power after:
+%          p_j(v) = mean_t (Phi g_j Phi' M y(t))_v^2 over the samples of all runs.            unit %^2
 %   fibres the endpoint-degree density of the participant's own tractography (fibres ending at a vertex per
 %          m^2 of cortex) and its wavelet coefficients, as PET.                              unit fibres/m^2
 % THE TILES are rheome.geom.tree on each hemisphere to Depth (default 6: 64 tiles per hemisphere), numbered
@@ -34,7 +39,14 @@ function [T, X, Cn] = measure_multimodal(name, S, opts)
 % ⚠ RAW MEG POWER ACROSS TILES IS MOSTLY THE KERNEL'S DEPTH SENSITIVITY: in one participant the alpha
 % tile power spans ~1000x while delta/theta varies +-12 %, so rho between raw band powers (and between a raw
 % power and anything deep-vs-superficial) reads the instrument. Compare a band relative to the sum of the bands
-% (exact at any level from the stored sums) before reading MEG against PET or fibres.
+% (exact at any level from the stored sums) before reading MEG against PET or fibres: X.tiles carries it as the
+% fields meg_<band>_rel (unit fraction, in mean; per member, the band's share of the four bands' power at that
+% scale), and X.assoc includes them.
+% ⚠ BOLD: THE POINT SPREAD THROUGH THE CHAIN IS NOT MEASURED. fMRIPrep sampled the BOLD at fsaverage5
+% (~10k vertices per hemisphere) and bst-fmri interpolated it to this cortex, so members finer than fsaverage5's
+% spacing carry no BOLD detail, and the haemodynamic and volume-to-surface blur are not characterised here.
+% Vertices whose temporal mean is below 1 % of the median (outside the brain mask) are set to zero and
+% counted (bold_lowmean_vertices).
 % ⚠ The connectome is RAW endpoint counts between tiles (each end at its nearest cortex vertex, the step
 % rheome.operators.connectome starts from), without its 3-hop vertex smoothing: at tile scale the smoothing
 % only moves weight across a tile border, and the smoothed vertex matrix costs ~20 GB at 1e6 fibres.
@@ -60,6 +72,8 @@ function [T, X, Cn] = measure_multimodal(name, S, opts)
         opts.Depth (1,1) double {mustBeInteger, mustBePositive} = 6
         opts.Bands = struct('name', {"delta" "theta" "alpha" "beta"}, 'hz', {[1 4] [4 8] [8 13] [13 30]})
         opts.AssocMinLevel (1,1) double = 3
+        opts.BoldBand (1,2) double = [0.01 0.1]
+        opts.BoldConfounds string = ["trans_x" "trans_y" "trans_z" "rot_x" "rot_y" "rot_z" "csf" "white_matter"]
     end
     if isempty(S), S = rheome.scale.sensors(name); end
     D = opts.Depth;  hemis = ["L" "R"];  d = fullfile(rheome.load.root(), name);
@@ -92,10 +106,16 @@ function [T, X, Cn] = measure_multimodal(name, S, opts)
         nSelf = sum(v1 == v2);  x = v1 ~= v2;  v1 = v1(x);  v2 = v2(x);
         deg = accumarray([v1; v2], 1, [nV 1]);
     end
-    fld = [compose("meg_%s", string({opts.Bands.name})), "pet_" + string({pet.name}), repmat("fibres_degree", 1, haveFib)];
-    mdl = [repmat("MEG", 1, nb), repmat("PET", 1, numel(pet)), repmat("fibres", 1, haveFib)];
-    uni = [repmat("(A m)^2", 1, nb), string({pet.units}), repmat("fibres/m^2", 1, haveFib)];
-    nF = numel(fld);
+    Yb = [];  boldInfo = [0 0 0];                       % runs, seconds, low-mean vertices
+    if isfile(fullfile(d, 'fmri.mat'))
+        [Yb, boldInfo] = i_bold(getfield(load(fullfile(d, 'fmri.mat'), 'fmri'), 'fmri'), nV, opts.BoldBand, opts.BoldConfounds);
+    end
+    haveBold = ~isempty(Yb);  iB = nb + 1;  np = numel(pet);
+    fld = [compose("meg_%s", string({opts.Bands.name})), repmat("fmri_infraslow", 1, haveBold), "pet_" + string({pet.name}), repmat("fibres_degree", 1, haveFib)];
+    mdl = [repmat("MEG", 1, nb), repmat("fMRI", 1, haveBold), repmat("PET", 1, np), repmat("fibres", 1, haveFib)];
+    uni = [repmat("(A m)^2", 1, nb), repmat("%^2", 1, haveBold), string({pet.units}), repmat("fibres/m^2", 1, haveFib)];
+    ns = nb + haveBold;                                  % the scalar maps (PET, fibres) follow the power fields
+    nF = numel(fld);  relName = compose("meg_%s_rel", string({opts.Bands.name}));
 
     % ---- per hemisphere: fields x members at the vertices, sums on the finest tiles, direct sums per depth
     codes = [];  A = [];  S1 = [];  S2 = [];  tileOf = zeros(nV, 1);  errDirect = 0;  direct = cell(2, D);
@@ -114,10 +134,15 @@ function [T, X, Cn] = measure_multimodal(name, S, opts)
                 for b = 1:nb, V(:, b, j + 1) = V(:, b, j + 1) + sum((Xj * Cs{b}) .* Xj, 2); end
             end
         end
+        if haveBold                                      % BOLD: wavelet on the band-passed signal, power after
+            Yh = Yb(gv, :);  V(:, iB, 1) = mean(Yh.^2, 2);  c = Phi' * (Mm * Yh);
+            for j = 1:numel(keep), V(:, iB, j + 1) = mean((Phi * (g(:, j) .* c)).^2, 2); end
+            clear Yh c
+        end
         sc = [arrayfun(@(p) double(pet(p).x(gv)), 1:numel(pet), 'UniformOutput', false), repmat({deg(gv) ./ a}, 1, haveFib)];
         for k = 1:numel(sc)                              % PET and fibre degree: wavelet on the map itself
-            V(:, nb + k, 1) = sc{k};  c = Phi' * (Mm * sc{k});
-            for j = 1:numel(keep), V(:, nb + k, j + 1) = Phi * (g(:, j) .* c); end
+            V(:, ns + k, 1) = sc{k};  c = Phi' * (Mm * sc{k});
+            for j = 1:numel(keep), V(:, ns + k, j + 1) = Phi * (g(:, j) .* c); end
         end
 
         Tr = rheome.geom.tree(H.S, L=H.lbo.L, M=Mm, MaxDepth=D);
@@ -166,22 +191,29 @@ function [T, X, Cn] = measure_multimodal(name, S, opts)
         tiles = [tiles; table(repmat(k, numel(ti), 1), uc(ti(:)), hemi(ti(:)), fld(fi(:))', mdl(fi(:))', uni(fi(:))', ...
                  mj(:), scaleMM(mj(:) + 1)', ar, s1, s2, s1 ./ ar, s2 ./ ar, 'VariableNames', ...
                  {'level','code','hemisphere','field','modality','unit','member','scale_mm','area_m2','sum_ax','sum_ax2','mean','ms'})]; %#ok<AGROW>
+        % relative band power: the tile's band power over the sum of the bands, a ratio of the stored sums
+        % (exact at every level; not additive, so sum_ax, sum_ax2 and ms are NaN)
+        P3 = reshape(S1k, numel(uc), nF, nJ);  rel = P3(:, 1:nb, :) ./ sum(P3(:, 1:nb, :), 2);
+        [ti, bj, mj] = ndgrid(1:numel(uc), 1:nb, 0:nJ - 1);  nr = numel(ti);
+        tiles = [tiles; table(repmat(k, nr, 1), uc(ti(:)), hemi(ti(:)), relName(bj(:))', repmat("MEG", nr, 1), ...
+                 repmat("fraction", nr, 1), mj(:), scaleMM(mj(:) + 1)', Ak(ti(:)), NaN(nr, 1), NaN(nr, 1), rel(:), NaN(nr, 1), ...
+                 'VariableNames', tiles.Properties.VariableNames)]; %#ok<AGROW>
     end
     Cn.level = 0:L1;  Cn.n_fibres = nFib;  Cn.n_self = nSelf;  Cn.depth = L1;
 
     % ---- descriptive association across tiles (no test)
-    assoc = table();
+    assoc = table();  fa = [fld, relName];  ma = [mdl, repmat("MEG", 1, nb)];  nA = numel(fa);
     for k = max(opts.AssocMinLevel, 0):L1
         for m = 0:nJ - 1
-            Y = zeros(2^k, nF);
-            for f = 1:nF
-                r = tiles(tiles.level == k & tiles.member == m & tiles.field == fld(f), :);
-                if mdl(f) == "MEG" || m == 0, Y(:, f) = r.mean; else, Y(:, f) = r.ms; end
+            Y = zeros(2^k, nA);
+            for f = 1:nA
+                r = tiles(tiles.level == k & tiles.member == m & tiles.field == fa(f), :);
+                if any(ma(f) == ["MEG" "fMRI"]) || m == 0, Y(:, f) = r.mean; else, Y(:, f) = r.ms; end
             end
             R = corr(Y, 'Type', 'Spearman');
-            [i1, i2] = find(triu(true(nF), 1));
+            [i1, i2] = find(triu(true(nA), 1));
             assoc = [assoc; table(repmat(k, numel(i1), 1), repmat(m, numel(i1), 1), repmat(scaleMM(m + 1), numel(i1), 1), ...
-                     fld(i1)', fld(i2)', R(sub2ind([nF nF], i1, i2)), repmat(2^k, numel(i1), 1), ...
+                     fa(i1)', fa(i2)', R(sub2ind([nA nA], i1, i2)), repmat(2^k, numel(i1), 1), ...
                      'VariableNames', {'level','member','scale_mm','field_a','field_b','rho','n_tiles'})]; %#ok<AGROW>
         end
     end
@@ -189,12 +221,31 @@ function [T, X, Cn] = measure_multimodal(name, S, opts)
 
     hl = zeros(nV, 1);  hl(double(S.B.L.gv)) = 1;  hl(double(S.B.R.gv)) = 2;  inter = NaN;
     if haveFib, inter = mean(hl(v1) ~= hl(v2)); end
-    T = rheome.scale.rows("multimodal", ["n_tiles_finest" "n_levels" "n_members" "n_fields" "n_meg_bands" "n_pet" ...
+    T = rheome.scale.rows("multimodal", ["n_tiles_finest" "n_levels" "n_members" "n_fields" "n_meg_bands" "n_pet" "n_bold_runs" "bold_seconds" "bold_lowmean_vertices" ...
             "fibres_available" "n_fibres" "fibres_self_tile_vertex" "interhemispheric_fraction" ...
             "rollup_max_relerr" "connectome_rollup_max_relerr" "connectome_total"], ...
-            [nT L1 + 1 nJ nF nb numel(pet) haveFib nFib nSelf inter errDirect errConn full(sum(Cfine, 'all'))], ...
-            ["tiles" "levels" "members" "fields" "bands" "tracers" "flag" "fibres" "fibres" "fraction" "relative" "relative" "fibre ends"], ...
+            [nT L1 + 1 nJ nF nb np boldInfo haveFib nFib nSelf inter errDirect errConn full(sum(Cfine, 'all'))], ...
+            ["tiles" "levels" "members" "fields" "bands" "tracers" "runs" "s" "vertices" "flag" "fibres" "fibres" "fraction" "relative" "relative" "fibre ends"], ...
             strjoin(fld, " "));
+end
+
+function [Y, info] = i_bold(fmri, nV, band, conf)
+% the runs -> [nV x sum nT] infra-slow BOLD in percent signal change; info = [runs seconds lowmean]
+    Y = [];  low = false(nV, 1);  sec = 0;
+    for r = 1:numel(fmri)
+        x = double(fmri(r).x);  fs = 1 / fmri(r).tr;
+        if size(x, 1) ~= nV, error('scale:multimodal:bold', 'BOLD %s has %d values, the cortex %d vertices', fmri(r).name, size(x, 1), nV); end
+        if band(2) >= fs / 2, error('scale:multimodal:boldband', 'BoldBand edge %g Hz is not below Nyquist %g Hz (TR %g s)', band(2), fs / 2, fmri(r).tr); end
+        m = mean(x, 2);  lo = m <= 0.01 * median(m);  low = low | lo;
+        x = 100 * (x - m) ./ m;  x(lo, :) = 0;
+        [ok, ic] = ismember(conf, fmri(r).confoundNames);
+        if ~all(ok), error('scale:multimodal:confounds', 'run %s has no confound %s', fmri(r).name, strjoin(conf(~ok), ', ')); end
+        nT = size(x, 2);  R = [ones(nT, 1), linspace(-1, 1, nT)', fillmissing(fmri(r).confounds(:, ic), 'constant', 0)];
+        x = x - (R * (R \ x.')).';
+        bp = designfilt('bandpassiir', 'FilterOrder', 4, 'HalfPowerFrequency1', band(1), 'HalfPowerFrequency2', band(2), 'SampleRate', fs);
+        Y = [Y, filtfilt(bp, x.').'];  sec = sec + nT * fmri(r).tr; %#ok<AGROW>
+    end
+    info = [numel(fmri) sec sum(low)];
 end
 
 % Author: Diellor Basha, 2026

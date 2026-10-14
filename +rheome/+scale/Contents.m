@@ -12,7 +12,8 @@
 %   rheome.scale.measure_bandresolution - Resolution at each octave's OWN measured SNR, for one subject.
 %   rheome.scale.measure_catalogue     - The catalogue's patterns through this participant's own head, read by three estimators (MS1 G6, G16).
 %   rheome.scale.measure_fusion         - Fused flow kernels against reconstruct-then-differentiate, on one subject's data.
-%   rheome.scale.measure_atlas          - MS1 G12 per participant: DK correspondence, atlas events, shared-gauge tensor, connectome roll-up.
+%   rheome.scale.measure_atlas          - MS1 G12 per participant: DK correspondence, atlas events, shared-gauge tensor, connectome roll-up; one person's atlas (3.4) and F23 across levels (2.4).
+%   rheome.scale.measure_scaleramp      - MS1 2.4: a peak whose size ramps 10 -> 40 mm, read by detect.ridges (sphere + cortex).
 %   rheome.scale.measure_geometry       - The atlas geometry checks on one subject's cortex: atom-tile overlap, gauge, roll-up.
 %   rheome.scale.measure_grouptrack     - Viterbi tile tracking of the alpha envelope, real against the mode-shift surrogate.
 %   rheome.scale.measure_events         - What a detected alpha event is: shape boundaries, event-locked TF, timing (MS1 SPEC1 §8).
