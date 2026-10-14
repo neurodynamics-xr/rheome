@@ -16,7 +16,8 @@ function T = eventtable(Ev, Y, A, fs, opts)
 %   A    struct, A.(hemi) [nTile x 1] tile area (m^2)
 %   fs   Y's sample rate          T0  time of Y's first sample (s)
 %   R2Min  a fit counts if r2 >= R2Min (0.7, as rheome.flow.labelalpha)
-%   Model  risefall's model: "linear" or "quadrature" (the episode adds to the background in power)
+%   Model  risefall's model: "linear", "quadrature" (the episode adds to the background in power) or "posterior"
+%          (the quadrature model read by its posterior medians: rheome.detect.risefall)
 %
 % OUTPUT T = Ev with, per event:
 %   tOn tOff tauR tauF r2 (NaN without a fit)   fit  (fit made and r2 >= R2Min)   atBound (tau at TauMax)

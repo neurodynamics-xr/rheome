@@ -38,10 +38,12 @@ classdef tScaleEvents < matlab.unittest.TestCase
         function plantsAreReadBackPerSnrBoundAndModel(tc)
             S = rheome.scale.sensors(tc.Name);
             [T, X] = rheome.scale.measure_eventplants(tc.Name, S, Depth=3, NPer=2, SNRs=[10 30], Hemis="L");
-            tc.verifyEqual(height(X), 2 * 2 * 2 * 2);                                   % plants x SNRs x bounds x models
+            tc.verifyEqual(height(X), 2 * 2 * 2 * 3);                                   % plants x SNRs x bounds x models
             tc.verifyTrue(any(T.band == "30dB/tau1/quadrature" & T.metric == "participant_pass"));
             q = X(X.snr_db == 30 & X.model == "quadrature" & X.fit, :);
             tc.verifyLessThan(median(abs(q.on_err_s)), 0.165);                          % clean plants: within a tile
+            q = X(X.snr_db == 30 & X.model == "posterior" & X.fit, :);
+            tc.verifyLessThan(median(abs(q.on_err_s)), 0.165);
         end
 
         function theDriverAndTheGroupReduce(tc)

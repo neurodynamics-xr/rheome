@@ -46,6 +46,23 @@ classdef tEvents < matlab.unittest.TestCase
             tc.verifyLessThan(Rl.tauR, 0.9*0.3);  tc.verifyGreaterThan(Rl.tOn - 3, 0.05);   % linear: sharper, late
         end
 
+        function posteriorReadsAnEpisodeOnABeatingBackground(tc)
+            % the episode beats with an ongoing rhythm of its own band: |p + n|, n a slowly drifting complex
+            % background (episode 20 dB over its median: the level at which the through-MEG plants read tau at x0.97-1.02); over planted episodes the posterior medians stay within a
+            % time tile and tau within 0.8-1.25 (the through-MEG check at 10 dB is measure_eventplants')
+            fs = 300;  t = (0:fs*8-1)/fs;  Sg = @(x) 1 ./ (1 + exp(-x));  e = zeros(20, 4);  r = e;
+            for k = 1:20
+                rng(k);  on = 3 + 0.5*rand;  off = on + 1 + rand;  tau = 0.1 + 0.3*rand(1, 2);
+                n = movmean(randn(1, numel(t)) + 1i*randn(1, numel(t)), round(0.2*fs));  n = n / median(abs(n));
+                a = abs(10*Sg((t - on)/tau(1)) .* Sg(-(t - off)/tau(2)) + n);
+                R = rheome.detect.risefall(a, fs, on + 0.1, off - 0.1, Model="posterior");
+                tc.verifyTrue(R.ok);
+                e(k, :) = [R.tOn - on, R.tOff - off, R.tauR / tau(1), R.tauF / tau(2)];
+            end
+            tc.verifyLessThan(median(abs(e(:, 1:2))), [0.165 0.165]);
+            tc.verifyGreaterThan(median(e(:, 3:4)), [0.8 0.8]);  tc.verifyLessThan(median(e(:, 3:4)), [1.25 1.25]);
+        end
+
         function eventlockedFindsTheBurstFrequency(tc)
             rng(1);  fs = 250;  t = (0:fs*20-1)/fs;  x = 0.1*randn(2, numel(t));
             on = 8;  b = t >= on & t < on + 1;  x(1, b) = x(1, b) + sin(2*pi*11*t(b));

@@ -1,4 +1,4 @@
-function [T, X] = measure_eventplants(name, S, opts)
+function [T, X, Z] = measure_eventplants(name, S, opts)
 % SCALE.MEASURE_EVENTPLANTS  Planted alpha episodes of known timing in the participant's own rest, boundaries read back (MS1 SPEC1 §8 A).
 %
 %   [T, X] = rheome.scale.measure_eventplants(name)
@@ -16,7 +16,7 @@ function [T, X] = measure_eventplants(name, S, opts)
 %             depth-Depth tile mean (rheome.flow.envelopemodes' chain), at 300 frames/s
 %   boundary  rheome.detect.eventtable on the planted tile, candidate [tOn, tOff] each moved by
 %             U(-CandJitterS, CandJitterS) (a detector's boundary error), at TauMax and TauMaxAlt, with each of
-%             risefall's Models (linear, quadrature) -- the evidence measure_events' Model is chosen by
+%             risefall's Models (linear, quadrature, posterior) -- the evidence measure_events' Model is chosen by
 % A plant PASSES if its fit counts (r2 >= R2Min), |tOn error| and |tOff error| <= TimeTileS (one time tile,
 % 165 ms for alpha) and tauR, tauF within TauRatio of planted. The PARTICIPANT passes at an SNR if the
 % medians over its plants meet the same rule (unfitted plants counted as failures of the timing medians:
@@ -53,7 +53,8 @@ function [T, X] = measure_eventplants(name, S, opts)
         opts.Hemis string = ["L" "R"]
         opts.Seed (1,1) double = 41
         opts.EdgeS (1,1) double = 10
-        opts.Models string = ["linear" "quadrature"]
+        opts.Models string = ["linear" "quadrature" "posterior"]
+        opts.Footprint (1,1) double = 0
     end
     if isempty(S), S = rheome.scale.sensors(name); end
     rng(opts.Seed);
@@ -63,7 +64,7 @@ function [T, X] = measure_eventplants(name, S, opts)
     bp = designfilt('bandpassiir', 'FilterOrder', 8, 'HalfPowerFrequency1', 8, 'HalfPowerFrequency2', 16, 'SampleRate', fs);
     E = rheome.flow.envelopemodes(name, Band=[8 16], Rate=FR);
     nSeg = SEG*fs;  tSeg = (0:nSeg-1)/fs;  cIdx = PAD*fs + 1:round(fs/FR):(SEG - PAD)*fs;  tc = (cIdx - 1)/fs;
-    Sg = @(x) 1 ./ (1 + exp(-x));  X = table();
+    Sg = @(x) 1 ./ (1 + exp(-x));  X = table();  Z = table();  keepZ = nargout > 2;
     for hh = opts.Hemis
         h = char(hh);  H = S.B.(h);  Phi = H.lbo.Phi;  Mm = H.lbo.Mass;  lam = H.lbo.Lambda(:);
         av = full(sum(Mm, 2));  gv = double(H.gv(:));  nV = numel(gv);  nrm = double(H.S.VertNormals);
@@ -81,13 +82,20 @@ function [T, X] = measure_eventplants(name, S, opts)
             g0 = GL*i_blob(v0, Phi, Mm, hk, nrm);
             bsig = g0 * (env .* cos(2*pi*F0*tSeg + 2*pi*rand));
             s0 = randi([CS.first, CS.last - nSeg + 1]) + (0:nSeg-1);
-            u = Wd(k0, :) * i_envmodes(bsig, bp, cIdx, K, Phi, Mm);
+            U = Wd * i_envmodes(bsig, bp, cIdx, K, Phi, Mm);  u = U(k0, :);  pk = max(U, [], 2) / max(u);
+            fp = find(pk >= opts.Footprint);  if opts.Footprint <= 0 || ~ismember(k0, fp), fp = k0; end
+            zk = [k0; setdiff(find(pk >= 0.25), k0)];
             j = opts.CandJitterS*(2*rand(1, 2) - 1);
-            Ev = table(hh, {k0}, on + j(1), off + j(2), 'VariableNames', {'hemi','tiles','t0','t1'});
+            Ev = table(hh, {fp}, on + j(1), off + j(2), 'VariableNames', {'hemi','tiles','t0','t1'});
+            if keepZ
+                n0 = Wd(zk, :) * i_envmodes(F(:, s0), bp, cIdx, K, Phi, Mm);  yZ = cell(1, numel(opts.SNRs));
+            end
             for snr = opts.SNRs
                 amp = 10^(snr/20) * med(k0) / max(u);
                 Y = struct(h, zeros(size(Wd, 1), numel(cIdx)));
-                Y.(h)(k0, :) = Wd(k0, :) * i_envmodes(F(:, s0) + amp*bsig, bp, cIdx, K, Phi, Mm);
+                Yk = Wd(union(fp, zk), :) * i_envmodes(F(:, s0) + amp*bsig, bp, cIdx, K, Phi, Mm);
+                Y.(h)(union(fp, zk), :) = Yk;
+                if keepZ, yZ{snr == opts.SNRs} = Y.(h)(zk, :) / (amp * max(u)); end   % in units of the plant's height
                 for tm = [opts.TauMax opts.TauMaxAlt], for md = opts.Models
                     R = rheome.detect.eventtable(Ev, Y, A, FR, T0=tc(1), TauMax=tm, R2Min=opts.R2Min, Model=md);
                     eOn = R.tOn - on;  eOff = R.tOff - off;  rR = R.tauR / tau(1);  rF = R.tauF / tau(2);
@@ -99,9 +107,15 @@ function [T, X] = measure_eventplants(name, S, opts)
                         'off_err_s','tauR_ratio','tauF_ratio','pass'})]; %#ok<AGROW>
                 end, end
             end
+            if keepZ
+                Z = [Z; table(hh, q, on, off, tau(1), tau(2), on + j(1), off + j(2), {U(zk, :) / max(u)}, {n0 / max(u)}, {yZ}, ...
+                    {10.^(opts.SNRs/20) * med(k0) / max(u)}, {zk}, {pk(zk)}, {A.(h)(zk)}, 'VariableNames', {'hemi','plant', ...
+                    'tOn_true','tOff_true','tauR_true','tauF_true','t0','t1','u','n','y','amp','tiles','peakfrac','area'})]; %#ok<AGROW>
+            end
         end
         fprintf('[eventplants %s] %s: %d plants x %d SNRs\n', name, h, opts.NPer, numel(opts.SNRs));
     end
+    if keepZ, Z.Properties.UserData = struct('t', tc, 'fs', FR, 'snr_db', opts.SNRs); end
     T = table();
     for snr = opts.SNRs
         for tm = [opts.TauMax opts.TauMaxAlt], for md = opts.Models
