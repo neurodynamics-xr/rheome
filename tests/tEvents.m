@@ -57,6 +57,7 @@ classdef tEvents < matlab.unittest.TestCase
                 a = abs(10*Sg((t - on)/tau(1)) .* Sg(-(t - off)/tau(2)) + n);
                 R = rheome.detect.risefall(a, fs, on + 0.1, off - 0.1, Model="posterior");
                 tc.verifyTrue(R.ok);
+                tc.verifyEqual(rheome.detect.risefall(a, fs, on + 0.1, off - 0.1, Model="posterior", Chunk=997), R);  % blocks: bit-identical
                 e(k, :) = [R.tOn - on, R.tOff - off, R.tauR / tau(1), R.tauF / tau(2)];
             end
             tc.verifyLessThan(median(abs(e(:, 1:2))), [0.165 0.165]);
