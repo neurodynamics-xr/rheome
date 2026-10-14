@@ -1,4 +1,4 @@
-function [T, X, Best, Win] = measure_grouptrack(name, S, opts)
+function [T, X, Best, Win, Paths] = measure_grouptrack(name, S, opts)
 % SCALE.MEASURE_GROUPTRACK  Viterbi tile tracking of the alpha envelope, real against the mode-shift surrogate.
 %
 %   [T, X] = rheome.scale.measure_grouptrack(name)
@@ -35,6 +35,9 @@ function [T, X, Best, Win] = measure_grouptrack(name, S, opts)
 % Win (fourth output, grouptrackwindows.csv): one row per configuration x 2 s window -- the best real and surrogate
 % path scores, the window's start (s from the recording start), whether it is used (clean), its surrogate half
 % (calibration | test) and the configuration's threshold: the detection behind frac_pass and false_rate_test.
+% Paths (fifth output): one row per configuration x used window x kind (real | surrogate) with a path -- hemi
+% depth jj rate window start_s kind score thr passed, and the best path's frames and tiles (cells): the
+% tracker's DETECTIONS, the event table rheome.scale.measure_events reads.
 %
 % ⚠ netMM is quantised to the tiling: displacement below one tile is not measured, by design.
 % ⚠ Everything is through the instrument -- a trajectory is the trajectory of the RENDERED blob.
@@ -61,7 +64,7 @@ function [T, X, Best, Win] = measure_grouptrack(name, S, opts)
     B = S.B;
     st = rheome.load.study(name);  fs = st.rec.sfreq;  CS = rheome.scale.cleanspan(double(st.rec.F(S.iSel, :)), fs, EdgeS=opts.EdgeS);  clear st
     E = rheome.flow.envelopemodes(name, Band=[8 16], Rate=opts.Rate);
-    FR = opts.Rate;  W = opts.WindowS;  res = [];  nWin = NaN;  Best = struct([]);  Win = table();
+    FR = opts.Rate;  W = opts.WindowS;  res = [];  nWin = NaN;  Best = struct([]);  Win = table();  Paths = table();
     dec = round(fs / FR);                                     % envelope frame k is sample (k-1)*dec + 1
     f1 = ceil((CS.first - 1) / dec) + 1;  f2 = floor((CS.last - 1) / dec) + 1;
     badF = CS.mask(1:dec:end);
@@ -79,10 +82,10 @@ function [T, X, Best, Win] = measure_grouptrack(name, S, opts)
             for jj = opts.JLevels
                 [Yr, rate, nF] = i_winblock(Y0, FR, jj, W*FR, nWin);  Ysr = i_winblock(Ys0, FR, jj, W*FR, nWin);
                 b0 = quantile(reshape(Ysr(:, 1:nWin*nF), [], 1), opts.BaseQ);
-                ss = zeros(nWin, 1);  sst = cell(nWin, 1);
+                ss = zeros(nWin, 1);  sst = cell(nWin, 1);  spt = cell(nWin, 1);  rpt = spt;
                 for w = ok
                     pth = rheome.detect.tilepath(Ysr(:, (w-1)*nF + (1:nF)), G, Baseline=b0, SampleRate=rate);
-                    if pth.nTracks, ss(w) = pth.tracks(1).score; sst{w} = i_stats(pth, G, rate); end
+                    if pth.nTracks, ss(w) = pth.tracks(1).score; sst{w} = i_stats(pth, G, rate); spt{w} = pth.tracks(1); end
                 end
                 cal = ok(1:2:end);  tst = ok(2:2:end);
                 thr = i_rate_thr(ss(cal), opts.Alpha * W);
@@ -90,7 +93,7 @@ function [T, X, Best, Win] = measure_grouptrack(name, S, opts)
                 rs = zeros(nWin, 1);  rst = cell(nWin, 1);
                 for w = ok
                     pth = rheome.detect.tilepath(Yr(:, (w-1)*nF + (1:nF)), G, Baseline=b0, SampleRate=rate);
-                    if pth.nTracks, rs(w) = pth.tracks(1).score; rst{w} = i_stats(pth, G, rate); end
+                    if pth.nTracks, rs(w) = pth.tracks(1).score; rst{w} = i_stats(pth, G, rate); rpt{w} = pth.tracks(1); end
                 end
                 pr = false(nWin, 1);  pr(ok) = rs(ok) > thr;  ps = ss(tst) > thr;
                 if nargout > 3
@@ -99,6 +102,10 @@ function [T, X, Best, Win] = measure_grouptrack(name, S, opts)
                         (f1 - 1)/FR + (wi - 1)*W, ismember(wi, ok), hv, rs, ss, repmat(thr, nWin, 1), ...
                         'VariableNames', {'hemi','depth','rate','window','start_s','used','surrogate_half', ...
                         'real_score','surrogate_score','thr'})]; %#ok<AGROW>
+                end
+                if nargout > 4
+                    Paths = [Paths; i_paths(hh, d, jj, rate, (f1 - 1)/FR + ((1:nWin)' - 1)*W, rpt, "real", thr); ...
+                             i_paths(hh, d, jj, rate, (f1 - 1)/FR + ((1:nWin)' - 1)*W, spt, "surrogate", thr)]; %#ok<AGROW>
                 end
                 [bs, bw] = max(rs);
                 if bs > 0
@@ -139,6 +146,15 @@ function [Y, rate, nF] = i_winblock(Y0, FR, jj, nW, nWin)
     bs = 2^jj;  nF = floor(nW/bs);  rate = FR/bs;  nT = size(Y0, 1);
     Z = reshape(Y0(:, 1:nW*nWin), nT, nW, nWin);  Z = Z(:, 1:nF*bs, :);
     Y = reshape(mean(reshape(Z, nT, bs, nF, nWin), 2), nT, nF*nWin);
+end
+
+function P = i_paths(hh, d, jj, rate, t0, pt, kind, thr)
+    w = find(~cellfun(@isempty, pt));  n = numel(w);
+    sc = cellfun(@(x) x.score, pt(w));
+    P = table(repmat(hh, n, 1), repmat(d, n, 1), repmat(jj, n, 1), repmat(rate, n, 1), w, t0(w), ...
+        repmat(kind, n, 1), sc(:), repmat(thr, n, 1), sc(:) > thr, cellfun(@(x) x.frames(:)', pt(w), 'uni', 0), ...
+        cellfun(@(x) x.tiles(:)', pt(w), 'uni', 0), 'VariableNames', {'hemi','depth','jj','rate','window','start_s', ...
+        'kind','score','thr','passed','frames','tiles'});
 end
 
 function t = i_rate_thr(sc, allowPerWindow)

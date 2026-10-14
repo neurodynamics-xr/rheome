@@ -41,6 +41,12 @@ function R = run(name, opts)
 %   inject.csv, trackfactorial.csv   MS1 G7 / G8 (P5, nsp cf-track): per-injection rows of
 %                     rheome.scale.measure_inject and the factorial rows of measure_trackfactorial
 %                     (RefHead from RHEOME_REFHEAD); opt-in, not in the "ported" default
+%   events.csv, eventacf.csv, eventtf.mat   MS1 SPEC1 §8 (nsp cf-events): rheome.scale.measure_events -- the
+%                     tracker's detections as an event table with shape-based boundaries (risefall), peak
+%                     frequency and cycles; the event-train and envelope autocorrelation against the surrogate and
+%                     Poisson; the onset/offset-locked TF maps (dB vs matched random onsets); opt-in, not "ported"
+%   eventplants.csv   MS1 SPEC1 §8 A (nsp cf-events): rheome.scale.measure_eventplants -- planted episodes of known
+%                     tOn/tOff/tau in own rest, boundaries read back at 5/10/20 dB; opt-in, not "ported"
 %   aperiodic.csv     MS1 G10 (P6, nsp cf-aperiodic): rheome.scale.measure_aperiodic -- per cell (arm x plant x
 %                     sigma x speed x signal) the on-patch Viterbi rate against the held-out null, the split's
 %                     reduction, band-map errors and along-path speed; opt-in, not in the "ported" default
@@ -218,6 +224,11 @@ function R = run(name, opts)
                     if a == "catalogue", save(fullfile(od, 'catalogue_strips.mat'), '-struct', 'strips', '-v7.3'); end
                 case "inject"                  % MS1 G7 (Fig. 8): movers injected into the own recording, tracked
                     [Ti, X.inject] = rheome.scale.measure_inject(name, S);  M = [M; Ti]; %#ok<AGROW>
+                case "events"                  % MS1 SPEC1 §8: shape boundaries, event-locked TF, timing of the tracker's detections
+                    [Tq, X.events, X.eventacf, TF] = rheome.scale.measure_events(name, S);  M = [M; Tq]; %#ok<AGROW>
+                    save(fullfile(od, 'eventtf.mat'), 'TF', '-v7');
+                case "eventplants"             % MS1 SPEC1 §8 A: planted episodes in own rest, boundaries read back
+                    [Tq, X.eventplants] = rheome.scale.measure_eventplants(name, S);  M = [M; Tq]; %#ok<AGROW>
                 case "trackfactorial"          % MS1 G8 (Fig. 9): the 0.52 diagnosis, 2^5 factorial
                     [Tf, X.trackfactorial] = rheome.scale.measure_trackfactorial(name, S);  M = [M; Tf]; %#ok<AGROW>
                 case "panelexamples"           % MS1 Figs. 4-7 panel A: one example per figure (figure data)

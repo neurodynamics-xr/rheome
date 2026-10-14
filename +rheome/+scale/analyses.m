@@ -71,6 +71,11 @@ function a = analyses(which)
 %   panelexamples    MS1 Figs. 4-7 panel A      one example each (plant + band maps, PSF, injected mover, aperiodic
 %                                              patch + spectra) by the figure's own measure; run only when asked
 %                                              (nsp rheome-ms1-examples), not "ported"
+%   events           MS1 SPEC1 §8 B            the tracker's detections (depth 8, 18.75 fps) as an event table: risefall
+%                                              boundaries, peak frequency, cycles; onset/offset-locked TF vs random
+%                                              onsets; intervals and autocorrelation vs surrogate and Poisson
+%   eventplants      MS1 SPEC1 §8 A            planted episodes of known timing in own rest, boundaries read back
+%                    -- both run only when asked (nsp cf-events), not "ported"
 %   coefficients     (Prognome input)          rheome.scale.coefficients: tile x scale x time envelopes;
 %                                              run only when asked (a ~200 MB file), so not "ported"
 %
@@ -81,7 +86,7 @@ function a = analyses(which)
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
            "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
            "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" ...
-           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "slowoscplant" "correspondence" "atlasevents" "gaugetensor" "connectome" "multimodal" "modesfields" "modesfit" "jointfields" "jointcanary" "upstream" "lambdaedge" "panelexamples" "coefficients"];
+           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "slowoscplant" "correspondence" "atlasevents" "gaugetensor" "connectome" "multimodal" "modesfields" "modesfit" "jointfields" "jointcanary" "upstream" "lambdaedge" "panelexamples" "events" "eventplants" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end

@@ -37,6 +37,10 @@ classdef tEventSensors < matlab.unittest.TestCase
             tc.addTeardown(@close, h);
             tc.verifyEqual(sort(info.carrying), (1:4)');
             tc.verifyNumElements(findobj(h, 'Type', 'axes'), 2);
+            % §5c: neutral trace + trace-event segment only; no shaded patches
+            tc.verifyEmpty(findobj(h, 'Type', 'patch'));
+            cols = unique(round(vertcat(findobj(h, 'Type', 'line').Color) * 255), 'rows');
+            tc.verifyEqual(cols, [138 148 163; 209 73 91]);
         end
     end
 end

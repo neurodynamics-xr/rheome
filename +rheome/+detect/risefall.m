@@ -4,7 +4,8 @@ function R = risefall(a, fs, t0, t1, opts)
 %   R = rheome.detect.risefall(a, fs, t0, t1)                  % a candidate episode [t0, t1] s
 %   R = rheome.detect.risefall(a, fs, t0, t1, Margin=1, Smooth=0.1)
 %
-%       a(t) = b + h * S((t - tOn)/tauR) * S(-(t - tOff)/tauF),    S(x) = 1/(1 + exp(-x))
+%       a(t) = b + h * S((t - tOn)/tauR) * S(-(t - tOff)/tauF),    S(x) = 1/(1 + exp(-x))      (Model "linear")
+%       a(t) = sqrt(b^2 + (h * S((t - tOn)/tauR) * S(-(t - tOff)/tauF))^2)                    (Model "quadrature")
 %
 % fitted to the amplitude a over [t0 - Margin, t1 + Margin]. tOn and tOff are the HALF-rise and
 % HALF-fall times -- where the episode is half built and half gone -- and tauR, tauF how fast it
@@ -23,9 +24,16 @@ function R = risefall(a, fs, t0, t1, opts)
 %   fs       samples per second          t0, t1   the candidate episode (s), e.g. from rheome.detect.spindle
 %   Margin   seconds either side included in the fit (1)
 %   Smooth   moving mean applied first, symmetric (0.1 s)
+%   Model    "linear" (default) or "quadrature". ⭐ An episode on an ongoing background adds to it in POWER,
+%            not in amplitude (incoherent sources): |p + n|^2 ~ p^2 + n^2. The linear model then reads the
+%            flanks of sqrt(b^2 + h^2 S^2) as sharper than the episode's own (planted through MEG at 10 dB:
+%            tau x 0.65). "quadrature" fits the episode's own amplitude S under that sum.
+%   TauMax   upper bound of tauR and tauF (1 s). On two OMEGA participants tau reached 1 s at the 95th
+%            percentile (labelling design section 7); a fit AT the bound is flagged (.atBound), not trusted
 %
 % OUTPUT (struct R)
 %   .tOn .tOff .tauR .tauF .b .h (seconds and amplitude units)   .r2   .ok
+%   .atBound  tauR or tauF within 1% of TauMax
 %   .buildup .plateau .decay   [start end] s; plateau is [] when the fit leaves none
 %
 % See also: rheome.detect.spindle, rheome.detect.tilepath
@@ -39,8 +47,10 @@ function R = risefall(a, fs, t0, t1, opts)
         t1 (1,1) double
         opts.Margin (1,1) double {mustBeNonnegative} = 1
         opts.Smooth (1,1) double {mustBeNonnegative} = 0.1
+        opts.TauMax (1,1) double {mustBePositive} = 1
+        opts.Model (1,1) string {mustBeMember(opts.Model, ["linear" "quadrature"])} = "linear"
     end
-    R = struct('tOn',NaN,'tOff',NaN,'tauR',NaN,'tauF',NaN,'b',NaN,'h',NaN,'r2',NaN,'ok',false, ...
+    R = struct('tOn',NaN,'tOff',NaN,'tauR',NaN,'tauF',NaN,'b',NaN,'h',NaN,'r2',NaN,'ok',false,'atBound',false, ...
         'buildup',[],'plateau',[],'decay',[]);
     i0 = max(1, round((t0 - opts.Margin) * fs) + 1);  i1 = min(numel(a), round((t1 + opts.Margin) * fs) + 1);
     if i1 - i0 < 10, return; end
@@ -54,7 +64,11 @@ function R = risefall(a, fs, t0, t1, opts)
     b0 = prctile(y, 5);  h0 = max(y) - b0;
     p0 = [b0 h0 t0 0.1 t1 0.1];
     lb = [min(y) - h0, 0,       t(1), 0.01, t0,   0.01];
-    ub = [max(y),      3 * h0,  t1,   1.0,  t(end), 1.0];
+    if opts.Model == "quadrature"
+        f = @(p, t) sqrt(p(1)^2 + (p(2) * S((t - p(3)) / p(4)) .* S(-(t - p(5)) / p(6))).^2);
+        h0 = sqrt(max(max(y)^2 - b0^2, 0));  p0(2) = h0;  lb(1) = 0;
+    end
+    ub = [max(y),      3 * h0,  t1,   opts.TauMax,  t(end), opts.TauMax];
     p0 = min(max(p0, lb), ub);
     o = optimoptions('lsqcurvefit', 'Display', 'off');
     try
@@ -71,6 +85,7 @@ function R = risefall(a, fs, t0, t1, opts)
     if R.tOff - 2*R.tauF > R.tOn + 2*R.tauR
         R.plateau = [R.tOn + 2*R.tauR, R.tOff - 2*R.tauF];
     end
+    R.atBound = max(R.tauR, R.tauF) >= 0.99 * opts.TauMax;
     R.ok = true;
 end
 
