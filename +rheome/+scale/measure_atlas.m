@@ -1,4 +1,4 @@
-function [T, X] = measure_atlas(name, S, item, opts)
+function [T, X, Fig] = measure_atlas(name, S, item, opts)
 % SCALE.MEASURE_ATLAS  MS1 group P8 (G12) on one participant: correspondence, atlas events, the shared-gauge
 % alpha tensor and the connectome roll-up -- the atlas, gauge and multimodal checks, per participant.
 %
@@ -6,6 +6,8 @@ function [T, X] = measure_atlas(name, S, item, opts)
 %   [T, X] = rheome.scale.measure_atlas(name, S, "atlasevents", NSurr=20)
 %   [T, X] = rheome.scale.measure_atlas(name, S, "gaugetensor")
 %   [T, X] = rheome.scale.measure_atlas(name, S, "connectome", Gammas=[0 0.01 0.1 1 10])
+%   [T, X, Fig] = rheome.scale.measure_atlas(name, S, "atlasone")    % one person's atlas, depths 0-6 (figure data)
+%   [T, X, Fig] = rheome.scale.measure_atlas(name, S, "xlevel")      % F23: one pattern across the levels
 %
 % Spec: the group-analysis plan, G12. The geometry parts
 % of G12 (roll-up exactness, atom-tile overlap, gauge singularity count and smoothness) are P2's
@@ -52,6 +54,27 @@ function [T, X] = measure_atlas(name, S, item, opts)
 %                   (mexhat on the LB-Connectome pencil) per member at Gammas x the auto gamma, over NSeeds
 %                   seeds: area-weighted RMS width (mm, Euclidean from the seed), energy in the other
 %                   hemisphere, energy beyond 3 sigma (VR1 2.1d), and the coupling scale 2 pi / sqrt(lambda_2).
+%   atlasone        MS1 3.4 (F8, F12 on the paper's kernel): one person's alpha atlas on ONE tree, the group
+%                   tree of rheome.scale.template, depths 0..LeafDepth. Alpha power is computed once, on the
+%                   current summed over each LEAF tile (depth LeafDepth), and every coarser node is the exact
+%                   sum of its leaves -- so the levels are one measure rolled up, not a separate inversion per
+%                   depth (atlasevents sums the current per depth instead). dB against each node's own median;
+%                   events as atlasevents (ThresholdDB, touching tiles, consecutive time tiles) at each depth,
+%                   against NSurr phase-randomised surrogates of the leaf currents. Rows per hemisphere x depth
+%                   as atlasevents; Fig: per hemisphere the dB tower, the event label of every cell, the
+%                   event catalogue (onset, duration, tiles, peak), tile adjacency, codes, centres and areas.
+%   xlevel          MS1 2.4, F23 re-run on that tree (left hemisphere, depths 0..LeafDepth). (i) PLANTED: a
+%                   heat-kernel peak carried 150 deg down a meridian of the participant's registered sphere
+%                   (PlantAzimuthDeg) in NTiles time tiles while it widens 7 -> 18 deg (rheome.flow.movingpeak,
+%                   rheome.filters.sphere_kernel), amplitude 9 sin^2 over background 1, rolled up leaf -> root.
+%                   (ii) REAL: the atlasone alpha tower, NTiles time tiles from 2 before the onset of the
+%                   largest depth-TrackLevel event (or from RealT0S). Both tracked by rheome.detect.tilepath at
+%                   every depth (Span "full"); the chain is the TrackLevel track, its ancestors, and the stronger
+%                   child below. Leaves also in pole-to-pole spiral order (rheome.geom.spiralorder). Fig has the
+%                   fields of the F23 cache (xlevel_planted / xlevel_real).
+%
+% ⚠ ONE TREE. atlasone and xlevel reach the tree only through rheome.scale.template (rheome.geom.tree on the
+% template), so whichever partition geom.tree builds is the one every level, participant and figure uses.
 %
 % ⚠ RAW COORDINATES NEED THE MRI. The subject's SCS/NCS come from the protocol's subjectimage (staged by nsp
 % cf-atlas, cached as mri.mat by rheome.scale.importsubject); without it dk_agree_raw is NaN. NCS is
@@ -69,7 +92,7 @@ function [T, X] = measure_atlas(name, S, item, opts)
     arguments
         name (1,:) char
         S = []
-        item (1,1) string {mustBeMember(item, ["correspondence" "atlasevents" "gaugetensor" "connectome"])} = "correspondence"
+        item (1,1) string {mustBeMember(item, ["correspondence" "atlasevents" "gaugetensor" "connectome" "atlasone" "xlevel"])} = "correspondence"
         opts.Template char = ''
         opts.Depths double = 1:3
         opts.Band (1,2) double = [6.1 12.1]
@@ -83,7 +106,13 @@ function [T, X] = measure_atlas(name, S, item, opts)
         opts.Kc (1,1) double = 400
         opts.NSeeds (1,1) double = 60
         opts.Hemis string = ["L" "R"]
+        opts.LeafDepth (1,1) double {mustBeInteger, mustBePositive} = 6
+        opts.TrackLevel (1,1) double {mustBeInteger, mustBePositive} = 4
+        opts.NTiles (1,1) double {mustBeInteger, mustBePositive} = 24
+        opts.RealT0S (1,1) double = NaN
+        opts.PlantAzimuthDeg (1,1) double = 0
     end
+    Fig = [];
     if isempty(S), S = rheome.scale.sensors(name); end
     dmax = max([opts.Depths opts.TensorDepth]);
     switch item
@@ -91,6 +120,9 @@ function [T, X] = measure_atlas(name, S, item, opts)
         case "atlasevents",    Tp = rheome.scale.template(dmax, Template=opts.Template, Hemis=opts.Hemis);  [T, X] = i_events(name, S, Tp, opts);
         case "gaugetensor",    Tp = rheome.scale.template(dmax, Template=opts.Template, Hemis=opts.Hemis);  [T, X] = i_tensor(name, S, Tp, opts);
         case "connectome",     [T, X] = i_connectome(name, S, opts);
+        case "atlasone",       Tp = rheome.scale.template(opts.LeafDepth, Template=opts.Template, Hemis=opts.Hemis);  [T, X, Fig] = i_atlasone(name, S, Tp, opts);
+        case "xlevel",         o = opts;  o.Hemis = opts.Hemis(1);  o.NSurr = 0;
+                               Tp = rheome.scale.template(opts.LeafDepth, Template=opts.Template, Hemis=o.Hemis);  [T, X, Fig] = i_xlevel(name, S, Tp, o);
     end
 end
 
@@ -189,7 +221,7 @@ function D = i_detect(Y, blk, bp, nb, thr, mins)
     end
 end
 
-function [n, dur, ntiles] = i_events_of(on, A, dt)
+function [n, dur, ntiles, lab] = i_events_of(on, A, dt)
 % connected sets of on-cells: touching tiles within a time tile, same or touching tile across consecutive ones
     [nT, nb] = size(on);  id = reshape(1:nT*nb, nT, nb);
     % ⚠ e(:), t(:): with one edge (depth 1, two tiles) on(i1,:) is a row and find returns rows (MATLAB:catenate)
@@ -199,6 +231,7 @@ function [n, dur, ntiles] = i_events_of(on, A, dt)
     s = [s; id(sub2ind([nT nb], i2(e), t))];  d = [d; id(sub2ind([nT nb], j2(e), t + 1))];
     c = conncomp(graph(sparse(s, d, 1, nT*nb, nT*nb) + sparse(d, s, 1, nT*nb, nT*nb)));
     v = find(on(:));  [~, ~, g] = unique(c(v));  n = max([g; 0]);
+    lab = zeros(nT, nb, 'uint32');  lab(v) = g;
     if n == 0, dur = NaN;  ntiles = NaN;  return; end
     tile = mod(v - 1, nT) + 1;  bin = floor((v - 1) / nT) + 1;
     dur = (accumarray(g, bin, [], @max) - accumarray(g, bin, [], @min) + 1) * dt;
@@ -318,6 +351,202 @@ function T = i_zoom(lab, Pf, Pc, a, Cf, Cc, src)
     T = rheome.scale.rows("connectome", ["area_outside" "split_share" "edge_loss" "cv_area" "n_fine" "n_coarse"], ...
         [sum(af - mx) / sum(af), mean(1 - mx ./ af > 0.05), loss, std(af) / mean(af), size(Pf, 2), size(Pc, 2)], ...
         ["fraction" "fraction" "relative" "ratio" "units" "units"], lab + "_" + src);
+end
+
+%% ---------- one person's atlas on one tree (MS1 3.4) and one pattern across its levels (F23, MS1 2.4)
+function [T, X, Fig] = i_atlasone(name, S, Tp, o)
+    [F, fs, t0] = i_rec(name, S);  mins = size(F, 2) / fs / 60;
+    [bp, nb] = i_band(o, fs);  dt = nb / fs;
+    T = rheome.scale.rows("atlasone", strings(0,1), [], "");  X = table();
+    Fig = struct('band_hz', o.Band, 'threshold_db', o.ThresholdDB, 'dt', dt, 't_offset_s', t0, 'leaf_depth', o.LeafDepth, ...
+                 'kernel', "unconstrained noise-whitened minimum norm (S.Res), current summed over each leaf tile", ...
+                 'tree', "rheome.scale.template: rheome.geom.tree on the template, carried through the registered sphere");
+    for h = o.Hemis(:)'
+        tw = i_leaftower(S, Tp, h, o, F);
+        dB = i_db(tw, i_leafpower(tw.Y, bp, nb));
+        Su = cell(1, o.NSurr);
+        for s = 1:o.NSurr, rng(o.Seed + s);  Su{s} = i_db(tw, i_leafpower(i_phaserand(tw.Y), bp, nb)); end
+        lab = cell(1, tw.D + 1);  cg = table();
+        for l = 0:tw.D
+            [d, lab{l+1}] = i_stats(dB{l+1}, tw.A{l+1}, o.ThresholdDB, dt, mins);
+            sr = zeros(o.NSurr, 6);  for s = 1:o.NSurr, sr(s, :) = i_stats(Su{s}{l+1}, tw.A{l+1}, o.ThresholdDB, dt, mins); end
+            r = h + ".d" + l;
+            T = [T; rheome.scale.rows("atlasone", ...
+                 ["events_per_min" "duration_median_s" "tiles_visited_median" "frac_on" ...
+                  "surr_events_per_min" "surr_duration_median_s" "surr_tiles_visited_median" "surr_frac_on" "p_rate"], ...
+                 [d(2:5) mean(sr(:, 2:5), 1, 'omitnan') (1 + nnz(sr(:, 2) >= d(2))) / (1 + o.NSurr)], ...
+                 ["1/min" "s" "tiles" "fraction" "1/min" "s" "tiles" "fraction" "p"], r)]; %#ok<AGROW>
+            M = [d; sr];  src = ["data"; repmat("surrogate", o.NSurr, 1)];
+            X = [X; table(repmat(h, o.NSurr + 1, 1), repmat(l, o.NSurr + 1, 1), src, (0:o.NSurr)', ...
+                 M(:,1), M(:,2), M(:,3), M(:,4), M(:,5), M(:,6), 'VariableNames', ...
+                 {'hemi','depth','source','surrogate','n_events','events_per_min','duration_median_s','tiles_visited_median','frac_on','duration_p90_s'})]; %#ok<AGROW>
+            cg = [cg; i_catalogue(dB{l+1}, lab{l+1}, tw.ids{l+1}, h, l, dt, t0)]; %#ok<AGROW>
+            fprintf('[atlasone %s] %s: %.1f events/min (surrogates %.1f)\n', name, r, d(2), mean(sr(:, 2)));
+        end
+        Fig.(h) = struct('db', {cellfun(@single, dB, 'UniformOutput', false)}, 'event', {lab}, 'catalogue', cg, ...
+                         'ids', {tw.ids}, 'adjacency', {tw.A}, 'centre', {tw.C}, 'area_m2', {tw.area});
+    end
+end
+
+function [T, X, Fig] = i_xlevel(name, S, Tp, o)
+    D = o.LeafDepth;  L4 = o.TrackLevel;  NT = o.NTiles;  h = o.Hemis(1);
+    if L4 > D, error('scale:atlas:xlevel', 'TrackLevel %d is below LeafDepth %d', L4, D); end
+    SWEEP = 150;  COLAT0 = 15;  SIG = [7 18];  AMP = 9;  NWAY = 151;  LMAX = 120;  TURNS = [1 1.5 2 3 4 6 8];
+    [F, fs, t0] = i_rec(name, S);  [bp, nb] = i_band(o, fs);  DT = nb / fs;
+    tw = i_leaftower(S, Tp, h, o, F);  clear F
+    for l = 0:D
+        if ~isequal(tw.ids{l+1}(:)', 2^l:2^(l+1)-1), error('scale:atlas:heap', 'depth %d: tile codes are not the full heap', l); end
+    end
+    a = tw.a;  P6 = tw.P{D+1};  gv = S.B.(h).gv(:);
+    u = double(S.Sf.Sphere(gv, :));  R = mean(vecnorm(u, 2, 2));  u = u ./ vecnorm(u, 2, 2);
+
+    % (i) PLANTED: a widening heat-kernel peak down a meridian of the registered sphere
+    m = [cosd(o.PlantAzimuthDeg) sind(o.PlantAzimuthDeg) 0];
+    c0 = cosd(COLAT0)*[0 0 1] + sind(COLAT0)*m;  b = -sind(COLAT0)*[0 0 1] + cosd(COLAT0)*m;
+    phw = linspace(0, deg2rad(SWEEP), NWAY)';  sigw = deg2rad(linspace(SIG(1), SIG(2), NWAY))';
+    atoms = zeros(numel(gv), NWAY);
+    for k = 1:NWAY
+        c = cos(phw(k))*c0 + sin(phw(k))*b;
+        at = rheome.filters.sphere_kernel(acos(max(-1, min(1, u*c'))), exp(-(0:LMAX)'.*(1:LMAX+1)' * sigw(k)^2/2));
+        atoms(:, k) = at / max(at);
+    end
+    cums = phw * R;  v = cums(end) / ((NT-1) * DT) * (1 - 1e-9);          % (1-1e-9): exactly NT frames
+    Pk = rheome.flow.movingpeak(atoms, cums, SpeedMS=v, SampleRate=1/DT);
+    if size(Pk.X, 2) ~= NT, error('scale:atlas:xlevel', 'movingpeak gave %d frames, not %d', size(Pk.X, 2), NT); end
+    env = sin(pi * ((0:NT-1) + 0.5) / NT).^2;  Xp = 1 + AMP * env .* Pk.X;
+    phi = Pk.s / R;  centre = cos(phi)*c0 + sin(phi)*b;
+    sigma = rad2deg(sigw(Pk.k0) .* (1 - Pk.w) + sigw(Pk.k0 + 1) .* Pk.w);
+    leaf = P6' * (a .* Xp);  la = P6' * a;  err = 0;  plant = cell(D+1, 1);
+    for l = 0:D
+        up = tw.Ru{l+1} * leaf;  direct = tw.P{l+1}' * (a .* Xp);           % leaf roll-up vs the level's own tiles
+        err = max(err, max(abs(up - direct), [], 'all') / max(abs(direct), [], 'all'));
+        plant{l+1} = 10*log10(up ./ (tw.Ru{l+1} * la));
+    end
+    [~, vtrue] = max(u * centre', [], 1);  truth = zeros(D+1, NT);
+    for l = 0:D, [~, ti] = max(tw.P{l+1}(vtrue, :), [], 2);  truth(l+1, :) = ti'; end
+
+    % spiral order of the leaves
+    A6 = tw.A{D+1};  cen = (P6' * (a .* u)) ./ la;  cen = cen ./ vecnorm(cen, 2, 2);  [ei, ej] = find(triu(A6));
+    gap = zeros(size(TURNS));  r = zeros(1, 2^D);
+    for i = 1:numel(TURNS), oi = rheome.geom.spiralorder(cen, Turns=TURNS(i));  r(oi) = 1:2^D;  gap(i) = mean(abs(r(ei) - r(ej))); end
+    [~, ib] = min(gap);  turns = TURNS(ib);  [order, tspiral] = rheome.geom.spiralorder(cen, Turns=turns);
+    rs = zeros(1, 2^D);  rs(order) = 1:2^D;  rt = 1:2^D;
+    mono = @(r) [corr((1:NT)', r(truth(D+1,:))', 'Type', 'Spearman'), sum(diff(r(truth(D+1,:))) < 0), max(abs(diff(r(truth(D+1,:)))))];
+    ms = mono(rs);  mt = mono(rt);
+
+    % (ii) REAL: the alpha tower, NT time tiles around the largest event at TrackLevel
+    dB = i_db(tw, i_leafpower(tw.Y, bp, nb));  nbin = size(dB{1}, 2);
+    if isfinite(o.RealT0S)
+        k0 = floor((o.RealT0S - t0) / DT) + 1;
+    else
+        [~, ~, ~, lab] = i_events_of(dB{L4+1} > o.ThresholdDB, tw.A{L4+1}, DT);
+        k0 = 1;
+        if any(lab(:))
+            [~, big] = max(accumarray(double(lab(lab > 0)), 1));  [~, bins] = find(lab == big);  k0 = min(bins) - 2;
+        end
+    end
+    k0 = max(1, min(k0, nbin - NT + 1));
+    rl = cellfun(@(y) y(:, k0 + (0:NT-1)), dB, 'UniformOutput', false);
+
+    EX = struct('name', {"planted", "real"}, 'levels', {plant, rl}, 'thr', {3, o.ThresholdDB});
+    X = table();
+    for e = 1:2
+        Y = EX(e).levels;  own = ones(D+1, NT);  am = ones(D+1, NT);  chain = ones(D+1, NT);
+        for l = 1:D
+            tr = rheome.detect.tilepath(Y{l+1}, struct('A', tw.A{l+1}), Span="full", Baseline=EX(e).thr);
+            own(l+1, :) = tr.tracks(1).tiles';  [~, am(l+1, :)] = max(Y{l+1}, [], 1);
+        end
+        chain(L4+1, :) = own(L4+1, :);
+        for l = L4-1:-1:0, chain(l+1, :) = floor((chain(l+2, :) - 1) / 2) + 1; end
+        for l = L4+1:D
+            kids = 2*chain(l, :) - 1 + [0; 1];
+            [~, w] = max([Y{l+1}(sub2ind(size(Y{l+1}), kids(1,:), 1:NT)); Y{l+1}(sub2ind(size(Y{l+1}), kids(2,:), 1:NT))]);
+            chain(l+1, :) = kids(sub2ind(size(kids), w, 1:NT));
+        end
+        nj = @(p, l) sum(arrayfun(@(k) p(k) ~= p(k+1) && ~tw.A{l+1}(p(k), p(k+1)), 1:NT-1));
+        EX(e).own = own;  EX(e).argmax = am;  EX(e).chain = chain;  EX(e).argmax_jumps = arrayfun(@(l) nj(am(l+1,:), l), 0:D);
+        EX(e).on_tiles = sum(Y{L4+1}(sub2ind(size(Y{L4+1}), chain(L4+1,:), 1:NT)) > EX(e).thr);
+        [lv, fr] = ndgrid(0:D, 1:NT);  val = arrayfun(@(l, f) Y{l+1}(chain(l+1, f), f), lv, fr);
+        tru = nan(D+1, NT);  if e == 1, tru = truth; end
+        X = [X; table(repmat(EX(e).name, numel(lv), 1), lv(:), fr(:), chain(:), own(:), am(:), tru(:), val(:), ...
+             'VariableNames', {'example','level','frame','chain','track','argmax','truth','db_chain'})]; %#ok<AGROW>
+    end
+    hit = mean(EX(1).chain == truth, 2)';
+    T = rheome.scale.rows("xlevel", ["rollup_rel_err" "planted_hit_track_level" "planted_hit_leaf" "spiral_rho" "tree_rho" ...
+            "planted_leaf_argmax_jumps" "real_leaf_argmax_jumps" "real_track_level_argmax_jumps" "real_on_tiles" "real_t0_s"], ...
+        [err hit(L4+1) hit(D+1) ms(1) mt(1) EX(1).argmax_jumps(D+1) EX(2).argmax_jumps(D+1) EX(2).argmax_jumps(L4+1) ...
+         EX(2).on_tiles t0 + (k0-1)*DT], ...
+        ["relative" "fraction" "fraction" "rho" "rho" "jumps" "jumps" "jumps" "tiles" "s"], h);
+    fprintf('[xlevel %s] roll-up %.1e; planted l%d hit %.2f; real argmax jumps l%d %d vs l%d %d; on %d/%d\n', name, err, ...
+            L4, hit(L4+1), D, EX(2).argmax_jumps(D+1), L4, EX(2).argmax_jumps(L4+1), EX(2).on_tiles, NT);
+    Fig = struct('planted', EX(1), 'real', EX(2), 'truth', truth, 'centre', centre, 'sigma_deg', sigma, ...
+        'phi_deg', rad2deg(phi), 'env', env(:), 'amp', AMP, 'dt', DT, 't_plant', (0:NT-1)'*DT, ...
+        't_real', t0 + (k0 - 1 + (0:NT-1)')*DT, 'speed_sphere_ms', v, 'leaf_order', order, 'leaf_t', tspiral, ...
+        'turns', turns, 'turns_tried', TURNS, 'rank_gap', gap, 'rank_gap_tree', mean(abs(rt(ei) - rt(ej))), ...
+        'mono_spiral', ms, 'mono_tree', mt, 'leaf_centroid', cen, 'track_level', L4, 'adjacency', {tw.A}, ...
+        'hemi', h, 'plant_azimuth_deg', o.PlantAzimuthDeg, 'rollup_rel_err', err, ...
+        'kernel', "unconstrained noise-whitened minimum norm (S.Res)", 'tree', "rheome.scale.template group tree");
+end
+
+function [F, fs, t0] = i_rec(name, S)
+    st = rheome.load.study(name);  fs = st.rec.sfreq;  F = double(st.rec.F(S.iSel, :));
+    t0 = 0;  if isfield(st.rec, 'Time') && ~isempty(st.rec.Time), t0 = st.rec.Time(1); end
+end
+
+function [bp, nb] = i_band(o, fs)
+    bp = designfilt('bandpassiir', 'FilterOrder', 8, 'HalfPowerFrequency1', o.Band(1), ...
+                    'HalfPowerFrequency2', o.Band(2), 'SampleRate', fs);
+    nb = round(o.TimeTileS * fs);
+end
+
+function tw = i_leaftower(S, Tp, h, o, F)
+% the group tiles of hemisphere h at depths 0..LeafDepth, the leaf -> node roll-up, and the leaf currents
+    D = o.LeafDepth;  gv = S.B.(h).gv(:);  tw.D = D;  tw.a = full(sum(S.B.(h).lbo.Mass, 2));
+    for l = D:-1:0
+        [tw.P{l+1}, tw.A{l+1}, tw.ids{l+1}, tw.C{l+1}] = rheome.scale.grouptiles(S, Tp, h, l);
+        [~, pj] = ismember(floor(tw.ids{D+1} / 2^(D-l)), tw.ids{l+1});
+        tw.Ru{l+1} = sparse(pj, 1:numel(pj), 1, numel(tw.ids{l+1}), numel(pj));
+        tw.area{l+1} = tw.P{l+1}' * tw.a;
+    end
+    K = S.Res.ImagingKernel;  P6 = tw.P{D+1}';  tw.Y = [];
+    for k = 1:3, tw.Y = [tw.Y; (P6 * K((gv - 1)*3 + k, :)) * F]; end
+end
+
+function pw = i_leafpower(Y, bp, nb)
+% band power of the leaf currents (x + y + z), mean per time tile: [nLeaf x nBins]
+    E = abs(hilbert(filtfilt(bp, Y.')).').^2;  n = size(Y, 1) / 3;  nbin = floor(size(E, 2) / nb);
+    pw = E(1:n, :) + E(n+1:2*n, :) + E(2*n+1:end, :);
+    pw = reshape(mean(reshape(pw(:, 1:nbin*nb), n, nb, nbin), 2), n, nbin);
+end
+
+function dB = i_db(tw, pw6)
+% every node is the exact sum of its leaves; dB against the node's own median (a node no vertex reaches: NaN)
+    dB = cell(1, tw.D + 1);
+    for l = 0:tw.D
+        p = tw.Ru{l+1} * pw6;  p(p <= 0) = NaN;  dB{l+1} = 10*log10(p ./ median(p, 2, 'omitnan'));
+    end
+end
+
+function [d, lab] = i_stats(dB, A, thr, dt, mins)
+% [n_events events_per_min duration_median_s tiles_visited_median frac_on duration_p90_s]
+    on = dB > thr;  [n, dur, nt, lab] = i_events_of(on, A, dt);
+    d = [n, n / mins, median(dur), median(nt), mean(on, 'all'), prctile(dur, 90)];
+    if n == 0, d([3 4 6]) = NaN; end
+end
+
+function C = i_catalogue(dB, lab, ids, h, l, dt, t0)
+% one row per event: onset, duration, tiles visited, peak dB and the tile code holding it
+    [tile, bin] = find(lab);  tile = tile(:);  bin = bin(:);  g = double(lab(lab > 0));  g = g(:);   % (:): one tile gives rows
+    if isempty(g)
+        C = table(strings(0,1), zeros(0,1), zeros(0,1), zeros(0,1), zeros(0,1), zeros(0,1), zeros(0,1), zeros(0,1), 'VariableNames', ...
+            {'hemi','depth','event','onset_s','duration_s','n_tiles','peak_db','peak_code'});  return
+    end
+    v = dB(sub2ind(size(dB), tile, bin));  v = v(:);  n = max(g);
+    pk = accumarray(g, v, [], @max);  ip = arrayfun(@(e) find(g == e & v == pk(e), 1), (1:n)');
+    on = accumarray(g, bin, [], @min);  off = accumarray(g, bin, [], @max);
+    nt = accumarray(g, tile, [], @(x) numel(unique(x)));
+    C = table(repmat(h, n, 1), repmat(l, n, 1), (1:n)', t0 + (on - 1) * dt, (off - on + 1) * dt, nt, pk, ids(tile(ip)), ...
+        'VariableNames', {'hemi','depth','event','onset_s','duration_s','n_tiles','peak_db','peak_code'});
 end
 
 %% ---------- shared helpers

@@ -54,6 +54,13 @@ function a = analyses(which)
 %   gaugetensor      MS1 G12 (section 12.3)    alpha orientation tensor per depth-3 group tile in the shared gauge
 %   connectome       MS1 G12 (Fig. 3C)         Destrieux -> DK vs dyadic roll-up; connectome-wavelet widths, gamma sweep
 %                    -- the four run only when asked (nsp cf-atlas), not "ported"; rheome.scale.measure_atlas
+%   atlasone         MS1 3.4 (F8, F12)          one person's alpha atlas, depths 0-6 on one tree, on the paper's kernel
+%   xlevel           MS1 2.4 (F23)              a planted mover and a real alpha event tracked across depths 0-6
+%                    -- both rheome.scale.measure_atlas; need a template cortex; run only when asked
+%                    (nsp rheome-ms1-panels), not "ported"
+%   scaleramp        MS1 2.4                    a peak whose size ramps 10 -> 40 mm, read by rheome.detect.ridges on a
+%                                              sphere and the left cortex (rheome.scale.measure_scaleramp); run only
+%                                              when asked (nsp rheome-ms1-panels), not "ported"
 %   multimodal       MS1 multimodal      MEG band power, PET SUVR, fibre degree through one wavelet bank on
 %                                              one dyadic ladder, exact roll-up; run only when asked, not "ported"
 %   modesfields      resting-state pattern atlas, stage 1: complex band tile series + nulls N1, N4, N5
@@ -86,7 +93,7 @@ function a = analyses(which)
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
            "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
            "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" ...
-           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "slowoscplant" "correspondence" "atlasevents" "gaugetensor" "connectome" "multimodal" "modesfields" "modesfit" "jointfields" "jointcanary" "upstream" "lambdaedge" "panelexamples" "events" "eventplants" "coefficients"];
+           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "slowoscplant" "correspondence" "atlasevents" "gaugetensor" "connectome" "atlasone" "xlevel" "scaleramp" "multimodal" "modesfields" "modesfit" "jointfields" "jointcanary" "upstream" "lambdaedge" "panelexamples" "events" "eventplants" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end
