@@ -14,7 +14,7 @@ function hAx = vectors(surf, V3, varargin)
 % OPTIONS (name/value):
 %   'NumArrows' number of arrows to draw, at the top-magnitude vertices (default 400)
 %   'Scale'     quiver length scale in mm-equivalent surface units (default auto)
-%   'Color'     arrow color (default [0 0 0])
+%   'Color'     arrow color (default neutral-ink, figure tokens)
 %   'View'      camera [az el] (default [-90 10])
 %   'Parent'    axes to draw into (default new figure)
 %   'Visible'   'on' (default) | 'off'
@@ -27,17 +27,18 @@ function hAx = vectors(surf, V3, varargin)
 %
 % Author: Diellor Basha, 2026
 
+    T = tokens();
     p = inputParser;
     p.addParameter('NumArrows', 400);
     p.addParameter('Scale', []);
-    p.addParameter('Color', [0.1 1 0.3]);
+    p.addParameter('Color', T.rgb.neutral_ink);
     p.addParameter('View', [-90 10]);
     p.addParameter('Parent', []);
     p.addParameter('Visible', 'on');
     p.addParameter('Title', []);
     p.addParameter('CLim', []);
     p.addParameter('Colorbar', true);
-    p.addParameter('Colormap', hot(256));
+    p.addParameter('Colormap', nxr_cmap('flow-magnitude'));
     p.addParameter('Zoom', 1);         % camera zoom factor (>1 zooms in)
     p.addParameter('Target', []);      % [1x3] camera target (default: field centroid)
     p.parse(varargin{:});
@@ -72,7 +73,7 @@ function hAx = vectors(surf, V3, varargin)
     hold(hAx, 'on');
     quiver3(hAx, V(sel,1), V(sel,2), V(sel,3), ...
             scale*V3(sel,1), scale*V3(sel,2), scale*V3(sel,3), ...
-            0, 'Color', opt.Color, 'LineWidth', 1.1, 'MaxHeadSize', 0.6);
+            0, 'Color', opt.Color, 'LineWidth', T.line.arrow_pt, 'MaxHeadSize', 0.6);
     hold(hAx, 'off');
 
     % zoom the camera onto the active region so the arrows are readable
