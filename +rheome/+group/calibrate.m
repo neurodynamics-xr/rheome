@@ -3,6 +3,7 @@ function [C, D] = calibrate(inDir, outDir, opts)
 %
 %   [C, D] = rheome.group.calibrate(inDir, outDir)
 %   [C, D] = rheome.group.calibrate(inDir, outDir, NDraw=500, NPerm=2000, NSpin=1000, Effects=[0 0.2 0.35 0.5 0.8], Nuisance=0.5)
+%   [C, D] = rheome.group.calibrate(inDir, outDir, Nuisance=[0 0.5], Transform=["none" "rankit"])
 %
 % inDir holds per-participant gaugetensor.csv (rheome.scale.run's <sub>/ or nsp cf-atlas's flat <sub>_ files,
 % any depth) and metrics.csv, whose `dataset` column is the cohort (a participant without one is an error); no
@@ -18,6 +19,10 @@ function [C, D] = calibrate(inDir, outDir, opts)
 % covariate c correlated rho with v and with a 1 sd effect at every tile, and the design is [1 v c]: the
 % Freedman-Lane reduced-model step is then exercised, as in the real analyses (age, sex, site...). Each map goes
 % through rheome.group.glm (Freedman-Lane, max-|t| FWER) and the t map through rheome.group.spin against w.
+% Nuisance may be a vector and Transform ("none"; "rankit": each tile's values replaced by their rank-based
+% inverse normal scores, Blom's (r - 3/8) / (n + 1/4), before plant and nuisance, so the measure analysed is the
+% rank-normalised one) a list: every combination is run on the SAME draws (labels, seed tile, nuisance noise,
+% permutations), so conditions are compared paired. Each is a condition of its own in the gate (K grows).
 % Writes to outDir:
 %   draws.csv         one row per cohort x measure x kind x effect x draw: any_fwer (any tile p_fwer < Alpha),
 %                     fp_outside (any tile with w < 0.05 significant), detected (any tile with w >= 0.5),
@@ -37,6 +42,8 @@ function [C, D] = calibrate(inDir, outDir, opts)
 % valid, but the draws' spin false rates are correlated through that one rotation set.
 %   tiles.csv         the tiles tested per cohort (hemi, depth, node_id, centre u1..u3)
 %   participants.csv  the participants per cohort and measure (complete cases)
+%   shape.csv         per cohort x measure x transform, over tiles: median and max skewness and kurtosis, the
+%                     largest |z| of any value, and the mean correlation between tiles (no participant values)
 %
 % Tiles missing in more than MaxMissing of a cohort's participants are dropped, then participants missing any
 % kept tile (shortcut: complete cases; per-tile missingness would break the permutation's shared row order).
@@ -61,15 +68,16 @@ function [C, D] = calibrate(inDir, outDir, opts)
         opts.Seed (1,1) double = 7
         opts.Centres = []
         opts.Template char = ''
-        opts.Nuisance (1,1) double {mustBeNonnegative} = 0.5
+        opts.Nuisance (1,:) double {mustBeNonnegative} = 0.5
+        opts.Transform (1,:) string {mustBeMember(opts.Transform, ["none" "rankit"])} = "none"
     end
-    if opts.Nuisance >= 1, error('group:calibrate:nuisance', 'Nuisance is a correlation in [0, 1)'); end
+    if any(opts.Nuisance >= 1), error('group:calibrate:nuisance', 'Nuisance is a correlation in [0, 1)'); end
     if ~exist(outDir, 'dir'), mkdir(outDir); end
     X = i_read(inDir);  dep = max(X.depth);  X = X(X.depth == dep, :);
     X.log10_trace = log10(X.trace);
     T = i_centres(opts, dep);
     rs = RandStream('mt19937ar', 'Seed', opts.Seed);
-    D = {};  Tl = table();  Pp = table();
+    D = {};  Tl = table();  Pp = table();  Sh = table();
     for ds = unique(X.dataset)'
         Xd = X(X.dataset == ds, :);
         tk = unique(Xd(:, {'hemi','node_id'}));  [ok, ic] = ismember(tk, T(:, {'hemi','node_id'}));
@@ -82,13 +90,22 @@ function [C, D] = calibrate(inDir, outDir, opts)
             n = size(Y, 1);  Uk = U(keep, :);  hk = tk.hemi(keep);
             Pp = [Pp; table(repmat(ds, n, 1), repmat(ms, n, 1), sub, 'VariableNames', {'dataset','measure','subject'})]; %#ok<AGROW>
             if n < 8 || size(Y, 2) < 2, warning('group:calibrate:small', '%s %s: %d participants, %d tiles: skipped', ds, ms, n, size(Y, 2)); continue, end
-            sd = std(Y, 0, 1);  cosu = min(1, max(-1, Uk * Uk'));
+            cosu = min(1, max(-1, Uk * Uk'));  Ys = cell(1, numel(opts.Transform));
+            for it = 1:numel(opts.Transform)
+                Ys{it} = Y;  if opts.Transform(it) == "rankit", Ys{it} = norminv((tiedrank(Y) - 3/8) / (n + 1/4)); end
+                Yz = (Ys{it} - mean(Ys{it})) ./ std(Ys{it});  cr = corr(Ys{it});  sk = skewness(Ys{it});  ku = kurtosis(Ys{it});
+                Sh = [Sh; table(ds, ms, opts.Transform(it), n, median(sk), max(abs(sk)), median(ku), max(ku), max(abs(Yz), [], 'all'), ...
+                      mean(cr(triu(true(size(cr)), 1))), 'VariableNames', {'dataset','measure','transform','n','skew_median', ...
+                      'skew_absmax','kurt_median','kurt_max','absz_max','tile_corr_mean'})]; %#ok<AGROW>
+            end
             Sx = rheome.group.spin(zeros(size(Y, 2), 1), ones(size(Y, 2), 1), Uk, hk, NSpin=opts.NSpin, Seed=randi(rs, 2^31 - 1));
             fprintf('[group.calibrate] %s %s: %d participants x %d tiles\n', ds, ms, n, size(Y, 2));
             for d = 1:opts.NDraw
                 g = zeros(n, 1);  g(randperm(rs, n, floor(n/2))) = 1;  z = randn(rs, n, 1);  z = (z - mean(z)) / std(z);
                 s0 = randi(rs, size(Y, 2));  w = exp(-acosd(cosu(:, s0)).^2 / (2 * opts.PlantDeg^2)) .* (hk == hk(s0));
-                sp = randi(rs, 2^31 - 1);  zc = randn(rs, n, 1);  rho = opts.Nuisance;
+                sp = randi(rs, 2^31 - 1);  zc = randn(rs, n, 1);
+                for it = 1:numel(opts.Transform), tr = opts.Transform(it);  Y = Ys{it};  sd = std(Y, 0, 1);
+                for rho = opts.Nuisance
                 for kind = opts.Kinds
                     if kind == "group", v = g; else, v = z; end
                     Xg = [ones(n, 1) v];  Yk = Y;
@@ -101,11 +118,13 @@ function [C, D] = calibrate(inDir, outDir, opts)
                         R = rheome.group.glm(Ye, Xg, 2, NPerm=opts.NPerm, Seed=sp);
                         S = rheome.group.spin(R.t', w, Uk, hk, Index=Sx.index);
                         sig = R.p_fwer < opts.Alpha;  in = w >= 0.5;  out = w < 0.05;
-                        D{end+1, 1} = table(ds, ms, kind, e, rho, d, n, size(Y, 2), s0, any(sig), any(sig(out')), any(sig(in')), ...
-                             mean(sig(in')), mean(R.p < opts.Alpha), S.r, S.p, 'VariableNames', {'dataset','measure','kind', ...
+                        D{end+1, 1} = table(ds, ms, tr, kind, e, rho, d, n, size(Y, 2), s0, any(sig), any(sig(out')), any(sig(in')), ...
+                             mean(sig(in')), mean(R.p < opts.Alpha), S.r, S.p, 'VariableNames', {'dataset','measure','transform','kind', ...
                              'effect','nuisance','draw','n','n_tiles','seed_tile','any_fwer','fp_outside','detected','sensitivity', ...
                              'unc_rate','spin_r','spin_p'}); %#ok<AGROW>
                     end
+                end
+                end
                 end
             end
         end
@@ -114,6 +133,7 @@ function [C, D] = calibrate(inDir, outDir, opts)
     C = i_summary(D, opts.Alpha);
     writetable(D, fullfile(outDir, 'draws.csv'));  writetable(C, fullfile(outDir, 'calibration.csv'));
     writetable(Tl, fullfile(outDir, 'tiles.csv'));  writetable(Pp, fullfile(outDir, 'participants.csv'));
+    writetable(Sh, fullfile(outDir, 'shape.csv'));
     for ds = unique(C.dataset)'
         c = C(C.dataset == ds, :);
         v = ["NOT CALIBRATED" "CALIBRATED"];
@@ -124,7 +144,7 @@ end
 
 function C = i_summary(D, a)
     C = table();  if isempty(D), return, end
-    [gi, C] = findgroups(D(:, {'dataset','measure','kind','effect'}));
+    [gi, C] = findgroups(D(:, {'dataset','measure','transform','nuisance','kind','effect'}));
     C.n_draws = splitapply(@numel, D.draw, gi);
     for f = ["any_fwer" "fp_outside" "detected" "spin"]
         if f == "spin", x = D.spin_p < a; else, x = D.(f); end
