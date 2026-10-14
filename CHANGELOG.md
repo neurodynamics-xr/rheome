@@ -18,6 +18,22 @@
 
 ### Added
 
+- **`rheome.snapshot` draws selections, geodesic paths and shaped insets, and returns each render's camera**
+  (figure system revision 3, Diellor's board comments 24-26).
+  - `Selection`: a tile (`Vertices`) or a geodesic disk (`Centre`, `RadiusMM` along the folded surface). It is
+    drawn as a blended fill in its axis colour at the tokens' alpha, or with `Dashed` as an extent. Its centre is
+    the tokens' marker, one size for every centre.
+  - `Paths`: geodesics. `From`/`To` are traced by `rheome.geom.geodesicpath`; `Points` with `How` are a path the
+    caller traced. Each is ink at `cortex.paths` width with an arrowhead, and is hidden behind the surface and
+    off the shown hemisphere.
+  - `Inset.Shape`: `tile`, `disk` (cut by the region's mask) or `square`. With no `Vertices`, the inset takes the
+    shot's first selection.
+  - `out.cameras`: per render `R`, `s`, `off`, `crop`, `origin_mm` and `mm_per_px`, so a caller can place vector
+    marks on the page.
+- **`rheome.geom.geodesicpath`**: a geodesic between two vertices, traced across the faces by steepest descent of
+  the heat distance. On fsaverage6 its median length is within 0.5 % of the exact geodesic, and the board's
+  r3 pair comes out at 216.5 mm (exact 215.9; the old trace was 290.5).
+
 - **`rheome.show` follows figure-system revision 1 (figure tokens v2.0.0).** One colormap per quantity: every
   colourbar names a token quantity (divergence, curl, potential, stream, magnitude, amplitude, speed, power, phase,
   code ...) and takes its map; the retired `flow-signed-field` / `'signed'` kind is gone. `surface`, `gif` and

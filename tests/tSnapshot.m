@@ -48,7 +48,16 @@ classdef tSnapshot < matlab.unittest.TestCase
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Inset', setfield(in, 'View', 'top'))), 'rheome:snapshot:inset');
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Frames', 1:3, 'View', 'L lateral', 'Inset', in)), 'rheome:snapshot:inset');
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Inset', setfield(in, 'Field', 'zz'))), 'rheome:snapshot:option');
+            sel = struct('Vertices', [1 2 3], 'Label', 'tile 1');
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Selection', rmfield(sel, 'Label'))), 'rheome:snapshot:selection');
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Selection', struct('Centre', 1, 'Label', 'd'))), 'rheome:snapshot:selection');   % no radius
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Selection', setfield(sel, 'Axis', 'depth'))), 'rheome:snapshot:option');
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Paths', struct('Points', tc.S.Vertices(1:2, :), 'Label', 'p'))), 'rheome:snapshot:path');   % How
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Paths', struct('From', 1, 'To', 9, 'Label', 'p'))), 'rheome:snapshot:path');
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Inset', setfield(in, 'Shape', 'star'))), 'rheome:snapshot:option');
             % every check passed: it gets as far as looking for Node
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Selection', struct('Centre', 1, 'RadiusMM', 80, 'Label', 'disk'), ...
+                'Paths', struct('From', 1, 'To', 4, 'Label', 'p'), 'Inset', struct('Label', 'the disk'))), 'rheome:snapshot:node');
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'View', 'R medial', 'Vector', 'v')), 'rheome:snapshot:node');
         end
     end
@@ -119,6 +128,38 @@ classdef tSnapshot < matlab.unittest.TestCase
             tc.verifyLessThan(norm(mean(px) - mean([c r])), tol, 'the region drawn is off-centre');
             tc.verifyGreaterThan(mean(dOut <= tol), 0.95, 'the region drawn spills off where the viewer paints it');
             tc.verifyGreaterThan(mean(dIn <= tol), 0.95, 'the region drawn misses part of where the viewer paints it');
+        end
+        function selectionPathAndCameraAreWhereTheViewerDraws(tc)
+        % a geodesic disk selected (filled), a tile as an extent (dashed), a geodesic path, a square inset; the camera
+        % returned places a vertex where the render's own camera does, and the path is a geodesic on the folded surface
+            [vdir, S] = needs(tc);
+            V = S.Vertices;  lat = find(V(:, 2) == max(V(:, 2)), 1);
+            near = find(vecnorm(V - V(lat, :), 2, 2) < 0.03 & V(:, 2) > max(V(:, 2)) - 0.015);
+            [~, j] = max(vecnorm(V(near, :) - V(lat, :), 2, 2));  far = near(j);
+            x = (V(:, 1) - mean(V(:, 1))) * 1e3;
+            tile = vecnorm(V - V(far, :), 2, 2) < 0.008;
+            out = rheome.snapshot(S, struct('x', x), Out=tempname, Viewer=vdir, Format=[], ScaleBar=0, Shots=struct( ...
+                'Field', 'x', 'Unit', 'mm', 'View', 'standard', ...
+                'Selection', [struct('Centre', lat, 'RadiusMM', 12, 'Label', 'disk, 12 mm', 'Vertices', [], 'Dashed', false); ...
+                              struct('Centre', [], 'RadiusMM', [], 'Label', 'support', 'Vertices', tile, 'Dashed', true)], ...
+                'Paths', struct('From', lat, 'To', far, 'Label', 'path of the event'), ...
+                'Inset', struct('Label', 'the disk', 'Shape', 'square', 'View', 'L lateral')));
+            tc.addTeardown(@() rmdir(fileparts(out.svg), 's'));
+            svg = fileread(out.svg);
+            tc.verifySubstring(svg, 'stroke-dasharray');                                % the extent
+            tc.verifyEqual({out.selections.kind}, {'disk', 'tile'});
+            tc.verifyEqual(out.inset.shape, 'square');
+            p = out.paths;
+            tc.verifyGreaterThan(p.length_mm, 0.99 * p.geodesic_mm - 0.5);             % a path on the surface
+            tc.verifyLessThan(p.length_mm, 1.06 * p.geodesic_mm + 0.5);                 % and a geodesic, not a mesh walk
+            tc.verifySubstring(out.legend, 'path of the event');
+            c = out.cameras(1);                                                          % L lateral
+            tc.verifyEqual(c.view, 'L lateral');
+            px = c.s * V(lat, :) * c.R' + c.off;                                        % the vertex on the render
+            [~, ~, al] = imread(out.renders{1});
+            tc.verifyGreaterThan(al(round(px(2)), round(px(1))), 0, 'the camera puts the vertex on the cortex');
+            tc.verifyEqual(p.px{1}(1, :), px, 'AbsTol', 1e-6, 'the path starts at its vertex, by the same camera');
+            tc.verifyFalse(any(p.visible{3}) || any(p.visible{4}), 'a left-hemisphere path is not drawn on the right''s views');
         end
         function barLiesWhereTheViewerDrawsIt(tc)
         % paint the bar's vertices (and their neighbours) in the viewer; the curve drawn from the camera read off the
