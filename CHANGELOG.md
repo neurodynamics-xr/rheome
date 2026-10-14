@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Changed behaviour (check results computed before this)
+
+- **`rheome.geom.geodesic` measures surface distance correctly.** It was wrong on cortical meshes. On fsaverage6
+  pial it saturated near 46 mm (true max ~240 mm) and was 20-30 % off within 40 mm. On an MS1 cortex
+  (omega_sub0002, left) it was ±35 % (p5/p95) at 5-40 mm and 20-28 % short beyond 100 mm. On fsaverage, which has
+  zero-area triangles, its Cholesky failed. It now follows geometry-central's robust heat method: intrinsic
+  edge lengths, mollified, flipped to the intrinsic Delaunay triangulation, lumped mass, and a scale-invariant
+  Poisson pin. On fsaverage5/6/fsaverage pial it agrees with geometry-central to <0.3 % at 5-40 mm and to
+  <=1.1 mm everywhere. Both are 1-6 % above the exact edge-flip geodesic. Vertices on another connected
+  component are `Inf`. Results that planted along it change: `flow.seedvortex` / `vortexatom` envelopes
+  (MS1 G2 composition, rotation, diracangles) and `flow.movingvortex` paths (MS1 G11). In one placement the old
+  path had a nominal 126 mm, but its ends were truly 178 mm apart, so it planted 0.141 m/s instead of 0.100.
+  `tests/tGeodesic`; `tMovingVortex` no longer encodes the saturated 161 mm hemisphere.
+
 ### Added
 
 - **`rheome.show` follows figure-system revision 1 (figure tokens v2.0.0).** One colormap per quantity: every
