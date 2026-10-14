@@ -38,7 +38,7 @@ function hAx = vectors(surf, V3, varargin)
     p.addParameter('Title', []);
     p.addParameter('CLim', []);
     p.addParameter('Colorbar', true);
-    p.addParameter('Colormap', nxr_cmap('flow-magnitude'));
+    p.addParameter('Colormap', nxr_cmap(T.quantity.magnitude.colormap));
     p.addParameter('Zoom', 1);         % camera zoom factor (>1 zooms in)
     p.addParameter('Target', []);      % [1x3] camera target (default: field centroid)
     p.parse(varargin{:});

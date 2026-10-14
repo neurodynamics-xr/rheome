@@ -3,18 +3,26 @@ classdef tShowTokens < matlab.unittest.TestCase
 % (library/styles/tokens/figure-tokens.json) and its export passes the lab's figure check
 % (library/styles/schematics/figure_check.py, on the PDF: column width, page height, fonts embedded and
 % in the house face, no text below 6 pt). Request d12bfeff, 2026-10-14.
+% Revision 1 (request e2ea030f): every figure is drawn in each theme (Pergammon, NeuroImage for MS1) and
+% checked against it; colourbars carry a token quantity (one colormap per quantity) and sit in a key band;
+% the colormaps' descriptive names are on the figure for the legend; no Unicode maths glyphs in +show.
 %
 % Author: Diellor Basha, 2026
 
+    properties (ClassSetupParameter)
+        Theme = {'pergammon', 'neuroimage'};
+    end
+
     properties
-        S; out; styles; check
+        S; out; styles; check; theme
     end
 
     methods (TestClassSetup)
-        function build(t)
+        function build(t, Theme)
+            t.theme = Theme;
             [x, y, z] = sphere(30);  fv = surf2patch(0.07*x, 0.07*y, 0.07*z, 'triangles');
             t.S = struct('Vertices', fv.vertices, 'Faces', fv.faces, 'nV', size(fv.vertices, 1));
-            t.out = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'results', 'figure-check');
+            t.out = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'results', 'figure-check', Theme);
             if ~isfolder(t.out), mkdir(t.out); end
             t.styles = getenv('NXR_STYLES');
             if isempty(t.styles), t.styles = fullfile(getenv('HOME'), 'workspace', 'library', 'styles'); end
@@ -32,13 +40,22 @@ classdef tShowTokens < matlab.unittest.TestCase
             C = 12;  nS = 300;  X = randn(C, nS);  m = false(C, nS);  m(1:4, 100:160) = true;
             E = struct('footprint', rand(C, 1), 'channels', {{(1:4)'}}, 'mask', m);
             h = rheome.show.eventsensors(X, (0:nS-1)/300, E, randn(C, 2), 'NumChannels', 6, 'Visible', 'off', ...
-                'Unit', 'fT', 'Export', t.stem('eventsensors'));
+                'Unit', 'fT', 'Theme', t.theme, 'Export', t.stem('eventsensors'));
             t.passes(h, 'eventsensors');
+        end
+
+        function eventsensorsSpan(t)
+            C = 12;  nS = 300;  X = randn(C, nS);  m = false(C, nS);  m(1:4, 100:160) = true;
+            E = struct('footprint', rand(C, 1), 'channels', {{(1:4)'}}, 'mask', m);
+            h = rheome.show.eventsensors(X, (0:nS-1)/300, E, randn(C, 2), 'NumChannels', 6, 'Visible', 'off', ...
+                'Unit', 'fT', 'EventMode', 'span', 'EventLabel', 'spindle', 'Theme', t.theme, 'Export', t.stem('eventsensors-span'));
+            t.verifyNotEmpty(findall(h, 'Tag', 'nxr-event-span'));
+            t.passes(h, 'eventsensors-span');
         end
 
         function activity(t)
             K = 20;  nT = 80;  Psi = orth(randn(t.S.nV, K));  c = randn(K, nT) + 1i*randn(K, nT);
-            h = rheome.show.activity(t.S, c, Psi, (0:nT-1)/100, 'Visible', 'off', 'Export', t.stem('activity'));
+            h = rheome.show.activity(t.S, c, Psi, (0:nT-1)/100, 'Visible', 'off', 'Theme', t.theme, 'Export', t.stem('activity'));
             t.passes(h, 'activity');
         end
 
@@ -47,27 +64,27 @@ classdef tShowTokens < matlab.unittest.TestCase
             cp = struct('pos', t.S.Vertices(1:40:160, :), 'type', {types}, 'strength', [1; 2; 3; 4]);
             o = struct('cp', cp, 'frames', [1 2 3], 'counts', [1 1 1 1; 2 0 1 1; 1 2 0 1], 'kinds', {types}, ...
                        'chi', [2 2 2], 'chiExpected', 2);
-            h = rheome.show.critical(t.S, o, 'Visible', 'off', 'Export', t.stem('critical'));
+            h = rheome.show.critical(t.S, o, 'Visible', 'off', 'Theme', t.theme, 'Export', t.stem('critical'));
             t.passes(h, 'critical');
         end
 
         function filmstrip(t)
             U = sin(40*t.S.Vertices(:, 1) + (1:5)) .* exp(10*t.S.Vertices(:, 3));
             h = rheome.show.filmstrip(t.S, U, 1:5, 'Visible', 'off', 'RowLabel', 'Impulse response', ...
-                'Titles', compose('t = %d ms', (0:4)*20), 'Unit', 'nA·m', 'Export', t.stem('filmstrip'));
+                'Titles', compose('t = %d ms', (0:4)*20), 'Unit', 'nA·m', 'Theme', t.theme, 'Export', t.stem('filmstrip'));
             t.passes(h, 'filmstrip');
         end
 
         function vectorstrip(t)
             J = randn(3*t.S.nV, 4);
-            h = rheome.show.vectorstrip(t.S, J, 1:4, 'Visible', 'off', 'Zoom', 1, 'Export', t.stem('vectorstrip'));
+            h = rheome.show.vectorstrip(t.S, J, 1:4, 'Visible', 'off', 'Zoom', 1, 'Theme', t.theme, 'Export', t.stem('vectorstrip'));
             t.passes(h, 'vectorstrip');
         end
 
         function frame(t)
             lam = linspace(0, 4e5, 200)';
             fr = rheome.filters.frame('itersine', 5, [min(lam(lam > 0)) max(lam)]);
-            h = rheome.show.frame(fr, lam, 'Visible', 'off', 'Export', t.stem('frame'));
+            h = rheome.show.frame(fr, lam, 'Visible', 'off', 'Theme', t.theme, 'Export', t.stem('frame'));
             t.passes(h, 'frame');
         end
 
@@ -75,14 +92,14 @@ classdef tShowTokens < matlab.unittest.TestCase
             sc = struct('sigma', [NaN 0.01 0.02 0.04], 'f', 1:40, 'energy', rand(4, 40), 'kbar', 100:10:200, ...
                         'fRidge', linspace(5, 20, 11), 'wRidge', rand(1, 11), 'slope', 0.5, 'slopeR2', 0.9, ...
                         'fSupport', [4 22]);
-            h = rheome.show.jointscalogram(sc, 'Visible', 'off', 'Export', t.stem('jointscalogram'));
+            h = rheome.show.jointscalogram(sc, 'Visible', 'off', 'Theme', t.theme, 'Export', t.stem('jointscalogram'));
             t.passes(h, 'jointscalogram');
         end
 
         function jointspectrum(t)
             lam = [linspace(0, 4e5, 30) linspace(0, 4e5, 30)]';
             h = rheome.show.jointspectrum(randn(60, 40) + 1i, 1:40, lam, 'Speed', [0.5 2], 'Visible', 'off', ...
-                'Export', t.stem('jointspectrum'));
+                'Theme', t.theme, 'Export', t.stem('jointspectrum'));
             t.passes(h, 'jointspectrum');
         end
 
@@ -91,28 +108,28 @@ classdef tShowTokens < matlab.unittest.TestCase
                           'VariableNames', {'name', 'mm', 'kind'});
             h = rheome.show.resolution(marks, 'Surface', t.S, 'Visible', 'off', 'Patches', {1:50, 1:20}, ...
                 'PatchTitles', {'a', 'b'}, 'Fields', rand(t.S.nV, 2), 'FieldTitles', {'c', 'd'}, ...
-                'Bands', {10, 80, 'low'; 80, 400, 'high'}, 'Export', t.stem('resolution'));
+                'Bands', {10, 80, 'low'; 80, 400, 'high'}, 'Theme', t.theme, 'Export', t.stem('resolution'));
             t.passes(h, 'resolution');
         end
 
         function ridges(t)
             o = t.ridgeOut();
             h = rheome.show.ridges(t.S, o, 'Visible', 'off', 'Truth', struct('sigma', 0.02, 'speed', 0.5), ...
-                'Export', t.stem('ridges'));
+                'Theme', t.theme, 'Export', t.stem('ridges'));
             t.passes(h, 'ridges');
         end
 
         function ridgestrip(t)
             U = rand(t.S.nV, 6);
             h = rheome.show.ridgestrip(t.S, U, t.ridgeOut(), 1:5, 'Visible', 'off', 'Zoom', 1, ...
-                'Export', t.stem('ridgestrip'));
+                'Theme', t.theme, 'Export', t.stem('ridgestrip'));
             t.passes(h, 'ridgestrip');
         end
 
         function specparam(t)
             f = (1:60)';  Pap = 1 ./ f.^[1 1.5 2];  P = Pap .* (1 + exp(-(f - 10).^2/4));
             ap = struct('Pap', Pap, 'exponent', [1 1.5 2]);
-            h = rheome.show.specparam(P, f, ap, 'Visible', 'off', 'Export', t.stem('specparam'));
+            h = rheome.show.specparam(P, f, ap, 'Visible', 'off', 'Theme', t.theme, 'Export', t.stem('specparam'));
             t.passes(h, 'specparam');
         end
 
@@ -123,6 +140,10 @@ classdef tShowTokens < matlab.unittest.TestCase
                 code = regexprep(fileread(fullfile(d, f.name)), '%[^\n]*', '');
                 t.verifyEmpty(regexp(code, '\[\s*0?\.\d+\s+0?\.\d+\s+0?\.\d+', 'match', 'once'), f.name);
                 t.verifyEmpty(regexp(code, '\<(parula|hot|jet|lines)\(', 'match', 'once'), f.name);
+                t.verifyEmpty(regexp(code, 'flow-signed-field|''signed''', 'match', 'once'), [f.name ': retired kind']);
+                % symbols and unit exponents are LaTeX maths (tokens type.math), never Unicode glyphs
+                t.verifyEmpty(regexp(code, '[\x{0370}-\x{03FF}\x{00B2}\x{00B3}\x{00B5}\x{2070}-\x{209F}\x{221A}\x{2211}]', 'match', 'once'), ...
+                    [f.name ': a Unicode maths glyph outside a comment']);
             end
         end
     end
@@ -132,11 +153,23 @@ classdef tShowTokens < matlab.unittest.TestCase
 
         function passes(t, h, name)
             t.verifyTrue(isgraphics(h, 'figure'));
+            T = nxr_figure_tokens(t.theme);
+            for cb = findall(h, 'Type', 'ColorBar')'      % one colormap per quantity, from the key band
+                p = strsplit(cb.Tag, '|');
+                t.verifyTrue(numel(p) >= 5 && isfield(T.quantity, p{2}), sprintf('%s: colourbar %s has no token quantity', name, cb.Tag));
+            end
+            nm = getappdata(h, 'colormapNames');
+            t.verifyEqual(isempty(nm), isempty(findall(h, 'Type', 'ColorBar')), [name ': colormap names for the legend']);
+            t.verifyEmpty(regexp(strjoin([nm {''}]), '_r\>|PuOr|viridis|cividis', 'once'), name);
             uv = fullfile(getenv('HOME'), '.local', 'bin', 'uv');
             t.assumeTrue(isfile(t.check) && isfile(uv), 'figure_check.py or uv is not on this machine');
+            % MATLAB prints a variable font as Courier: the Pergammon face (Inter) needs its static files installed
+            st = [dir(fullfile(getenv('HOME'), 'Library', 'Fonts', 'Inter*Regular.ttf')); dir('/Library/Fonts/Inter*Regular.ttf')];
+            t.assumeTrue(~strcmp(t.theme, 'pergammon') || ~isempty(st), ...
+                'static Inter is not installed: MATLAB cannot embed the Pergammon face (the figure was drawn, not checked)');
             cmd = sprintf(['export PATH=/opt/homebrew/bin:$PATH; cd "%s" && "%s" run -q --with numpy ' ...
-                '--with matplotlib --with pillow --with pdfplumber python figure_check.py "%s.pdf"'], ...
-                fileparts(t.check), uv, t.stem(name));
+                '--with matplotlib --with pillow --with pdfplumber python figure_check.py "%s.pdf" --theme %s'], ...
+                fileparts(t.check), uv, t.stem(name), t.theme);
             [st, txt] = system(cmd);
             t.verifyEqual(st, 0, sprintf('%s.pdf fails the figure check:\n%s', name, txt));
         end

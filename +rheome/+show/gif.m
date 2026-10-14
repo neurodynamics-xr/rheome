@@ -16,7 +16,8 @@ function gif(surf, U, file, varargin)
 % OPTIONS:
 %   'Frames'    frame indices (default 1:nT)
 %   'CLim'      colour limits (default symmetric from U(:,Frames))
-%   'Colormap'  default: the house maps (flow-signed-field / flow-magnitude) via rheome.show.surface
+%   'Quantity'  what U is (tokens quantity: its own colormap; default inferred, see rheome.show.surface)
+%   'Colormap'  in place of the quantity's colormap
 %   'View'      camera [az el] (default [-90 10])
 %   'DelayTime' seconds per frame (default 0.06)
 %   'Resolution' export DPI (default 80)
@@ -29,6 +30,7 @@ function gif(surf, U, file, varargin)
     p.addParameter('Frames', []);
     p.addParameter('CLim', []);
     p.addParameter('Colormap', []);
+    p.addParameter('Quantity', '');
     p.addParameter('View', [-90 10]);
     p.addParameter('DelayTime', 0.06);
     p.addParameter('Resolution', 80);
@@ -49,8 +51,8 @@ function gif(surf, U, file, varargin)
     % Draw once; update the patch CData per frame and capture with getframe (fast).
     hFig = figure('Color','w','Visible','off','Position',[80 80 420 380]);
     ax   = axes('Parent', hFig);
-    hAx  = rheome.show.surface(surf, U(:,frames(1)), 'Parent',ax, 'View',opt.View, 'CLim',clim, 'Colorbar',false, 'Title','');
-    if ~isempty(opt.Colormap), colormap(hAx, opt.Colormap); end
+    hAx  = rheome.show.surface(surf, U(:,frames(1)), 'Parent',ax, 'View',opt.View, 'CLim',clim, 'Colorbar',false, 'Title','', ...
+                       'Quantity',quantity(opt.Quantity, U(:,frames)), 'Colormap',opt.Colormap);
     hp = findobj(hAx, 'Type','patch');
 
     for k = 1:numel(frames)

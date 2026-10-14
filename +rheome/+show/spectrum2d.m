@@ -16,7 +16,7 @@ function hAx = spectrum2d(lambda, freqs, P, varargin)
 % OPTIONS:
 %   'FreqRange' [lo hi] Hz window on x (default [0 40])
 %   'Log'       true -> log10 color scale (default true; good for power, off for gains)
-%   'Colormap'  default the house atlas-power map (figure tokens)
+%   'Colormap'  default the power colormap (figure tokens quantity power)
 %   'Parent','Title','Visible'
 %
 % OUTPUT: hAx axes handle.
@@ -25,11 +25,11 @@ function hAx = spectrum2d(lambda, freqs, P, varargin)
 %
 % Author: Diellor Basha, 2026
 
-    tokens();
+    T = tokens();
     p = inputParser;
     p.addParameter('FreqRange', [0 40]);
     p.addParameter('Log', true);
-    p.addParameter('Colormap', nxr_cmap('atlas-power'));
+    p.addParameter('Colormap', nxr_cmap(T.quantity.power.colormap));
     p.addParameter('Parent', []);
     p.addParameter('Title', '');
     p.addParameter('Visible', 'on');
@@ -52,9 +52,10 @@ function hAx = spectrum2d(lambda, freqs, P, varargin)
     imagesc(hAx, fk, 1:K, Pk);
     set(hAx, 'YDir', 'normal');
     colormap(hAx, opt.Colormap);  cb = colorbar(hAx);
-    if opt.Log, cb.Label.String = 'power (log10 a.u.)'; else, cb.Label.String = 'power (a.u.)'; end
+    if opt.Log, cb.Label.String = 'power $\log_{10} P$ (a.u.)'; else, cb.Label.String = 'power $P$ (a.u.)'; end
+    cb.Label.Interpreter = 'latex';
     xlabel(hAx, 'temporal frequency (Hz)');
-    ylabel(hAx, 'spatial frequency √λ (1/m)');
+    ylabel(hAx, 'spatial frequency $\sqrt{\lambda}$ (rad/m)', 'Interpreter', 'latex');
 
     % relabel the y ticks (mode index -> sqrt(lambda), the physical spatial frequency)
     yt = unique(round(linspace(1, K, 6)));

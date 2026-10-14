@@ -4,6 +4,21 @@
 
 ### Added
 
+- **`rheome.show` follows figure-system revision 1 (figure tokens v2.0.0).** One colormap per quantity: every
+  colourbar names a token quantity (divergence, curl, potential, stream, magnitude, amplitude, speed, power, phase,
+  code ...) and takes its map; the retired `flow-signed-field` / `'signed'` kind is gone. `surface`, `gif` and
+  `filmstrip` take `'Quantity'` (unnamed signed data take the divergence map, the tokens' alias of the retired kind;
+  filmstrip's colourbar text moves to `'Label'`), `resolution` takes `'FieldQuantity'`; ridgestrip shows |U| as
+  amplitude, eventsensors' footprint and the scalograms as power, activity's |ω| as amplitude. The colormaps'
+  descriptive names (tokens colormapName, never `PuOr_r`) are on each figure for its legend:
+  `getappdata(h, 'colormapNames')`. Every figure takes `'Theme'` (`''` = Pergammon, 180 mm; `'neuroimage'` for MS1,
+  190 mm) for its page and type family. Colourbars and keys sit in the panels' key bands (`nxr_figure 'Keys'`,
+  `nxr_colorbar(..., 'F', F)`, `nxr_key`) instead of inside the axes or in a free cell; specparam's gains are labelled
+  at their curves. Events are `nxr_event_trace` (labelled trace by default; eventsensors `'EventMode', 'span'` and
+  `'EventLabel'`). Symbols and unit exponents are LaTeX maths (any text holding `$...$` is set by the LaTeX
+  interpreter; units through `texunit`), never Unicode glyphs. `tests/tShowTokens` runs every figure in both themes
+  against `figure_check.py --theme`, and also refuses the retired kind, colourbars without a token quantity, software
+  colormap names and Unicode maths glyphs in `+show`.
 - **`rheome.view` draws LAYERS: a field, a form, a representation.** The painted colours and the arrows are both
   fields, of two types (Diellor, 2026-10-14), so `Layers=` names what is drawn: one field, one form of it (a real
   field's value `f`; a vector field's `abs`, `nx`, `div`, `curl`, or the vector `x`, `xt`) and one representation

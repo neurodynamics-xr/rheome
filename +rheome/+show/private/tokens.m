@@ -1,8 +1,9 @@
-function T = tokens()
+function T = tokens(theme)
 % TOKENS  The lab's figure tokens (library/styles/tokens/figure-tokens.json) as a struct, and the house
 % figure kit (nxr_figure, nxr_axes_style, nxr_colorbar, nxr_cmap, nxr_save) on the path.
 %   The styles folder is $NXR_STYLES, else ~/workspace/library/styles. Every size and colour of rheome.show
 %   comes from here: the figure rules are tokens read by every exporter, not literals (Diellor, 2026-10-14).
+%   theme  'pergammon' (default) | 'neuroimage' (MS1) | 'nature': page widths, height and type family.
 %
 % Author: Diellor Basha, 2026
     persistent ready
@@ -16,5 +17,6 @@ function T = tokens()
         if ~contains([pathsep path pathsep], [pathsep m pathsep]), addpath(m); end
         ready = true;
     end
-    T = nxr_figure_tokens();
+    if nargin < 1, theme = ''; end
+    T = nxr_figure_tokens(theme);
 end
