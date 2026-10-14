@@ -103,14 +103,32 @@ classdef tSnapshot < matlab.unittest.TestCase
             tc.addTeardown(@() rmdir(fileparts(out.svg), 's'));
             tc.verifyGreaterThan(out.inset.magnification, 1.5);                % shown larger than on its view
             tc.verifyGreaterThanOrEqual(out.inset.dpi, 600 - 1e-6);              % never enlarged past its pixels (I1 is checked inside)
+            one = rheome.snapshot(S, struct('x', x), Out=tempname, Viewer=vdir, Format=[], ScaleBar=0, Shots=struct('Field', 'x', ...
+                'Unit', 'mm', 'View', 'L lateral', 'Inset', struct('Vertices', reg, 'Label', 'p')));   % one view at 600 dpi: the zoom lifts the old cap
+            tc.addTeardown(@() rmdir(fileparts(one.svg), 's'));
+            tc.verifyGreaterThanOrEqual(one.inset.dpi, 600 - 1e-6);
+            tc.verifyGreaterThan(one.inset.camera.s / one.cameras(1).s, 2, 'the zoomed inset has >= 2x the view''s pixels per mm (I1)');
             tc.verifyError(@() rheome.snapshot(S, struct('x', x), Out=tempname, Viewer=vdir, Format=[], ScaleBar=0, Shots=struct('Field', 'x', ...
-                'Unit', 'mm', 'View', 'L lateral', 'Inset', struct('Vertices', reg, 'Label', 'p'))), 'rheome:snapshot:inset');   % one view at 600 dpi: < 2x
+                'Unit', 'mm', 'View', 'L lateral', 'Inset', struct('Vertices', reg, 'Label', 'p', 'Zoom', 1e3))), 'rheome:snapshot:inset');   % too large a region for x1000
             tc.verifySubstring(out.legend, 'inset: patch, finer field');
             tc.verifySubstring(fileread(out.svg), 'patch, finer field');
             paint = rheome.snapshot(S, struct('m', double(reg)), Out=tempname, Viewer=vdir, Format=[], ScaleBar=0, ...
                 Shots=struct('Field', 'm', 'Unit', 'a.u.', 'Quantity', 'magnitude', 'CLim', [0 1], 'Colormap', 'viridis', ...
-                'Settings', struct('isolines', 0)));
+                'Settings', struct('isolines', 0), 'Inset', struct('Vertices', reg, 'Label', 'p', 'View', 'L lateral')));
             tc.addTeardown(@() rmdir(fileparts(paint.svg), 's'));
+            % the zoomed render: the region painted where the inset's camera (the viewer's regionFrame) puts it
+            [imI, ~, aI] = imread(paint.inset.render);  gI = double(imI);
+            hotI = gI(:, :, 2) >= gI(:, :, 3) & aI > 0;  hotI(round(0.85 * end):end, 1:round(0.3 * end)) = false;   % not the colourbar
+            [rI, cI] = find(hotI);
+            tc.assertNotEmpty(rI, 'the painted region is not on the zoomed render');
+            c = paint.inset.camera;  q = c.s * V(reg, :) * c.R' + c.off;
+            F = double(S.Faces);  el = median(vecnorm(V(F(:, 1), :) - V(F(:, 2), :), 2, 2)) * c.s;   % a mesh edge, px
+            lo = min(q) - el;  hi = max(q) + el;            % the box of the region's vertices; the paint's 1/2 level lies half an edge out
+            tc.verifyLessThan(norm([min(cI) + max(cI), min(rI) + max(rI)] / 2 - (min(q) + max(q)) / 2), 0.02 * size(aI, 1), ...
+                'the painted region is off the zoomed camera''s centre');   % measured 2026-10-14: 8 px of 1520
+            tc.verifyGreaterThan(mean(cI >= lo(1) & cI <= hi(1) & rI >= lo(2) & rI <= hi(2)), 0.98, 'the painted region lies outside the zoomed camera''s box');
+            tc.verifyGreaterThan((max(cI) - min(cI)) / (hi(1) - lo(1)), 0.8, 'the zoomed camera''s scale is off');
+            tc.verifyGreaterThan(max(hi - lo) / size(aI, 1), 0.7, 'the region does not fill the stage');
             [im, ~, al] = imread(paint.renders{1});                             % L lateral, as the inset's view
             w0 = size(imread(out.renders{1}), 2);                               % the renders differ in pixel ratio only
             px = min(max(round((out.inset.px - 0.5) * size(al, 2) / w0 + 0.5), 1), flip(size(al)));
@@ -138,12 +156,13 @@ classdef tSnapshot < matlab.unittest.TestCase
             [~, j] = max(vecnorm(V(near, :) - V(lat, :), 2, 2));  far = near(j);
             x = (V(:, 1) - mean(V(:, 1))) * 1e3;
             tile = vecnorm(V - V(far, :), 2, 2) < 0.008;
-            out = rheome.snapshot(S, struct('x', x), Out=tempname, Viewer=vdir, Format=[], ScaleBar=0, Shots=struct( ...
+            out = tc.verifyWarning(@() rheome.snapshot(S, struct('x', x), Out=tempname, Viewer=vdir, Format=[], ScaleBar=0, Shots=struct( ...
                 'Field', 'x', 'Unit', 'mm', 'View', 'standard', ...
                 'Selection', [struct('Centre', lat, 'RadiusMM', 12, 'Label', 'disk, 12 mm', 'Vertices', [], 'Dashed', false); ...
                               struct('Centre', [], 'RadiusMM', [], 'Label', 'support', 'Vertices', tile, 'Dashed', true)], ...
                 'Paths', struct('From', lat, 'To', far, 'Label', 'path of the event'), ...
-                'Inset', struct('Label', 'the disk', 'Shape', 'square', 'View', 'L lateral')));
+                'Inset', struct('Label', 'the disk', 'Shape', 'square', 'View', 'L lateral'))), ...
+                'rheome:snapshot:insetcolourbar');   % zoomed, the square reaches the viewer's colourbar: that corner left out
             tc.addTeardown(@() rmdir(fileparts(out.svg), 's'));
             svg = fileread(out.svg);
             tc.verifySubstring(svg, 'stroke-dasharray');                                % the extent

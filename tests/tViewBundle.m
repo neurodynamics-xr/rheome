@@ -142,6 +142,58 @@ classdef tViewBundle < matlab.unittest.TestCase
             tc.verifyEqual(o.settings.layers{2}.field, 'velocity');
             tc.verifyError(@() rheome.view(tc.S, struct('a', rand(4, 2)), Viewer="none", Arrows=true), 'rheome:view:option');
         end
+        function writesTracks(tc)
+            d = tempname;  c = onCleanup(@() rmdir(d, 's'));
+            tr = {struct('Label', 'heading', 'Unit', 'rad', 'Spec', struct('Start', 0, 'To', 2*pi, 'Profile', 'ramp', ...
+                    'Osc', struct('rate', 2, 'depth', 0.3))), ...
+                  struct('Label', 'chirality', 'Unit', 'sign', 'Kind', 'sign', 'Spec', struct('Keys', [0 1]), ...
+                    'Values', [1 NaN], 'Time', [0 0.01], 'Driver', 'planted'), ...
+                  struct('Label', 'scale', 'Unit', 'mm', 'Spec', struct('Keys', struct('x', {0, 0.5}, 'v', {10, 30}, 'seg', {'curve', ''}))), ...
+                  struct('Label', 'speed', 'Unit', 'm/s', 'Values', 0.4)};
+            m = rheome.io.write.bundle(d, tc.S, rand(4, 3), 'Fs', 100, 'Tracks', tr);
+            txt = fileread(m);
+            tc.verifySubstring(txt, '"spec":{"start":0,"to":6.2831853071795862,"profile":"ramp","osc":{"rate":2,"depth":0.3}}');
+            tc.verifySubstring(txt, '"keys":[{"x":0,"v":1}]');                 % one key: still an array, [x v] read as linear
+            tc.verifySubstring(txt, '"values":[1,null],"time":[0,0.01]');    % NaN: none at that time
+            tc.verifySubstring(txt, '"keys":[{"x":0,"v":10,"seg":"curve"},{"x":0.5,"v":30}]');
+            tc.verifySubstring(txt, '"values":[0.4]');                        % one value: an array
+            j = jsondecode(txt);
+            tc.verifyEqual(cellfun(@(t) t.label, j.tracks, 'UniformOutput', false)', {'heading', 'chirality', 'scale', 'speed'});
+            tc.verifyEqual(j.tracks{2}.kind, 'sign');  tc.verifyEqual(j.tracks{2}.driver, 'planted');
+            tc.verifyFalse(contains(fileread(rheome.io.write.bundle(d, tc.S, rand(4, 3))), 'tracks'));
+            w = @(x) rheome.io.write.bundle(d, tc.S, rand(4, 3), 'Tracks', x);
+            tc.verifyError(@() w(struct('Label', 'a', 'Spec', struct('To', 1))), 'rheome:bundle:tracks');               % no unit
+            tc.verifyError(@() w(struct('Label', 'a', 'Unit', 'mm')), 'rheome:bundle:tracks');                           % no plant, no values
+            tc.verifyError(@() w(struct('Label', 'a', 'Unit', 'mm', 'Values', [1 2], 'Time', 0)), 'rheome:bundle:tracks');
+            tc.verifyError(@() w(struct('Label', 'a', 'Unit', 'mm', 'Kind', 'phase', 'Values', 1)), 'rheome:bundle:tracks');
+            tc.verifyError(@() w(struct('Label', 'a', 'Unit', 'mm', 'Spec', struct('To', 1, 'Profile', 'zigzag'))), 'rheome:show:track');
+            tc.verifyError(@() w(struct('Label', 'a', 'Unit', 'mm', 'Values', 1, 'Colour', 'red')), 'rheome:bundle:tracks');
+        end
+        function mapsZoomPhasorTracks(tc)
+            d = tempname;  old = getenv('RHEOME_VIEWER');  setenv('RHEOME_VIEWER', d);
+            c = onCleanup(@() cleanup(d, old));
+            r = struct('phase', rand(4, 2), 'amp', rand(4, 2));
+            out = rheome.view(tc.S, r, Viewer="none", Zoom=[2 4], Phasor=struct('Field', "phase", 'Amplitude', "amp", 'Vertices', 3), ...
+                Tracks=struct('Label', 'scale', 'Unit', 'mm', 'Values', [1 2]));
+            txt = fileread(out.manifest);
+            tc.verifySubstring(txt, '"zoom":{"vertices":[1,3]}');                         % 0-based
+            tc.verifySubstring(txt, '"phasor":{"field":"phase","amplitude":"amp","vertices":[2]}');
+            tc.verifySubstring(txt, '"tracks":[{"label":"scale"');
+            o2 = rheome.view(tc.S, r, Viewer="none", Zoom=struct('BBox', [0 0 0; 1 1 1], 'Margin', 0.2), Phasor="phase");
+            tc.verifySubstring(fileread(o2.manifest), '"zoom":{"bbox":[[0,0,0],[1,1,1]],"margin":0.2}');
+            tc.verifyEqual(o2.settings.phasor, struct('field', 'phase'));
+            o3 = rheome.view(tc.S, r, Viewer="none", Zoom=false, Phasor=false);
+            tc.verifySubstring(fileread(o3.manifest), '"zoom":null,"phasor":null');     % the whole surface, no glyph
+            tc.verifySubstring(fileread(rheome.view(tc.S, r, Viewer="none", Zoom=logical([1 0 1 0])).manifest), '"zoom":{"vertices":[0,2]}');
+            v = @(varargin) rheome.view(tc.S, r, 'Viewer', 'none', varargin{:});
+            tc.verifyError(@() v('Zoom', 9), 'rheome:view:option');
+            tc.verifyError(@() v('Zoom', struct('BBox', [1 1 1; 0 0 0])), 'rheome:view:option');
+            tc.verifyError(@() v('Zoom', struct('Vertices', 1, 'BBox', [0 0 0; 1 1 1])), 'rheome:view:option');
+            tc.verifyError(@() v('Zoom', struct('Vertices', 1, 'Margin', 5)), 'rheome:view:option');
+            tc.verifyError(@() v('Zoom', true), 'rheome:view:option');
+            tc.verifyError(@() v('Phasor', "nope"), 'rheome:view:option');
+            tc.verifyError(@() v('Phasor', struct('Field', "phase", 'Points', "crit")), 'rheome:view:option');
+        end
         function writesPotentials(tc)
             d = tempname;  c = onCleanup(@() rmdir(d, 's'));
             [V, F] = rheome.geom.icosphere(2);  S = struct('Vertices', 0.07*V, 'Faces', F);

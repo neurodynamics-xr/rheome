@@ -18,6 +18,22 @@
 
 ### Added
 
+- **Time-tracks in the viewer bundle, and the viewer's camera on a region** (the Cortical Flow viewer's `tracks`,
+  `zoom` and `phasor`, nxr-cortical-flow PR #39).
+  - `rheome.io.write.bundle(..., 'Tracks', tracks)` writes the tracks `rheome.show.timetracks` takes (the planted
+    course as `rheome.show.track`'s spec, the detected values, NaN none) as the manifest's `tracks`. The viewer
+    draws them under the stage with a playhead at the frame shown. `rheome.view` passes `Tracks` through.
+  - `rheome.view` takes `Zoom` (vertices, or a struct with `Vertices` or `BBox` and `Margin`; false: the whole
+    surface) and `Phasor` (a real field's name, or a struct with `Field`, `Amplitude`, `Vertices`).
+  - `rheome.snapshot`'s `Inset` is now rendered with the camera on its region (`zoom`), at the views' pixel ratio.
+    The pixel-ratio-4 cap is gone, so an inset on a single view works. `Inset.Zoom` is now the least
+    magnification over the view (default 2, rule I1). Before, it was the pixel ratio (default 4). The inset's
+    camera follows the viewer's own framing rule and is checked against the render; it is returned as
+    `out.inset.camera`, with `out.inset.render`. The inset's render is at the pixel ratio that fills its column at
+    the print dpi (at most 4). The viewer paints its colourbar into every PNG (lower left), and a zoomed region can
+    reach that corner; the corner is then cut out of the inset with a warning (`rheome:snapshot:insetcolourbar`).
+    A setting to leave the colourbar out is asked of Product.
+
 - **`rheome.snapshot` draws selections, geodesic paths and shaped insets, and returns each render's camera**
   (figure system revision 3, Diellor's board comments 24-26).
   - `Selection`: a tile (`Vertices`) or a geodesic disk (`Centre`, `RadiusMM` along the folded surface). It is

@@ -33,8 +33,9 @@ function out = snapshot(surf, result, varargin)
 %   Vector     a vector field drawn as arrows (default none); arrows show the same vector the colour shows
 %   Settings   struct of further viewer settings, applied last (README of the viewer, 'The settings')
 %   Name       the files' name (default "shot<k>")
-%   Inset      a MULTISCALE INSET (default none): a region of one view re-rendered by the viewer at a higher
-%              pixel ratio (and, if given, with a finer field), cut to the region's shape on the cortex and laid
+%   Inset      a MULTISCALE INSET (default none): a region of one view re-rendered by the viewer with its camera on
+%              the region (the viewer's 'zoom': same direction, the region filling the stage, so it is rendered at its
+%              own size) and, if given, with a finer field, cut to the region's shape on the cortex and laid
 %              out in its own column right of the views, the region outlined on the view and around the inset and
 %              joined by a leader. Not a stretched crop: it prints at >= the journal's dpi at its magnification.
 %              A struct with
@@ -42,9 +43,8 @@ function out = snapshot(surf, result, varargin)
 %                Label     what the inset shows, under it ("tile 12, level 5")                        REQUIRED
 %                Field     the real field painted in the inset (default the shot's Field), e.g. the field at a
 %                          deeper level; it shares the panel's colourbar (same quantity, unit and limits)
-%                Zoom      the inset's pixel ratio over the views' (default 4, >= 2: rule I1 of the tokens' inset;
-%                          capped at pixel ratio 4, the viewer's largest working screenshot, and refused if the
-%                          cap leaves it under 2: today an inset suits the four-view row, whose ratio is 2)
+%                Zoom      the least magnification: the inset's pixels per mm of cortex over the view's (default 2,
+%                          >= 2: rule I1 of the tokens' inset); refused when the region is too large to reach it
 %                View      the view the region is taken from (default the first of the shot's views)
 %                Shape     "tile" (default): cut by the region's own mask and outlined by its contour (a dyadic tile,
 %                          a parcel); "disk": the same, for a geodesic disk; "square": a square around the region
@@ -89,7 +89,8 @@ function out = snapshot(surf, result, varargin)
 %         .length_mm measured along the drawn curve, .vertices) .legend (the sentence the figure legend needs:
 %         views, surface, the bar's distance, the interval, the inset) .settings (each render's viewer settings)
 %         .inset (.label .view .magnification (x, the inset's length per the view's) .dpi .vertices .px (the
-%         region's outline on the view, render pixels) .shape) or []
+%         region's outline on the view, render pixels) .shape .render (its PNG) .camera (.R .s .off .d: the zoomed
+%         render's, as .cameras: render px = s * X * R' + off)) or []
 %         .selections (.label .kind ("tile" | "disk") .axis .colour .dashed .vertices) .paths (.label .how .length_mm
 %         along the folded surface, .geodesic_mm the heat distance between its ends (From/To), .points)
 %         .cameras, one per render, so a caller can place vector marks on the page: .view .render .R (2 x 3) .s
@@ -177,9 +178,9 @@ function out = snapshot(surf, result, varargin)
             renders{end+1} = struct('name', shots(k).renders(r).file, 'settings', shots(k).renders(r).settings, 'scale', scale); %#ok<AGROW>
         end
         if ~isempty(shots(k).Inset)
-            % shortcut: the viewer has no camera zoom, so the inset is the whole view at a higher pixel ratio, capped
-            % at pixel ratio 4; a viewer zoom-to-region setting would lift the cap (asked of Product)
-            si = min(scale * shots(k).Inset.Zoom, 4);   % measured 2026-10-14: 4 and 4.2 render; 6 and 8.1 give no screenshot in 300 s
+            % the region fills the stage (1 + margin), where a view's cortex fills half of it: the ratio that fills the
+            % inset's column at the print dpi; shortcut: kept <= 4, the largest ratio measured to screenshot (2026-10-14)
+            si = min(4, max(o.Scale, ceil(10 * need * (1 + insetMargin) / 2) / 10));
             renders{end+1} = struct('name', shots(k).Inset.render.file, 'settings', shots(k).Inset.render.settings, 'scale', si); %#ok<AGROW>
         end
     end
@@ -341,12 +342,13 @@ function in = inset(a, s, k, real, nV)
     if nnz(m) < 3, error('rheome:snapshot:inset', '%s: Inset.Vertices: a region of 3 vertices or more.', s.Name); end
     lab = char(get(a, 'Label', ''));
     if isempty(lab), error('rheome:snapshot:inset', '%s: Inset.Label: say what the inset shows (it is drawn under it).', s.Name); end
-    z = double(get(a, 'Zoom', 4));
+    z = double(get(a, 'Zoom', 2));
     if ~(isscalar(z) && z >= 2), error('rheome:snapshot:inset', '%s: Inset.Zoom >= 2 (an inset shows more: tokens annotation.inset, I1).', s.Name); end
     vi = find(strcmpi(char(get(a, 'View', s.views{1, 1})), s.views(:, 1)), 1);
     if isempty(vi), error('rheome:snapshot:inset', '%s: Inset.View: one of %s.', s.Name, strjoin(s.views(:, 1), ', ')); end
     f = pickName(get(a, 'Field', s.Field), real, 'Inset.Field');
     r = s.renders(vi);  r.settings.scalar = f;
+    r.settings.zoom = struct('vertices', {num2cell(find(m)' - 1)}, 'margin', insetMargin);   % the camera on the region
     r.file = sprintf('s%d_inset', k);  r.label = [r.label '_inset'];
     in = struct('mask', m, 'Label', lab, 'Zoom', z, 'view', vi, 'Field', f, 'render', r, 'Shape', shape);
 end
@@ -557,6 +559,31 @@ function cam = fitCamera(alpha, X, camera)
             100 * best.inside, best.aspect, srt(1) - srt(2));
     end
     cam = best;
+end
+
+function m = insetMargin()
+% the stage spared around an inset's region (the viewer's zoom margin; its default)
+    m = 0.08;
+end
+
+function cam = zoomCamera(camV, V, region, alpha, shown)
+% the camera of a render zoomed on a region, by the viewer's own rule (state.ts regionFrame): the view's direction, the
+% region's box on the screen centred on the stage, its larger half-extent (the width's by the stage's aspect) times
+% 1 + margin the stage's half-height; checked like fitCamera: the shown vertices that land on the image land on cortex
+    u = V(region, :) * camV.R';                                  % screen right, down (the view's axes: zoom keeps them)
+    half = (max(u, [], 1) - min(u, [], 1)) / 2;  mid = (max(u, [], 1) + min(u, [], 1)) / 2;
+    E = max(V, [], 1) - min(V, [], 1);  E(E == 0) = 1;
+    [H, W] = size(alpha);
+    ext = max([half(2), half(1) / (W / H), 1e-3 * norm(E)]);
+    cam = camV;
+    cam.s = H / (2 * (1 + insetMargin()) * ext);
+    cam.off = [(W + 1) / 2, (H + 1) / 2] - cam.s * mid;          % pixel centres at integers, as fitCamera's
+    px = round(project(cam, V(shown, :)));
+    on = px(:, 1) >= 1 & px(:, 1) <= W & px(:, 2) >= 1 & px(:, 2) <= H;
+    in = alpha(sub2ind([H W], px(on, 2), px(on, 1))) > 0;
+    if nnz(on) < 3 || mean(in) < 0.97
+        error('rheome:snapshot:camera', 'The inset''s zoomed camera does not fit its render (%.1f %% of %d vertices on cortex).', 100 * mean(in), nnz(on));
+    end
 end
 
 function px = project(cam, X)
@@ -802,14 +829,25 @@ function [svg, info] = drawInset(svg, s, Vd, F, hemi, img, al, crop, k, cw, gap,
     shown = hemi > 0;
     if ~strcmp(rv.hemisphere, 'both'), shown = hemi == find(strcmp({'left', 'right'}, rv.hemisphere)); end
     [im, ~, ai] = imread(fullfile(s.dir, [In.render.label '.png']));  ai = cortexOnly(ai);
-    camI = fitCamera(ai, Vd(shown, :), rv.camera);
     camV = fitCamera(al{vi}, Vd(shown, :), rv.camera);
+    camI = zoomCamera(camV, Vd, In.mask, ai, shown);
     E = double(F);  el = median(vecnorm(Vd(E(:, 1), :) - Vd(E(:, 2), :), 2, 2));   % the mesh's edge, m
     mI = regionMask(ai, Vd, shown, In.mask, camI, el);
     mV = regionMask(al{vi}, Vd, shown, In.mask, camV, el);
     if strcmp(In.Shape, 'square'), mI = squareOf(mI);  mV = squareOf(mV); end   % a square around the region, not cut
-    if camI.s / camV.s < 2 - 1e-9   % tokens annotation.inset, rule I1: >= 2x the view's pixels per mm of cortex
-        error('rheome:snapshot:inset', '%s: the inset has %.2fx the view''s pixels per mm (< 2, rule I1); the viewer''s canvas caps it: a smaller Scale or Width.', s.Name, camI.s / camV.s);
+    % the viewer paints its colourbar into every PNG (lower left) and, zoomed, the region may reach that corner: its box
+    % on the view's render (the small pieces cortexOnly took out) at the inset's pixel ratio is left out of the inset
+    [~, ~, a0] = imread(fullfile(s.dir, [rv.label '.png']));
+    [rb, cb] = find(a0 > 0 & al{vi} == 0);  keep = rb > 0.75 * size(a0, 1) & cb < 0.4 * size(a0, 2);
+    if any(keep)
+        f = size(ai, 1) / size(a0, 1);  zr = max(1, floor((min(rb(keep)) - 2) * f)):size(mI, 1);  zc = 1:min(size(mI, 2), ceil((max(cb(keep)) + 2) * f));
+        if any(mI(zr, zc), 'all')
+            mI(zr, zc) = false;
+            warning('rheome:snapshot:insetcolourbar', '%s: the inset''s region reaches the corner where the viewer paints its colourbar; that corner is left out of the inset.', s.Name);
+        end
+    end
+    if camI.s / camV.s < In.Zoom - 1e-9   % tokens annotation.inset, rule I1: >= 2x the view's pixels per mm of cortex
+        error('rheome:snapshot:inset', '%s: the inset has %.2fx the view''s pixels per mm (< %g, rule I1): a smaller region.', s.Name, camI.s / camV.s, In.Zoom);
     end
     if ~any(mI(:)) || ~any(mV(:)), error('rheome:snapshot:inset', '%s: the inset''s region is not visible on the %s view.', s.Name, rv.view); end
     [rr, cc] = find(mI);  pad = 2;
@@ -845,7 +883,8 @@ function [svg, info] = drawInset(svg, s, Vd, F, hemi, img, al, crop, k, cw, gap,
     if dpiI < J.dpi.combination, warning('rheome:snapshot:dpi', '%s: the inset prints at %.0f dpi (< %d); a smaller Zoom or region.', s.Name, dpiI, J.dpi.combination); end
     [rv3, cv3] = find(mV);
     info = struct('label', In.Label, 'view', rv.view, 'magnification', mag, 'dpi', dpiI, 'vertices', find(In.mask), ...
-        'px', [cv3 rv3], 'shape', In.Shape);
+        'px', [cv3 rv3], 'shape', In.Shape, 'render', fullfile(s.dir, [In.render.label '.png']), ...
+        'camera', struct('R', camI.R, 's', camI.s, 'off', camI.off, 'd', camI.d));
 end
 
 function q = squareOf(m)
