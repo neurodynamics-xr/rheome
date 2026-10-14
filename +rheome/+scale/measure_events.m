@@ -185,7 +185,8 @@ function [T, X, Acf, TF] = measure_events(name, S, opts)
     Acf = table(repmat(lag, numel(sr), 1), repelem(sr', ml + 1), V(:), 'VariableNames', {'lag_s','series','acf'});
 
     % metrics
-    beyond = lag >= 2;  pm = median(pa, 2);  xs = @(c) max(c(beyond) - pm(beyond));      % ACF excess over Poisson, lags >= 2 s  dec = @(c) lag(find(c < exp(-1), 1));  e1 = dec(ea(:, 1));  e2 = dec(ea(:, 2));
+    beyond = lag >= 2;  pm = median(pa, 2);  xs = @(c) max(c(beyond) - pm(beyond));      % ACF excess over Poisson, lags >= 2 s
+    dec = @(c) lag(find(c < exp(-1), 1));  e1 = dec(ea(:, 1));  e2 = dec(ea(:, 2));
     if isempty(e1), e1 = NaN; end
     if isempty(e2), e2 = NaN; end
     m = ["frac_fit" "frac_unfitted" "frac_tau_at_bound" "frac_tau_at_bound_alt" "frac_fit_alt" ...
