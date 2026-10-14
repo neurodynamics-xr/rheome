@@ -152,6 +152,16 @@ classdef tModes < matlab.unittest.TestCase
             tc.verifyTrue(isnan(rheome.modes.lagged(nan(4, 1), eye(4)).r_n3));      % a non-finite mode: NaN, no crash
             % the driver writes the fit tables, then the reduction over the three
             setenv('RHEOME_MODES_CENTROIDS', fullfile(od, 'discover', 'centroids.mat'));  tc.addTeardown(@setenv, 'RHEOME_MODES_CENTROIDS', '');
+            % the driver's N5 count comes from nsp's nsurr (RHEOME_MODES_NSURR), is recorded, and a bad value is refused
+            tc.addTeardown(@setenv, 'RHEOME_MODES_NSURR', '');
+            setenv('RHEOME_MODES_NSURR', '3');
+            R = rheome.scale.run(char(tc.Names(1)), OutDir=fullfile(od, 'runfit'), Analyses="modesfit");
+            tc.verifyEqual(R.timing.status, "ok", strjoin(R.timing.message, ' | '));
+            tc.verifyEqual(R.metrics.value(R.metrics.metric == "n_surr"), 3);
+            setenv('RHEOME_MODES_NSURR', '9.5');
+            R = rheome.scale.run(char(tc.Names(1)), OutDir=fullfile(od, 'runfit'), Analyses="modesfit");
+            tc.verifyTrue(startsWith(R.timing.message, "scale:run:nsurr"), R.timing.message);
+            setenv('RHEOME_MODES_NSURR', '');
             fits = strings(0);  sa = strings(0);  sb = strings(0);
             for n = tc.Names
                 fo = fullfile(od, 'fit', n);  mkdir(fo);
