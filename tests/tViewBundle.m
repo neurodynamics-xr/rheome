@@ -22,6 +22,29 @@ classdef tViewBundle < matlab.unittest.TestCase
             tc.verifyEqual(reshape(rd(d, 'faces.bin', 'int32'), 3, []), int32(tc.S.Faces' - 1));
             tc.verifyEqual(reshape(rd(d, j.fields(2).values, 'single'), 12, 3), single(v));
         end
+        function writesPaths(tc)
+        % paths[] as the viewer reads them: vertices or faces + weights, 0-based, weights [3 x n] float32
+            d = tempname;  c = onCleanup(@() rmdir(d, 's'));
+            w = [1 0 0; 0.2 0.3 0.5; 0 0 1];
+            P = [struct('name', 'by vertices', 'vertices', [1 4 2], 'faces', [], 'weights', [], 'color', '', 'arrow', []); ...
+                 struct('name', 'by faces', 'vertices', [], 'faces', [1 2 4], 'weights', w, 'color', 'neutral-ink', 'arrow', true)];
+            j = jsondecode(fileread(rheome.io.write.bundle(d, tc.S, rand(4, 2), 'Paths', P)));
+            q = j.paths;  tc.assertClass(q, 'cell');   % objects with different keys
+            tc.verifyEqual(cellfun(@(x) x.name, q, 'UniformOutput', false)', {'by vertices', 'by faces'});
+            tc.verifyEqual(rd(d, q{1}.vertices, 'int32'), int32([0; 3; 1]));
+            tc.verifyEqual(rd(d, q{2}.faces, 'int32'), int32([0; 1; 3]));
+            tc.verifyEqual(reshape(rd(d, q{2}.weights, 'single'), 3, [])', single(w));
+            tc.verifyEqual(q{2}.color, 'neutral-ink');  tc.verifyTrue(q{2}.arrow);
+            tc.verifyFalse(isfield(q{1}, 'color'));   % none given: the viewer's default
+            one = jsondecode(fileread(rheome.io.write.bundle(d, tc.S, rand(4, 2), 'Paths', P(1))));
+            tc.verifyEqual(numel(one.paths), 1);
+            bad = @(q) rheome.io.write.bundle(d, tc.S, rand(4, 2), 'Paths', q);
+            tc.verifyError(@() bad(struct('name', 'x', 'vertices', [1 5])), 'rheome:bundle:paths');
+            tc.verifyError(@() bad(struct('name', 'x', 'faces', [1 2], 'weights', [0.5 0.6 0; 1 0 0])), 'rheome:bundle:paths');
+            tc.verifyError(@() bad(struct('name', 'x', 'faces', [1 9], 'weights', [1 0 0; 1 0 0])), 'rheome:bundle:paths');
+            tc.verifyError(@() bad(struct('name', '', 'vertices', [1 2])), 'rheome:bundle:paths');
+            tc.verifyError(@() bad(struct('name', 'x', 'vertices', [1 2], 'colour', 'red')), 'rheome:bundle:paths');
+        end
         function refusesABadResult(tc)
             d = tempname;  c = onCleanup(@() rmdir(d, 's'));  mkdir(d);
             tc.verifyError(@() rheome.io.write.bundle(d, tc.S, rand(5, 2)), 'rheome:bundle:rows');

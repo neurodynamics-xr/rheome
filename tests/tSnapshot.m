@@ -55,7 +55,16 @@ classdef tSnapshot < matlab.unittest.TestCase
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Paths', struct('Points', tc.S.Vertices(1:2, :), 'Label', 'p'))), 'rheome:snapshot:path');   % How
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Paths', struct('From', 1, 'To', 9, 'Label', 'p'))), 'rheome:snapshot:path');
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Inset', setfield(in, 'Shape', 'star'))), 'rheome:snapshot:option');
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Paths', struct('Faces', [1 2], 'Weights', [1 0 0], 'How', 'h', 'Label', 'p'))), 'rheome:snapshot:path');
+            tc.verifyError(@() run(struct('Layers', {{{'a', 'x'}}})), 'rheome:snapshot:option');            % a real field has form f only
+            tc.verifyError(@() run(struct('Layers', {{{'v', 'x', 'colour'}}})), 'rheome:snapshot:layers');  % a vector form as arrows
+            tc.verifyError(@() run(struct('Layers', {{{'a'}, {'v', 'div'}}}, 'Unit', 'mm')), 'rheome:snapshot:layers');   % two colour layers
+            tc.verifyError(@() run(struct('Layers', {{{'v', 'div'}}}, 'Unit', '1/s')), 'rheome:snapshot:clim');  % the viewer's form: CLim
+            tc.verifyError(@() run(struct('Layers', {{{'a'}}})), 'rheome:snapshot:unit');                   % a colour layer: a colourbar
+            tc.verifyError(@() run(struct('Layers', {{{'v'}}}, 'Vector', 'v')), 'rheome:snapshot:layers');
             % every check passed: it gets as far as looking for Node
+            tc.verifyError(@() run(struct('Layers', {{{'v', 'x', 'arrows'}}})), 'rheome:snapshot:node');    % arrows only: no unit
+            tc.verifyError(@() run(struct('Layers', {{}}, 'Paths', struct('Faces', [1 2], 'Weights', [1 0 0; 0 0.5 0.5], 'How', 'h', 'Label', 'p'))), 'rheome:snapshot:node');
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Selection', struct('Centre', 1, 'RadiusMM', 80, 'Label', 'disk'), ...
                 'Paths', struct('From', 1, 'To', 4, 'Label', 'p'), 'Inset', struct('Label', 'the disk'))), 'rheome:snapshot:node');
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'View', 'R medial', 'Vector', 'v')), 'rheome:snapshot:node');
@@ -158,8 +167,45 @@ classdef tSnapshot < matlab.unittest.TestCase
             px = c.s * V(lat, :) * c.R' + c.off;                                        % the vertex on the render
             [~, ~, al] = imread(out.renders{1});
             tc.verifyGreaterThan(al(round(px(2)), round(px(1))), 0, 'the camera puts the vertex on the cortex');
-            tc.verifyEqual(p.px{1}(1, :), px, 'AbsTol', 1e-6, 'the path starts at its vertex, by the same camera');
-            tc.verifyFalse(any(p.visible{3}) || any(p.visible{4}), 'a left-hemisphere path is not drawn on the right''s views');
+            tc.verifyEqual(out.settings{1}.paths, {'shot1_path1'}, 'the viewer draws the shot''s path');
+        end
+        function arrowsOnlyWithAPathTheViewerDraws(tc)
+        % an arrows-only shot (no colour layer: no colourbar) with a path given as faces + barycentric weights: the
+        % viewer accepts the layers and draws the path in the render, where the render's camera puts its points
+            [vdir, S] = needs(tc);
+            V = S.Vertices;  nV = size(V, 1);  lat = find(V(:, 2) == max(V(:, 2)), 1);
+            near = find(vecnorm(V - V(lat, :), 2, 2) < 0.03 & V(:, 2) > max(V(:, 2)) - 0.015);
+            [~, j] = max(vecnorm(V(near, :) - V(lat, :), 2, 2));  far = near(j);
+            [X, info] = rheome.geom.geodesicpath(S, lat, far);
+            fc = info.faces([1:end end]);
+            A = V(S.Faces(fc, 1), :);  e1 = V(S.Faces(fc, 2), :) - A;  e2 = V(S.Faces(fc, 3), :) - A;
+            w = zeros(numel(fc), 3);
+            for i = 1:numel(fc), uv = [e1(i, :); e2(i, :)]' \ (X(i, :) - A(i, :))';  w(i, :) = [1 - sum(uv) uv']; end
+            w = max(w, 0);  w = w ./ sum(w, 2);
+            fg = rheome.operators.face_gradient(V, S.Faces);  N = fg.W * fg.FaceNormal;  N = N ./ vecnorm(N, 2, 2);
+            v = repmat([0 0 1], nV, 1);  v = v - sum(v .* N, 2) .* N;   % tangent, upward
+            r = struct('v', reshape(v', [], 1));
+            out = rheome.snapshot(S, r, Out=tempname, Viewer=vdir, Format="pdf", ScaleBar=0, Shots=struct('View', 'L lateral', ...
+                'Layers', {{struct('field', 'v', 'form', 'x', 'as', 'arrows', 'density', 0.05)}}, 'Paths', struct('Faces', fc, 'Weights', w, 'How', 'test: geodesicpath', ...
+                'Label', 'trajectory', 'Color', '#ff00ff', 'Width', 2)));
+            tc.addTeardown(@() rmdir(fileparts(out.svg), 's'));
+            tc.verifyEmpty(out.colormap);  tc.verifyEmpty(out.colorbar);
+            tc.verifyTrue(isfile(out.pdf));
+            L = out.settings{1}.layers;  if iscell(L), L = L{1}; end
+            tc.verifyEqual({L.field, L.as}, {'v', 'arrows'});
+            [im, ~, al] = imread(out.renders{1});
+            g = double(im);  mag = g(:, :, 1) > 180 & g(:, :, 3) > 180 & g(:, :, 2) < 120 & al > 0;
+            [rr, cc] = find(mag);
+            tc.assertNotEmpty(rr, 'the path is not drawn in the render');
+            c = out.cameras(1);  P = out.paths.points;
+            P = interp1(1:size(P, 1), P, linspace(1, size(P, 1), 50 * size(P, 1)));   % along its segments
+            px = c.s * P * c.R' + c.off;
+            d = min(hypot(cc - px(:, 1)', rr - px(:, 2)'), [], 2);       % each drawn pixel to the path
+            head = hypot(cc - px(end, 1), rr - px(end, 2)) < 80;          % the arrowhead: a cone 5 x 4 widths at the end
+            tc.verifyGreaterThan(nnz(head), 100, 'no arrowhead at the path''s end');
+            % the tube, 2 pt (~11 px at this pixel ratio): within 25 px of the path's line
+            tc.verifyGreaterThan(mean(d(~head) < 25), 0.95, 'the drawn path is off where its points project');
+            tc.verifyEqual([min(cc) max(cc) min(rr) max(rr)], [min(px(:, 1)) max(px(:, 1)) min(px(:, 2)) max(px(:, 2))], 'AbsTol', 30);
         end
         function barLiesWhereTheViewerDrawsIt(tc)
         % paint the bar's vertices (and their neighbours) in the viewer; the curve drawn from the camera read off the
