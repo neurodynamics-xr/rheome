@@ -40,7 +40,7 @@ function R = risefall(a, fs, t0, t1, opts)
 %            timing error into tau (x0.7-0.8). Held-out plants, 4 participants at 10 dB, vs "quadrature": median
 %            |tOn| 0.13-0.18 s (0.17-0.19), |tOff| 0.11-0.18 s (0.12-0.22), tau x0.73-0.98 (x0.62-0.87), fit
 %            share 0.90-0.99 (0.81-0.88); at 20 dB tau x0.97-1.02. ⚠ At 10 dB timing sits near one 165 ms tile
-%            and tau can stay compressed: the beat, not the fit, sets that limit (request cfc56e72). ~0.3 s/event.
+%            and tau can stay compressed: the beat, not the fit, sets that limit. ~0.3 s per event.
 %   TauMax   upper bound of tauR and tauF (1 s). On two OMEGA participants tau reached 1 s at the 95th
 %            percentile (labelling design section 7); a fit AT the bound is flagged (.atBound), not trusted
 %

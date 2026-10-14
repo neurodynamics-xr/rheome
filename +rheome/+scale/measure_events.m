@@ -17,7 +17,7 @@ function [T, X, Acf, TF] = measure_events(name, S, opts)
 %                   its tiles' 8-16 Hz envelope at 300 frames/s, first-to-last time +- 1 s): tOn, tOff, tauR,
 %                   tauF, build-up / plateau / decay, r2 (a fit counts at r2 >= 0.7), with risefall's Model
 %                   ("posterior": the quadrature model -- the episode adds to the background in power -- read by its
-%                   posterior medians; chosen by measure_eventplants, request cfc56e72).
+%                   posterior medians; chosen by measure_eventplants).
 %                   The tau bound is revisited: every event is fitted at TauMax (1 s, labelalpha's) and at
 %                   TauMaxAlt (2 s). frac_fit_detections (unmerged) and frac_fit_linear are the comparisons.
 %   B1. TIME-FREQUENCY  rheome.detect.eventlocked: power at the event's tile centres (minimum-norm kernel
