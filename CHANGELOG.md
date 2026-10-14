@@ -4,6 +4,15 @@
 
 ### Added
 
+- **Ambient-field and critical-point trajectory panels (MS1 1.4, 2.3)**, no instrument, on the sphere and the
+  subject's left hemisphere. `rheome.scale.measure_ambient` (analysis `ambient`) plants a tilted field and reads it
+  ambient vs tangential: the mean-curvature coupling 2H(J.n) against its closed form (H = 1/R on the sphere, cotan H
+  on the cortex, also at > 60 mm). `rheome.scale.measure_cptrack` (analysis `cptrack`) plants a drifting rotor and a
+  source that waxes and wanes, tracks them with `rheome.detect.track`, and reads core path, speed, curl and div
+  against the closed form -2/s^2 at the core. Both write `<analysis>.csv` and figure data `<analysis>.mat`. Sphere:
+  coupling 1.7 %, rotor path 1.4 mm median, speed 0.029 of 0.030 m/s, curl 5.8 %, source on/off within 1 frame
+  (tests/tScaleAmbient).
+
 - **Event boundaries and event statistics (MS1 SPEC1 §8)**, generic over an event table (one row per event:
   hemisphere, tiles, first and last time), so the tracker's detections and atlas-cell events are read alike.
   `rheome.detect.eventtable` fits `rheome.detect.risefall` to each event's own area-weighted envelope (tOn, tOff,
