@@ -27,6 +27,9 @@ classdef tScaleFreqTrack < matlab.unittest.TestCase
                 "control_found" "cross_oct" "false_frac_win" "sweep_err_med" "jump_oct_med" "net_oct_med" ...
                 "hit_minus_control" "null_band_occ"], T.metric)));
             tc.verifyEqual(sum(T.metric == "null_band_occ"), 7);
+            rr = T.value(T.metric == "real_band_r");  nr = T.value(T.metric == "null_band_r");
+            tc.verifyGreaterThan(rr, 0.2, 'overlapping one-octave bands share envelope');
+            tc.verifyEqual(nr, rr, 'AbsTol', 0.05, 'the null keeps the band coupling: one shift per LB mode, shared by every band');
             fr = T.value(T.metric == "false_rate");
             tc.verifyGreaterThanOrEqual(fr, 0);  tc.verifyLessThanOrEqual(T.value(T.metric == "cross_false_rate"), fr);
             q = X(X.arm == "noiseless", :);

@@ -34,7 +34,9 @@ function [T, X] = measure_freqtrack(name, S, opts)
 %
 % X (freqtrack.csv): one row per hemisphere x case x plant x arm (and per real window): truth, readout (pass found
 %   near octErr sweepOctS octSpan durS netMM netOct jumpOct sweepErr), the half of the recording, the seed, the
-%   null's held-out false rates (per s and per window), its cross criterion and band occupancy. sweepErr = the
+%   null's held-out false rates (per s and per window), its cross criterion, the number of passing calibration
+%   paths that set it (nullCalN) and band occupancy, and the median adjacent-band envelope correlation of the real
+%   field and of the null (realBandR, nullBandR: equal under the shared shift, the null's guard). sweepErr = the
 %   read sweep - the LS slope of the (clamped) truth over the path's own frames: a perfect readout reads 0 in
 %   every case (the hop's step truth has an LS slope of ~1.1 oct/s, not 0).
 % T (rheome.scale.rows, analysis "freqtrack"), band "<arm>/<case>/d<depth>/<fps>fps":
@@ -48,7 +50,8 @@ function [T, X] = measure_freqtrack(name, S, opts)
 %   hit_minus_control  hit_rate - control_found of the same case                      fraction
 %   control_found   (arm control) fraction of plant-free segments with a FOUND path    fraction
 % and band "d<depth>/<fps>fps": false_rate, cross_false_rate (1/s, held-out surrogate), false_frac_win,
-% cross_frac_win (the same per 2 s window, the unit of real_frac_*), cross_oct (the criterion), real_frac_pass,
+% cross_frac_win (the same per 2 s window, the unit of real_frac_*), cross_oct (the criterion), cross_cal_n (passing
+% calibration paths behind it), real_band_r and null_band_r (adjacent-band envelope correlation), real_frac_pass,
 % real_frac_cross (passing real windows with |netOct| >= cross_oct), real_sweep_abs_med (oct/s); per band
 % "d<depth>/<fps>fps/<Hz>Hz": null_band_occ; hit_rate per half ("_h1" / "_h2"). All medians over hemispheres
 % of ONE participant: the per-participant false rate.
@@ -83,7 +86,7 @@ function [T, X] = measure_freqtrack(name, S, opts)
         opts.NearMM (1,1) double = 50
         opts.OctTol (1,1) double = 0.5
         opts.Alpha (1,1) double = 0.1
-        opts.CrossOct double = []
+        opts.CrossOct double {mustBeScalarOrEmpty, mustBePositive} = []
         opts.Hemis string = ["L" "R"]
         opts.Seed (1,1) double = 53
         opts.EdgeS (1,1) double = 10
@@ -124,11 +127,13 @@ function [T, X] = measure_freqtrack(name, S, opts)
             Ys(:, b, :) = reshape(i_block(Wd*C, bs, W*FR, nWin), nTile, 1, []);
         end
         clear C
+        bR = [i_bandr(Yr) i_bandr(Ys)];                             % a per-band shift drives the null's towards 0
         N = rheome.detect.jointpathnull(Ys, G, nF, rate, LogF=lf, Alpha=opts.Alpha, WindowS=W, CrossOct=opts.CrossOct);
         clear Ys
         base = table(hh, opts.Depth, median(G.diameterMM), rate, opts.Seed, N.falseTestS, N.crossTestS, ...
-                     N.falseTestW, N.crossTestW, N.crossOct, N.bandOcc, 'VariableNames', {'hemi','depth','tileMM', ...
-                     'rate','seed','nullFalseS','nullCrossS','nullFalseW','nullCrossW','nullCrossOct','nullOcc'});
+                     N.falseTestW, N.crossTestW, N.crossOct, numel(N.calNet), N.bandOcc, bR(1), bR(2), ...
+                     'VariableNames', {'hemi','depth','tileMM','rate','seed','nullFalseS','nullCrossS','nullFalseW', ...
+                     'nullCrossW','nullCrossOct','nullCalN','nullOcc','realBandR','nullBandR'});
         for w = 1:nWin
             r = i_path(Yr(:, :, (w-1)*nF + (1:nF)), G, N, lf, rate, [], [], opts);
             X = [X; base, i_row("real", NaN, w, 1 + (w > nWin/2), "real", r)]; %#ok<AGROW>
@@ -184,11 +189,12 @@ function T = i_metrics(X, opts)
     T = table();  r = @(m, v, u, b) rheome.scale.rows("freqtrack", m, v, u, b);
     b0 = sprintf('d%d/%gfps', opts.Depth, X.rate(1));
     q = X(X.case == "real", :);  p = q(q.pass == 1, :);
-    T = [T; r(["false_rate" "cross_false_rate" "false_frac_win" "cross_frac_win" "cross_oct" "real_frac_pass" ...
-               "real_frac_cross" "real_sweep_abs_med"], ...
+    T = [T; r(["false_rate" "cross_false_rate" "false_frac_win" "cross_frac_win" "cross_oct" "cross_cal_n" ...
+               "real_band_r" "null_band_r" "real_frac_pass" "real_frac_cross" "real_sweep_abs_med"], ...
               [median(q.nullFalseS) median(q.nullCrossS) median(q.nullFalseW) median(q.nullCrossW) median(q.nullCrossOct) ...
+               median(q.nullCalN) median(q.realBandR) median(q.nullBandR) ...
                mean(q.pass) mean(q.pass == 1 & abs(q.netOct) >= q.nullCrossOct) median(abs(p.sweepOctS), 'omitnan')], ...
-              ["1/s" "1/s" "fraction" "fraction" "oct" "fraction" "fraction" "oct/s"], b0)];
+              ["1/s" "1/s" "fraction" "fraction" "oct" "count" "r" "r" "fraction" "fraction" "oct/s"], b0)];
     T = [T; r(repmat("null_band_occ", numel(opts.LogF), 1), median(q.nullOcc, 1), "fraction", b0 + "/" + compose("%.3g", 2.^opts.LogF(:)) + "Hz")];
     for a = unique(X.arm(X.case ~= "real"))'
         for c = opts.Cases
@@ -245,6 +251,12 @@ function Y = i_read(Fs, bp, bb, cIdx, K, Phi, Mm, Wd, bs, nF)
         Cw = Phi'*(Mm*rheome.flow.activation(K*Fa(:, cIdx)));
         Y(:, b, :) = reshape(i_block(Wd*Cw, bs, numel(cIdx), 1), [], 1, nF);
     end
+end
+
+% Median over tiles and adjacent band pairs of the envelope correlation over time, Y [nTile x nB x nT].
+function m = i_bandr(Y)
+    Z = Y - mean(Y, 3);  Z = Z./sqrt(sum(Z.^2, 3));
+    m = median(sum(Z(:, 1:end-1, :).*Z(:, 2:end, :), 3), 'all', 'omitnan');
 end
 
 % Heat-kernel blob at vertex v along the normal, interleaved [x1;y1;z1;x2;...] (as measure_inject).
