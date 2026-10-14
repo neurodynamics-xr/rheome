@@ -43,7 +43,7 @@ function [T, X] = measure_helmholtzbands(name, opts)
         G = cell2mat(arrayfun(@(m) feval(gain(gfb, m), lam), 1:nM, 'uni', 0));  wl = 1e3 * wavelengths(gfb);
         for m0 = 2:nM-1
             for rep = 1:opts.Plants
-                v0 = randi(nV);
+                cvx = find(rheome.geom.cortexmask(S));  v0 = cvx(randi(numel(cvx)));   % plant on cortex
                 psi = P * (G(:, m0) .* (P' * (Mm * full(sparse(v0, 1, 1, nV, 1)))));
                 g = [fg.W*(fg.Gx*psi) fg.W*(fg.Gy*psi) fg.W*(fg.Gz*psi)];  g = g - sum(g.*nrm, 2) .* nrm;
                 Jf = [reshape(g', [], 1) reshape(cross(nrm, g, 2)', [], 1)];

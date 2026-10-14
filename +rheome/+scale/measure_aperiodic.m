@@ -95,7 +95,7 @@ function [T, X, Ex] = measure_aperiodic(name, S, opts)
 
     %% the cortex, the instrument, the records
     Hm = S.B.(char(opts.Hemi));  Sh = Hm.S;  lbo = Hm.lbo;  Phi = lbo.Phi;  lam = lbo.Lambda(:);  Mm = lbo.Mass;
-    gv = double(Hm.gv(:));  nV = size(Sh.Vertices, 1);  av = full(sum(Mm, 2));
+    gv = double(Hm.gv(:));  nV = size(Sh.Vertices, 1);  av = full(sum(Mm, 2)) .* rheome.geom.cortexmask(Sh);
     Nl = Sh.VertNormals ./ max(vecnorm(Sh.VertNormals, 2, 2), eps);  Sh.VertNormals = Nl;
     st = rheome.load.study(name);  fs = st.rec.sfreq;  REST = double(st.rec.F(S.iSel, :));  clear st
     E = [];  iC = (1:numel(S.iSel))';
@@ -115,6 +115,7 @@ function [T, X, Ex] = measure_aperiodic(name, S, opts)
     if numel(iC) < numel(S.iSel)                         % the shared channels get their own kernel
         Res = rheome.inverse.mne(S.G(iC, :), struct('NoiseCov', S.ncm.NoiseCov(iC, iC)), ...
             struct('ChannelTypes', {S.chT(iC)}, 'InverseMeasure', 'amplitude', 'nVert', S.nV, 'SnrFixed', 3));
+        Res.ImagingKernel = rheome.operators.harmonicfill(S.Sf, Res.ImagingKernel, rheome.geom.cortexmask(S.Sf));   % as rheome.scale.sensors
     end
     REST = REST(iC, :);  ER = [];
     if ~isempty(E)
@@ -155,7 +156,7 @@ function [T, X, Ex] = measure_aperiodic(name, S, opts)
     for r = 1:opts.Reps
         cand = [];  tries = 0;
         while isempty(cand)
-            s0 = randi(nV);  d0 = distances(ge, s0);  cand = find(abs(d0 - PATH) < 2e-3);  tries = tries + 1;
+            cvx = rheome.geom.cortexmask(Sh);  s0 = find(cvx);  s0 = s0(randi(numel(s0)));  d0 = distances(ge, s0);  cand = find(abs(d0(:) - PATH) < 2e-3 & cvx);  tries = tries + 1;   % ends on cortex
             if tries > 200, error('scale:aperiodic:path', 'no %g mm geodesic on this hemisphere', opts.PathMM); end
         end
         [pv, ~, eg] = shortestpath(ge, s0, cand(randi(numel(cand))));

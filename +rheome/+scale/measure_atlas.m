@@ -132,7 +132,7 @@ function [T, X] = i_correspondence(name, S, Tp, o)
     f = fullfile(rheome.load.root(), name, 'mri.mat');  mri = [];  if isfile(f), mri = load(f); end
     T = rheome.scale.rows("correspondence", strings(0,1), [], "");  X = table();
     for h = o.Hemis(:)'
-        Hh = S.B.(h);  gv = Hh.gv(:);  th = Tp.(h);  a = full(sum(Hh.lbo.Mass, 2));
+        Hh = S.B.(h);  gv = Hh.gv(:);  th = Tp.(h);  a = full(sum(Hh.lbo.Mass, 2)) .* rheome.geom.cortexmask(Hh.S);
         ls = labS(gv);
         [is, ds] = knnsearch(th.u, i_unit(S.Sf.Sphere(gv, :)));
         [agS, agSa] = i_agree(ls, Tp.dk(th.gv(is)), a);
@@ -255,7 +255,7 @@ function [T, X] = i_tensor(name, S, Tp, o)
     for h = o.Hemis(:)'
         Hh = S.B.(h);  gv = Hh.gv(:);  V = double(Hh.S.Vertices);  Fc = double(Hh.S.Faces);
         Nv = i_normals(S.Sf, gv, V, Fc);  fr = rheome.geom.sphereframe(V, Fc, Nv, S.Sf.Sphere(gv, :));
-        ok = ~fr.singular;  a = full(sum(Hh.lbo.Mass, 2)) .* ok;
+        ok = ~fr.singular & rheome.geom.cortexmask(Hh.S);  a = full(sum(Hh.lbo.Mass, 2)) .* ok;
         Kx = K((gv-1)*3 + 1, :);  Ky = K((gv-1)*3 + 2, :);  Kz = K((gv-1)*3 + 3, :);
         pr = @(e) e(:,1) .* Kx + e(:,2) .* Ky + e(:,3) .* Kz;
         e1 = fr.e1;  e2 = fr.e2;  e1(~ok, :) = 0;  e2(~ok, :) = 0;
@@ -501,7 +501,7 @@ end
 
 function tw = i_leaftower(S, Tp, h, o, F)
 % the group tiles of hemisphere h at depths 0..LeafDepth, the leaf -> node roll-up, and the leaf currents
-    D = o.LeafDepth;  gv = S.B.(h).gv(:);  tw.D = D;  tw.a = full(sum(S.B.(h).lbo.Mass, 2));
+    D = o.LeafDepth;  gv = S.B.(h).gv(:);  tw.D = D;  tw.a = full(sum(S.B.(h).lbo.Mass, 2)) .* rheome.geom.cortexmask(S.B.(h).S);
     for l = D:-1:0
         [tw.P{l+1}, tw.A{l+1}, tw.ids{l+1}, tw.C{l+1}] = rheome.scale.grouptiles(S, Tp, h, l);
         [~, pj] = ismember(floor(tw.ids{D+1} / 2^(D-l)), tw.ids{l+1});
@@ -552,7 +552,7 @@ end
 %% ---------- shared helpers
 function lab = i_labels(A, nV)
 % one label per vertex; unknown / medial wall / corpus callosum left empty
-    keep = ~contains(lower(string(A.Label(:))), ["unknown" "medial" "corpus"]);
+    keep = ~startsWith(lower(strtrim(string(A.Label(:)))), ["unknown" "corpuscallosum" "corpus callosum" "medial_wall" "medial wall"]);   % prefix: medialorbitofrontal is cortex
     L = string(A.Label(:));  L = L(keep);  [mx, k] = max(double(A.Membership(keep, :)), [], 1);
     lab = strings(nV, 1);  lab(mx > 0) = L(k(mx > 0));
 end

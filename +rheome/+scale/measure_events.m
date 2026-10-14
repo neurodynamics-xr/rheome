@@ -95,10 +95,10 @@ function [T, X, Acf, TF] = measure_events(name, S, opts)
     E = rheome.flow.envelopemodes(name, Band=[8 16], Rate=FR);
     Y = struct();  Ys = Y;  A = Y;  Gc = Y;  Ga = Y;
     for hh = opts.Hemis
-        h = char(hh);  H = S.B.(h);  Phi = H.lbo.Phi;  Mm = H.lbo.Mass;  av = full(sum(Mm, 2));
+        h = char(hh);  H = S.B.(h);  Phi = H.lbo.Phi;  Mm = H.lbo.Mass;  av = full(sum(Mm, 2)) .* rheome.geom.cortexmask(H.S);
         Tr = rheome.geom.tree(H.S, L=H.lbo.L, M=Mm, MaxDepth=opts.Depth);
         G = rheome.geom.tiles(Tr, H.S, opts.Depth, Ruler=rheome.geom.edgegraph(H.S));
-        P = double(G.P);  Wd = (P'*(av.*Phi)) ./ (P'*av);  A.(h) = P'*av;
+        P = double(G.P);  Wd = (P'*(av.*Phi)) ./ (P'*av);  Wd(~isfinite(Wd)) = 0;   % a tile wholly on the medial wall: no cortex, reads 0 (weight 0)  A.(h) = P'*av;
         C = double(E.(h).C);  Y.(h) = Wd*C;
         sh = randi([2*FR, size(C, 2) - 2*FR], size(C, 1), 1);
         for k = 1:size(C, 1), C(k, :) = circshift(C(k, :), sh(k)); end

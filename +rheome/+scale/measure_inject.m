@@ -75,7 +75,7 @@ function [T, X, Ex] = measure_inject(name, S, opts)
     X = table();  Ex = struct([]);
     for hh = opts.Hemis
         H = S.B.(char(hh));  Sh = H.S;  Phi = H.lbo.Phi;  Mm = H.lbo.Mass;  lam = H.lbo.Lambda(:);
-        av = full(sum(Mm, 2));  gv = double(H.gv(:));  nV = numel(gv);  nrm = double(Sh.VertNormals);
+        av = full(sum(Mm, 2)) .* rheome.geom.cortexmask(H.S);  gv = double(H.gv(:));  nV = numel(gv);  nrm = double(Sh.VertNormals);
         rows = reshape((gv' - 1)*3 + (1:3)', [], 1);  K = S.Res.ImagingKernel(rows, :);  GL = S.G(:, rows);
         hk = exp(-lam*(opts.SigmaMM*1e-3)^2/2);
         C = double(E.(char(hh)).C);  nFr = size(C, 2);  nWin = floor(nFr/(W*FR));
@@ -86,7 +86,7 @@ function [T, X, Ex] = measure_inject(name, S, opts)
         Gs = cell(1, nd);  Wd = Gs;  Dcv = Gs;  NUL = cell(nd, nj);
         for di = 1:nd
             Gs{di} = rheome.geom.tiles(Tr, Sh, opts.Depths(di), Ruler=ge);  P = double(Gs{di}.P);
-            Wd{di} = (P'*(av.*Phi))./(P'*av);  Dcv{di} = distances(ge, Gs{di}.centre);
+            Wd{di} = (P'*(av.*Phi))./(P'*av);  Wd{di}(~isfinite(Wd{di})) = 0;  Dcv{di} = distances(ge, Gs{di}.centre);
             for ji = 1:nj
                 [Ys, rate, nF] = i_winblock(Wd{di}*Cs, FR, opts.JLevels(ji), W*FR, nWin);
                 NUL{di, ji} = rheome.detect.tilepathnull(Ys, Gs{di}, nF, rate, Alpha=opts.Alpha, WindowS=W);
@@ -105,7 +105,7 @@ function [T, X, Ex] = measure_inject(name, S, opts)
         for w = 1:nWin, ref(w) = max(Phi*mean(C(:, (w-1)*W*FR + (1:W*FR)), 2)); end
         s1 = zeros(20, 1);  tt = (0:W*fs-1)/fs;
         for q = 1:20
-            g0 = GL*i_blob(randi(nV), Phi, Mm, hk, nrm);
+            cvx = find(rheome.geom.cortexmask(Sh));  g0 = GL*i_blob(cvx(randi(numel(cvx))), Phi, Mm, hk, nrm);   % on cortex
             A = rheome.flow.activation(K*hilbert(filtfilt(bp, (g0*cos(2*pi*F0*tt)).')).');
             s1(q) = max(mean(A, 2));
         end
@@ -114,7 +114,7 @@ function [T, X, Ex] = measure_inject(name, S, opts)
             for n = 1:opts.NPer
                 hf = 1 + (n > opts.NPer/2);  lims = [3, floor(nWin/2); floor(nWin/2) + 1, nWin - 2];
                 w = randi(lims(hf, :));  s0 = (w-1)*W*fs - (MARGIN + PAD)*fs + (1:nSeg);
-                v0 = randi(nV);  car = cos(2*pi*F0*tSeg + 2*pi*rand);  v = opts.Speeds(ci);
+                cvx = rheome.geom.cortexmask(Sh);  cvi = find(cvx);  v0 = cvi(randi(numel(cvi)));  car = cos(2*pi*F0*tSeg + 2*pi*rand);  v = opts.Speeds(ci);   % on cortex
                 switch opts.Cases(ci)
                     case "still"
                         bsig = (GL*i_blob(v0, Phi, Mm, hk, nrm))*(env.*car);  vT = repmat(v0, 1, numel(cIdx));
@@ -129,7 +129,7 @@ function [T, X, Ex] = measure_inject(name, S, opts)
                         while isempty(cand)
                             tries = tries + 1;
                             if tries > 200, error('scale:inject:path', 'No %.0f mm shortest path on the %s hemisphere.', 1e3*Lp, hh); end
-                            v0 = randi(nV);  d = distances(ge, v0);  cand = find(abs(d - Lp) < 2e-3);
+                            v0 = cvi(randi(numel(cvi)));  d = distances(ge, v0);  cand = find(abs(d(:) - Lp) < 2e-3 & cvx);   % ends on cortex
                         end
                         [pv, ~, eg] = shortestpath(ge, v0, cand(randi(numel(cand))));
                         cu = [0; cumsum(ge.Edges.Weight(eg))];  keep = [true; diff(cu) > 0];  pv = pv(keep);  cu = cu(keep);

@@ -45,6 +45,7 @@ function [Sh, dbh] = hemisphere(S, dbG, h)
     Sh.Hemi = {};  Sh.HemiLabel = {};                     % already a single hemisphere
     Sh.SurfaceFile    = S.SurfaceFile;
     Sh.GlobalVertices = vidx;                             % local -> global vertex map
+    if isfield(S, 'Cortex') && numel(S.Cortex) == S.nV, Sh.Cortex = S.Cortex(vidx); end   % rheome.geom.cortexmask
 
     % --- sub-basis: this hemisphere's modes on this hemisphere's rows ---
     dbh = [];

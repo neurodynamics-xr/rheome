@@ -4,6 +4,7 @@ function R = spin(M, Ref, U, hemi, opts)
 %   R = rheome.group.spin(M, Ref, U, hemi)
 %   R = rheome.group.spin(M, Ref, U, hemi, NSpin=1000, Seed=1)
 %   R = rheome.group.spin(M, Ref, U, hemi, Index=R0.index)       % the same rotations as an earlier call
+%   R = rheome.group.spin(M, Ref, U, hemi, Cortex=G.cortex_area > 0)   % medial-wall tiles out
 %
 %   M     [m x 1] the tile map tested (e.g. rheome.group.glm's t)
 %   Ref   [m x K] K reference maps on the same tiles
@@ -24,6 +25,11 @@ function R = spin(M, Ref, U, hemi, opts)
 % spins (m = 16 at depth 3) and many rotations land a tile on itself: ties are counted against the effect (>=),
 % so the test is conservative there and cannot reach small p. Read its calibration (rheome.group.calibrate).
 %
+% MEDIAL WALL (decision 3882c4ce, 2026-10-14). Cortex= marks the tiles that hold cortex (rheome.geom.tiles
+% .cortex_area > 0). The others are dropped before anything else: they are neither scored nor a target of a
+% rotated tile (the rotated wall is discarded and reassigned to the nearest cortex tile), and .index then
+% numbers the kept tiles (R.cortex says which).
+%
 % See also: rheome.group.glm, rheome.modes.fit
 %
 % Author: Diellor Basha, 2026
@@ -36,6 +42,12 @@ function R = spin(M, Ref, U, hemi, opts)
         opts.NSpin (1,1) double {mustBeInteger, mustBePositive} = 1000
         opts.Seed (1,1) double = 1
         opts.Index double = []
+        opts.Cortex logical = logical.empty
+    end
+    if ~isempty(opts.Cortex) && ~all(opts.Cortex)
+        k = opts.Cortex(:);
+        R = rheome.group.spin(M(k), Ref(k, :), U(k, :), hemi(k), NSpin=opts.NSpin, Seed=opts.Seed, Index=opts.Index);
+        R.cortex = k;  return
     end
     m = numel(M);
     if size(Ref, 1) ~= m || size(U, 1) ~= m || numel(hemi) ~= m, error('group:spin:size', 'M, Ref, U and hemi need one row per tile'); end

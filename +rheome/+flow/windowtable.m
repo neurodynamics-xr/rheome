@@ -88,7 +88,7 @@ function [T, X] = windowtable(name, varargin)
     B = rheome.load.bases(name);
     H = B.(char(o.Hemi));
     S = H.S;  gv = double(H.gv(:))';  lbo = H.lbo;  nV = size(S.Vertices,1);
-    av = full(sum(lbo.Mass,2));
+    av = full(sum(lbo.Mass,2)) .* rheome.geom.cortexmask(S);         % cortex only: the medial wall weighs 0
     T0 = rheome.geom.tree(S, L=lbo.L, M=lbo.M, MaxDepth=o.MaxDepth);
     keepN = T0.depth >= 1;                                  % the root is the whole hemisphere
     nodes = T0(keepN,:);  nN = height(nodes);

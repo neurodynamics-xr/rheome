@@ -70,14 +70,14 @@ function [T, X, Best, Win, Paths] = measure_grouptrack(name, S, opts)
     badF = CS.mask(1:dec:end);
     for hh = opts.Hemis
         H = B.(char(hh));  Sh = H.S;  Phi = H.lbo.Phi;  Mm = H.lbo.Mass;
-        av = full(sum(Mm, 2));  C = double(E.(char(hh)).C(:, f1:min(f2, end)));  nFr = size(C, 2);  nWin = floor(nFr/(W*FR));
+        av = full(sum(Mm, 2)) .* rheome.geom.cortexmask(H.S);  C = double(E.(char(hh)).C(:, f1:min(f2, end)));  nFr = size(C, 2);  nWin = floor(nFr/(W*FR));
         bw0 = badF(f1:f1 + nFr - 1);  ok = find(~any(reshape(bw0(1:nWin*W*FR), W*FR, nWin), 1));
         % shortcut: an interior artefact block still enters the surrogate, circularly shifted per mode; mask it if a cohort shows many
         g = rheome.geom.edgegraph(Sh);  Tr = rheome.geom.tree(Sh, L=H.lbo.L, M=Mm, MaxDepth=max(opts.Depths));
         sh = randi([W*FR, nFr - W*FR], size(C, 1), 1);
         Cs = zeros(size(C));  for k = 1:size(C, 1), Cs(k, :) = circshift(C(k, :), sh(k)); end
         for d = opts.Depths
-            G = rheome.geom.tiles(Tr, Sh, d, Ruler=g);  P = double(G.P);  Wd = (P' * (av .* Phi)) ./ (P' * av);
+            G = rheome.geom.tiles(Tr, Sh, d, Ruler=g);  P = double(G.P);  Wd = (P' * (av .* Phi)) ./ (P' * av);  Wd(~isfinite(Wd)) = 0;   % a tile wholly on the medial wall: no cortex, reads 0 (weight 0)
             Y0 = Wd * C;  Ys0 = Wd * Cs;
             for jj = opts.JLevels
                 [Yr, rate, nF] = i_winblock(Y0, FR, jj, W*FR, nWin);  Ysr = i_winblock(Ys0, FR, jj, W*FR, nWin);

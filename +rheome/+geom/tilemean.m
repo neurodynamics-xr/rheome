@@ -16,6 +16,10 @@ function Y = tilemean(G, X, a, stat)
 % opposite sign. The tile has to be matched to the spatial band: that is the separable version of the
 % joint tiling's diagonal. Planting measures where it breaks.
 %
+% ⭐ CORTEX ONLY. When G carries .cortex (rheome.geom.tiles), the medial wall's vertices get weight 0 and
+% the median skips them: a tile observes cortex, not the patch that closes the hemisphere. A tile with no
+% cortex reads NaN. Still linear, so the roll-up stays exact.
+%
 % INPUTS
 %   G     rheome.geom.tiles struct (.P, .tileOf)      X  [nV x nT] vertex maps
 %   a     [nV x 1] vertex areas, or [] for an unweighted mean
@@ -31,13 +35,15 @@ function Y = tilemean(G, X, a, stat)
     if nargin < 3 || isempty(a), a = ones(size(X, 1), 1); end
     if nargin < 4, stat = 'mean'; end
     a = double(a(:));
+    c = true(size(X, 1), 1);  if isfield(G, 'cortex') && numel(G.cortex) == size(X, 1), c = G.cortex(:); end
+    a = a .* c;
     switch lower(stat)
         case 'mean'
             P = double(G.P);
             Y = (P' * (a .* X)) ./ (P' * a);
         case 'median'
             nTile = size(G.P, 2);  Y = zeros(nTile, size(X, 2));
-            for k = 1:nTile, Y(k, :) = median(X(G.tileOf == k, :), 1); end
+            for k = 1:nTile, Y(k, :) = median(X(G.tileOf == k & c, :), 1); end
         otherwise
             error('geom:tilemean:stat', 'stat must be ''mean'' or ''median'', got ''%s''.', stat);
     end

@@ -126,7 +126,7 @@ function X = i_sizeruler(~, S, o)
         C = i_hemi(S, h);  lbo = C.lbo;  P = lbo.Phi;  lam = lbo.Lambda(:);
         dmin = min(pdist2(C.Sh.Vertices, reshape(S.Loc, 3, [])'), [], 2);
         q = discretize(dmin, prctile(dmin, linspace(0, 100, o.Seeds + 1)));
-        seeds = arrayfun(@(k) i_pick(find(q == k)), 1:o.Seeds);
+        cvx = rheome.geom.cortexmask(C.Sh);  seeds = arrayfun(@(k) i_pick(find(q == k & cvx)), 1:o.Seeds);   % seeds on cortex
         for l = LAM
             hk = exp(-((l*1e-3/(2*pi))^2/2) * lam);
             for v = seeds
@@ -257,7 +257,7 @@ function X = i_detection(name, S, o)
     for h = o.Hemis
         C = i_hemi(S, h);  ctx = struct('H', S.B.(char(h)), 'd', d, 'st', st, 'er', er);
         dmm = 1e3 * min(pdist2(C.Sh.Vertices, reshape(S.Loc, 3, [])'), [], 2);
-        mid = find(abs(dmm - median(dmm)) < 5);  seeds = mid(randperm(numel(mid), min(o.Seeds, numel(mid))));
+        mid = find(abs(dmm - median(dmm)) < 5 & rheome.geom.cortexmask(C.Sh));  seeds = mid(randperm(numel(mid), min(o.Seeds, numel(mid))));
         for v = seeds(:)'
             for fam = [o.Families "rotor140"]
                 if fam == "rotor140"
@@ -315,7 +315,7 @@ function C = i_hemi(S, h)
     rows = reshape((double(H.gv(:))' - 1) * 3 + (1:3)', [], 1);
     C.K = S.Res.ImagingKernel(rows, :);  C.G = S.G(:, rows);
     C.n = H.S.VertNormals ./ max(vecnorm(H.S.VertNormals, 2, 2), eps);
-    C.area = full(sum(H.lbo.Mass, 2));  C.ge = rheome.geom.edgegraph(H.S);
+    C.area = full(sum(H.lbo.Mass, 2)) .* rheome.geom.cortexmask(H.S);  C.ge = rheome.geom.edgegraph(H.S);
 end
 
 function [F, fs] = i_rest(name, S)
@@ -347,11 +347,11 @@ function v = i_farvertex(C, g)
         Fc = double(C.Sh.Faces(g.singular, :));
         ok = min(pdist2(P, (P(Fc(:,1),:) + P(Fc(:,2),:) + P(Fc(:,3),:)) / 3), [], 2) >= 0.02;
     end
-    k = find(ok);  v = k(randi(numel(k)));
+    k = find(ok(:) & rheome.geom.cortexmask(C.Sh));  v = k(randi(numel(k)));   % on cortex
 end
 
 function Sg = i_sg(C, name, h)
-    Sg = C.Sh;  Sg.nV = C.nV;  Sg.Hemi = {(1:C.nV)'};  Sg.HemiLabel = {char("Cortex " + h)};
+    Sg = C.Sh;  Sg.Cortex = rheome.geom.cortexmask(C.Sh);  Sg.nV = C.nV;  Sg.Hemi = {(1:C.nV)'};  Sg.HemiLabel = {char("Cortex " + h)};
     Sg.Comment = char(name);  if ~isfield(Sg, 'SurfaceFile'), Sg.SurfaceFile = ''; end
 end
 

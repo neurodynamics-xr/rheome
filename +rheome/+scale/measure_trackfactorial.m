@@ -106,6 +106,7 @@ function H0 = i_refhead(ref, chn)
     G = Sr.G(ir, :);  ncm = struct('NoiseCov', Sr.ncm.NoiseCov(ir, ir));
     Res = rheome.inverse.mne(G, ncm, struct('ChannelTypes', {Sr.chT(ir)}, 'InverseMeasure', 'amplitude', ...
                                             'nVert', Sr.nV, 'SnrFixed', 3));
+    Res.ImagingKernel = rheome.operators.harmonicfill(Sr.Sf, Res.ImagingKernel, rheome.geom.cortexmask(Sr.Sf));   % as rheome.scale.sensors
     H0 = struct('B', Sr.B, 'Sf', Sr.Sf, 'G', G, 'K', Res.ImagingKernel, 'iF', iF(:)');
 end
 
