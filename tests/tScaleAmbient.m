@@ -47,7 +47,10 @@ classdef tScaleAmbient < matlab.unittest.TestCase
             x = X(1, :);
             tc.verifyGreaterThan(x.rotor_cover, 0.9);
             tc.verifyLessThan(x.rotor_err_mm_median, 3);                % edge ~3.9 mm at ico5, R = 100 mm
-            tc.verifyEqual(x.rotor_speednet_ms, x.speed_true_euclid_ms, 'RelTol', 0.15);
+            tc.verifyEqual(x.rotor_speednet_ms, x.speed_true_net_ms, 'RelTol', 0.15);
+            tc.verifyEqual(x.rotor_speedpath_ms, x.speed_true_path_ms, 'RelTol', 0.25);   % path speed carries jitter
+            tc.verifyLessThan(x.rotor_curl_relerr_mesh, 0.15);
+            tc.verifyLessThan(x.source_div_relerr_mesh, 0.15);
             tc.verifyLessThan(x.rotor_curl_relerr, 0.15);
             tc.verifyLessThan(x.rotor_div_leak, 0.1);
             tc.verifyEqual(x.source_on, x.source_on_true, 'AbsTol', 2);  % born and dies with its amplitude
@@ -56,13 +59,17 @@ classdef tScaleAmbient < matlab.unittest.TestCase
             tc.verifyLessThan(x.source_curl_leak, 0.1);
             tc.verifyTrue(all(T.analysis == "cptrack"));
             tc.verifyEqual(numel(Ex.sphere.t_s), 41);
+            [~, ~, ~, W] = rheome.scale.measure_cptrack('', SweepSigmaMM=[15 30]);
+            tc.verifyEqual(height(W), 4);                                % 2 plants x 2 sigmas
+            tc.verifyLessThan(W.curl_weak_relerr, 0.05);                 % at the bump's own scale both plants converge
+            tc.verifyLessThan(W.div_weak_relerr, 0.05);
         end
 
         function bothRunThroughTheDriver(tc)
             od = fullfile(tc.Root, 'out');
             R = rheome.scale.run(tc.Name, Analyses=["ambient" "cptrack"], OutDir=od);
             tc.verifyEqual(R.timing.status', ["ok" "ok"], strjoin(R.timing.message, ' | '));
-            for f = ["ambient.csv" "ambient.mat" "cptrack.csv" "cptrack.mat" "metrics.csv"]
+            for f = ["ambient.csv" "ambient.mat" "cptrack.csv" "cptrack_sweep.csv" "cptrack.mat" "metrics.csv"]
                 tc.verifyTrue(isfile(fullfile(od, tc.Name, f)), f);
             end
             tc.verifyTrue(all(ismember(["ambient" "cptrack"], rheome.scale.analyses())));

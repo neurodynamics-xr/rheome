@@ -21,7 +21,7 @@ function R = run(name, opts)
 %   ambient.csv, ambient.mat   MS1 1.4 (nsp rheome-ms1-panels): rheome.scale.measure_ambient -- a planted tilted
 %                     field on the sphere and the subject's left hemisphere, ambient vs tangential divergence and
 %                     the 2H(J.n) coupling against its closed form, per surface x tilt; .mat: figure data. Opt-in
-%   cptrack.csv, cptrack.mat   MS1 2.3 (nsp rheome-ms1-panels): rheome.scale.measure_cptrack -- a drifting rotor
+%   cptrack.csv, cptrack_sweep.csv, cptrack.mat   MS1 2.3 (nsp rheome-ms1-panels): rheome.scale.measure_cptrack -- a drifting rotor
 %                     and a waxing/waning source tracked by rheome.detect.track, core path, curl and div against
 %                     the truth, per surface; .mat: figure data. Opt-in; neither reads the recording
 %   plantfloors.csv, movingvortex.csv, composition.csv, sizeruler.csv, vortexscale.csv, rotation.csv,
@@ -259,7 +259,7 @@ function R = run(name, opts)
                     [Tq, X.ambient, ex] = rheome.scale.measure_ambient(name);  M = [M; Tq]; %#ok<AGROW>
                     save(fullfile(od, 'ambient.mat'), '-struct', 'ex', '-v7');
                 case "cptrack"                 % MS1 2.3: a drifting rotor + a waxing/waning source through detect.track
-                    [Tq, X.cptrack, ex] = rheome.scale.measure_cptrack(name);  M = [M; Tq]; %#ok<AGROW>
+                    [Tq, X.cptrack, ex, X.cptrack_sweep] = rheome.scale.measure_cptrack(name);  M = [M; Tq]; %#ok<AGROW>
                     save(fullfile(od, 'cptrack.mat'), '-struct', 'ex', '-v7');
                 case "aperiodic"               % MS1 G10: a moving 1/f change, threshold and split selectivity
                     [Ta, X.aperiodic] = rheome.scale.measure_aperiodic(name, S);  M = [M; Ta]; %#ok<AGROW>
