@@ -25,7 +25,11 @@ classdef tScaleFreqTrack < matlab.unittest.TestCase
             tc.verifyEqual(sort(unique(X.arm(X.case ~= "real")))', ["control" "noiseless" "snr20"]);
             tc.verifyTrue(all(ismember(["false_rate" "cross_false_rate" "real_frac_pass" "hit_rate" "sweep_ratio" ...
                 "control_found" "cross_oct" "false_frac_win" "sweep_err_med" "jump_oct_med" "net_oct_med" ...
-                "hit_minus_control" "null_band_occ"], T.metric)));
+                "hit_minus_control" "null_band_occ" "real_score_ratio_med" "null_score_ratio_med" "guard_s"], T.metric)));
+            g = T.value(T.metric == "guard_s");
+            tc.verifyGreaterThan(g, 0.5, 'the guard covers more than cleanspan''s one-block dilation at 4 Hz');
+            tc.verifyLessThan(g, 10, 'the guard stays a few seconds');
+            tc.verifyGreaterThan(T.value(T.metric == "null_score_ratio_med"), 0);
             tc.verifyEqual(sum(T.metric == "null_band_occ"), 7);
             rr = T.value(T.metric == "real_band_r");  nr = T.value(T.metric == "null_band_r");
             tc.verifyGreaterThan(rr, 0.2, 'overlapping one-octave bands share envelope');
@@ -54,6 +58,13 @@ classdef tScaleFreqTrack < matlab.unittest.TestCase
                                                     Hemis="L", Cases="still", Rates=0);
             tc.verifyEqual(mean(X.pass(X.arm == "noiseless")), 1, 'the onset transient must not set the threshold');
             tc.verifyLessThan(sum(X.case == "real"), 20, 'real windows come from the clean span only');
+            % the guard is used, not only computed: without it (GuardDB ~ 0) the span is 2 x guard_s longer, which on
+            % 2 s windows is at least 2 more real windows (review of PR #74: keepFr reverted to the bare clean span)
+            [T0, X0] = rheome.scale.measure_freqtrack('synth_freqtrack_onset', S, Depth=3, JLevel=4, NPer=2, SNRs=20, ...
+                                                      Hemis="L", Cases="still", Rates=0, GuardDB=1e-6);
+            tc.verifyLessThan(T0.value(T0.metric == "guard_s"), 0.05, 'GuardDB ~ 0 gives no guard');
+            tc.verifyLessThanOrEqual(sum(X.case == "real") + 2, sum(X0.case == "real"), ...
+                'the default guard removes the clean span''s first and last guard_s from the real windows');
         end
 
         function theDriverWritesTheTable(tc)
