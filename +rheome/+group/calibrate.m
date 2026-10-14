@@ -2,10 +2,11 @@ function [C, D] = calibrate(inDir, outDir, opts)
 % GROUP.CALIBRATE  Does tile-wise group inference hold its error rate and find planted effects on the real cohort tile maps? Null labels and plants.
 %
 %   [C, D] = rheome.group.calibrate(inDir, outDir)
-%   [C, D] = rheome.group.calibrate(inDir, outDir, NDraw=500, NPerm=2000, NSpin=1000, Effects=[0 0.2 0.35 0.5 0.8])
+%   [C, D] = rheome.group.calibrate(inDir, outDir, NDraw=500, NPerm=2000, NSpin=1000, Effects=[0 0.2 0.35 0.5 0.8], Nuisance=0.5)
 %
 % inDir holds per-participant gaugetensor.csv (rheome.scale.run's <sub>/ or nsp cf-atlas's flat <sub>_ files,
-% any depth) and metrics.csv, whose `dataset` column is the cohort; no draw mixes cohorts. The tile maps are
+% any depth) and metrics.csv, whose `dataset` column is the cohort (a participant without one is an error); no
+% draw mixes cohorts, and the same subject ID in two cohorts is two participants. The tile maps are
 % the participants' own values per group tile (Measures: anisotropy, normal_share, log10 trace). No real outcome
 % is read: the labels and covariates are random, so age and AD risk stay locked (AGE-1, ATLAS-1).
 %
@@ -13,14 +14,27 @@ function [C, D] = calibrate(inDir, outDir, opts)
 % "covariate") and a random seed tile; the plant is w = exp(-theta^2 / (2 PlantDeg^2)) on the seed's hemisphere
 % (theta: angle between tile centres on the template sphere), added as effect * sd(tile) * w to the labelled half
 % (group: Cohen's d at the seed) or as effect * sd(tile) * w * z (covariate: a standardised slope). Effect 0 is
-% the null-label condition. Each map goes through rheome.group.glm (Freedman-Lane, max-|t| FWER) and the t map
-% through rheome.group.spin against w. Writes to outDir:
+% the null-label condition. Nuisance (rho, default 0.5; 0 = none) adds, per draw and kind, a synthetic nuisance
+% covariate c correlated rho with v and with a 1 sd effect at every tile, and the design is [1 v c]: the
+% Freedman-Lane reduced-model step is then exercised, as in the real analyses (age, sex, site...). Each map goes
+% through rheome.group.glm (Freedman-Lane, max-|t| FWER) and the t map through rheome.group.spin against w.
+% Writes to outDir:
 %   draws.csv         one row per cohort x measure x kind x effect x draw: any_fwer (any tile p_fwer < Alpha),
 %                     fp_outside (any tile with w < 0.05 significant), detected (any tile with w >= 0.5),
 %                     sensitivity (share of w >= 0.5 tiles), unc_rate (share of tiles with p < Alpha), spin_r, spin_p
 %   calibration.csv   per cohort x measure x kind x effect: n_draws and the rates with Clopper-Pearson 95 % CIs;
-%                     ⭐ calibrated = no false rate is above Alpha (each CI's lower bound <= Alpha): any_fwer and
-%                     spin_p < Alpha at effect 0, fp_outside at every effect. Power (detected) is reported, not gated
+%                     ⭐ calibrated = no false rate is above Alpha: any_fwer and spin_p < Alpha at effect 0,
+%                     fp_outside at every effect. Power (detected) is reported, not gated
+%
+% ⭐ HOW THE GATE IS READ (declared before the first fir run). A cohort has K gated rates (fp_outside in every
+% condition, any_fwer and spin at effect 0: K = 42 at the defaults). Each fails only if its Clopper-Pearson
+% lower bound at the Bonferroni level, 1 - Alpha/K two-sided, is above Alpha (column gate_lo_*). A cohort is
+% calibrated when all its K rates pass (printed per cohort); one failure means the method is fixed and re-run.
+% What the gate can see: at NDraw = 500 and K = 42 it flags an observed false rate of 43/500 = 0.086 or more
+% (36/500 = 0.072 at a single 95 % gate); a smaller excess goes unseen and is read from the rates themselves.
+% At depth 3 (8 tiles a hemisphere) the 30-degree plant covers about one tile, so sensitivity and detected
+% coincide there. The spin rotations are drawn once per cohort x measure and shared by all draws: each test is
+% valid, but the draws' spin false rates are correlated through that one rotation set.
 %   tiles.csv         the tiles tested per cohort (hemi, depth, node_id, centre u1..u3)
 %   participants.csv  the participants per cohort and measure (complete cases)
 %
@@ -47,7 +61,9 @@ function [C, D] = calibrate(inDir, outDir, opts)
         opts.Seed (1,1) double = 7
         opts.Centres = []
         opts.Template char = ''
+        opts.Nuisance (1,1) double {mustBeNonnegative} = 0.5
     end
+    if opts.Nuisance >= 1, error('group:calibrate:nuisance', 'Nuisance is a correlation in [0, 1)'); end
     if ~exist(outDir, 'dir'), mkdir(outDir); end
     X = i_read(inDir);  dep = max(X.depth);  X = X(X.depth == dep, :);
     X.log10_trace = log10(X.trace);
@@ -72,17 +88,22 @@ function [C, D] = calibrate(inDir, outDir, opts)
             for d = 1:opts.NDraw
                 g = zeros(n, 1);  g(randperm(rs, n, floor(n/2))) = 1;  z = randn(rs, n, 1);  z = (z - mean(z)) / std(z);
                 s0 = randi(rs, size(Y, 2));  w = exp(-acosd(cosu(:, s0)).^2 / (2 * opts.PlantDeg^2)) .* (hk == hk(s0));
-                sp = randi(rs, 2^31 - 1);
+                sp = randi(rs, 2^31 - 1);  zc = randn(rs, n, 1);  rho = opts.Nuisance;
                 for kind = opts.Kinds
                     if kind == "group", v = g; else, v = z; end
+                    Xg = [ones(n, 1) v];  Yk = Y;
+                    if rho > 0
+                        c = rho * (v - mean(v)) / std(v) + sqrt(1 - rho^2) * zc;  c = (c - mean(c)) / std(c);
+                        Xg = [Xg c];  Yk = Y + c .* sd;              % a 1 sd nuisance effect at every tile
+                    end
                     for e = opts.Effects
-                        Ye = Y + e * (v .* (sd .* w'));
-                        R = rheome.group.glm(Ye, [ones(n, 1) v], 2, NPerm=opts.NPerm, Seed=sp);
+                        Ye = Yk + e * (v .* (sd .* w'));
+                        R = rheome.group.glm(Ye, Xg, 2, NPerm=opts.NPerm, Seed=sp);
                         S = rheome.group.spin(R.t', w, Uk, hk, Index=Sx.index);
                         sig = R.p_fwer < opts.Alpha;  in = w >= 0.5;  out = w < 0.05;
-                        D{end+1, 1} = table(ds, ms, kind, e, d, n, size(Y, 2), s0, any(sig), any(sig(out')), any(sig(in')), ...
+                        D{end+1, 1} = table(ds, ms, kind, e, rho, d, n, size(Y, 2), s0, any(sig), any(sig(out')), any(sig(in')), ...
                              mean(sig(in')), mean(R.p < opts.Alpha), S.r, S.p, 'VariableNames', {'dataset','measure','kind', ...
-                             'effect','draw','n','n_tiles','seed_tile','any_fwer','fp_outside','detected','sensitivity', ...
+                             'effect','nuisance','draw','n','n_tiles','seed_tile','any_fwer','fp_outside','detected','sensitivity', ...
                              'unc_rate','spin_r','spin_p'}); %#ok<AGROW>
                     end
                 end
@@ -93,7 +114,12 @@ function [C, D] = calibrate(inDir, outDir, opts)
     C = i_summary(D, opts.Alpha);
     writetable(D, fullfile(outDir, 'draws.csv'));  writetable(C, fullfile(outDir, 'calibration.csv'));
     writetable(Tl, fullfile(outDir, 'tiles.csv'));  writetable(Pp, fullfile(outDir, 'participants.csv'));
-    if ~isempty(C), fprintf('[group.calibrate] calibrated in %d of %d conditions\n', nnz(C.calibrated), height(C)); end
+    for ds = unique(C.dataset)'
+        c = C(C.dataset == ds, :);
+        v = ["NOT CALIBRATED" "CALIBRATED"];
+        fprintf('[group.calibrate] %s: %s (%d of %d conditions pass, K = %d gated rates)\n', ds, ...
+                v(1 + all(c.calibrated)), nnz(c.calibrated), height(c), c.K(1));
+    end
 end
 
 function C = i_summary(D, a)
@@ -109,7 +135,14 @@ function C = i_summary(D, a)
     C.sensitivity = splitapply(@mean, D.sensitivity, gi);  C.unc_rate = splitapply(@mean, D.unc_rate, gi);
     C.spin_r = splitapply(@mean, D.spin_r, gi);
     nul = C.effect == 0;
-    C.calibrated = C.fp_outside_lo <= a & (~nul | (C.any_fwer_lo <= a & C.spin_lo <= a));
+    gd = findgroups(C.dataset);  Kd = splitapply(@(z) numel(z) + 2 * nnz(z), nul, gd);  C.K = Kd(gd);   % gated rates per cohort
+    lo = @(f) arrayfun(@(k, n, K) i_lo(k, n, a / K), round(C.(f + "_rate") .* C.n_draws), C.n_draws, C.K);
+    for f = ["any_fwer" "fp_outside" "spin"], C.("gate_lo_" + f) = lo(f); end
+    C.calibrated = C.gate_lo_fp_outside <= a & (~nul | (C.gate_lo_any_fwer <= a & C.gate_lo_spin <= a));
+end
+
+function l = i_lo(k, n, al)
+    [~, ci] = binofit(k, n, al);  l = ci(1);
 end
 
 function X = i_read(inDir)
@@ -129,7 +162,10 @@ function X = i_read(inDir)
     end
     if isempty(X), error('group:calibrate:empty', 'no gaugetensor.csv under %s', inDir); end
     X.dataset(ismissing(X.dataset)) = "";
-    [~, ia] = unique(X(:, {'subject','hemi','depth','node_id'}), 'last');  X = X(sort(ia), :);   % a re-run counts once
+    nod = unique(X.subject(X.dataset == ""));
+    if ~isempty(nod), error('group:calibrate:cohort', 'no dataset in metrics.csv for %d participants (%s): a draw would mix cohorts', ...
+                            numel(nod), strjoin(nod(1:min(5, end)), ', ')); end
+    [~, ia] = unique(X(:, {'dataset','subject','hemi','depth','node_id'}), 'last');  X = X(sort(ia), :);   % a re-run counts once
 end
 
 function [Y, sub, keep] = i_matrix(Xd, tk, ms, mx)

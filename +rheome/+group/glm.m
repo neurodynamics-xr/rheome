@@ -18,7 +18,9 @@ function R = glm(Y, X, j, opts)
 % nuisance constant within subject this is the random-intercept mixed model by summary statistics (Holmes &
 % Friston 1998), exact when every subject has the same number of rows; X must be constant within subject.
 %
-% Returns R with .t .beta [1 x m], .p .p_fwer [1 x m], .df, .n (rows tested), .maxnull [NPerm x 1] (max |t*|).
+% Returns R with .t .beta [1 x m], .p .p_fwer [1 x m], .df, .n (rows tested), .maxnull [NPerm x 1] (max |t*|),
+% .untestable [1 x m]: tiles whose residuals are zero to round-off (e.g. a constant tile). Their t is NaN, their
+% p and p_fwer are 1, and they are left out of the max (a round-off t would otherwise be of arbitrary size).
 %
 % ⚠ Rows are exchangeable under the null: one cohort per call (no exchangeability blocks across sites).
 %
@@ -50,15 +52,19 @@ function R = glm(Y, X, j, opts)
     Pi = pinv(X);  cjj = Pi(j, :) * Pi(j, :)';                 % (X'X)^-1 (j,j)
     tf = @(Yk) i_t(Yk, X, Pi, j, cjj, df);
     [R.t, R.beta] = tf(Y);
+    rss = sum((Y - X * (Pi * Y)).^2, 1);
+    R.untestable = sqrt(rss / n) <= 1e3 * eps * max(abs(Y), [], 1);
+    R.t(R.untestable) = NaN;
     if isempty(Z), Hy = zeros(size(Y)); else, Hy = Z * (pinv(Z) * Y); end
     Rz = Y - Hy;  rs = RandStream('mt19937ar', 'Seed', opts.Seed);
-    cnt = ones(1, size(Y, 2));  R.maxnull = zeros(opts.NPerm, 1);  at = abs(R.t);
+    cnt = ones(1, size(Y, 2));  R.maxnull = zeros(opts.NPerm, 1);  at = abs(R.t);  at(R.untestable) = Inf;
     for k = 1:opts.NPerm
-        ts = abs(tf(Rz(randperm(rs, n), :) + Hy));
+        ts = abs(tf(Rz(randperm(rs, n), :) + Hy));  ts(R.untestable) = 0;
         cnt = cnt + (ts >= at - 1e-12);  R.maxnull(k) = max(ts);
     end
     R.p = cnt / (1 + opts.NPerm);
     R.p_fwer = (1 + sum(R.maxnull >= at - 1e-12, 1)) / (1 + opts.NPerm);
+    R.p(R.untestable) = 1;  R.p_fwer(R.untestable) = 1;
     R.df = df;  R.n = n;
 end
 

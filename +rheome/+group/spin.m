@@ -15,6 +15,8 @@ function R = spin(M, Ref, U, hemi, opts)
 % its rotated centre within its hemisphere, as rheome.modes.fit's N2. p_k = (1 + #{|r*_k| >= |r_k|}) / (1 + NSpin);
 % p_fwer_k compares |r_k| with max_k |r*_k| of each spin (FWER over the K references).
 %
+% A NaN r (M or a reference constant, or holding NaN) gets p = p_fwer = 1.
+%
 % Returns R with .r .p .p_fwer [1 x K], .rnull [NSpin x K] and .index [NSpin x m] (spin s maps tile i to tile
 % index(s, i); pass it back as Index= to test many maps against one set of rotations).
 %
@@ -45,6 +47,7 @@ function R = spin(M, Ref, U, hemi, opts)
     ns = size(R.index, 1);
     R.p = (1 + sum(R.rnull >= ar - 1e-12, 1)) / (1 + ns);
     R.p_fwer = (1 + sum(max(R.rnull, [], 2) >= ar - 1e-12, 1)) / (1 + ns);
+    R.p(isnan(R.r)) = 1;  R.p_fwer(isnan(R.r)) = 1;        % a NaN or constant map (or reference) is not evidence
 end
 
 function I = i_index(U, hemi, n, seed)
