@@ -59,22 +59,19 @@ classdef tViewBundle < matlab.unittest.TestCase
             d = tempname;  old = getenv('RHEOME_VIEWER');  setenv('RHEOME_VIEWER', d);
             c = onCleanup(@() cleanup(d, old));
             r = struct('activity', rand(4, 5), 'velocity', rand(12, 5));
-            out = rheome.view(struct('pial', tc.S, 'inflated', tc.S), r, Viewer="none", Fs=10, Field="activity", ...
-                Arrows=false, Colormap="viridis", CLim=[-1 2], Threshold=[0.1 NaN], Surface="Inflated", ...
+            out = rheome.view(struct('pial', tc.S, 'inflated', tc.S), r, Viewer="none", Fs=10, ...
+                Colormap="viridis", CLim=[-1 2], Threshold=[0.1 NaN], Surface="Inflated", ...
                 Hemisphere="left", View="Top", ArrowDensity=0.25, ArrowScale=0.002, Time=0.26, Play=false, Speed=0.5);
-            want = struct('scalar', 'activity', 'vector', '', 'colormap', 'viridis', 'clim', [-1 2], ...
-                'threshold', struct('min', 0.1, 'max', NaN), 'surface', 'inflated', 'hemisphere', 'left', 'view', 'top', ...
-                'arrowDensity', 0.25, 'arrowScale', 0.002, 'frame', 3, 'playing', false, 'fps', 5);
+            want = struct('layers', {{struct('field', 'activity', 'form', 'f', 'as', 'colour', 'colormap', 'viridis', ...
+                'clim', [-1 2], 'threshold', struct('min', 0.1, 'max', NaN)), ...
+                struct('field', 'velocity', 'form', 'x', 'as', 'arrows', 'density', 0.25, 'scale', 0.002)}}, ...
+                'surface', 'inflated', 'hemisphere', 'left', 'view', 'top', 'frame', 3, 'playing', false, 'fps', 5);
             tc.verifyEqual(out.settings, want);
             txt = fileread(out.manifest);
             tc.verifySubstring(txt, '"threshold":{"min":0.1,"max":null}');   % NaN: the open side
             j = jsondecode(txt);
-            tc.verifyEqual(j.settings.clim, [-1; 2]);
-            tc.verifyEqual(j.settings.vector, '');
-            o2 = rheome.view(tc.S, r, Viewer="none", Field="velocity");
-            tc.verifyEqual(o2.settings, struct('vector', 'velocity'));    % a vector field: the arrows
-            o3 = rheome.view(tc.S, r, Viewer="none", Arrows=true);
-            tc.verifyEqual(o3.settings, struct('vector', 'velocity'));
+            tc.verifyEqual(j.settings.layers{1}.clim, [-1; 2]);
+            tc.verifyFalse(isfield(j.settings, 'scalar') || isfield(j.settings, 'vector'));   % the old keys are not sent
             o4 = rheome.view(tc.S, rand(4, 2), Viewer="none");
             tc.verifyEqual(o4.settings, struct());   % none given: the viewer's defaults
         end
@@ -82,11 +79,15 @@ classdef tViewBundle < matlab.unittest.TestCase
             d = tempname;  old = getenv('RHEOME_VIEWER');  setenv('RHEOME_VIEWER', d);
             c = onCleanup(@() cleanup(d, old));
             v = @(varargin) rheome.view(tc.S, struct('a', rand(4, 3)), 'Viewer', 'none', varargin{:});
-            tc.verifyError(@() v('Field', 'b'), 'rheome:view:option');
+            tc.verifyError(@() v('Layers', {{'b'}}), 'rheome:view:option');
+            tc.verifyError(@() v('Layers', {{'a', 'abs'}}), 'rheome:view:option');               % a real field has form f only
+            tc.verifyError(@() v('Layers', {{'a', 'f', 'arrows'}}), 'rheome:view:option');       % a scalar form is not arrows
+            tc.verifyError(@() v('Layers', struct('field', 'a', 'size', 2)), 'rheome:view:option');   % not a layer key
+            tc.verifyError(@() v('Layers', struct('field', 'a', 'opacity', 2)), 'rheome:view:option');
             tc.verifyError(@() v('CLim', [1 0]), 'rheome:view:option');
             tc.verifyError(@() v('Colormap', gray(4)), 'rheome:view:option');   % the viewer takes names
             tc.verifyError(@() v('Threshold', [1 0]), 'rheome:view:option');
-            tc.verifyError(@() v('Arrows', true), 'rheome:view:option');         % no vector field
+            tc.verifyError(@() v('ArrowScale', 1), 'rheome:view:option');       % no arrows layer to act on
             tc.verifyError(@() v('Surface', 'inflated'), 'rheome:view:option');
             tc.verifyError(@() v('View', 'lateral'), 'rheome:view:option');
             tc.verifyError(@() v('ArrowDensity', 1.5), 'rheome:view:option');
@@ -97,20 +98,67 @@ classdef tViewBundle < matlab.unittest.TestCase
         function takesTheResultAlone(tc)
             d = tempname;  old = getenv('RHEOME_VIEWER');  setenv('RHEOME_VIEWER', d);
             c = onCleanup(@() cleanup(d, old));
-            out = rheome.view(struct('surface', tc.S, 'power', rand(4, 2)), Viewer="none", Field="power");
+            out = rheome.view(struct('surface', tc.S, 'power', rand(4, 2)), Viewer="none", Layers={{"power"}});
             j = jsondecode(fileread(out.manifest));
             tc.verifyEqual({j.fields.name}, {'power'});
-            tc.verifyEqual(out.settings.scalar, 'power');
+            tc.verifyEqual(out.settings.layers, {struct('field', 'power', 'form', 'f', 'as', 'colour')});
         end
         function showHonoursFieldAndTime(tc)
             r = struct('a', zeros(4, 3), 'b', [zeros(4, 2) (1:4)']);
-            out = rheome.view(tc.S, r, Viewer="show", Field="b", Time=2, CLim=[0 4], View="top");
+            out = rheome.view(tc.S, r, Viewer="show", Layers=struct('field', 'b', 'clim', [0 4]), Time=2, View="top");
             c = onCleanup(@() close(out.figure));
             ax = findobj(out.figure, 'Type', 'axes');
             p = findobj(ax, 'Type', 'patch');
             tc.verifyEqual(p(1).FaceVertexCData, (1:4)');
             tc.verifyEqual(ax(1).CLim, [0 4]);
             tc.verifyEqual(ax(1).View, [0 90]);
+        end
+        function takesLayers(tc)
+            d = tempname;  old = getenv('RHEOME_VIEWER');  setenv('RHEOME_VIEWER', d);
+            c = onCleanup(@() cleanup(d, old));
+            r = struct('activity', rand(4, 2), 'J', rand(12, 2));
+            o = rheome.view(tc.S, r, Viewer="none", Layers={{"J", "curl", "colour"}, {"J", "curl", "halfMax"}, {"j"}});
+            tc.verifyEqual(o.settings.layers, {struct('field', 'J', 'form', 'curl', 'as', 'colour'), ...
+                struct('field', 'J', 'form', 'curl', 'as', 'halfMax'), struct('field', 'J', 'form', 'x', 'as', 'arrows')});
+            o = rheome.view(tc.S, r, Viewer="none", Layers={"J", "abs"});              % one layer; as: colour
+            tc.verifyEqual(o.settings.layers, {struct('field', 'J', 'form', 'abs', 'as', 'colour')});
+            L = struct('field', {'activity', 'J'}, 'as', {'colour', 'arrows'}, 'color', {[], 'paper'});
+            o = rheome.view(tc.S, r, Viewer="none", Layers=L);
+            tc.verifyEqual(o.settings.layers{2}.color, 'paper');
+            j = jsondecode(fileread(o.manifest));
+            tc.verifyEqual(cellfun(@(x) x.field, j.settings.layers, 'UniformOutput', false)', {'activity', 'J'});           % a JSON array, set whole
+            tc.verifyError(@() rheome.view(tc.S, r, Viewer="none", Layers={{"J", "x"}}, CLim=[0 1]), 'rheome:view:option');   % no colour layer
+        end
+        function keepsFieldAndArrowsAsAliases(tc)
+            d = tempname;  old = getenv('RHEOME_VIEWER');  setenv('RHEOME_VIEWER', d);
+            c = onCleanup(@() cleanup(d, old));
+            r = struct('activity', rand(4, 2), 'speed', rand(4, 2), 'velocity', rand(12, 2));
+            o = tc.verifyWarning(@() rheome.view(tc.S, r, Viewer="none", Field="speed"), 'rheome:view:deprecated');
+            tc.verifyEqual(o.settings.layers, {struct('field', 'speed', 'form', 'f', 'as', 'colour'), ...
+                struct('field', 'velocity', 'form', 'x', 'as', 'arrows')});
+            o = tc.verifyWarning(@() rheome.view(tc.S, r, Viewer="none", Arrows=false), 'rheome:view:deprecated');
+            tc.verifyEqual(o.settings.layers, {struct('field', 'activity', 'form', 'f', 'as', 'colour')});
+            o = tc.verifyWarning(@() rheome.view(tc.S, r, Viewer="none", Field="velocity"), 'rheome:view:deprecated');
+            tc.verifyEqual(o.settings.layers{2}.field, 'velocity');
+            tc.verifyError(@() rheome.view(tc.S, struct('a', rand(4, 2)), Viewer="none", Arrows=true), 'rheome:view:option');
+        end
+        function writesPotentials(tc)
+            d = tempname;  c = onCleanup(@() rmdir(d, 's'));
+            [V, F] = rheome.geom.icosphere(2);  S = struct('Vertices', 0.07*V, 'Faces', F);
+            nV = size(V, 1);  J = randn(3*nV, 2);
+            m = rheome.io.write.bundle(d, S, struct('a', rand(nV, 2), 'J', J), 'Potentials', "J");
+            j = jsondecode(fileread(m));
+            tc.verifyEqual(cellfun(@(x) x.name, j.fields, 'UniformOutput', false)', {'a', 'J', 'J_phi', 'J_psi'});
+            g = j.fields(3:4);  if iscell(g), g = [g{:}]; end
+            tc.verifyEqual({g.name; g.derivedFrom; g.form; g.type}, {'J_phi', 'J_psi'; 'J', 'J'; 'phi', 'psi'; 'real', 'real'});
+            fg = rheome.operators.face_gradient(S.Vertices, S.Faces);  S.VertNormals = fg.W * fg.FaceNormal;
+            H = rheome.differential.helmholtz(J, S);
+            tc.verifyEqual(reshape(rd(d, g(2).values, 'single'), nV, 2), single(H.Psi));
+            tc.verifyError(@() rheome.io.write.bundle(d, S, struct('J', J), 'Potentials', "a"), 'rheome:bundle:potentials');
+            old = getenv('RHEOME_VIEWER');  setenv('RHEOME_VIEWER', [d '_v']);  c2 = onCleanup(@() cleanup([d '_v'], old));
+            out = rheome.view(S, struct('J', J), Viewer="none", Potentials=true, Layers={{"J_phi"}, {"J"}});
+            tc.verifyEqual(out.settings.layers{1}, struct('field', 'J_phi', 'form', 'f', 'as', 'colour'));
+            tc.verifyTrue(contains(fileread(out.manifest), '"derivedFrom":"J"'));
         end
         function editorRoundTrip(tc)
             tc.assumeFalse(isMATLABReleaseOlderThan('R2026a'), 'uihtml viewer path: R2026a+');
@@ -122,17 +170,21 @@ classdef tViewBundle < matlab.unittest.TestCase
                 Timeout=30), 'rheome:view:settings');   % the page refuses one setting first: a warning, then ready
             tc.addTeardown(@() delete(a.figure));
             tc.verifyEqual(a.viewer, 'editor');
-            tc.verifyEqual(a.ready.settings.clim(:)', [0 1]);
+            tc.verifyEqual(a.ready.settings.layers.clim(:)', [0 1]);
             tc.verifyEqual(a.ready.settings.frame, 1);
             tc.verifyEqual(a.ready.bytes(:)', [48 48 48]);   % positions, faces, the field: every file served
-            b = rheome.view(tc.S, struct('a', rand(4, 3)), Viewer="editor", Field="a", Fs=100, Timeout=30);
+            b = rheome.view(tc.S, struct('a', rand(4, 3)), Viewer="editor", Layers={{"a", "f", "isolines"}}, Fs=100, Timeout=30);
             tc.verifySameHandle(b.figure, a.figure);    % the figure is reused
-            tc.verifyEqual(b.ready.settings.scalar, 'a');
+            tc.verifyEqual(b.ready.settings.layers.as, 'isolines');
             h = findobj(b.figure, 'Type', 'uihtml');
             b.set(View="right", Play=true, Speed=0.5);
             t = tic;  while ~isfield(h.UserData, 'settings') && toc(t) < 30, pause(0.1); end
             tc.verifyEqual(h.UserData.settings, struct('view', 'right', 'playing', true, 'fps', 50));   % Speed x the bundle's Fs
             tc.verifyError(@() b.set(View="sideways"), 'rheome:view:option');
+            h.UserData = rmfield(h.UserData, 'settings');
+            b.set(CLim=[0 2]);   % a layer option acts on the layers last sent
+            t = tic;  while ~isfield(h.UserData, 'settings') && toc(t) < 30, pause(0.1); end
+            tc.verifyEqual(h.UserData.settings.layers, struct('field', 'a', 'form', 'f', 'as', 'isolines', 'clim', [0 2]));
             f = [tempname '.png'];  tc.addTeardown(@() delete(f));
             b.screenshot(f, 2);
             tc.verifyEqual(size(imread(f)), [1 1 3]);

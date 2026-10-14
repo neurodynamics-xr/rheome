@@ -3,6 +3,7 @@ function manifest = bundle(folder, surf, result, varargin)
 %
 %   manifest = rheome.io.write.bundle(folder, surf, result)
 %   manifest = rheome.io.write.bundle(folder, surf, result, 'Fs', fs, 'Name', name, 'Settings', s)
+%   manifest = rheome.io.write.bundle(folder, surf, result, 'Potentials', "J")   % + J's Hodge potentials phi, psi
 %
 % The folder holds raw little-endian arrays and one manifest.json, written with fwrite and nothing else:
 %   positions.bin  float32 [3 x nV]  (the vertices, meters)      faces.bin  int32 [3 x nF], 0-based
@@ -27,6 +28,11 @@ function manifest = bundle(folder, surf, result, varargin)
 %   'Fs'    sampling rate of the T columns, Hz (default 1)
 %   'Name'  the bundle's name (default 'Rheome result')
 %   'Settings'  struct of viewer settings, written as the manifest's 'settings' (default: none)
+%   'Potentials'  the vector fields whose Hodge potentials are written too: names (string/cellstr), true (every
+%               vector field) or false (default). Each adds two real fields, <v>_phi (scalar potential, sources and
+%               sinks) and <v>_psi (stream function, vortices), from rheome.differential.helmholtz on the first
+%               surface (its .Hemi, if any, sets the per-hemisphere solves), tagged "derivedFrom": "<v>" and
+%               "form": "phi" | "psi" in the manifest (additive to rheome.bundle@1). The viewer cannot solve them.
 %
 % OUTPUT:
 %   manifest : full path of the manifest.json written.
@@ -39,6 +45,7 @@ function manifest = bundle(folder, surf, result, varargin)
     p.addParameter('Fs', 1, @(x) isscalar(x) && x > 0);
     p.addParameter('Name', 'Rheome result', @(x) ischar(x) || isstring(x));
     p.addParameter('Settings', [], @(x) isempty(x) || isstruct(x));
+    p.addParameter('Potentials', false);
     p.parse(varargin{:});
     o = p.Results;
 
@@ -56,6 +63,7 @@ function manifest = bundle(folder, surf, result, varargin)
     names = fieldnames(result);
     if isempty(names), error('rheome:bundle:empty', 'The result has no field.'); end
     T = size(result.(names{1}), 2);
+    pot = potentials(o.Potentials, names, result, nV);
 
     if ~isfolder(folder), mkdir(folder); end
     put(folder, 'positions.bin', V', 'single');
@@ -81,6 +89,20 @@ function manifest = bundle(folder, surf, result, varargin)
         put(folder, file, x, 'single');
         fl{k} = struct('name', names{k}, 'type', type, 'values', file, 'time', true);
     end
+    for k = 1:numel(pot)
+        S = surf;
+        if ~isfield(S, 'VertNormals') || isempty(S.VertNormals)
+            fg = rheome.operators.face_gradient(V, F);  S.VertNormals = fg.W * fg.FaceNormal;
+        end
+        H = rheome.differential.helmholtz(double(result.(pot{k})), S);
+        for f = {'phi', 'Phi'; 'psi', 'Psi'}'
+            name = [pot{k} '_' f{1}];
+            if any(strcmp(name, names)), error('rheome:bundle:potentials', '%s: the result already has a field of that name.', name); end
+            n = numel(fl) + 1;  file = sprintf('field%d.bin', n);
+            put(folder, file, H.(f{2}), 'single');
+            fl{n} = struct('name', name, 'type', 'real', 'values', file, 'time', true, 'derivedFrom', pot{k}, 'form', f{1});
+        end
+    end
     m = struct('format', 'rheome.bundle@1', 'name', char(o.Name), ...
         'surface', sm, 'time', struct('samples', T, 'fs', o.Fs, 'origin', 0), 'fields', {fl});
     if numel(surfs) > 1, m.surfaces = num2cell(alt); end   % a JSON array even for one
@@ -89,6 +111,19 @@ function manifest = bundle(folder, surf, result, varargin)
     fid = fopen(manifest, 'w');
     if fid < 0, error('rheome:bundle:write', 'Cannot write %s.', manifest); end
     fwrite(fid, jsonencode(m)); fclose(fid);
+end
+
+function pot = potentials(x, names, result, nV)
+% the vector fields named by 'Potentials' (true: every one)
+    vec = names(cellfun(@(f) size(result.(f), 1) == 3*nV, names));
+    if (islogical(x) || isnumeric(x)) && isscalar(x)
+        pot = {};  if x, pot = vec'; end
+        return
+    end
+    if ~(ischar(x) || iscellstr(x) || isstring(x)), error('rheome:bundle:potentials', 'Potentials: names, true or false.'); end
+    pot = cellstr(x);
+    bad = setdiff(pot, vec);
+    if ~isempty(bad), error('rheome:bundle:potentials', 'Potentials: %s is not a vector field of the result.', strjoin(bad, ', ')); end
 end
 
 function put(folder, name, x, cls)
