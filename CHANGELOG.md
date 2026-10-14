@@ -60,9 +60,15 @@
 - **Hodge potentials in the bundle (`rheome.io.write.bundle` `'Potentials'`, `rheome.view` `Potentials=`).** The
   scalar potential and the stream function of a vector field need a Poisson solve the viewer does not do: they are
   solved with `rheome.differential.helmholtz` and written as real fields `<v>_phi`, `<v>_psi` tagged
-  `"derivedFrom": "<v>"` and `"form": "phi" | "psi"` (additive to `rheome.bundle@1`).
+  `"derivedFrom": "<v>"` and `"byOperator": "hodge:potential" | "hodge:stream"` (additive to `rheome.bundle@1`).
+- **Divergence and curl in the bundle (`rheome.io.write.bundle` `'DivCurl'`).** Writes `<v>_div`, `<v>_curl`
+  (`rheome.differential.divergence` / `curl`, per meter) tagged `"derivedFrom": "<v>"`, `"byOperator": "divergence" |
+  "curl"`; the Cortical Flow viewer shows them in place of its own ∇·v, ∇×v.
 
 ### Deprecated
+- The bundle's `fields[].form` (`phi` | `psi`) is no longer written: a derived field's lineage is its parent
+  (`derivedFrom`) and the operator that produced it (`byOperator`), as in Cortical Flow's data model (schema 49).
+  "Form" keeps the viewer's meaning (a quantity drawn from a field). The viewer reads the old tag for one release.
 
 - `rheome.view` `Field` and `Arrows`: rewritten into `Layers` with a warning (`rheome:view:deprecated`); removed in
   the next release.
