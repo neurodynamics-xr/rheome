@@ -15,6 +15,8 @@
 %   rheome.scale.measure_atlas          - MS1 G12 per participant: DK correspondence, atlas events, shared-gauge tensor, connectome roll-up.
 %   rheome.scale.measure_geometry       - The atlas geometry checks on one subject's cortex: atom-tile overlap, gauge, roll-up.
 %   rheome.scale.measure_grouptrack     - Viterbi tile tracking of the alpha envelope, real against the mode-shift surrogate.
+%   rheome.scale.measure_events         - What a detected alpha event is: shape boundaries, event-locked TF, timing (MS1 SPEC1 §8).
+%   rheome.scale.measure_eventplants    - Planted alpha episodes of known timing in own rest, boundaries read back (SPEC1 §8 A).
 %   rheome.scale.measure_helmholtzbands - Helmholtz-band recovery on the subject's own cortex (geometry only; no MEG).
 %   rheome.scale.measure_ownregion      - Readout rule 5 for one subject: which Desikan-Killiany regions own their flux.
 %   rheome.scale.measure_inject         - Known movers injected into the own recording, tracked back (MS1 G7, Fig. 8).
@@ -25,6 +27,7 @@
 %   rheome.scale.measure_upstream       - The AGE-1 participant readout: U, U_surrogate, U_total, U_of and covariates per recording.
 %   rheome.scale.measure_upstreamnull   - Gate N calibration in one head: planted travel vs lagged pairs read by the AGE-1 readout.
 %   rheome.scale.groupupstream          - Gate G of AGE-1 / WAVE-OR-LEAKAGE: ICC(2,1) and SD of U*, and no mean.
+%   rheome.scale.groupevents            - MS1 event statistics per cohort: medians, CIs, split-half ICC, boundary acceptance, group TF.
 %   rheome.scale.reduce                 - Per-subject tables -> group distributions, the anchor's place, cohort contrasts.
 %   rheome.scale.reducegauge            - Per-subject gaugetensor.csv -> the group alpha orientation tensor per shared tile.
 %   rheome.scale.reducegaugeflow        - Per-subject gaugeflow.csv -> the group alpha flow per sphere patch in the shared frame.

@@ -48,6 +48,10 @@
 %       detect-then-link loses (measured by planting). Use it, not tiletrack, below ~20 dB.
 %   rheome.detect.trackstats / tracknull / trackselect - per-track duration, net displacement, straightness,
 %       net speed; thresholds from noise-only windows at a false-trajectory RATE alpha per second.
+%   rheome.detect.risefall / eventtable - an event's start and end from its envelope's SHAPE (double
+%       sigmoid: half-rise tOn, half-fall tOff, tauR, tauF), per row of a generic event table.
+%   rheome.detect.eventlocked - Morlet time-frequency power around event anchors through a spatial filter
+%       (onset- and offset-locked averages against random onsets).
 %   rheome.detect.blobscale  - the characteristic SIZE of structure, by scale selection over a
 %                       band-pass ladder on the surface's own operator. ⚠ the response must
 %                       be scale-normalised or every blob measures as small; rheome.filters.mexhat

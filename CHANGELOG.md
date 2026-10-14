@@ -4,6 +4,19 @@
 
 ### Added
 
+- **Event boundaries and event statistics (MS1 SPEC1 §8)**, generic over an event table (one row per event:
+  hemisphere, tiles, first and last time), so the tracker's detections and atlas-cell events are read alike.
+  `rheome.detect.eventtable` fits `rheome.detect.risefall` to each event's own area-weighted envelope (tOn, tOff,
+  tauR, tauF, build-up / plateau / decay, r2, height, extent). `rheome.detect.eventlocked` gives Morlet
+  time-frequency power around anchors through a spatial filter. `rheome.scale.measure_events` (analysis `events`)
+  reads the tracker's detections: their table, peak frequency and cycles, onset- and offset-locked TF against each
+  event's matched random onsets, inter-event intervals, and the event-train and envelope autocorrelation against the
+  mode-shift surrogate and a Poisson train. `rheome.scale.measure_eventplants` (analysis `eventplants`) plants
+  episodes of known timing in the participant's own rest and reads the boundaries back. `rheome.scale.groupevents`
+  gives per-cohort medians with CIs, split-half ICC, the §8 A acceptance and the group TF maps.
+  `risefall` takes `TauMax` and flags fits at the bound (`atBound`). `measure_grouptrack` returns its detections
+  (fifth output).
+
 - **`rheome.view`, optional** (needs MATLAB R2026a+ or the Cortical Flow app; Rheome works without it on R2023b+):
   a result on the cortex in the 3D viewer from one call, `rheome.view(surf, result, Name=Value)` or
   `rheome.view(result)` with `result.surface`. It opens the Cortical Flow viewer's `viewer.html` (nxr-cortical-flow
