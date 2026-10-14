@@ -53,6 +53,10 @@ function R = run(name, opts)
 %                     Poisson; the onset/offset-locked TF maps (dB vs matched random onsets); opt-in, not "ported"
 %   eventplants.csv   MS1 SPEC1 §8 A (nsp cf-events): rheome.scale.measure_eventplants -- planted episodes of known
 %                     tOn/tOff/tau in own rest, boundaries read back at 5/10/20 dB; opt-in, not "ported"
+%   freqtrack.csv     MS1 2.5 (nsp cf-chirps): rheome.scale.measure_freqtrack -- planted chirps (still, hop, 0.5-2
+%                     oct/s) in own rest, tracked across frequency on the joint (tile x band) graph
+%                     (rheome.detect.jointpath): per plant x arm (noiseless, SNRs, control) and per real window, with
+%                     the surrogate's held-out false and cross-band false rates; opt-in, not in the "ported" default
 %   aperiodic.csv     MS1 G10 (P6, nsp cf-aperiodic): rheome.scale.measure_aperiodic -- per cell (arm x plant x
 %                     sigma x speed x signal) the on-patch Viterbi rate against the held-out null, the split's
 %                     reduction, band-map errors and along-path speed; opt-in, not in the "ported" default
@@ -243,6 +247,8 @@ function R = run(name, opts)
                     save(fullfile(od, 'eventtf.mat'), 'TF', '-v7');
                 case "eventplants"             % MS1 SPEC1 §8 A: planted episodes in own rest, boundaries read back
                     [Tq, X.eventplants] = rheome.scale.measure_eventplants(name, S);  M = [M; Tq]; %#ok<AGROW>
+                case "freqtrack"               % MS1 2.5: planted chirps tracked across frequency (nsp cf-chirps)
+                    [Tq, X.freqtrack] = rheome.scale.measure_freqtrack(name, S);  M = [M; Tq]; %#ok<AGROW>
                 case "trackfactorial"          % MS1 G8 (Fig. 9): the 0.52 diagnosis, 2^5 factorial
                     [Tf, X.trackfactorial] = rheome.scale.measure_trackfactorial(name, S);  M = [M; Tf]; %#ok<AGROW>
                 case "panelexamples"           % MS1 Figs. 4-7 panel A: one example per figure (figure data)

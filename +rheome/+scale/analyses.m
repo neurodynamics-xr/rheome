@@ -88,6 +88,9 @@ function a = analyses(which)
 %                                              onsets; intervals and autocorrelation vs surrogate and Poisson
 %   eventplants      MS1 SPEC1 §8 A            planted episodes of known timing in own rest, boundaries read back
 %                    -- both run only when asked (nsp cf-events), not "ported"
+%   freqtrack        MS1 2.5                   planted chirps in own rest tracked across frequency (jointpath), the
+%                                              surrogate's false and cross-band false rates; run only when asked
+%                                              (nsp cf-chirps), not "ported"
 %   coefficients     (Prognome input)          rheome.scale.coefficients: tile x scale x time envelopes;
 %                                              run only when asked (a ~200 MB file), so not "ported"
 %
@@ -98,7 +101,7 @@ function a = analyses(which)
     all = ["resolution" "bandsnr" "bandresolution" "flowmap" "periodicflow" "grouptrack" ...
            "fieldsmooth" "eventsensors" "inject" "vortex" "sensorwavelet" ...
            "plantfloors" "movingvortex" "composition" "sizeruler" "vortexscale" "rotation" "detection" "diracangles" ...
-           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "slowoscplant" "correspondence" "atlasevents" "gaugetensor" "connectome" "atlasone" "xlevel" "scaleramp" "multimodal" "modesfields" "modesfit" "jointfields" "jointcanary" "upstream" "lambdaedge" "panelexamples" "ambient" "cptrack" "events" "eventplants" "coefficients"];
+           "bandperiodic" "helmholtzbands" "ownregion" "geometry" "fusion" "patterns" "patternnulls" "catalogue" "catalognulls" "trackfactorial" "aperiodic" "slowosc" "slowoscplant" "correspondence" "atlasevents" "gaugetensor" "connectome" "atlasone" "xlevel" "scaleramp" "multimodal" "modesfields" "modesfit" "jointfields" "jointcanary" "upstream" "lambdaedge" "panelexamples" "ambient" "cptrack" "events" "eventplants" "freqtrack" "coefficients"];
     ported = ["resolution" "bandsnr" "bandresolution" "periodicflow" "grouptrack" "fieldsmooth" "eventsensors"];
     if nargin && which == "ported", a = ported; else, a = all; end
 end
