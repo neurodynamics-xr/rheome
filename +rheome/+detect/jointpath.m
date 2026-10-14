@@ -22,8 +22,16 @@ function out = jointpath(Y, G, opts)
 % LogF over the path's band and its two neighbours at the path's tile, weighted by the normalised value above
 % the baseline. .sweepOctS is the least-squares slope of that centroid over time (octaves per second).
 %
+% ⭐ NET CHANGE, NOT SPAN, IS THE CROSS-BAND STATISTIC. .octSpan (max - min of the centroid) accumulates the
+% wander of any local path: on noise it is >= 1 octave for nearly every passing path. .netOct is the change of
+% the mean centroid from the path's first third to its last third; .jumpOct, its largest one-frame step, tells
+% a hop (one large step) from a chirp (many small ones).
+%
 % ⚠ One step per frame on the product graph: a pattern that changes tile AND band in one frame takes two
 %   frames. The frame rate must make that rare (as for space: rheome.geom.jointcell's speedTrackMS).
+% ⚠ A jump of more than one band in one frame is read as a TRANSIT at one band per frame through the bands
+%   between (the path pays the baseline on each transit frame) when what follows outweighs that cost, and as
+%   two separate paths otherwise (tJointPath.aJumpOfSeveralBands).
 % ⚠ The common frame grid oversamples the low bands' envelopes; the null (a surrogate of the same data on
 %   the same grid) carries that correlation, so the threshold and false rate are honest for the grid used.
 %
@@ -38,6 +46,8 @@ function out = jointpath(Y, G, opts)
 % OUTPUT (struct out) -- rheome.detect.tilepath's, so rheome.detect.trackstats reads the tile walk; per track also
 %   .bands      [n x 1] band index per frame            .logf   [n x 1] centroid log2 frequency per frame
 %   .sweepOctS  slope of .logf over time (oct/s; NaN under 3 frames)   .octSpan  max - min of .logf (octaves)
+%   .netOct     mean .logf over the last third - over the first third (signed, octaves; 0 under 2 frames)
+%   .jumpOct    the largest |one-frame step| of .logf (octaves; 0 for one frame)
 %   .tiles      the tile per frame (the band removed)   .values  the NORMALISED value per frame
 %
 % See also: rheome.detect.jointpathnull, rheome.detect.tilepath, rheome.detect.trackstats, rheome.scale.measure_freqtrack
@@ -70,6 +80,7 @@ function out = jointpath(Y, G, opts)
                                  NumPaths=opts.NumPaths, SampleRate=opts.SampleRate, Span=opts.Span);
     lf = opts.LogF(:);  [out.tracks.bands] = deal([]);  [out.tracks.logf] = deal([]);
     [out.tracks.sweepOctS] = deal(NaN);  [out.tracks.octSpan] = deal(NaN);
+    [out.tracks.netOct] = deal(NaN);  [out.tracks.jumpOct] = deal(NaN);
     for q = 1:out.nTracks
         x = out.tracks(q);  node = x.tiles;
         k = mod(node - 1, nTile) + 1;  b = (node - k)/nTile + 1;
@@ -82,6 +93,8 @@ function out = jointpath(Y, G, opts)
         sw = NaN;  if numel(c) >= 3, p = polyfit(x.frames(:)/opts.SampleRate, c, 1);  sw = p(1); end
         out.tracks(q).tiles = k;  out.tracks(q).bands = b;  out.tracks(q).logf = c;
         out.tracks(q).hops = sum(diff(k) ~= 0);  out.tracks(q).sweepOctS = sw;  out.tracks(q).octSpan = max(c) - min(c);
+        m = max(1, floor(numel(c)/3));  out.tracks(q).netOct = mean(c(end-m+1:end)) - mean(c(1:m));
+        out.tracks(q).jumpOct = max([0; abs(diff(c))]);
     end
 end
 

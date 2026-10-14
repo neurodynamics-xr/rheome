@@ -24,7 +24,9 @@ classdef tScaleFreqTrack < matlab.unittest.TestCase
             tc.verifyEqual(sum(X.case ~= "real"), 2*2*3);                             % cases x plants x arms
             tc.verifyEqual(sort(unique(X.arm(X.case ~= "real")))', ["control" "noiseless" "snr20"]);
             tc.verifyTrue(all(ismember(["false_rate" "cross_false_rate" "real_frac_pass" "hit_rate" "sweep_ratio" ...
-                "control_found"], T.metric)));
+                "control_found" "cross_oct" "false_frac_win" "sweep_err_med" "jump_oct_med" "net_oct_med" ...
+                "hit_minus_control" "null_band_occ"], T.metric)));
+            tc.verifyEqual(sum(T.metric == "null_band_occ"), 7);
             fr = T.value(T.metric == "false_rate");
             tc.verifyGreaterThanOrEqual(fr, 0);  tc.verifyLessThanOrEqual(T.value(T.metric == "cross_false_rate"), fr);
             q = X(X.arm == "noiseless", :);

@@ -11,37 +11,56 @@ function [T, X] = measure_freqtrack(name, S, opts)
 %             means (rheome.flow.envelopemodes' chain), 300 frames/s block-averaged by 2^JLevel (the time tile)
 %   source    a Laplace-Beltrami heat-kernel blob (SigmaMM 15) along the normal at a random vertex, forwarded
 %             through the participant's leadfield; it stays put -- the place is not what is tested
-%   cases     still (FcHz), hop (two tones at 2.^HopLogF trading amplitude: frequency jumps, nothing drifts), and
+%   cases     still (FcHz), hop (a CROSSFADE of two tones at 2.^HopLogF: both present mid-window; nothing drifts), and
 %             exponential chirps at Rates octaves/s (log2 f = log2 FcHz + r (t - W/2), held at the window's ends);
 %             NPer 2 s windows each from the clean span, present for the window +-1 s with 0.25 s ramps
 %   amplitude per-band SNR (dB) = 20 log10 of the plant's full-height envelope on its tile in the band of its
-%             instantaneous frequency (a unit tone read alone) over the median REAL envelope there; the chirp's
+%             instantaneous frequency (a unit tone read alone) over the null's median there (N.norm: the real
+%             envelope's median over the calibration windows, circularly shifted); the chirp's
 %             amplitude follows that gain in log f, so the SNR is the same at every frequency it passes
 %   arms      noiseless (the plant alone at 20 dB: the instrument's own bias), each SNR in the own rest, and
 %             control (the same rest segment without the plant)
-%   null      every (band, LB mode) envelope series circularly shifted independently (keeps each series'
-%             spectrum, destroys alignment across bands and places); rheome.detect.jointpathnull, odd windows
-%             calibrate, even windows test: Alpha false paths/s, and the CROSS-BAND false rate (span >= CrossOct)
+%   null      each LB mode's envelope circularly shifted by ONE shift shared by every band (keeps each series'
+%             spectrum and the coupling of overlapping bands; destroys alignment across places);
+%             rheome.detect.jointpathnull, odd windows calibrate, even windows test: Alpha false paths/s, the
+%             cross-band criterion (the 95th percentile of |netOct| over passing null paths, or CrossOct if
+%             given) and the CROSS-BAND false rate at it
 %   tracker   rheome.detect.jointpath, top 3 paths; FOUND = a passing path with >= half its frames within NearMM
-%             of the plant and a median |frequency centroid - truth| <= OctTol octaves over its frames
+%             of the plant and a MEAN |frequency centroid - truth| <= OctTol octaves over its frames (the truth
+%             clamped to the band set's centres, which bound the readout). The threshold is calibrated on the
+%             best path per window and the plants may use any of 3: control_found measures that specificity,
+%             and hit_minus_control is the hit rate above it
 %   real      every 2 s window of the recording through the same tracker and threshold (case "real")
 %
 % X (freqtrack.csv): one row per hemisphere x case x plant x arm (and per real window): truth, readout (pass found
-%   near octErr sweepOctS octSpan durS netMM), the half of the recording, the null's held-out false rates.
+%   near octErr sweepOctS octSpan durS netMM netOct jumpOct sweepErr), the half of the recording, the seed, the
+%   null's held-out false rates (per s and per window), its cross criterion and band occupancy. sweepErr = the
+%   read sweep - the LS slope of the (clamped) truth over the path's own frames: a perfect readout reads 0 in
+%   every case (the hop's step truth has an LS slope of ~1.1 oct/s, not 0).
 % T (rheome.scale.rows, analysis "freqtrack"), band "<arm>/<case>/d<depth>/<fps>fps":
 %   hit_rate        fraction of plants FOUND                                          fraction
 %   sweep_ratio     median read sweep / planted rate, found chirps ⭐                 ratio
-%   sweep_oct_s     median read sweep of found plants (still and hop: should be 0)    oct/s
+%   sweep_oct_s     median read sweep of found plants (still: 0; hop: see sweep_err)  oct/s
+%   sweep_err_med   median sweepErr of found plants (0 for a perfect readout)        oct/s
+%   net_oct_med     median netOct of found plants                                     oct
+%   jump_oct_med    median jumpOct of found plants (hop: one large step; chirp: small) oct
 %   oct_err_med     median frequency-centroid error of found plants                   oct
+%   hit_minus_control  hit_rate - control_found of the same case                      fraction
 %   control_found   (arm control) fraction of plant-free segments with a FOUND path    fraction
-% and band "d<depth>/<fps>fps": false_rate, cross_false_rate (1/s, held-out surrogate), real_frac_pass,
-% real_frac_cross (passing real windows whose path spans >= CrossOct), real_sweep_abs_med (oct/s); hit_rate per
-% half ("_h1" / "_h2").
+% and band "d<depth>/<fps>fps": false_rate, cross_false_rate (1/s, held-out surrogate), false_frac_win,
+% cross_frac_win (the same per 2 s window, the unit of real_frac_*), cross_oct (the criterion), real_frac_pass,
+% real_frac_cross (passing real windows with |netOct| >= cross_oct), real_sweep_abs_med (oct/s); per band
+% "d<depth>/<fps>fps/<Hz>Hz": null_band_occ; hit_rate per half ("_h1" / "_h2"). All medians over hemispheres
+% of ONE participant: the per-participant false rate.
 %
 % ⚠ The frequency readout is the centroid over the path's band and its neighbours, so it is bounded by the
 %   band set: below 2^(LogF(1)) or above 2^(LogF(end)) a chirp reads clamped, and sweep_ratio < 1 there.
-% ⚠ On noise the best path already spans > 1 octave in about half the windows (tJointPath): a path that
-%   crosses bands is evidence only against cross_false_rate, never by its span alone.
+% ⚠ On noise the best path's centroid spans >= 1 octave in nearly every passing window: a path that crosses
+%   bands is evidence only by |netOct| against cross_oct and cross_false_rate, never by its span.
+% ⚠ The null's paths sit mostly in the low bands (null_band_occ): the threshold is set by them, and the
+%   sensitivity differs by band.
+% ⚠ The per-mode shift also removes the minimum norm's spatial point-spread correlation between places (as
+%   measure_inject and grouptrack): the null is conservative about place, not about band.
 %
 % See also: rheome.detect.jointpath, rheome.detect.jointpathnull, rheome.scale.measure_inject
 %
@@ -64,7 +83,7 @@ function [T, X] = measure_freqtrack(name, S, opts)
         opts.NearMM (1,1) double = 50
         opts.OctTol (1,1) double = 0.5
         opts.Alpha (1,1) double = 0.1
-        opts.CrossOct (1,1) double = 1
+        opts.CrossOct double = []
         opts.Hemis string = ["L" "R"]
         opts.Seed (1,1) double = 53
         opts.EdgeS (1,1) double = 10
@@ -97,18 +116,19 @@ function [T, X] = measure_freqtrack(name, S, opts)
         Wd = (P'*(av.*Phi))./(P'*av);  Dcv = distances(ge, G.centre);
         nFr = size(E{1}.(h).C, 2);  nWin = floor(nFr/(W*FR));
         Yr = zeros(nTile, nB, nF*nWin);  Ys = Yr;
+        sh = randi([W*FR, nFr - W*FR], size(E{1}.(h).C, 1), 1);      % one shift per LB mode, shared by every band
         for b = 1:nB                                                % one band at a time: never 7 full-rate copies
             C = double(E{b}.(h).C);
             Yr(:, b, :) = reshape(i_block(Wd*C, bs, W*FR, nWin), nTile, 1, []);
-            sh = randi([W*FR, nFr - W*FR], size(C, 1), 1);
             for k = 1:size(C, 1), C(k, :) = circshift(C(k, :), sh(k)); end
             Ys(:, b, :) = reshape(i_block(Wd*C, bs, W*FR, nWin), nTile, 1, []);
         end
         clear C
         N = rheome.detect.jointpathnull(Ys, G, nF, rate, LogF=lf, Alpha=opts.Alpha, WindowS=W, CrossOct=opts.CrossOct);
         clear Ys
-        base = table(hh, opts.Depth, median(G.diameterMM), rate, N.falseTestS, N.crossTestS, ...
-                     'VariableNames', {'hemi','depth','tileMM','rate','nullFalseS','nullCrossS'});
+        base = table(hh, opts.Depth, median(G.diameterMM), rate, opts.Seed, N.falseTestS, N.crossTestS, ...
+                     N.falseTestW, N.crossTestW, N.crossOct, N.bandOcc, 'VariableNames', {'hemi','depth','tileMM', ...
+                     'rate','seed','nullFalseS','nullCrossS','nullFalseW','nullCrossW','nullCrossOct','nullOcc'});
         for w = 1:nWin
             r = i_path(Yr(:, :, (w-1)*nF + (1:nF)), G, N, lf, rate, [], [], opts);
             X = [X; base, i_row("real", NaN, w, 1 + (w > nWin/2), "real", r)]; %#ok<AGROW>
@@ -156,16 +176,20 @@ end
 
 function r = i_row(cs, r0, n, hf, arm, v)
     r = [table(cs, r0, n, hf, arm, 'VariableNames', {'case','rate_oct_s','n','half','arm'}), ...
-         array2table(v, 'VariableNames', {'pass','found','near','octErr','sweepOctS','octSpan','durS','netMM'})];
+         array2table(v, 'VariableNames', {'pass','found','near','octErr','sweepOctS','octSpan','durS','netMM', ...
+                                          'netOct','jumpOct','sweepErr'})];
 end
 
 function T = i_metrics(X, opts)
     T = table();  r = @(m, v, u, b) rheome.scale.rows("freqtrack", m, v, u, b);
     b0 = sprintf('d%d/%gfps', opts.Depth, X.rate(1));
     q = X(X.case == "real", :);  p = q(q.pass == 1, :);
-    T = [T; r(["false_rate" "cross_false_rate" "real_frac_pass" "real_frac_cross" "real_sweep_abs_med"], ...
-              [median(q.nullFalseS) median(q.nullCrossS) mean(q.pass) mean(q.pass == 1 & q.octSpan >= opts.CrossOct) ...
-               median(abs(p.sweepOctS), 'omitnan')], ["1/s" "1/s" "fraction" "fraction" "oct/s"], b0)];
+    T = [T; r(["false_rate" "cross_false_rate" "false_frac_win" "cross_frac_win" "cross_oct" "real_frac_pass" ...
+               "real_frac_cross" "real_sweep_abs_med"], ...
+              [median(q.nullFalseS) median(q.nullCrossS) median(q.nullFalseW) median(q.nullCrossW) median(q.nullCrossOct) ...
+               mean(q.pass) mean(q.pass == 1 & abs(q.netOct) >= q.nullCrossOct) median(abs(p.sweepOctS), 'omitnan')], ...
+              ["1/s" "1/s" "fraction" "fraction" "oct" "fraction" "fraction" "oct/s"], b0)];
+    T = [T; r(repmat("null_band_occ", numel(opts.LogF), 1), median(q.nullOcc, 1), "fraction", b0 + "/" + compose("%.3g", 2.^opts.LogF(:)) + "Hz")];
     for a = unique(X.arm(X.case ~= "real"))'
         for c = opts.Cases
             q = X(X.arm == a & X.case == c, :);  f = q(q.found == 1, :);  bc = a + "/" + c + "/" + b0;
@@ -174,9 +198,12 @@ function T = i_metrics(X, opts)
                 continue
             end
             sr = f.sweepOctS ./ f.rate_oct_s;  sr(f.rate_oct_s == 0) = NaN;
-            T = [T; r(["hit_rate" "sweep_ratio" "sweep_oct_s" "oct_err_med"], ...
-                      [mean(q.found) median(sr, 'omitnan') median(f.sweepOctS, 'omitnan') median(f.octErr, 'omitnan')], ...
-                      ["fraction" "ratio" "oct/s" "oct"], bc)]; %#ok<AGROW>
+            cf = mean(X.found(X.arm == "control" & X.case == c));
+            T = [T; r(["hit_rate" "sweep_ratio" "sweep_oct_s" "sweep_err_med" "net_oct_med" "jump_oct_med" "oct_err_med" ...
+                       "hit_minus_control"], ...
+                      [mean(q.found) median(sr, 'omitnan') median(f.sweepOctS, 'omitnan') median(f.sweepErr, 'omitnan') ...
+                       median(f.netOct, 'omitnan') median(f.jumpOct, 'omitnan') median(f.octErr, 'omitnan') mean(q.found) - cf], ...
+                      ["fraction" "ratio" "oct/s" "oct/s" "oct" "oct" "oct" "fraction"], bc)]; %#ok<AGROW>
             for hf = 1:2
                 T = [T; r("hit_rate", mean(q.found(q.half == hf)), "fraction", bc + "_h" + hf)]; %#ok<AGROW>
             end
@@ -185,17 +212,18 @@ function T = i_metrics(X, opts)
 end
 
 % Top 3 disjoint paths (1 without a truth); FOUND = passing, near the plant for >= half its frames, and its
-% frequency centroid within OctTol of the truth (median over its frames). Returns
-% [pass found near octErr sweepOctS octSpan durS netMM] of the found path, else of the best one.
+% frequency centroid within OctTol of the truth clamped to the band centres (mean over its frames). Returns
+% [pass found near octErr sweepOctS octSpan durS netMM netOct jumpOct sweepErr] of the found path, else of the best one.
 function r = i_path(Y, G, N, lf, rate, dv, lT, opts)
-    r = [0 0 NaN NaN NaN NaN NaN NaN];
+    r = [0 0 NaN NaN NaN NaN NaN NaN NaN NaN NaN];
     p = rheome.detect.jointpath(Y, G, Null=N, LogF=lf, SampleRate=rate, NumPaths=3 - 2*isempty(dv));
     if p.nTracks == 0, return; end
     ok = [p.tracks.score] > N.threshold;  nr = nan(p.nTracks, 1);  oe = nr;  q = 1;
     if ~isempty(dv)
+        lT = min(max(lT, lf(1)), lf(end));                         % the readout cannot leave the band centres
         for i = 1:p.nTracks
             x = p.tracks(i);  nr(i) = mean(dv(x.tiles) <= opts.NearMM*1e-3);
-            oe(i) = median(abs(x.logf(:) - lT(x.frames(:))'));
+            oe(i) = mean(abs(x.logf(:) - lT(x.frames(:))'));
         end
         fnd = ok(:) & nr >= 0.5 & oe <= opts.OctTol;
         if any(fnd), [~, q] = max(nr.*fnd - 1e-3*oe.*fnd); end
@@ -203,7 +231,9 @@ function r = i_path(Y, G, N, lf, rate, dv, lT, opts)
         fnd = false;
     end
     x = p.tracks(q);  one = p;  one.tracks = x;  one.nTracks = 1;  s = rheome.detect.trackstats(one, G, rate);
-    r = [ok(q) any(fnd) nr(q) oe(q) x.sweepOctS x.octSpan s.durationS s.netMM];
+    se = NaN;
+    if ~isempty(dv) && numel(x.frames) >= 3, pt = polyfit(x.frames(:)/rate, lT(x.frames(:))', 1);  se = x.sweepOctS - pt(1); end
+    r = [ok(q) any(fnd) nr(q) oe(q) x.sweepOctS x.octSpan s.durationS s.netMM x.netOct x.jumpOct se];
 end
 
 % The band envelopes of a sensor segment, tile means at the tracker's frames: [nTile x nB x nF] (bands not in bb
