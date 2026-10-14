@@ -1,11 +1,13 @@
 """Cohort reducers of Rheome's per-subject tables: median and a distribution-free 95 % CI per tile or quantity.
 
-    python3 reduce/cohort.py gauge      OUT_DIR IN_DIR [IN_DIR ...]   -> OUT_DIR/gaugecohort.csv
+    python3 reduce/cohort.py gauge      OUT_DIR IN_DIR [IN_DIR ...] [--exclude=DATASET/SUBJECT_GLOB ...]   -> OUT_DIR/gaugecohort.csv
     python3 reduce/cohort.py multimodal OUT_DIR IN_DIR [IN_DIR ...]   -> OUT_DIR/multimodal_{relative,subjects,cohort}.csv
 
 IN_DIR holds rheome.scale.run's per-subject folders (<sub>/gaugetensor.csv, <sub>/multimodal.csv), nsp's flat
 <sub>_<table>.csv, or nsp's promoted <sub>.tar.gz (read in place, never unpacked); <sub>_metrics.csv / metrics.csv
-gives the dataset, which is the group (cf-atlas labels every cohort "unlabelled").
+gives the dataset, which is the group (cf-atlas labels every cohort "unlabelled"). --exclude drops the subjects whose
+"<dataset>/<subject>" matches the glob, e.g. omega/sub-CONP* (MS1 4.1: OMEGA's 111 CONP recordings are PREVENT-AD
+participants, analysed once, within PREVENT-AD).
 
 gauge (cohort tile map, MS1 4.4): per (dataset, hemi, depth, node_id) of rheome.scale.measure_atlas "gaugetensor"
 -- template tiles reached through the registered sphere, so tile k is the same in everyone -- the median over
@@ -28,6 +30,7 @@ for any continuous distribution; NaN when n < 6. Descriptive only: no test acros
 Author: Diellor Basha, 2026
 """
 import csv
+import fnmatch
 import io
 import os
 import sys
@@ -100,10 +103,13 @@ def _axis(t11, t22, t12):
 
 
 # ---------------------------------------------------------------- gauge: the cohort tile map
-def gauge(out_dir, dirs, polar_deg=POLAR_DEG):
+def gauge(out_dir, dirs, polar_deg=POLAR_DEG, exclude=()):
     T = defaultdict(lambda: defaultdict(list))  # (dataset, hemi, depth, node) -> column -> values over subjects
-    subs = set()
+    subs, dropped = set(), 0
     for sub, ds, rows in subjects(dirs, "gaugetensor"):
+        if any(fnmatch.fnmatchcase(ds + "/" + sub, g) for g in exclude):
+            dropped += 1
+            continue
         subs.add((ds, sub))
         for r in rows:
             c = T[(ds, r["hemi"], int(r["depth"]), int(r["node_id"]))]
@@ -135,7 +141,7 @@ def gauge(out_dir, dirs, polar_deg=POLAR_DEG):
     per = defaultdict(int)
     for ds, _ in subs:
         per[ds] += 1
-    print("[cohort gauge] %s; %d tile rows (%d polar)" % (", ".join("%s %d" % kv for kv in sorted(per.items())), len(out), sum(r["polar"] for r in out)))
+    print("[cohort gauge] %s; %d excluded; %d tile rows (%d polar)" % (", ".join("%s %d" % kv for kv in sorted(per.items())), dropped, len(out), sum(r["polar"] for r in out)))
     return out
 
 
@@ -211,6 +217,11 @@ def multimodal(out_dir, dirs, min_level=3):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 4 or sys.argv[1] not in ("gauge", "multimodal"):
+    ex = [a.split("=", 1)[1] for a in sys.argv if a.startswith("--exclude=")]
+    args = [a for a in sys.argv if not a.startswith("--exclude=")]
+    if len(args) < 4 or args[1] not in ("gauge", "multimodal") or (ex and args[1] != "gauge"):
         raise SystemExit(__doc__.split("\n\n")[1])
-    {"gauge": gauge, "multimodal": multimodal}[sys.argv[1]](sys.argv[2], sys.argv[3:])
+    if args[1] == "gauge":
+        gauge(args[2], args[3:], exclude=ex)
+    else:
+        multimodal(args[2], args[3:])
