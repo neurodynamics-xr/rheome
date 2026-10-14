@@ -117,6 +117,15 @@ classdef tGroup < matlab.unittest.TestCase
             tc.verifyEqual(C.detected_rate(C.effect == 4), ones(4, 1));   % 4 sd at the seed tile, 12 vs 12
             tc.verifyEqual(unique(C.K), 2 * 2 + 2 * 2);               % fp_outside x 4 conditions + any_fwer, spin x 2
             tc.verifyTrue(all(ismember({'any_fwer_lo','fp_outside_hi','spin_rate','gate_lo_spin','calibrated'}, C.Properties.VariableNames)));
+            % paired conditions: every Transform x Nuisance on the same draws; rankit removes the skew
+            [C2, D2] = rheome.group.calibrate(d, fullfile(d, 'out2'), Centres=Ct, NDraw=2, NPerm=19, NSpin=19, Effects=0, ...
+                                              Measures="log10_trace", Nuisance=[0 0.5], Transform=["none" "rankit"]);
+            tc.verifyEqual(height(D2), 2 * 2 * 2 * 2 * 2);  tc.verifyEqual(height(C2), 2 * 2 * 2 * 2);
+            k = D2(D2.dataset == "omega" & D2.draw == 1 & D2.kind == "group", :);
+            tc.verifyEqual(numel(unique(k.seed_tile)), 1);           % the same draw across conditions
+            Sh = readtable(fullfile(d, 'out2', 'shape.csv'), 'TextType', 'string');
+            tc.verifyEqual(height(Sh), 2 * 2);
+            tc.verifyLessThan(Sh.skew_absmax(Sh.transform == "rankit"), 0.05 * [1; 1]);
             delete(fullfile(d, 'cf-atlas-camcan', 'sub-03_metrics.csv'));   % a participant without a cohort
             tc.verifyError(@() rheome.group.calibrate(d, o, Centres=Ct, NDraw=1, NPerm=9, NSpin=9, Measures="anisotropy"), ...
                            'group:calibrate:cohort');
