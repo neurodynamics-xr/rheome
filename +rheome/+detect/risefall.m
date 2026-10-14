@@ -41,6 +41,7 @@ function R = risefall(a, fs, t0, t1, opts)
 %            |tOn| 0.13-0.14 s (0.17-0.19), |tOff| 0.11-0.18 s (0.12-0.22), tau x0.73-0.98 (x0.62-0.87), fit
 %            share 0.90-0.99 (0.81-0.88); at 20 dB tau x0.97-1.02. ⚠ At 10 dB timing sits near one 165 ms tile
 %            and tau can stay compressed: the beat, not the fit, sets that limit. ~0.3 s per event.
+%   Chunk    "posterior" only: elements per block of the (tOn, tOff) grid (2e7, ~1 GB peak); results do not depend on it
 %   TauMax   upper bound of tauR and tauF (1 s). On two OMEGA participants tau reached 1 s at the 95th
 %            percentile (labelling design section 7); a fit AT the bound is flagged (.atBound), not trusted
 %
@@ -62,6 +63,7 @@ function R = risefall(a, fs, t0, t1, opts)
         opts.Smooth (1,1) double {mustBeNonnegative} = 0.1
         opts.TauMax (1,1) double {mustBePositive} = 1
         opts.Model (1,1) string {mustBeMember(opts.Model, ["linear" "quadrature" "posterior"])} = "linear"
+        opts.Chunk (1,1) double {mustBePositive} = 2e7
     end
     R = struct('tOn',NaN,'tOff',NaN,'tauR',NaN,'tauF',NaN,'b',NaN,'h',NaN,'r2',NaN,'ok',false,'atBound',false, ...
         'buildup',[],'plateau',[],'decay',[]);
@@ -116,17 +118,24 @@ function R = i_posterior(R, y, t, t0, t1, sc, S, opts)
     if isempty(onG) || isempty(offG), return; end
     [I, J] = ndgrid(1:numel(onG), 1:numel(offG));  k = offG(J) > onG(I);  I = I(k);  J = J(k);
     if isempty(I), return; end
-    sw = sum(w);  swp = w'*Pd;  swpp = w'*Pd.^2;  L = zeros(numel(I), NTAU, NTAU);
+    % ⚠ MEMORY: an n x pairs block grows as the window cubed (36 s: ~9 GB each); the pairs are read in blocks of
+    % <= opts.Chunk elements, each pair's SSE computed exactly as in one block. L itself is pairs x 256 (36 s: 2 GB).
+    sw = sum(w);  swp = w'*Pd;  swpp = w'*Pd.^2;  nP = numel(I);  L = zeros(nP, NTAU, NTAU);
+    m = max(1, floor(opts.Chunk / n));
     for a1 = 1:NTAU
         SR = S((td - onG)/tauG(a1));
         for a2 = 1:NTAU
-            G = (SR(:, I) .* S(-(td - offG(J))/tauG(a2))).^2;
-            swg = w'*G;  swgg = w'*G.^2;  swgp = (w.*Pd)'*G;
-            H = (sw*swgp - swg*swp) ./ max(sw*swgg - swg.^2, realmin);  B = (swp - H.*swg)/sw;
-            e = swpp - 2*B*swp - 2*H.*swgp + B.^2*sw + 2*B.*H.*swg + H.^2.*swgg;  % weighted SSE at the profiled B, H
-            z = B < 0;                                                           % B clipped at 0
-            if any(z), H(z) = swgp(z)./max(swgg(z), realmin);  e(z) = swpp - H(z).^2.*swgg(z); end
-            e(H <= 0) = Inf;  L(:, a1, a2) = e;
+            SF = S(-(td - offG)/tauG(a2));
+            for b0 = 1:m:nP
+                b = b0:min(b0 + m - 1, nP);
+                G = (SR(:, I(b)) .* SF(:, J(b))).^2;
+                swg = w'*G;  swgg = w'*G.^2;  swgp = (w.*Pd)'*G;
+                H = (sw*swgp - swg*swp) ./ max(sw*swgg - swg.^2, realmin);  B = (swp - H.*swg)/sw;
+                e = swpp - 2*B*swp - 2*H.*swgp + B.^2*sw + 2*B.*H.*swg + H.^2.*swgg;  % weighted SSE at the profiled B, H
+                z = B < 0;                                                           % B clipped at 0
+                if any(z), H(z) = swgp(z)./max(swgg(z), realmin);  e(z) = swpp - H(z).^2.*swgg(z); end
+                e(H <= 0) = Inf;  L(b, a1, a2) = e;
+            end
         end
     end
     [emin, kb] = min(L(:));  if ~isfinite(emin), return; end
@@ -135,7 +144,9 @@ function R = i_posterior(R, y, t, t0, t1, sc, S, opts)
     r = Pd - X*((X.*sqrt(w)) \ (Pd.*sqrt(w)));  r = r - mean(r);
     ac = xcorr(r, 'coeff');  ac = ac(n:end);  m = find(ac < 0, 1);  if isempty(m), m = n; end
     Tint = max(1, 1 + 2*sum(ac(2:m-1)));                                         % frames per independent sample
-    p = exp(-(L - emin) / (2*emin/n*Tint));  p = p / sum(p(:));
+    p = L;  clear L                                                              % in place: no second pairs x 256
+    T = 2*emin/n*Tint;  for a = 1:NTAU^2, p(:, a) = exp(-(p(:, a) - emin) / T); end
+    s = sum(p(:));  for a = 1:NTAU^2, p(:, a) = p(:, a) / s; end
     pt = sum(sum(p, 3), 2);
     q = [i_median(onG, accumarray(I, pt, [numel(onG) 1])), i_median(offG, accumarray(J, pt, [numel(offG) 1]))];
     if q(2) <= q(1), return; end
