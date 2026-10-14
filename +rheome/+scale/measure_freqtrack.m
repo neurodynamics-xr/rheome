@@ -30,14 +30,16 @@ function [T, X] = measure_freqtrack(name, S, opts)
 %             clamped to the band set's centres, which bound the readout). The threshold is calibrated on the
 %             best path per window and the plants may use any of 3: control_found measures that specificity,
 %             and hit_minus_control is the hit rate above it
-%   real      every 2 s window of the clean span (rheome.scale.cleanspan: edges and bad blocks out, the null
-%             built on the same frames) through the same tracker and threshold (case "real")
+%   real      every 2 s window of the clean span (rheome.scale.cleanspan: edges and bad blocks out, then a guard of
+%             the lowest band's two-sided envelope response down GuardDB, guard_s; the null built on the same
+%             frames) through the same tracker and threshold (case "real")
 %
 % X (freqtrack.csv): one row per hemisphere x case x plant x arm (and per real window): truth, readout (pass found
-%   near octErr sweepOctS octSpan durS netMM netOct jumpOct sweepErr), the half of the recording, the seed, the
+%   near octErr sweepOctS octSpan durS netMM netOct jumpOct sweepErr scoreRatio), the half of the recording, the seed, the
 %   null's held-out false rates (per s and per window), its cross criterion, the number of passing calibration
 %   paths that set it (nullCalN) and band occupancy, and the median adjacent-band envelope correlation of the real
-%   field and of the null (realBandR, nullBandR: equal under the shared shift, the null's guard). sweepErr = the
+%   field and of the null (realBandR, nullBandR: equal under the shared shift, the null's guard), the median null
+%   calibration score over the threshold (nullScoreRatio) and the guard (guardS, s). sweepErr = the
 %   read sweep - the LS slope of the (clamped) truth over the path's own frames: a perfect readout reads 0 in
 %   every case (the hop's step truth has an LS slope of ~1.1 oct/s, not 0).
 % T (rheome.scale.rows, analysis "freqtrack"), band "<arm>/<case>/d<depth>/<fps>fps":
@@ -53,7 +55,10 @@ function [T, X] = measure_freqtrack(name, S, opts)
 % and band "d<depth>/<fps>fps": false_rate, cross_false_rate (1/s, held-out surrogate), false_frac_win,
 % cross_frac_win (the same per 2 s window, the unit of real_frac_*), cross_oct (the criterion), cross_cal_n (passing
 % calibration paths behind it), real_band_r and null_band_r (adjacent-band envelope correlation), real_frac_pass,
-% real_frac_cross (passing real windows with |netOct| >= cross_oct), real_sweep_abs_med (oct/s); per band
+% real_frac_cross (passing real windows with |netOct| >= cross_oct), real_sweep_abs_med (oct/s),
+% real_score_ratio_med and null_score_ratio_med (median best-path score / threshold of the real and the null
+% calibration windows: equal if the null is a null of this recording; real below null = a conservative null),
+% guard_s (s); per band
 % "d<depth>/<fps>fps/<Hz>Hz": null_band_occ; hit_rate per half ("_h1" / "_h2"). All medians over hemispheres
 % of ONE participant: the per-participant false rate.
 %
@@ -91,6 +96,7 @@ function [T, X] = measure_freqtrack(name, S, opts)
         opts.Hemis string = ["L" "R"]
         opts.Seed (1,1) double = 53
         opts.EdgeS (1,1) double = 10
+        opts.GuardDB (1,1) double {mustBePositive} = 60
     end
     if numel(opts.Rates) ~= numel(opts.Cases), error('scale:freqtrack:cases', 'Cases and Rates must pair up.'); end
     if isempty(S), S = rheome.scale.sensors(name); end
@@ -106,9 +112,14 @@ function [T, X] = measure_freqtrack(name, S, opts)
     end
     CS = rheome.scale.cleanspan(F, fs, EdgeS=opts.EdgeS);
     % the envelope frames inside the clean span and off its bad blocks: the recording's onset transient (1-4 Hz at
-    % ~200x) otherwise passes as the one real path and, scattered by the per-mode shift, sets the null's threshold
+    % ~200x) otherwise passes as the one real path and, scattered by the per-mode shift, sets the null's threshold.
+    % The envelopes are filtered over the whole recording, so a guard of the lowest band's two-sided (filtfilt +
+    % Hilbert) response, down GuardDB, keeps their ringing out too (cf-chirps calibration 2: with the clean span
+    % alone, the first or last window of it was still the one passing real window in 57/80 hemispheres)
+    gS = i_guard(bp{1}, fs, opts.GuardDB);
+    cFirst = CS.first + gS;  cLast = CS.last - gS;  badG = movmax(CS.mask, 2*gS + 1);
     sFr = 1 + (0:size(E{1}.(char(opts.Hemis(1))).C, 2) - 1)*round(fs/FR);
-    keepFr = sFr >= CS.first & sFr <= CS.last & ~CS.mask(min(sFr, numel(CS.mask)));
+    keepFr = sFr >= cFirst & sFr <= cLast & ~badG(min(sFr, numel(badG)));
     nSeg = (W + 2*MARGIN + 2*PAD)*fs;  tSeg = (0:nSeg-1)/fs - (MARGIN + PAD);
     env = i_env(tSeg, W, MARGIN, 0.25);  cIdx = (MARGIN + PAD)*fs + (1:round(fs/FR):W*fs);
     tFr = ((0:nF-1)*bs + bs/2)/FR;                                  % tracker frame centres in the window (s)
@@ -137,15 +148,16 @@ function [T, X] = measure_freqtrack(name, S, opts)
         clear Ys
         base = table(hh, opts.Depth, median(G.diameterMM), rate, opts.Seed, N.falseTestS, N.crossTestS, ...
                      N.falseTestW, N.crossTestW, N.crossOct, numel(N.calNet), N.bandOcc, bR(1), bR(2), ...
+                     median(N.calScores)/N.threshold, gS/fs, ...
                      'VariableNames', {'hemi','depth','tileMM','rate','seed','nullFalseS','nullCrossS','nullFalseW', ...
-                     'nullCrossW','nullCrossOct','nullCalN','nullOcc','realBandR','nullBandR'});
+                     'nullCrossW','nullCrossOct','nullCalN','nullOcc','realBandR','nullBandR','nullScoreRatio','guardS'});
         for w = 1:nWin
             r = i_path(Yr(:, :, (w-1)*nF + (1:nF)), G, N, lf, rate, [], [], opts);
             X = [X; base, i_row("real", NaN, w, 1 + (w > nWin/2), "real", r)]; %#ok<AGROW>
         end
         clear Yr
         rd = @(Fs, bb) i_read(Fs, bp, bb, cIdx, K, Phi, Mm, Wd, bs, nF);
-        lims = [max(CS.first, 1), floor((CS.first + CS.last - nSeg)/2); floor((CS.first + CS.last - nSeg)/2) + 1, CS.last - nSeg + 1];
+        lims = [max(cFirst, 1), floor((cFirst + cLast - nSeg)/2); floor((cFirst + cLast - nSeg)/2) + 1, cLast - nSeg + 1];
         for ci = 1:numel(opts.Cases)
             cs = opts.Cases(ci);  r0 = opts.Rates(ci);
             for n = 1:opts.NPer
@@ -187,7 +199,7 @@ end
 function r = i_row(cs, r0, n, hf, arm, v)
     r = [table(cs, r0, n, hf, arm, 'VariableNames', {'case','rate_oct_s','n','half','arm'}), ...
          array2table(v, 'VariableNames', {'pass','found','near','octErr','sweepOctS','octSpan','durS','netMM', ...
-                                          'netOct','jumpOct','sweepErr'})];
+                                          'netOct','jumpOct','sweepErr','scoreRatio'})];
 end
 
 function T = i_metrics(X, opts)
@@ -195,11 +207,14 @@ function T = i_metrics(X, opts)
     b0 = sprintf('d%d/%gfps', opts.Depth, X.rate(1));
     q = X(X.case == "real", :);  p = q(q.pass == 1, :);
     T = [T; r(["false_rate" "cross_false_rate" "false_frac_win" "cross_frac_win" "cross_oct" "cross_cal_n" ...
-               "real_band_r" "null_band_r" "real_frac_pass" "real_frac_cross" "real_sweep_abs_med"], ...
+               "real_band_r" "null_band_r" "real_frac_pass" "real_frac_cross" "real_sweep_abs_med" ...
+               "real_score_ratio_med" "null_score_ratio_med" "guard_s"], ...
               [median(q.nullFalseS) median(q.nullCrossS) median(q.nullFalseW) median(q.nullCrossW) median(q.nullCrossOct) ...
                median(q.nullCalN) median(q.realBandR) median(q.nullBandR) ...
-               mean(q.pass) mean(q.pass == 1 & abs(q.netOct) >= q.nullCrossOct) median(abs(p.sweepOctS), 'omitnan')], ...
-              ["1/s" "1/s" "fraction" "fraction" "oct" "count" "r" "r" "fraction" "fraction" "oct/s"], b0)];
+               mean(q.pass) mean(q.pass == 1 & abs(q.netOct) >= q.nullCrossOct) median(abs(p.sweepOctS), 'omitnan') ...
+               median(q.scoreRatio) median(q.nullScoreRatio) median(q.guardS)], ...
+              ["1/s" "1/s" "fraction" "fraction" "oct" "count" "r" "r" "fraction" "fraction" "oct/s" ...
+               "ratio" "ratio" "s"], b0)];
     T = [T; r(repmat("null_band_occ", numel(opts.LogF), 1), median(q.nullOcc, 1), "fraction", b0 + "/" + compose("%.3g", 2.^opts.LogF(:)) + "Hz")];
     for a = unique(X.arm(X.case ~= "real"))'
         for c = opts.Cases
@@ -224,9 +239,10 @@ end
 
 % Top 3 disjoint paths (1 without a truth); FOUND = passing, near the plant for >= half its frames, and its
 % frequency centroid within OctTol of the truth clamped to the band centres (mean over its frames). Returns
-% [pass found near octErr sweepOctS octSpan durS netMM netOct jumpOct sweepErr] of the found path, else of the best one.
+% [pass found near octErr sweepOctS octSpan durS netMM netOct jumpOct sweepErr scoreRatio] of the found path, else of
+% the best one (scoreRatio = its score / the null's threshold).
 function r = i_path(Y, G, N, lf, rate, dv, lT, opts)
-    r = [0 0 NaN NaN NaN NaN NaN NaN NaN NaN NaN];
+    r = [0 0 NaN NaN NaN NaN NaN NaN NaN NaN NaN 0];
     p = rheome.detect.jointpath(Y, G, Null=N, LogF=lf, SampleRate=rate, NumPaths=3 - 2*isempty(dv));
     if p.nTracks == 0, return; end
     ok = [p.tracks.score] > N.threshold;  nr = nan(p.nTracks, 1);  oe = nr;  q = 1;
@@ -244,7 +260,7 @@ function r = i_path(Y, G, N, lf, rate, dv, lT, opts)
     x = p.tracks(q);  one = p;  one.tracks = x;  one.nTracks = 1;  s = rheome.detect.trackstats(one, G, rate);
     se = NaN;
     if ~isempty(dv) && numel(x.frames) >= 3, pt = polyfit(x.frames(:)/rate, lT(x.frames(:))', 1);  se = x.sweepOctS - pt(1); end
-    r = [ok(q) any(fnd) nr(q) oe(q) x.sweepOctS x.octSpan s.durationS s.netMM x.netOct x.jumpOct se];
+    r = [ok(q) any(fnd) nr(q) oe(q) x.sweepOctS x.octSpan s.durationS s.netMM x.netOct x.jumpOct se x.score/N.threshold];
 end
 
 % The band envelopes of a sensor segment, tile means at the tracker's frames: [nTile x nB x nF] (bands not in bb
@@ -256,6 +272,13 @@ function Y = i_read(Fs, bp, bb, cIdx, K, Phi, Mm, Wd, bs, nF)
         Cw = Phi'*(Mm*rheome.flow.activation(K*Fa(:, cIdx)));
         Y(:, b, :) = reshape(i_block(Wd*Cw, bs, numel(cIdx), 1), [], 1, nF);
     end
+end
+
+% Half-width (samples) of a band's two-sided envelope response (filtfilt, then Hilbert) above -db of its peak.
+function g = i_guard(bp, fs, db)
+    c = round(30*fs);  x = zeros(2*c - 1, 1);  x(c) = 1;
+    a = abs(hilbert(filtfilt(bp, x)));
+    g = max(abs(find(a > 10^(-db/20)*max(a)) - c));
 end
 
 % Median over tiles and adjacent band pairs of the envelope correlation over time, Y [nTile x nB x nT].
