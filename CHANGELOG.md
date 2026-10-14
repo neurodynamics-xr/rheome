@@ -4,6 +4,16 @@
 
 ### Added
 
+- **Cohort reducers on the hub (MS1 4.4, 5.5/5.6)**, `reduce/cohort.py` (Python 3.9, numpy + scipy; reads nsp's
+  promoted `<sub>.tar.gz` in place). `gauge`: the cohort tile map of `measure_atlas` "gaugetensor" per dataset and
+  template tile -- median and a distribution-free 95 % CI (order statistics) of anisotropy, normal share and the
+  trace-normalised tensor, the median tensor's axis, axis agreement, polar tiles' axis withheld. `multimodal`:
+  per subject of `measure_multimodal`, relative band power per tile, the whole-cortex relative power and Spearman rho
+  across tiles between each relative band and each non-MEG field; then cohort median and CI per quantity (own-tree
+  tiles are not the same place across people, so tiles are never pooled). Descriptive only.
+- `rheome.scale.measure_multimodal` writes relative band power (`meg_<band>_rel`, the band's share of the four
+  bands' stored sums, exact at every level and member) and includes it in `multimodal_assoc`.
+
 - **Event boundaries and event statistics (MS1 SPEC1 §8)**, generic over an event table (one row per event:
   hemisphere, tiles, first and last time), so the tracker's detections and atlas-cell events are read alike.
   `rheome.detect.eventtable` fits `rheome.detect.risefall` to each event's own area-weighted envelope (tOn, tOff,

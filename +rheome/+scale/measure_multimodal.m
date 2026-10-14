@@ -34,7 +34,9 @@ function [T, X, Cn] = measure_multimodal(name, S, opts)
 % ⚠ RAW MEG POWER ACROSS TILES IS MOSTLY THE KERNEL'S DEPTH SENSITIVITY: in one participant the alpha
 % tile power spans ~1000x while delta/theta varies +-12 %, so rho between raw band powers (and between a raw
 % power and anything deep-vs-superficial) reads the instrument. Compare a band relative to the sum of the bands
-% (exact at any level from the stored sums) before reading MEG against PET or fibres.
+% (exact at any level from the stored sums) before reading MEG against PET or fibres: X.tiles carries it as the
+% fields meg_<band>_rel (unit fraction, in mean; per member, the band's share of the four bands' power at that
+% scale), and X.assoc includes them.
 % ⚠ The connectome is RAW endpoint counts between tiles (each end at its nearest cortex vertex, the step
 % rheome.operators.connectome starts from), without its 3-hop vertex smoothing: at tile scale the smoothing
 % only moves weight across a tile border, and the smoothed vertex matrix costs ~20 GB at 1e6 fibres.
@@ -95,7 +97,7 @@ function [T, X, Cn] = measure_multimodal(name, S, opts)
     fld = [compose("meg_%s", string({opts.Bands.name})), "pet_" + string({pet.name}), repmat("fibres_degree", 1, haveFib)];
     mdl = [repmat("MEG", 1, nb), repmat("PET", 1, numel(pet)), repmat("fibres", 1, haveFib)];
     uni = [repmat("(A m)^2", 1, nb), string({pet.units}), repmat("fibres/m^2", 1, haveFib)];
-    nF = numel(fld);
+    nF = numel(fld);  relName = compose("meg_%s_rel", string({opts.Bands.name}));
 
     % ---- per hemisphere: fields x members at the vertices, sums on the finest tiles, direct sums per depth
     codes = [];  A = [];  S1 = [];  S2 = [];  tileOf = zeros(nV, 1);  errDirect = 0;  direct = cell(2, D);
@@ -166,22 +168,29 @@ function [T, X, Cn] = measure_multimodal(name, S, opts)
         tiles = [tiles; table(repmat(k, numel(ti), 1), uc(ti(:)), hemi(ti(:)), fld(fi(:))', mdl(fi(:))', uni(fi(:))', ...
                  mj(:), scaleMM(mj(:) + 1)', ar, s1, s2, s1 ./ ar, s2 ./ ar, 'VariableNames', ...
                  {'level','code','hemisphere','field','modality','unit','member','scale_mm','area_m2','sum_ax','sum_ax2','mean','ms'})]; %#ok<AGROW>
+        % relative band power: the tile's band power over the sum of the bands, a ratio of the stored sums
+        % (exact at every level; not additive, so sum_ax, sum_ax2 and ms are NaN)
+        P3 = reshape(S1k, numel(uc), nF, nJ);  rel = P3(:, 1:nb, :) ./ sum(P3(:, 1:nb, :), 2);
+        [ti, bj, mj] = ndgrid(1:numel(uc), 1:nb, 0:nJ - 1);  nr = numel(ti);
+        tiles = [tiles; table(repmat(k, nr, 1), uc(ti(:)), hemi(ti(:)), relName(bj(:))', repmat("MEG", nr, 1), ...
+                 repmat("fraction", nr, 1), mj(:), scaleMM(mj(:) + 1)', Ak(ti(:)), NaN(nr, 1), NaN(nr, 1), rel(:), NaN(nr, 1), ...
+                 'VariableNames', tiles.Properties.VariableNames)]; %#ok<AGROW>
     end
     Cn.level = 0:L1;  Cn.n_fibres = nFib;  Cn.n_self = nSelf;  Cn.depth = L1;
 
     % ---- descriptive association across tiles (no test)
-    assoc = table();
+    assoc = table();  fa = [fld, relName];  ma = [mdl, repmat("MEG", 1, nb)];  nA = numel(fa);
     for k = max(opts.AssocMinLevel, 0):L1
         for m = 0:nJ - 1
-            Y = zeros(2^k, nF);
-            for f = 1:nF
-                r = tiles(tiles.level == k & tiles.member == m & tiles.field == fld(f), :);
-                if mdl(f) == "MEG" || m == 0, Y(:, f) = r.mean; else, Y(:, f) = r.ms; end
+            Y = zeros(2^k, nA);
+            for f = 1:nA
+                r = tiles(tiles.level == k & tiles.member == m & tiles.field == fa(f), :);
+                if ma(f) == "MEG" || m == 0, Y(:, f) = r.mean; else, Y(:, f) = r.ms; end
             end
             R = corr(Y, 'Type', 'Spearman');
-            [i1, i2] = find(triu(true(nF), 1));
+            [i1, i2] = find(triu(true(nA), 1));
             assoc = [assoc; table(repmat(k, numel(i1), 1), repmat(m, numel(i1), 1), repmat(scaleMM(m + 1), numel(i1), 1), ...
-                     fld(i1)', fld(i2)', R(sub2ind([nF nF], i1, i2)), repmat(2^k, numel(i1), 1), ...
+                     fa(i1)', fa(i2)', R(sub2ind([nA nA], i1, i2)), repmat(2^k, numel(i1), 1), ...
                      'VariableNames', {'level','member','scale_mm','field_a','field_b','rho','n_tiles'})]; %#ok<AGROW>
         end
     end

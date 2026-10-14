@@ -49,6 +49,17 @@ classdef tScaleMultimodal < matlab.unittest.TestCase
             % the descriptive rho table covers every pair of fields at levels 3..5
             tc.verifyEqual(unique(X.assoc.level)', 3:5);
             tc.verifyTrue(all(abs(X.assoc.rho(~isnan(X.assoc.rho))) <= 1 + 1e-12));
+            % relative band power: the band's share of the four bands' stored sums, summing to 1 per tile and member
+            R = Y(endsWith(Y.field, "_rel"), :);
+            tc.verifyEqual(height(R), 4 * height(Y(Y.field == "meg_alpha", :)));
+            [g, ~] = findgroups(R(:, {'level','code','member'}));
+            tc.verifyEqual(splitapply(@sum, R.mean, g), ones(max(g), 1), 'AbsTol', 1e-12);
+            a = Y(Y.level == 5 & Y.member == 2 & Y.field == "meg_alpha", :);
+            M = Y(Y.level == 5 & Y.member == 2 & Y.modality == "MEG" & ~endsWith(Y.field, "_rel"), :);
+            ra = R(R.level == 5 & R.member == 2 & R.field == "meg_alpha_rel", :);
+            tot = splitapply(@sum, M.sum_ax, findgroups(M.code));
+            tc.verifyEqual(ra.mean, a.sum_ax ./ tot, 'RelTol', 1e-12);
+            tc.verifyTrue(any(X.assoc.field_a == "meg_alpha_rel" | X.assoc.field_b == "meg_alpha_rel"));
         end
 
         function viaRun(tc)
