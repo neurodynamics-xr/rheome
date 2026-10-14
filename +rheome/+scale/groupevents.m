@@ -32,7 +32,7 @@ function [G, A, TF] = groupevents(inDir, outDir, opts)
         opts.Seed (1,1) double = 7
         opts.Accept (1,1) double = 0.8
         opts.AcceptSNR (1,1) double = 10
-        opts.Model (1,1) string = "quadrature"
+        opts.Model (1,1) string = "posterior"
     end
     rng(opts.Seed);
     f = dir(fullfile(inDir, '**', '*metrics.csv'));  P = table();

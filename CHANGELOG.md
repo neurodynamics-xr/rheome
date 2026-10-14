@@ -4,6 +4,18 @@
 
 ### Added
 
+- **Event boundaries read by their posterior (`rheome.detect.risefall` `Model="posterior"`; default of
+  `measure_events` and of the §8 A rule in `groupevents`).** Diagnosis on planted episodes through MEG (truth
+  known): the 10 dB failure is not the fit's start, bounds, margin, smoothing or loss, and the joint footprint-tile
+  envelope does not help. The planted episode beats with the ongoing alpha of its band
+  (|p + n|^2 = p^2 + n^2 + 2pn cos(dphi)); with that cross term removed the same fit passes. The least-squares
+  point trades the resulting timing error into tau. The new model profiles the power double sigmoid over (tOn,
+  tOff, tauR, tauF), takes the marginal posterior medians of tOn and tOff (tempered by the residuals'
+  autocorrelation), and refits tau with the times held. Held-out plants (4 participants, 10 dB): every criterion
+  is better than "quadrature"; timing is near one 165 ms tile and tau x0.73-0.98. `measure_eventplants` reads
+  "posterior" alongside linear and quadrature, can fit the plant's footprint tiles (`Footprint`), and returns the
+  plants' envelopes (third output) for estimator work.
+
 - **The atlas's tiles in MATLAB (MS1 tree unification).** `rheome.geom.surfaceladder` ports nsp's atlas ladder
   (`nxr_convert/atlas/ladder.py`: equal-mass cuts across the geodesic diameter) step for step, floating-point order
   and sort emulation included (`rheome.utils.pysort` = CPython 3.12 `list.sort`). It is identical to ladder.py on
