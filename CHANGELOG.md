@@ -18,6 +18,13 @@
   against the closed form -2/s^2 at the core. Both write `<analysis>.csv` and figure data `<analysis>.mat`. Sphere:
   coupling 1.7 %, rotor path 1.4 mm median, speed 0.029 of 0.030 m/s, curl 5.8 %, source on/off within 1 frame
   (tests/tScaleAmbient).
+- **fMRI on the same tiles as MEG (MS1 code 5/7).** `rheome.io.read.bold` reads nsp bst-fmri's overlay (the
+  resting BOLD on the leadfield's cortex, with each run's fMRIPrep confounds); `rheome.scale.locate` finds it and
+  `rheome.scale.importsubject` caches it as `fmri.mat`. `rheome.scale.measure_multimodal` (analysis `multimodal`)
+  adds the field `fmri_infraslow`: per run percent signal change, motion/CSF/white-matter confounds and a trend
+  regressed out, 0.01-0.1 Hz band-pass, and its power through the same graph-wavelet bank on the same tiles as the
+  MEG band powers (%^2). Limitation stated: the BOLD point spread through the chain (fsaverage5 sampling,
+  interpolation, haemodynamics) is not measured.
 
 - **Event boundaries and event statistics (MS1 SPEC1 §8)**, generic over an event table (one row per event:
   hemisphere, tiles, first and last time), so the tracker's detections and atlas-cell events are read alike.

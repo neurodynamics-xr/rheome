@@ -51,6 +51,33 @@ classdef tScaleMultimodal < matlab.unittest.TestCase
             tc.verifyTrue(all(abs(X.assoc.rho(~isnan(X.assoc.rho))) <= 1 + 1e-12));
         end
 
+        function boldInfraslow(tc)
+            % a planted 0.05 Hz, 1 % BOLD oscillation on every vertex, plus a 0.2 Hz one (out of band) and a slow
+            % drift that a confound carries: the infra-slow power is the planted A^2/2 = 0.5 %^2, the drift is
+            % regressed out, and a spatially constant signal has no power in the wavelet members (lambda = 0)
+            nm = 'synth_multimodal_bold';  src = fullfile(tc.Root, tc.Name);  d = fullfile(tc.Root, nm);
+            copyfile(src, d);  delete(fullfile(d, 'fibers_subject.mat'));
+            sf = load(fullfile(d, 'surface.mat'));  nV = size(sf.S.Vertices, 1);
+            tr = 2;  t = (0:299) * tr;  drift = sin(2*pi*0.03*t);
+            conf = [drift; 0.01 * randn(7, numel(t), 'like', t)]';
+            x = 1000 + 10 * sin(2*pi*0.05*t) + 10 * sin(2*pi*0.2*t) + 50 * drift;
+            x = repmat(x, nV, 1);  x(1:2, :) = 0;              % two vertices outside the brain mask
+            names = ["trans_x" "trans_y" "trans_z" "rot_x" "rot_y" "rot_z" "csf" "white_matter"];
+            fmri = struct('name', 'task_rest_run_1', 'x', single(x), 'tr', tr, 'units', 'a.u.', ...
+                          'confounds', conf, 'confoundNames', names, 'file', '');
+            save(fullfile(d, 'fmri.mat'), 'fmri');
+            [T, X] = rheome.scale.measure_multimodal(nm, [], Depth=4);
+            v = @(m) T.value(T.metric == m);
+            tc.verifyEqual(v("n_fields"), 6);                  % 4 MEG bands, fMRI, PET
+            tc.verifyEqual([v("n_bold_runs") v("bold_seconds") v("bold_lowmean_vertices")], [1 600 2]);
+            Y = X.tiles(X.tiles.field == "fmri_infraslow", :);
+            tc.verifyEqual(unique(Y.modality), "fMRI");  tc.verifyEqual(unique(Y.unit), "%^2");
+            r0 = Y(Y.level == 0 & Y.member == 0, :);
+            tc.verifyEqual(r0.mean, 0.5, 'RelTol', 0.05);
+            tc.verifyLessThan(max(Y.mean(Y.member > 0)), 1e-3 * r0.mean);
+            tc.verifyLessThan(v("rollup_max_relerr"), 1e-10);
+        end
+
         function viaRun(tc)
             od = fullfile(tc.Root, 'out');
             R = rheome.scale.run(tc.Name, Analyses="multimodal", OutDir=od);
