@@ -43,6 +43,9 @@
 %   rheome.detect.tilepeaks / rheome.detect.tiletrack - the peak as a TILE and the trajectory as a walk on the
 %       tile graph (adjacent steps only, global assignment, margin hysteresis). Tile size is chosen
 %       from the feature (rheome.geom.jointcell); a planting test is the validation.
+%   rheome.detect.jointpath - TRACKING ACROSS FREQUENCY: the same Viterbi on the (tile x band) product graph,
+%                      band envelopes normalised by a null; frequency centroid and sweep (oct/s) per path
+%   rheome.detect.jointpathnull - its normalisation, baseline, threshold, held-out false and cross-band false rates
 %   rheome.detect.tilepath - ⭐ TRACK-BEFORE-DETECT: Viterbi on the tile graph within one observation window,
 %       scoring Y - baseline along every admissible walk before deciding. At 10 dB it keeps the movers
 %       detect-then-link loses (measured by planting). Use it, not tiletrack, below ~20 dB.

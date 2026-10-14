@@ -17,6 +17,7 @@
 %   rheome.scale.measure_grouptrack     - Viterbi tile tracking of the alpha envelope, real against the mode-shift surrogate.
 %   rheome.scale.measure_events         - What a detected alpha event is: shape boundaries, event-locked TF, timing (MS1 SPEC1 §8).
 %   rheome.scale.measure_eventplants    - Planted alpha episodes of known timing in own rest, boundaries read back (SPEC1 §8 A).
+%   rheome.scale.measure_freqtrack      - Planted chirps in own rest, tracked across frequency on the joint graph (MS1 2.5).
 %   rheome.scale.measure_helmholtzbands - Helmholtz-band recovery on the subject's own cortex (geometry only; no MEG).
 %   rheome.scale.measure_ownregion      - Readout rule 5 for one subject: which Desikan-Killiany regions own their flux.
 %   rheome.scale.measure_inject         - Known movers injected into the own recording, tracked back (MS1 G7, Fig. 8).
