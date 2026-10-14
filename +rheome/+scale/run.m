@@ -18,6 +18,12 @@ function R = run(name, opts)
 %   eventsensors.mat  eventsensors: the tracked event on the sensor data (figure data)
 %   grouptrackwindows.csv  grouptrack: per configuration x 2 s window, real and surrogate path scores and threshold
 %   panelexamples.mat panelexamples: MS1 Figs. 4-7 panel A examples (figure data)
+%   ambient.csv, ambient.mat   MS1 1.4 (nsp rheome-ms1-panels): rheome.scale.measure_ambient -- a planted tilted
+%                     field on the sphere and the subject's left hemisphere, ambient vs tangential divergence and
+%                     the 2H(J.n) coupling against its closed form, per surface x tilt; .mat: figure data. Opt-in
+%   cptrack.csv, cptrack.mat   MS1 2.3 (nsp rheome-ms1-panels): rheome.scale.measure_cptrack -- a drifting rotor
+%                     and a waxing/waning source tracked by rheome.detect.track, core path, curl and div against
+%                     the truth, per surface; .mat: figure data. Opt-in; neither reads the recording
 %   plantfloors.csv, movingvortex.csv, composition.csv, sizeruler.csv, vortexscale.csv, rotation.csv,
 %   detection.csv, diracangles.csv   the MS1 group plants (P1, nsp cf-plant-floors): the per-plant /
 %                     per-placement tables of rheome.scale.measure_plantfloors, measure_movingvortex and
@@ -162,7 +168,7 @@ function R = run(name, opts)
     for a = opts.Analyses(:)'
         t0 = tic;  msg = "";  st = "ok";
         try
-            if isempty(S) && ~ismember(a, ["bandsnr" "helmholtzbands"]), S = rheome.scale.sensors(name, Modality=opts.Modality); end
+            if isempty(S) && ~ismember(a, ["bandsnr" "helmholtzbands" "ambient" "cptrack"]), S = rheome.scale.sensors(name, Modality=opts.Modality); end
             if isempty(Kf) && ismember(a, ["ownregion" "fusion"])          % the fused kernels, built once
                 ctx = rheome.flow.context(name);  Kf = rheome.flow.build(ctx);
             end
@@ -234,6 +240,12 @@ function R = run(name, opts)
                 case "panelexamples"           % MS1 Figs. 4-7 panel A: one example per figure (figure data)
                     [Tp, ex] = rheome.scale.measure_panelexamples(name, S);  M = [M; Tp]; %#ok<AGROW>
                     save(fullfile(od, 'panelexamples.mat'), '-struct', 'ex', '-v7');
+                case "ambient"                 % MS1 1.4: a planted tilted field, ambient vs tangential, 2H(J.n) vs closed form
+                    [Tq, X.ambient, ex] = rheome.scale.measure_ambient(name);  M = [M; Tq]; %#ok<AGROW>
+                    save(fullfile(od, 'ambient.mat'), '-struct', 'ex', '-v7');
+                case "cptrack"                 % MS1 2.3: a drifting rotor + a waxing/waning source through detect.track
+                    [Tq, X.cptrack, ex] = rheome.scale.measure_cptrack(name);  M = [M; Tq]; %#ok<AGROW>
+                    save(fullfile(od, 'cptrack.mat'), '-struct', 'ex', '-v7');
                 case "aperiodic"               % MS1 G10: a moving 1/f change, threshold and split selectivity
                     [Ta, X.aperiodic] = rheome.scale.measure_aperiodic(name, S);  M = [M; Ta]; %#ok<AGROW>
                 case "slowosc"                 % MS1 G15, G16: sleep slow oscillations, the positive control

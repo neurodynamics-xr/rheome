@@ -4,6 +4,20 @@
 
 ### Added
 
+- **The atlas's tiles in MATLAB (MS1 tree unification).** `rheome.geom.surfaceladder` ports nsp's atlas ladder
+  (`nxr_convert/atlas/ladder.py`: equal-mass cuts across the geodesic diameter) step for step, floating-point order
+  and sort emulation included (`rheome.utils.pysort` = CPython 3.12 `list.sort`). It is identical to ladder.py on
+  the ten VR1 PREVENT-AD hemispheres at all 12 levels. `rheome.geom.tree` gains `Method="Ladder"` (re-build) and
+  `Codes=` (read the stored codes, the only way to match an atlas store built before today's ladder.py: 3 of the
+  10 VR1 hemispheres differ from it from level 7 on). The default stays Fiedler bisection; callers opt in.
+- **Ambient-field and critical-point trajectory panels (MS1 1.4, 2.3)**, no instrument, on the sphere and the
+  subject's left hemisphere. `rheome.scale.measure_ambient` (analysis `ambient`) plants a tilted field and reads it
+  ambient vs tangential: the mean-curvature coupling 2H(J.n) against its closed form (H = 1/R on the sphere, cotan H
+  on the cortex, also at > 60 mm). `rheome.scale.measure_cptrack` (analysis `cptrack`) plants a drifting rotor and a
+  source that waxes and wanes, tracks them with `rheome.detect.track`, and reads core path, speed, curl and div
+  against the closed form -2/s^2 at the core. Both write `<analysis>.csv` and figure data `<analysis>.mat`. Sphere:
+  coupling 1.7 %, rotor path 1.4 mm median, speed 0.029 of 0.030 m/s, curl 5.8 %, source on/off within 1 frame
+  (tests/tScaleAmbient).
 - **fMRI on the same tiles as MEG (MS1 code 5/7).** `rheome.io.read.bold` reads nsp bst-fmri's overlay (the
   resting BOLD on the leadfield's cortex, with each run's fMRIPrep confounds); `rheome.scale.locate` finds it and
   `rheome.scale.importsubject` caches it as `fmri.mat`. `rheome.scale.measure_multimodal` (analysis `multimodal`)
