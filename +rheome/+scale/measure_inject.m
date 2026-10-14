@@ -3,6 +3,7 @@ function [T, X, Ex] = measure_inject(name, S, opts)
 %
 %   [T, X] = rheome.scale.measure_inject(name)
 %   [T, X] = rheome.scale.measure_inject(name, S, Depths=[3 7 8], JLevels=[2 4], KAmp=2, NPer=12)
+%   [T, X] = rheome.scale.measure_inject(name, S, Frame="atlas", JLevels=[0 1])   % on the atlas's time tiles
 %
 % The group version of the single-participant injection test (left hemisphere, MS1
 % Fig. 8 and section 5.2), same source, same tracker, same null, per hemisphere:
@@ -37,6 +38,10 @@ function [T, X, Ex] = measure_inject(name, S, opts)
 % ⚠ Depth 3 tiles are lobar (8 per hemisphere): there a 0.1 m/s mover crosses at most one tile boundary,
 %   so its speed ratio is quantised. It is in the design as the independence limit (MS1 section 9.5).
 % ⚠ A window holds two objects -- the injection and the recording's own alpha -- hence the top 3 paths.
+% Frame="atlas" (prototype): frames are the atlas's alpha time tiles and windows WindowTiles of them,
+% and the envelope is the alpha wavelet's unless Filter="iir" -- exactly as rheome.scale.measure_grouptrack
+% documents; every window (real, surrogate, injected, control) is parcellated the same way, the truth is read at
+% each block's centre, and the injection is present for its window +-1 s as before.
 % Ex (third output, figure data): the first mover injected (first case with a speed > 0, first injection, first
 % depth and rate): the hemisphere's cortex, the planted path's vertices and cumulative length, the true vertex per
 % tracker frame, the tracked path (tiles, frames, tile centroids) chosen by the FOUND rule, and its readout.
@@ -61,15 +66,28 @@ function [T, X, Ex] = measure_inject(name, S, opts)
         opts.Alpha (1,1) double = 0.1
         opts.Hemis string = ["L" "R"]
         opts.Seed (1,1) double = 23
+        opts.Frame (1,1) string {mustBeMember(opts.Frame, ["ms1" "atlas"])} = "ms1"
+        opts.Filter (1,1) string {mustBeMember(opts.Filter, ["" "iir" "atlas"])} = ""
+        opts.WindowTiles (1,1) double {mustBeInteger, mustBePositive} = 16
     end
+    atlas = opts.Frame == "atlas";  filt = opts.Filter;  if filt == "", filt = "iir"; if atlas, filt = "atlas"; end, end
+    Tw = rheome.detect.atlastime(sqrt(8*16));
     if isempty(S), S = rheome.scale.sensors(name); end
     rng(opts.Seed);
-    FR = 300;  W = 2;  MARGIN = 1;  PAD = 2;  F0 = 10;
+    FR = 300;  W = 2;  MARGIN = 1;  PAD = 2;  F0 = 10;  if atlas, W = opts.WindowTiles*Tw.P; end
     st = rheome.load.study(name);  fs = st.rec.sfreq;  F = double(st.rec.F(S.iSel, :));  clear st
-    bp = designfilt('bandpassiir', 'FilterOrder', 8, 'HalfPowerFrequency1', 8, 'HalfPowerFrequency2', 16, 'SampleRate', fs);
-    E = rheome.flow.envelopemodes(name, Band=[8 16], Rate=FR);
-    dec = round(fs/FR);  nSeg = (W + 2*MARGIN + 2*PAD)*fs;  tSeg = (0:nSeg-1)/fs - (MARGIN + PAD);
-    env = i_env(tSeg, W, MARGIN, 0.25);  cIdx = (MARGIN + PAD)*fs + (1:dec:W*fs);
+    if filt == "atlas"
+        bp = @(Z) rheome.filters.atlasband(Z, fs, Tw.fc);
+    else
+        bf = designfilt('bandpassiir', 'FilterOrder', 8, 'HalfPowerFrequency1', 8, 'HalfPowerFrequency2', 16, 'SampleRate', fs);
+        bp = @(Z) hilbert(filtfilt(bf, Z.')).';
+    end
+    E = rheome.flow.envelopemodes(name, Band=[8 16], Rate=FR, Filter=filt);
+    dec = round(fs/FR);  nSeg = round((W + 2*MARGIN + 2*PAD)*fs);  tSeg = (0:nSeg-1)/fs - (MARGIN + PAD);
+    env = i_env(tSeg, W, MARGIN, 0.25);  cIdx = (MARGIN + PAD)*fs + (1:dec:ceil(W*fs) + dec*atlas);
+    FRh = FR;  if atlas, FRh = 1/Tw.P; end
+    tiles = @(Z) Z;  if atlas, tiles = @(Z) i_first(rheome.detect.timetiles(Z, FR, Tw.P), opts.WindowTiles); end
+    nW = round(W*FRh);
     uW = min(max(tSeg/W, 0), 1);
     vn = {'pass','found','near','netMM','speedMS','straight','durS'};
     X = table();  Ex = struct([]);
@@ -78,9 +96,11 @@ function [T, X, Ex] = measure_inject(name, S, opts)
         av = full(sum(Mm, 2));  gv = double(H.gv(:));  nV = numel(gv);  nrm = double(Sh.VertNormals);
         rows = reshape((gv' - 1)*3 + (1:3)', [], 1);  K = S.Res.ImagingKernel(rows, :);  GL = S.G(:, rows);
         hk = exp(-lam*(opts.SigmaMM*1e-3)^2/2);
-        C = double(E.(char(hh)).C);  nFr = size(C, 2);  nWin = floor(nFr/(W*FR));
+        C = double(E.(char(hh)).C);  C300 = C;
+        if atlas, C = rheome.detect.timetiles(C, FR, Tw.P); end   % the recording's tiles, from its start
+        nFr = size(C, 2);  nWin = floor(nFr/nW);
         ge = rheome.geom.edgegraph(Sh);  Tr = rheome.geom.tree(Sh, L=H.lbo.L, M=Mm, MaxDepth=max(opts.Depths));
-        sh = randi([W*FR, nFr - W*FR], size(C, 1), 1);
+        sh = randi([nW, nFr - nW], size(C, 1), 1);
         Cs = zeros(size(C));  for k = 1:size(C, 1), Cs(k, :) = circshift(C(k, :), sh(k)); end
         nd = numel(opts.Depths);  nj = numel(opts.JLevels);
         Gs = cell(1, nd);  Wd = Gs;  Dcv = Gs;  NUL = cell(nd, nj);
@@ -88,10 +108,10 @@ function [T, X, Ex] = measure_inject(name, S, opts)
             Gs{di} = rheome.geom.tiles(Tr, Sh, opts.Depths(di), Ruler=ge);  P = double(Gs{di}.P);
             Wd{di} = (P'*(av.*Phi))./(P'*av);  Dcv{di} = distances(ge, Gs{di}.centre);
             for ji = 1:nj
-                [Ys, rate, nF] = i_winblock(Wd{di}*Cs, FR, opts.JLevels(ji), W*FR, nWin);
+                [Ys, rate, nF] = i_winblock(Wd{di}*Cs, FRh, opts.JLevels(ji), nW, nWin);
                 NUL{di, ji} = rheome.detect.tilepathnull(Ys, Gs{di}, nF, rate, Alpha=opts.Alpha, WindowS=W);
                 % real alpha: every window against the same threshold (best path, as grouptrack)
-                Yr = i_winblock(Wd{di}*C, FR, opts.JLevels(ji), W*FR, nWin);
+                Yr = i_winblock(Wd{di}*C, FRh, opts.JLevels(ji), nW, nWin);
                 for w = 1:nWin
                     sr = i_path(Yr(:, (w-1)*nF + (1:nF)), Gs{di}, NUL{di, ji}, rate, [], [], opts.NearMM);
                     X = [X; i_row(hh, "real", NaN, w, w, 1 + (w > nWin/2), opts.Depths(di), Gs{di}, rate, ...
@@ -102,18 +122,19 @@ function [T, X, Ex] = measure_inject(name, S, opts)
         clear Cs
         % amplitude reference: the real envelope's typical per-window peak, and a unit blob's
         ref = zeros(nWin, 1);
-        for w = 1:nWin, ref(w) = max(Phi*mean(C(:, (w-1)*W*FR + (1:W*FR)), 2)); end
+        n3 = round(W*FR);  for w = 1:nWin, ref(w) = max(Phi*mean(C300(:, round((w-1)*W*FR) + (1:n3)), 2)); end
+        clear C300
         s1 = zeros(20, 1);  tt = (0:W*fs-1)/fs;
         for q = 1:20
             g0 = GL*i_blob(randi(nV), Phi, Mm, hk, nrm);
-            A = rheome.flow.activation(K*hilbert(filtfilt(bp, (g0*cos(2*pi*F0*tt)).')).');
+            A = rheome.flow.activation(K*bp(g0*cos(2*pi*F0*tt)));
             s1(q) = max(mean(A, 2));
         end
         amp = opts.KAmp*median(ref)/median(s1);
         for ci = 1:numel(opts.Cases)
             for n = 1:opts.NPer
                 hf = 1 + (n > opts.NPer/2);  lims = [3, floor(nWin/2); floor(nWin/2) + 1, nWin - 2];
-                w = randi(lims(hf, :));  s0 = (w-1)*W*fs - (MARGIN + PAD)*fs + (1:nSeg);
+                w = randi(lims(hf, :));  s0 = round((w-1)*W*fs) - (MARGIN + PAD)*fs + (1:nSeg);
                 v0 = randi(nV);  car = cos(2*pi*F0*tSeg + 2*pi*rand);  v = opts.Speeds(ci);
                 switch opts.Cases(ci)
                     case "still"
@@ -140,13 +161,17 @@ function [T, X, Ex] = measure_inject(name, S, opts)
                         idx = min(max((1:nSeg) - inW + 1, 1), nTr);                 % hold at the ends
                         bsig = PK.X(:, idx).*(env.*car);  vT = pv(PK.k(idx(cIdx)))';
                 end
-                Cin = i_envmodes(F(:, s0) + amp*bsig, bp, cIdx, K, Phi, Mm);
-                Cct = i_envmodes(F(:, s0), bp, cIdx, K, Phi, Mm);
+                Cin = tiles(i_envmodes(F(:, s0) + amp*bsig, bp, cIdx, K, Phi, Mm));
+                Cct = tiles(i_envmodes(F(:, s0), bp, cIdx, K, Phi, Mm));
                 for di = 1:nd
                     for ji = 1:nj
-                        [Yi, rate, nF] = i_winblock(Wd{di}*Cin, FR, opts.JLevels(ji), W*FR, 1);
-                        Yc = i_winblock(Wd{di}*Cct, FR, opts.JLevels(ji), W*FR, 1);
-                        vTb = vT((0:nF-1)*2^opts.JLevels(ji) + ceil(2^opts.JLevels(ji)/2));
+                        [Yi, rate, nF] = i_winblock(Wd{di}*Cin, FRh, opts.JLevels(ji), nW, 1);
+                        Yc = i_winblock(Wd{di}*Cct, FRh, opts.JLevels(ji), nW, 1);
+                        if atlas                                            % the 300/s frame at each block's centre
+                            vTb = vT(min(round(((0:nF-1) + 0.5)*2^opts.JLevels(ji)*Tw.P*FR) + 1, numel(vT)));
+                        else
+                            vTb = vT((0:nF-1)*2^opts.JLevels(ji) + ceil(2^opts.JLevels(ji)/2));
+                        end
                         [si, trk] = i_path(Yi, Gs{di}, NUL{di, ji}, rate, Dcv{di}, vTb, opts.NearMM);
                         if nargout > 2 && isempty(Ex) && v > 0
                             Ex = struct('hemi', hh, 'case', opts.Cases(ci), 'speed_ms', v, 'depth', opts.Depths(di), ...
@@ -216,9 +241,11 @@ end
 
 % The envelope of a sensor segment as LB mode coefficients over the central window.
 function Cw = i_envmodes(Fs, bp, cIdx, K, Phi, Mm)
-    Fa = hilbert(filtfilt(bp, Fs.')).';
+    Fa = bp(Fs);
     Cw = Phi'*(Mm*rheome.flow.activation(K*Fa(:, cIdx)));
 end
+
+function Z = i_first(Z, n), Z = Z(:, 1:n); end
 
 function [Y, rate, nF] = i_winblock(Y0, FR, jj, nW, nWin)
     bs = 2^jj;  nF = floor(nW/bs);  rate = FR/bs;  nT = size(Y0, 1);

@@ -3,6 +3,7 @@ function [T, X, Best, Win] = measure_grouptrack(name, S, opts)
 %
 %   [T, X] = rheome.scale.measure_grouptrack(name)
 %   [T, X] = rheome.scale.measure_grouptrack(name, S, Depths=7, JLevels=[0 2])
+%   [T, X] = rheome.scale.measure_grouptrack(name, S, Frame="atlas")        % on the atlas's time tiles
 %
 % The single-subject group-track analysis with the report printing and the blob-size aside removed; the same seed,
 % the same surrogate, the same calibration. Per hemisphere: the 8-16 Hz analytic envelope of the
@@ -36,6 +37,15 @@ function [T, X, Best, Win] = measure_grouptrack(name, S, opts)
 % path scores, the window's start (s from the recording start), whether it is used (clean), its surrogate half
 % (calibration | test) and the configuration's threshold: the detection behind frac_pass and false_rate_test.
 %
+% Frame="atlas" (prototype): time is parcellated as the dynamics atlas parcellates it. A frame is
+% one alpha time tile (rheome.detect.atlastime: P = 0.1648 s, edges at whole multiples of P from the recording
+% start), the envelope's mean over it (rheome.detect.timetiles); a window is WindowTiles tiles (16 = one tile of
+% level -15, 2.64 s), so JLevels block 2^j tiles (j = 1: the 0.33 s parent). Filter defaults to "atlas" there:
+% the envelope is the alpha wavelet's (6.07-12.14 Hz, rheome.filters.atlasband) instead of the 8-16 Hz IIR's;
+% Filter="iir" keeps the IIR envelope on atlas tiles (the factorial: frame x filter). Surrogate, baseline,
+% threshold and clean-span rules are unchanged. rate and start_s are then in tiles/s and tile-aligned seconds;
+% Best.frame0 counts tiles, so rheome.scale.measure_eventsensors does not read atlas-frame Best yet.
+%
 % ⚠ netMM is quantised to the tiling: displacement below one tile is not measured, by design.
 % ⚠ Everything is through the instrument -- a trajectory is the trajectory of the RENDERED blob.
 %
@@ -55,29 +65,40 @@ function [T, X, Best, Win] = measure_grouptrack(name, S, opts)
         opts.Hemis string = ["L" "R"]
         opts.Seed (1,1) double = 17
         opts.EdgeS (1,1) double = 10
+        opts.Frame (1,1) string {mustBeMember(opts.Frame, ["ms1" "atlas"])} = "ms1"
+        opts.Filter (1,1) string {mustBeMember(opts.Filter, ["" "iir" "atlas"])} = ""
+        opts.WindowTiles (1,1) double {mustBeInteger, mustBePositive} = 16
     end
+    atlas = opts.Frame == "atlas";  filt = opts.Filter;  if filt == "", filt = "iir"; if atlas, filt = "atlas"; end, end
+    Tw = rheome.detect.atlastime(sqrt(8*16));  if atlas, opts.WindowS = opts.WindowTiles*Tw.P; end
     rng(opts.Seed);
     if isempty(S), S = rheome.scale.sensors(name); end
     B = S.B;
     st = rheome.load.study(name);  fs = st.rec.sfreq;  CS = rheome.scale.cleanspan(double(st.rec.F(S.iSel, :)), fs, EdgeS=opts.EdgeS);  clear st
-    E = rheome.flow.envelopemodes(name, Band=[8 16], Rate=opts.Rate);
+    E = rheome.flow.envelopemodes(name, Band=[8 16], Rate=opts.Rate, Filter=filt);
     FR = opts.Rate;  W = opts.WindowS;  res = [];  nWin = NaN;  Best = struct([]);  Win = table();
     dec = round(fs / FR);                                     % envelope frame k is sample (k-1)*dec + 1
     f1 = ceil((CS.first - 1) / dec) + 1;  f2 = floor((CS.last - 1) / dec) + 1;
     badF = CS.mask(1:dec:end);
     for hh = opts.Hemis
         H = B.(char(hh));  Sh = H.S;  Phi = H.lbo.Phi;  Mm = H.lbo.Mass;
-        av = full(sum(Mm, 2));  C = double(E.(char(hh)).C(:, f1:min(f2, end)));  nFr = size(C, 2);  nWin = floor(nFr/(W*FR));
-        bw0 = badF(f1:f1 + nFr - 1);  ok = find(~any(reshape(bw0(1:nWin*W*FR), W*FR, nWin), 1));
+        av = full(sum(Mm, 2));  C = double(E.(char(hh)).C(:, f1:min(f2, end)));  nFr = size(C, 2);
+        bw0 = badF(f1:f1 + nFr - 1);  FRh = FR;  t0 = (f1 - 1)/FR;
+        if atlas                                              % frames -> the atlas's alpha time tiles
+            [C, ti] = rheome.detect.timetiles(C, FR, Tw.P, T0=t0);  bw0 = rheome.detect.timetiles(bw0(:)', FR, Tw.P, T0=t0) > 0;
+            FRh = 1/Tw.P;  t0 = ti.k(1)*Tw.P;  nFr = size(C, 2);
+        end
+        nW = round(W*FRh);  nWin = floor(nFr/nW);
+        ok = find(~any(reshape(bw0(1:nWin*nW), nW, nWin), 1));
         % shortcut: an interior artefact block still enters the surrogate, circularly shifted per mode; mask it if a cohort shows many
         g = rheome.geom.edgegraph(Sh);  Tr = rheome.geom.tree(Sh, L=H.lbo.L, M=Mm, MaxDepth=max(opts.Depths));
-        sh = randi([W*FR, nFr - W*FR], size(C, 1), 1);
+        sh = randi([nW, nFr - nW], size(C, 1), 1);
         Cs = zeros(size(C));  for k = 1:size(C, 1), Cs(k, :) = circshift(C(k, :), sh(k)); end
         for d = opts.Depths
             G = rheome.geom.tiles(Tr, Sh, d, Ruler=g);  P = double(G.P);  Wd = (P' * (av .* Phi)) ./ (P' * av);
             Y0 = Wd * C;  Ys0 = Wd * Cs;
             for jj = opts.JLevels
-                [Yr, rate, nF] = i_winblock(Y0, FR, jj, W*FR, nWin);  Ysr = i_winblock(Ys0, FR, jj, W*FR, nWin);
+                [Yr, rate, nF] = i_winblock(Y0, FRh, jj, nW, nWin);  Ysr = i_winblock(Ys0, FRh, jj, nW, nWin);
                 b0 = quantile(reshape(Ysr(:, 1:nWin*nF), [], 1), opts.BaseQ);
                 ss = zeros(nWin, 1);  sst = cell(nWin, 1);
                 for w = ok
@@ -96,14 +117,14 @@ function [T, X, Best, Win] = measure_grouptrack(name, S, opts)
                 if nargout > 3
                     wi = (1:nWin)';  hv = repmat("", nWin, 1);  hv(cal) = "calibration";  hv(tst) = "test";
                     Win = [Win; table(repmat(hh, nWin, 1), repmat(d, nWin, 1), repmat(rate, nWin, 1), wi, ...
-                        (f1 - 1)/FR + (wi - 1)*W, ismember(wi, ok), hv, rs, ss, repmat(thr, nWin, 1), ...
+                        t0 + (wi - 1)*W, ismember(wi, ok), hv, rs, ss, repmat(thr, nWin, 1), ...
                         'VariableNames', {'hemi','depth','rate','window','start_s','used','surrogate_half', ...
                         'real_score','surrogate_score','thr'})]; %#ok<AGROW>
                 end
                 [bs, bw] = max(rs);
                 if bs > 0
                     pth = rheome.detect.tilepath(Yr(:, (bw-1)*nF + (1:nF)), G, Baseline=b0, SampleRate=rate);
-                    Best = [Best, struct('hemi', hh, 'depth', d, 'jj', jj, 'rate', rate, 'window', bw, 'frame0', f1 - 1, ...
+                    Best = [Best, struct('hemi', hh, 'depth', d, 'jj', jj, 'rate', rate, 'window', bw, 'frame0', round(t0*FRh), ...
                         'score', bs, 'passed', bs > thr, 'track', pth.tracks(1), 'G', G)]; %#ok<AGROW>
                 end
                 R = vertcat(rst{pr});  Sx = vertcat(sst{tst(ps)});

@@ -3,6 +3,7 @@ function E = envelopemodes(name, opts)
 %
 %   E = rheome.flow.envelopemodes('sub01')                   % alpha, 8-16 Hz, 300 frames/s
 %   E = rheome.flow.envelopemodes(name, Band=[8 16], Rate=300, Rebuild=false)
+%   E = rheome.flow.envelopemodes(name, Filter="atlas")     % the atlas's alpha wavelet instead of the IIR band-pass
 %
 % Per hemisphere: band-pass and Hilbert AT THE SENSORS (exact, since the inverse is linear -- 270
 % transforms instead of 61 000), the plain minimum-norm kernel, |J^| per vertex (rheome.flow.activation), and
@@ -12,6 +13,8 @@ function E = envelopemodes(name, opts)
 %
 % CACHE: +data/<name>/alpha_envelope_modes.mat for the 8-16 Hz default (the file the alpha scripts
 % already read), envelope_modes__<lo>-<hi>Hz__<rate>.mat otherwise. Rebuild=true recomputes.
+% Filter="atlas": the band is the atlas's one-wavelet-per-octave band holding sqrt(prod(Band))
+% (rheome.filters.atlasband; [8 16] -> 6.07-12.14 Hz), cached as envelope_modes__atlas__<lo>-<hi>Hz__<rate>.mat.
 %
 % OUTPUT  E.L / E.R: struct(.C single [K x nFrames], .fs, .band)
 %
@@ -25,9 +28,13 @@ function E = envelopemodes(name, opts)
         opts.Rate (1,1) double {mustBePositive} = 300
         opts.Rebuild (1,1) logical = false
         opts.ChunkS (1,1) double {mustBePositive} = 2
+        opts.Filter (1,1) string {mustBeMember(opts.Filter, ["iir" "atlas"])} = "iir"
     end
+    if opts.Filter == "atlas", opts.Band = rheome.detect.atlastime(sqrt(prod(opts.Band))).band; end
     D = fullfile(rheome.load.root(), char(name));
-    if isequal(opts.Band, [8 16]) && opts.Rate == 300
+    if opts.Filter == "atlas"
+        f = fullfile(D, sprintf('envelope_modes__atlas__%.4g-%.4gHz__%g.mat', opts.Band, opts.Rate));
+    elseif isequal(opts.Band, [8 16]) && opts.Rate == 300
         f = fullfile(D, 'alpha_envelope_modes.mat');
     else
         f = fullfile(D, sprintf('envelope_modes__%g-%gHz__%g.mat', opts.Band, opts.Rate));
@@ -42,9 +49,13 @@ function E = envelopemodes(name, opts)
     chT = st.chan.Type(iSel);  fs = st.rec.sfreq;  F = double(st.rec.F(iSel, :));  clear st
     Res = rheome.inverse.mne(G, ncm, struct('ChannelTypes', {chT}, 'InverseMeasure', 'amplitude', 'nVert', Sf.nV));
     Kall = Res.ImagingKernel;  clear Res G
-    bp = designfilt('bandpassiir', 'FilterOrder', 8, 'HalfPowerFrequency1', opts.Band(1), ...
-                    'HalfPowerFrequency2', opts.Band(2), 'SampleRate', fs);
-    Fa = hilbert(filtfilt(bp, F.')).';  clear F
+    if opts.Filter == "atlas"
+        Fa = rheome.filters.atlasband(F, fs, sqrt(prod(opts.Band)));  clear F
+    else
+        bp = designfilt('bandpassiir', 'FilterOrder', 8, 'HalfPowerFrequency1', opts.Band(1), ...
+                        'HalfPowerFrequency2', opts.Band(2), 'SampleRate', fs);
+        Fa = hilbert(filtfilt(bp, F.')).';  clear F
+    end
     Fa = Fa(:, 1:round(fs / opts.Rate):end);
     nFr = size(Fa, 2);  chunk = round(opts.ChunkS * opts.Rate);
     for hh = ["L" "R"]

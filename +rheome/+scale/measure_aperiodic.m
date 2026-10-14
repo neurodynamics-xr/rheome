@@ -4,6 +4,7 @@ function [T, X, Ex] = measure_aperiodic(name, S, opts)
 %
 %   [T, X] = rheome.scale.measure_aperiodic(name)
 %   [T, X] = rheome.scale.measure_aperiodic(name, S, SigmaMM=[30 60 100], Reps=8, NullWindows=32)
+%   [T, X] = rheome.scale.measure_aperiodic(name, S, Frame="atlas")     % the tracker on the atlas's time tiles
 %
 % The group version of a single-participant test (a 30 mm patch, the
 % existence case), at lobar scale and with the threshold and the split's selectivity per participant:
@@ -59,6 +60,10 @@ function [T, X, Ex] = measure_aperiodic(name, S, opts)
 % ⚠ The fit-window PSD mixes the window's own Welch PSD at weight 6/L with the background's over the L span (the
 %   rest record; or the empty room + the cortical background's mean PSD) -- the plant exists only in the window,
 %   so this is the record's Welch PSD up to the segments straddling the window's edges.
+% Frame="atlas" (prototype): the Viterbi readout's frames are the atlas's alpha time tiles (means of
+% the 100/s envelope over P = 0.1648 s, tile edges from the window's start) and the window is WindowTiles of them
+% (2.64 s); with Filter="atlas" (the default there) the analytic signal is the alpha wavelet's
+% (rheome.filters.atlasband) instead of the 8-16 Hz FFT mask. Plant in-band dB stays on Band (comparable).
 % Ex (third output, figure data): the first offset plant at the largest OffsetX of the first arm, rep 1, first sigma,
 % first speed > 0 (else the first): the hemisphere's cortex, the path, the patch gain at the window's centre and the
 % patch centre per envelope frame, and at the sensors the channel-mean Welch PSDs (2 s Hann) of the background, the
@@ -89,9 +94,14 @@ function [T, X, Ex] = measure_aperiodic(name, S, opts)
         opts.MarginS (1,1) double = 2
         opts.Alpha (1,1) double = 0.1
         opts.Seed (1,1) double = 41
+        opts.Frame (1,1) string {mustBeMember(opts.Frame, ["ms1" "atlas"])} = "ms1"
+        opts.Filter (1,1) string {mustBeMember(opts.Filter, ["" "iir" "atlas"])} = ""
+        opts.WindowTiles (1,1) double {mustBeInteger, mustBePositive} = 16
     end
+    atlas = opts.Frame == "atlas";  filt = opts.Filter;  if filt == "", filt = "iir"; if atlas, filt = "atlas"; end, end
+    Tw = rheome.detect.atlastime(sqrt(prod(opts.Band)));  if atlas, opts.WindowS = opts.WindowTiles*Tw.P; end
     if isempty(S), S = rheome.scale.sensors(name); end
-    FITR = [1 45];  FR = 100;  FE = 25;  W = opts.WindowS;  SIG = opts.SigmaMM/1e3;  PATH = opts.PathMM/1e3;
+    FITR = [1 45];  FR = 100;  FE = 25;  if atlas, FE = 1/Tw.P; end;  W = opts.WindowS;  SIG = opts.SigmaMM/1e3;  PATH = opts.PathMM/1e3;
 
     %% the cortex, the instrument, the records
     Hm = S.B.(char(opts.Hemi));  Sh = Hm.S;  lbo = Hm.lbo;  Phi = lbo.Phi;  lam = lbo.Lambda(:);  Mm = lbo.Mass;
@@ -147,7 +157,7 @@ function [T, X, Ex] = measure_aperiodic(name, S, opts)
         Wt{k} = (Pt.'.*av.') ./ (Pt.'*av);
     end
     C = struct('Kn', Kn, 'S', Sh, 'lbo', lbo, 'fs', fs, 'FR', FR, 'FE', FE, 'keep', keep, 'nV', nV, ...
-               'band', opts.Band, 'BandMM', opts.BandMM);  C.Wt = Wt;
+               'band', opts.Band, 'BandMM', opts.BandMM, 'atlas', atlas, 'atlasFilter', filt == "atlas", 'Tw', Tw);  C.Wt = Wt;
     nFr = round(W*FE);
 
     %% the paths, shared by the arms
@@ -366,10 +376,16 @@ end
 function Q = i_chain(Y, C, full)
 % analytic at the sensors, normal MNE current, envelope at FE, tiles per depth (and the apparent flow)
     nT = size(Y, 2);  f = (0:nT-1)*C.fs/nT;
-    z = ifft(fft(Y, [], 2) .* (2*(f >= C.band(1) & f <= C.band(2))), [], 2);
-    zf = C.Kn * z(:, C.keep(1):round(C.fs/C.FR):C.keep(end));
-    bs = C.FR/C.FE;  nF = floor(size(zf, 2)/bs);
-    A = squeeze(mean(reshape(abs(zf(:, 1:nF*bs)), C.nV, bs, nF), 2));
+    if C.atlasFilter, z = rheome.filters.atlasband(Y, C.fs, C.Tw.fc);
+    else, z = ifft(fft(Y, [], 2) .* (2*(f >= C.band(1) & f <= C.band(2))), [], 2); end
+    if C.atlas                                   % the atlas's time tiles over the window (+ one frame for the last edge)
+        zf = C.Kn * z(:, C.keep(1):round(C.fs/C.FR):min(C.keep(end) + round(C.fs/C.FR), nT));
+        A = rheome.detect.timetiles(abs(zf), C.FR, C.Tw.P);  A = A(:, 1:round(numel(C.keep)/C.fs*C.FE));
+    else
+        zf = C.Kn * z(:, C.keep(1):round(C.fs/C.FR):C.keep(end));
+        bs = C.FR/C.FE;  nF = floor(size(zf, 2)/bs);
+        A = squeeze(mean(reshape(abs(zf(:, 1:nF*bs)), C.nV, bs, nF), 2));
+    end
     Q.tile = cellfun(@(Wt) Wt*A, C.Wt, 'uni', 0);
     if full
         o = rheome.flow.apparent(A, C.S, Rate=C.FE, Band=C.band, Alpha=0.01);   % ⚠ Alpha 0.01, not the default 1
