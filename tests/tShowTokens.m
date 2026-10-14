@@ -116,6 +116,43 @@ classdef tShowTokens < matlab.unittest.TestCase
             t.passes(h, 'specparam');
         end
 
+        function timetracks(t)
+            tt = linspace(0, 1, 400);
+            tr = struct('Label', {'heading', 'scale', 'chirality'}, 'Unit', {'rad', 'mm', 'sign'}, ...
+                'Spec', {struct('Start', 0, 'To', 4*pi, 'Profile', 'ramp'), struct('Start', 10, 'To', 30, 'Profile', 'ease'), ...
+                         struct('Keys', struct('x', {0, 0.5}, 'v', {1, -1}, 'seg', {'hold', 'hold'}))}, ...
+                'Values', {4*pi*tt(1:20:end) + 0.2*randn(1, 20), [], []}, 'Time', {tt(1:20:end), [], []});
+            [h, V] = rheome.show.timetracks(tt, tr, 'Visible', 'off', 'Export', t.stem('timetracks'));
+            t.verifyEqual({V.kind}, {'angle', 'value', 'sign'});
+            t.verifyEqual(V(3).plant([1 end]), [1 -1]);
+            t.passes(h, 'timetracks');
+        end
+
+        function phasor(t)
+            F = nxr_figure('single', 70, {'A'}, 'Kinds', struct('A', 'plot'), 'Letters', false);
+            axis(F.ax.A, 'equal', 'off');  F.fig.Visible = 'off';
+            g = rheome.show.phasor(F.ax.A, pi/3 + 0.3*randn(80, 1), 'Labels', true);
+            t.verifyEqual(g.mu, pi/3, 'AbsTol', 0.15);  t.verifyGreaterThan(g.R, 0.8);
+            g2 = rheome.show.phasor(F.ax.A, [0; pi/2], 'At', [3 0; 6 0], 'Radius', 1, 'Amplitude', [1; 0.5]);
+            t.verifyEqual(g2.R, [1; 1], 'AbsTol', 1e-12);  t.verifyEqual(g2.mu, [0; pi/2], 'AbsTol', 1e-12);
+            g3 = rheome.show.phasor(F.ax.A, [0; pi]);
+            t.verifyEqual(g3.R, 0, 'AbsTol', 1e-12);                       % opposite phases cancel
+            nxr_save(F, t.stem('phasor'));
+            t.passes(F.fig, 'phasor');
+        end
+
+        function levelstack(t)
+            [h, G] = rheome.show.levelstack(4, 0:4, 'Slice', 2, 'Tile', [2 3], 'SpaceMM', 122 ./ 2.^(4:-1:0), ...
+                'Visible', 'off', 'Export', t.stem('levelstack'));
+            t.verifyEqual(arrayfun(@(g) numel(g.t0), G), [16 8 4 2 1]);  % each tile of level j is two of level j-1
+            t.verifyEqual(G(3).t1 - G(3).t0, ones(1, 4));
+            t.passes(h, 'levelstack');
+            fld = arrayfun(@(g) rand(1, numel(g.t0)), G, 'UniformOutput', false);
+            h2 = rheome.show.levelstack(4, 0:4, 'Field', fld, 'Label', 'power', 'Unit', 'dB', 'Visible', 'off', ...
+                'Export', t.stem('levelstack-field'));
+            t.passes(h2, 'levelstack-field');
+        end
+
         function noColourLiteralsLeft(t)
             % the figure rules are tokens, not literals: no RGB triplets or hand-picked maps in +show
             d = fullfile(fileparts(fileparts(mfilename('fullpath'))), '+rheome', '+show');
