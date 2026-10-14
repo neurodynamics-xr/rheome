@@ -16,7 +16,7 @@ function gif(surf, U, file, varargin)
 % OPTIONS:
 %   'Frames'    frame indices (default 1:nT)
 %   'CLim'      colour limits (default symmetric from U(:,Frames))
-%   'Colormap'  default: diverging (signed) / parula (one-signed)
+%   'Colormap'  default: the house maps (flow-signed-field / flow-magnitude) via rheome.show.surface
 %   'View'      camera [az el] (default [-90 10])
 %   'DelayTime' seconds per frame (default 0.06)
 %   'Resolution' export DPI (default 80)

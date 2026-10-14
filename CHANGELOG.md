@@ -4,6 +4,17 @@
 
 ### Added
 
+- **`rheome.show` figures read the lab's figure tokens.** Every figure function (eventsensors, activity, critical,
+  filmstrip, vectorstrip, ridgestrip, ridges, frame, jointscalogram, jointspectrum, specparam, resolution) and the
+  panel functions (surface, vectors, spectrum2d) take their type sizes, line weights, trace/event colours and colormaps
+  from `library/styles/tokens/figure-tokens.json` (through `library/styles/matlab`, `$NXR_STYLES` to move it), not
+  literals. The figures are journal-sized (190 mm wide, NeuroImage) with panel letters and headings on the house
+  grid (`nxr_figure`). Colourbars carry 'quantity (unit)' with round limits, and the default maps are the house
+  maps (flow-signed-field, flow-magnitude, atlas-power). A new `'Export'` option writes PDF (fonts embedded), SVG and
+  PNG (`nxr_save`); `'Title'` becomes the figure's name, since the legend carries the title. New options say the
+  data's unit (`'Unit'`; filmstrip also `'Quantity'`). `tests/tShowTokens` renders each figure and requires its PDF
+  to pass `library/styles/schematics/figure_check.py`, and no RGB literal or hand-picked map may remain in `+show`.
+
 - **Event boundaries read by their posterior (`rheome.detect.risefall` `Model="posterior"`; default of
   `measure_events` and of the §8 A rule in `groupevents`).** Diagnosis on planted episodes through MEG (truth
   known): the 10 dB failure is not the fit's start, bounds, margin, smoothing or loss, and the joint footprint-tile

@@ -17,8 +17,8 @@ function hAx = surface(surf, data, varargin)
 %
 % OPTIONS (name/value):
 %   'Faces'      [nF x 3] faces, required only if 'surf' is a bare vertex matrix
-%   'Colormap'   colormap for the overlay (default: diverging for signed data
-%                (blue-white-red), sequential (parula) for one-signed data)
+%   'Colormap'   colormap for the overlay (default: the house maps of the figure tokens,
+%                flow-signed-field for signed data, flow-magnitude for one-signed data)
 %   'FaceAlpha'  surface opacity 0..1 (default 1)
 %   'EdgeColor'  edge color (default 'none')
 %   'View'       [az el] camera view (default [-90 10], left-lateral-ish)
@@ -82,9 +82,10 @@ function hAx = surface(surf, data, varargin)
     end
 
     % --- draw ---
+    T = tokens();
     if isempty(data)
         patch('Parent', hAx, 'Faces', F, 'Vertices', V, ...
-              'FaceColor', [0.82 0.82 0.82], 'EdgeColor', opt.EdgeColor, ...
+              'FaceColor', T.rgb.neutral_mist, 'EdgeColor', opt.EdgeColor, ...
               'FaceAlpha', opt.FaceAlpha, 'FaceLighting', 'gouraud');
     else
         patch('Parent', hAx, 'Faces', F, 'Vertices', V, ...
@@ -94,7 +95,7 @@ function hAx = surface(surf, data, varargin)
         isSigned = any(data < 0) && any(data > 0);
         cmap = opt.Colormap;
         if isempty(cmap)
-            if isSigned, cmap = i_diverging(256); else, cmap = parula(256); end
+            if isSigned, cmap = nxr_cmap('flow-signed-field'); else, cmap = nxr_cmap('flow-magnitude'); end
         end
         colormap(hAx, cmap);
         if isempty(opt.CLim)
@@ -120,19 +121,6 @@ function hAx = surface(surf, data, varargin)
     end
 
     if nargout == 0, clear hAx; end
-end
-
-function cmap = i_diverging(n)
-% Blue-white-red diverging colormap for signed fields (0 -> white).
-    if nargin < 1, n = 256; end
-    x = linspace(0, 1, n)';
-    lo = [0.23 0.30 0.75];   % blue
-    mid = [1 1 1];            % white
-    hi = [0.75 0.15 0.15];   % red
-    cmap = zeros(n, 3);
-    for c = 1:3
-        cmap(:,c) = interp1([0 0.5 1], [lo(c) mid(c) hi(c)], x, 'linear');
-    end
 end
 
 % Author: Diellor Basha, 2026
