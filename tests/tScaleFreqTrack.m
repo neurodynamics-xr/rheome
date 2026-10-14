@@ -41,6 +41,21 @@ classdef tScaleFreqTrack < matlab.unittest.TestCase
             tc.verifyLessThan(median(abs(s.sweepOctS)), 0.3, 'a still tone reads no sweep');
         end
 
+        function anOnsetTransientDoesNotSetTheNull(tc)
+            % a red common-mode transient in the first 0.5 s (cleanspan's onset finding; on cf-chirps it was the one passing
+            % real window in 78/80 hemispheres and, scattered by the shift, set the null). The guard is the frame count:
+            % on this small head the transient alone does not lift the threshold (mutation: only the count fails)
+            d = fullfile(getenv('RHEOME_DATA'), 'synth_freqtrack_onset');  scaleSynthSubject(d);
+            L = load(fullfile(d, 'study.mat'));  rec = L.rec;  n = round(0.5*rec.sfreq);
+            rec.F(:, 1:n) = rec.F(:, 1:n) + 200*std(rec.F(:))*randn(size(rec.F, 1), 1).*sin(2*pi*3*(0:n-1)/rec.sfreq);
+            L.rec = rec;  save(fullfile(d, 'study.mat'), '-struct', 'L');
+            S = rheome.scale.sensors('synth_freqtrack_onset');
+            [~, X] = rheome.scale.measure_freqtrack('synth_freqtrack_onset', S, Depth=3, JLevel=4, NPer=2, SNRs=20, ...
+                                                    Hemis="L", Cases="still", Rates=0);
+            tc.verifyEqual(mean(X.pass(X.arm == "noiseless")), 1, 'the onset transient must not set the threshold');
+            tc.verifyLessThan(sum(X.case == "real"), 20, 'real windows come from the clean span only');
+        end
+
         function theDriverWritesTheTable(tc)
             od = tc.applyFixture(matlab.unittest.fixtures.TemporaryFolderFixture).Folder;
             R = rheome.scale.run(tc.Name, Analyses="freqtrack", OutDir=od, Dataset="synth");
