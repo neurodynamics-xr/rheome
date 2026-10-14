@@ -28,7 +28,7 @@ function [hFig, G] = levelstack(duration, levels, varargin)
 %   'Quantity'  the field's quantity (figure tokens quantity: power, magnitude, divergence ...; default 'power')
 %   'Label','Unit'  the field's name and unit on the colourbar (required with Field)
 %   'Width'     'single' | 'onehalf' | 'double' (default 'double')
-%   'Export','Visible','Title'  as every rheome.show figure
+%   'Export','Visible','Title','Theme'  as every rheome.show figure
 %
 % OUTPUT:
 %   hFig the figure;  G struct per level: .level .t0 .t1 (s, the tiles' edges)
@@ -39,7 +39,6 @@ function [hFig, G] = levelstack(duration, levels, varargin)
 % See also: rheome.show.zstack, rheome.show.timetracks
 %
 % Author: Diellor Basha, 2026
-    T = tokens();
     p = inputParser;
     p.addParameter('Slice', []);
     p.addParameter('Tile', []);
@@ -52,8 +51,10 @@ function [hFig, G] = levelstack(duration, levels, varargin)
     p.addParameter('Title', 'The dyadic level stack');
     p.addParameter('Export', '');
     p.addParameter('Visible', 'on');
+    p.addParameter('Theme', '');
     p.parse(varargin{:});
     o = p.Results;
+    T = tokens(o.Theme);
     levels = double(levels(:)');
     if ~(isscalar(duration) && duration > 0), error('rheome:show:levelstack', 'duration: s, > 0.'); end
     if isempty(levels) || any(levels < 0 | levels ~= round(levels)) || any(diff(levels) <= 0)
@@ -71,7 +72,7 @@ function [hFig, G] = levelstack(duration, levels, varargin)
     end
 
     keys = 'g';  if hasField, keys = 'gs'; end   % the colour row last: its ticks hang below it
-    F = nxr_figure(o.Width, 34 + 8 * nL, {'A'}, 'Kinds', struct('A', 'plot'), 'Keys', struct('A', keys));
+    F = nxr_figure(o.Width, 34 + 8 * nL, {'A'}, 'Kinds', struct('A', 'plot'), 'Keys', struct('A', keys), 'Theme', o.Theme);
     hFig = F.fig;  hFig.Visible = o.Visible;
     ax = F.ax.A;  hold(ax, 'on');
     P = ax.Position;  ax.Position = [P(1) + 10 / F.size_mm(1), P(2), P(3) - 40 / F.size_mm(1), P(4)];   % level names; z-stack

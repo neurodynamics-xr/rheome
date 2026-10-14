@@ -24,6 +24,7 @@ function g = phasor(ax, phase, varargin)
 %   'Radius'     the circle's radius in ax's data units (default 1)
 %   'Mean'       draw the mean resultant vector (default true for one glyph, false for markers)
 %   'Labels'     write 0, pi/2, pi, -pi/2 at the circle (default: true for one glyph without ax, else false)
+%   'Theme'      '' (the tokens' default, Pergammon) | 'neuroimage' (MS1) | 'nature': colours, and the new figure's size
 %
 % OUTPUT:
 %   g  struct: .R (mean resultant length) .mu (its angle, rad) per glyph, .handles
@@ -34,15 +35,16 @@ function g = phasor(ax, phase, varargin)
 % See also: rheome.show.timetracks
 %
 % Author: Diellor Basha, 2026
-    T = tokens();
     p = inputParser;
     p.addParameter('Amplitude', []);
     p.addParameter('At', [0 0]);
     p.addParameter('Radius', 1, @(x) isscalar(x) && x > 0);
     p.addParameter('Mean', []);
     p.addParameter('Labels', []);
+    p.addParameter('Theme', '');
     p.parse(varargin{:});
     o = p.Results;
+    T = tokens(o.Theme);
     phase = double(phase(:));
     if isempty(phase) || any(~isfinite(phase)), error('rheome:show:phasor', 'phase: finite angles (rad), at least one.'); end
     a = double(o.Amplitude(:));
@@ -52,7 +54,7 @@ function g = phasor(ax, phase, varargin)
     if markers && size(At, 1) ~= numel(phase), error('rheome:show:phasor', 'At: one row per phase, or one centre.'); end
     newAxes = isempty(ax);
     if newAxes
-        F = nxr_figure('single', 70, {'A'}, 'Kinds', struct('A', 'plot'), 'Letters', false);
+        F = nxr_figure('single', 70, {'A'}, 'Kinds', struct('A', 'plot'), 'Letters', false, 'Theme', o.Theme);
         ax = F.ax.A;  axis(ax, 'equal', 'off');
     end
     useMean = o.Mean;  if isempty(useMean), useMean = ~markers; end

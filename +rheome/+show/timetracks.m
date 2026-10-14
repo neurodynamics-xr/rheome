@@ -33,6 +33,7 @@ function [hFig, V] = timetracks(t, tracks, varargin)
 %   'Title'   the figure's name (not drawn: a journal figure's title is its legend's first sentence)
 %   'Export'  file stem: <stem>.pdf/.svg/.png at print size (nxr_save)
 %   'Visible' 'on' (default) | 'off'
+%   'Theme'   '' (the tokens' default, Pergammon) | 'neuroimage' (MS1) | 'nature'
 %
 % OUTPUT:
 %   hFig  the figure;  V  struct array per row: .label .unit .kind .plant (on t, [] without Spec) .t .values
@@ -47,7 +48,6 @@ function [hFig, V] = timetracks(t, tracks, varargin)
 % See also: rheome.show.track, rheome.show.phasor, rheome.show.levelstack
 %
 % Author: Diellor Basha, 2026
-    T = tokens();
     p = inputParser;
     p.addParameter('Width', 'single');
     p.addParameter('RowHeight', [], @(x) isempty(x) || (isscalar(x) && x > 0));
@@ -55,8 +55,10 @@ function [hFig, V] = timetracks(t, tracks, varargin)
     p.addParameter('Title', 'Time-tracks');
     p.addParameter('Export', '');
     p.addParameter('Visible', 'on');
+    p.addParameter('Theme', '');
     p.parse(varargin{:});
     o = p.Results;
+    T = tokens(o.Theme);
 
     t = double(t(:)');
     if numel(t) < 2 || any(diff(t) <= 0), error('rheome:show:timetracks', 't: increasing times (s), at least two.'); end
@@ -97,7 +99,7 @@ function [hFig, V] = timetracks(t, tracks, varargin)
     lane = o.RowHeight;  if isempty(lane), lane = max(lay.lane_mm); end
     nk = hasPlant + hasKeys + hasDet;  krows = max(1, ceil(nk / 2));
     H = n * lane + (n - 1) * lay.gap_mm + 24 + 5 * krows;
-    F = nxr_figure(o.Width, H, {'A'}, 'Kinds', struct('A', 'plot'), 'Keys', struct('A', repmat('g', 1, krows)));
+    F = nxr_figure(o.Width, H, {'A'}, 'Kinds', struct('A', 'plot'), 'Keys', struct('A', repmat('g', 1, krows)), 'Theme', o.Theme);
     hFig = F.fig;  hFig.Visible = o.Visible;
     P = F.ax.A.Position;  axis(F.ax.A, 'off');
     gap = lay.gap_mm / F.size_mm(2);  bottom = 8 / F.size_mm(2);  left = 26 / F.size_mm(1);   % horizontal lane labels: they never reach a neighbouring lane
