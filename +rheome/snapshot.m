@@ -505,10 +505,13 @@ function n = nodePath(n)
 end
 
 function runDriver(job, node, work)
+    job.profile = tempname(work);   % Chrome's profile inside work: removed with it by onCleanup even if the driver dies
     jf = fullfile(work, 'job.json');
     fid = fopen(jf, 'w');  fwrite(fid, jsonencode(job));  fclose(fid);
     drv = fullfile(fileparts(mfilename('fullpath')), 'private', 'snapshot_driver.mjs');
-    [st, msg] = system(sprintf('"%s" "%s" "%s" 2>&1', node, drv, jf));
+    env = '';   % Linux: MATLAB's LD_LIBRARY_PATH (its own libraries) keeps Chrome from starting (fir, 2026-10-14)
+    if isunix && ~ismac, env = 'env -u LD_LIBRARY_PATH '; end
+    [st, msg] = system(sprintf('%s"%s" "%s" "%s" 2>&1', env, node, drv, jf));
     if st ~= 0, error('rheome:snapshot:viewer', 'The viewer run failed: %s', strtrim(msg)); end
 end
 
