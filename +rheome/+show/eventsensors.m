@@ -13,20 +13,25 @@ function [hFig, info] = eventsensors(X, t, E, pos2, varargin)
 % carrying channels ringed and the traced ones numbered. So a reader can find in the raw traces what
 % the tracker followed on the cortex.
 %
-% OPTIONS: 'NumChannels' (8)  'Labels' {1 x C} channel names  'Color' (trace-event [0.820 0.286 0.357])
-%          'Visible' ('on')  'Title' ('')
+% OPTIONS: 'NumChannels' (8)  'Labels' {1 x C} channel names  'Color' (trace-event, figure tokens)
+%          'Unit' ('a.u.') unit of X, for the footprint colourbar  'Visible' ('on')
+%          'Title' ('') the figure's name (the legend carries it)  'Export' file stem: <stem>.pdf/.svg/.png
+% Sizes and colours are the figure tokens (library/styles/tokens/figure-tokens.json), 190 x 70 mm.
 % OUTPUT:  info .channels [NumChannels x 1] the traced channels   .carrying [n x 1] union over steps
 %
 % See also: rheome.detect.eventsensors, rheome.detect.tiletrack
 %
 % Author: Diellor Basha, 2026
 
+    T = tokens();
     p = inputParser;
     p.addParameter('NumChannels', 8);
     p.addParameter('Labels', {});
-    p.addParameter('Color', [209 73 91] / 255);     % trace-event #d1495b (§5c)
+    p.addParameter('Color', T.rgb.trace_event);     % trace-event (§5c)
+    p.addParameter('Unit', 'a.u.');
     p.addParameter('Visible', 'on');
     p.addParameter('Title', '');
+    p.addParameter('Export', '');
     p.parse(varargin{:});  o = p.Results;
 
     X = real(double(X));  t = double(t(:)).';  C = size(X, 1);
@@ -34,28 +39,30 @@ function [hFig, info] = eventsensors(X, t, E, pos2, varargin)
     carrying = unique(vertcat(E.channels{:}));
     lab = o.Labels;  if isempty(lab), lab = arrayfun(@(c) sprintf('ch %d', c), 1:C, 'uni', 0); end
 
-    hFig = figure('Visible', o.Visible, 'Color', 'w', 'Position', [100 100 1100 480]);
-    tl = tiledlayout(hFig, 1, 3, 'TileSpacing', 'compact');
-    if ~isempty(o.Title), title(tl, o.Title); end
-    ax = nexttile(tl, [1 2]);  hold(ax, 'on');
-    sp = 3 * max(std(X(ch, :), 0, 2));  yl = [-sp, numel(ch) * sp];
+    F = nxr_figure('double', 70, {'AAB'}, 'Kinds', struct('B', 'image'), ...
+        'Titles', struct('A', 'Sensor traces, event samples in colour', 'B', 'Event footprint, carrying sensors ringed'));
+    hFig = F.fig;  hFig.Visible = o.Visible;
+    ax = F.ax.A;  hold(ax, 'on');
+    sp = 3 * max(std(X(ch, :), 0, 2));  if sp <= 0, sp = 1; end
     for i = 1:numel(ch)
         c = ch(i);  off = (numel(ch) - i) * sp;
-        plot(ax, t, X(c, :) + off, 'Color', [138 148 163] / 255, 'LineWidth', 1);   % trace-neutral #8a94a3
+        plot(ax, t, X(c, :) + off, 'Color', T.rgb.trace_neutral, 'LineWidth', T.line.data_pt);
         y = X(c, :) + off;  y(~E.mask(c, :)) = NaN;
-        plot(ax, t, y, 'Color', o.Color, 'LineWidth', 1.5);
-        text(ax, t(1), off, sprintf('%d  %s', i, lab{c}), 'HorizontalAlignment', 'right', 'FontSize', 8);
+        plot(ax, t, y, 'Color', o.Color, 'LineWidth', T.line.event_pt);
+        text(ax, t(1), off, sprintf('%d  %s ', i, lab{c}), 'HorizontalAlignment', 'right', 'Interpreter', 'none');
     end
-    set(ax, 'YTick', [], 'YLim', yl);  xlabel(ax, 'time (s)');  box(ax, 'off');
-    title(ax, 'sensor traces: red = the samples the tracked pattern occupies on that sensor');
+    nxr_axes_style(ax, 'time (s)');
+    set(ax, 'YLim', [-sp, numel(ch) * sp], 'XLim', [t(1) t(end)]);  ax.YAxis.Visible = 'off';
 
-    ax2 = nexttile(tl);  hold(ax2, 'on');  axis(ax2, 'equal', 'off');
-    scatter(ax2, pos2(:, 1), pos2(:, 2), 36, E.footprint, 'filled');
-    scatter(ax2, pos2(carrying, 1), pos2(carrying, 2), 70, o.Color, 'LineWidth', 1.2);
-    text(ax2, pos2(ch, 1), pos2(ch, 2), compose(' %d', (1:numel(ch))'), 'FontSize', 8);
-    colormap(ax2, parula);  cb = colorbar(ax2);  cb.Label.String = 'event footprint (mean |x_{ev}|^2)';
-    title(ax2, 'topography: ringed = carrying channels');
+    ax2 = F.ax.B;  hold(ax2, 'on');  axis(ax2, 'equal', 'off');
+    ms = T.marker.size_pt;
+    scatter(ax2, pos2(:, 1), pos2(:, 2), ms^2, E.footprint, 'filled');
+    scatter(ax2, pos2(carrying, 1), pos2(carrying, 2), (2*ms)^2, o.Color, 'LineWidth', T.marker.edge_pt);
+    text(ax2, pos2(ch, 1), pos2(ch, 2), compose(' %d', (1:numel(ch))'));
+    hi = max(E.footprint);  if ~(hi > 0), hi = 1; end
+    nicebar(nxr_colorbar(ax2, 'event footprint, mean |x|²', [o.Unit '²'], 'magnitude', [0 hi]), ax2);
     info = struct('channels', ch, 'carrying', carrying);
+    finish(F, o.Title, o.Export);
 end
 
 % Author: Diellor Basha, 2026

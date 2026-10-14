@@ -4,6 +4,29 @@
 
 ### Added
 
+- **`rheome.show` figures read the lab's figure tokens.** Every figure function (eventsensors, activity, critical,
+  filmstrip, vectorstrip, ridgestrip, ridges, frame, jointscalogram, jointspectrum, specparam, resolution) and the
+  panel functions (surface, vectors, spectrum2d) take their type sizes, line weights, trace/event colours and colormaps
+  from `library/styles/tokens/figure-tokens.json` (through `library/styles/matlab`, `$NXR_STYLES` to move it), not
+  literals. The figures are journal-sized (190 mm wide, NeuroImage) with panel letters and headings on the house
+  grid (`nxr_figure`). Colourbars carry 'quantity (unit)' with round limits, and the default maps are the house
+  maps (flow-signed-field, flow-magnitude, atlas-power). A new `'Export'` option writes PDF (fonts embedded), SVG and
+  PNG (`nxr_save`); `'Title'` becomes the figure's name, since the legend carries the title. New options say the
+  data's unit (`'Unit'`; filmstrip also `'Quantity'`). `tests/tShowTokens` renders each figure and requires its PDF
+  to pass `library/styles/schematics/figure_check.py`, and no RGB literal or hand-picked map may remain in `+show`.
+
+- **Print-ready cortical panels (`rheome.snapshot`), part of the figure system.** Every cortical panel of a figure
+  is drawn the same way from a shot list (field, quantity, unit, reference, time or strip, surface, view). The
+  Cortical Flow viewer draws the views in headless Chrome (Node driver, the viewer served read-only). The layout
+  follows the figure tokens: colormap and limits by quantity (signed: PuOr_r, +-p95, symmetric; magnitude: cividis
+  from 0), the colourbar in the viewer's own colours ("quantity (unit re reference)"), the four standard views (L
+  lateral, L medial, R medial, R lateral), and strips with t above each frame and the interval stated once. The
+  scale bar is geodesic: a mesh-edge path on the folded surface cut at exactly its length, drawn where it lies,
+  with the camera read off each render and checked. Output is SVG (editable), PDF (fonts embedded, the views at
+  full resolution; MATLAB's own PDF export resamples them to ~150 dpi) and PNG at the journal's dpi. The render
+  scale is raised per shot so the views print at >= 500 dpi. `out.legend` gives the legend's sentence. The
+  viewer-folder lookup moved from `rheome.view` to `+rheome/private/viewerFolder.m` (shared, unchanged). The
+  viewer has no BrBG_r or twilight_shifted yet, so coupling and phase quantities need `Colormap=`.
 - **Event boundaries read by their posterior (`rheome.detect.risefall` `Model="posterior"`; default of
   `measure_events` and of the §8 A rule in `groupevents`).** Diagnosis on planted episodes through MEG (truth
   known): the 10 dB failure is not the fit's start, bounds, margin, smoothing or loss, and the joint footprint-tile

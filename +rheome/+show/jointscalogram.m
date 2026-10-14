@@ -10,42 +10,50 @@ function hFig = jointscalogram(scal, varargin)
 % frequency interval carrying 90%% of the energy -- if the ridge does not span it, the slope is
 % clipped and should not be believed.
 %
-% OPTIONS: 'Title', 'Visible'
+% OPTIONS: 'Visible', 'Title' (the figure's name), 'Export' file stem (<stem>.pdf/.svg/.png).
+% Sizes and colours are the figure tokens; 190 x 58 mm.
 %
 % See also: rheome.filters.joint_scalogram, rheome.show.jointspectrum
 %
 % Author: Diellor Basha, 2026
 
+    T = tokens();
     p = inputParser;
     p.addParameter('Title','');
+    p.addParameter('Export','');
     p.addParameter('Visible','on');
     p.parse(varargin{:});  o = p.Results;
 
-    hFig = figure('Color','w','Position',[60 60 1150 420],'Visible',o.Visible);
+    hasRidge = ~isempty(scal.kbar);
+    tB = 'No ridge';
+    if hasRidge
+        tB = sprintf('Speed ridge: c = %.3f m/s (R² = %.3f), support %.1f–%.1f Hz', ...
+            scal.slope, scal.slopeR2, scal.fSupport(1), scal.fSupport(2));
+    end
+    F = nxr_figure('double', 58, {'AB'}, 'Titles', struct('A', 'Joint scalogram', 'B', tB));
+    hFig = F.fig;  hFig.Visible = o.Visible;
 
-    ax1 = subplot(1,2,1);
+    ax1 = F.ax.A;
     lab = arrayfun(@(s) ternary(isnan(s),'LP',sprintf('%.0f',1000*s)), scal.sigma, 'UniformOutput', false);
-    imagesc(ax1, scal.f, 1:numel(scal.sigma), log10(max(scal.energy, max(scal.energy(:))*1e-8)));
+    Z = log10(max(scal.energy, max(scal.energy(:))*1e-8));
+    imagesc(ax1, scal.f, 1:numel(scal.sigma), Z);
     axis(ax1,'xy');
     set(ax1,'YTick',1:numel(lab),'YTickLabel',lab);
-    xlabel(ax1,'temporal frequency (Hz)'); ylabel(ax1,'member \sigma_m (mm)');
-    cb = colorbar(ax1); cb.Label.String = 'log_{10} energy';
-    title(ax1,'joint scalogram','FontWeight','normal');
+    nxr_axes_style(ax1, 'temporal frequency (Hz)', 'member σ (mm)');
+    nicebar(nxr_colorbar(ax1, 'energy', 'log10 a.u.', 'power', [min(Z(:)) max(Z(:)) + eps]), ax1);
 
-    ax2 = subplot(1,2,2);
-    if ~isempty(scal.kbar)
-        scatter(ax2, scal.kbar, 2*pi*scal.fRidge, 14, scal.wRidge, 'filled'); hold(ax2,'on');
+    ax2 = F.ax.B;
+    if hasRidge
+        scatter(ax2, scal.kbar, 2*pi*scal.fRidge, T.marker.size_pt^2, scal.wRidge, 'filled'); hold(ax2,'on');
         kfit = linspace(min(scal.kbar), max(scal.kbar), 50);
         plot(ax2, kfit, scal.slope*kfit + (2*pi*mean(scal.fRidge) - scal.slope*mean(scal.kbar)), ...
-            'r-', 'LineWidth', 1.8);
-        xlabel(ax2,'energy-weighted \surd\lambda (rad m^{-1})'); ylabel(ax2,'\omega (rad s^{-1})');
-        grid(ax2,'on'); cb2 = colorbar(ax2); cb2.Label.String = 'energy weight';
-        title(ax2, sprintf('c = %.3f m/s   (R^2 = %.3f)   support %.1f–%.1f Hz', ...
-            scal.slope, scal.slopeR2, scal.fSupport(1), scal.fSupport(2)), 'FontWeight','normal');
+            '-', 'Color', T.rgb.neutral_ink, 'LineWidth', T.line.data_pt);
+        nxr_axes_style(ax2, 'energy-weighted √λ (rad/m)', 'ω (rad/s)');
+        nicebar(nxr_colorbar(ax2, 'energy weight', 'ratio', 'magnitude', [0 max(max(scal.wRidge), eps)]), ax2);
     else
-        text(ax2,0.5,0.5,'no ridge','HorizontalAlignment','center'); axis(ax2,'off');
+        axis(ax2,'off');
     end
-    if ~isempty(o.Title), sgtitle(hFig, o.Title, 'FontWeight','bold','FontSize',13); end
+    finish(F, o.Title, o.Export);
 end
 
 function y = ternary(c,a,b), if c, y=a; else, y=b; end, end

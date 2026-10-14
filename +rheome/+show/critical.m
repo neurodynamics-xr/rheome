@@ -9,56 +9,71 @@ function hFig = critical(surf, out, varargin)
 % the mesh and the operator, not a finding: sum(index) must equal chi on a closed manifold
 % surface, so a departure means mesh trouble rather than anything about the data.
 %
-% OPTIONS: 'Frame' which frame to draw (default 1), 'View', 'Title', 'Visible'
+% OPTIONS: 'Frame' which frame to draw (default 1), 'View', 'Visible', 'Title' (the figure's name),
+%          'Export' file stem (<stem>.pdf/.svg/.png). Sizes and colours are the figure tokens; 190 x 65 mm.
+% Vortex = flow-vortex circles, source = flow-source triangles, sink = open flow-source triangles
+% (pointing down), saddle = slate squares.
 %
 % See also: rheome.flow.critical, rheome.detect.criticalPoints
 %
 % Author: Diellor Basha, 2026
 
+    T = tokens();
     p = inputParser;
     p.addParameter('Frame', 1);
     p.addParameter('View', [-90 10]);
     p.addParameter('Title','');
+    p.addParameter('Export','');
     p.addParameter('Visible','on');
     p.parse(varargin{:});  o = p.Results;
 
-    col = struct('vortex',[0.85 0.15 0.15], 'source',[0.95 0.65 0.10], ...
-                 'sink',[0.15 0.35 0.85], 'saddle',[0.35 0.35 0.35]);
-    hFig = figure('Color','w','Position',[50 50 1330 420],'Visible',o.Visible);
-
-    ax1 = subplot(1,3,1);
-    rheome.show.surface(surf, zeros(size(surf.Vertices,1),1), 'Parent', ax1, 'View', o.View);
-    hold(ax1,'on');
+    % Helmholtz colours of the tokens; shape doubles colour (source/sink share a colour, not a shape)
+    sty = struct('vortex', {{'o', T.rgb.flow_vortex, T.rgb.flow_vortex}}, ...
+                 'source', {{'^', T.rgb.flow_source, T.rgb.flow_source}}, ...
+                 'sink',   {{'v', T.rgb.neutral_paper, T.rgb.flow_source}}, ...
+                 'saddle', {{'s', T.rgb.neutral_slate, T.rgb.neutral_ink}});
     c = out.cp(o.Frame);
+    ok = ~isempty(out.chi) && all(abs(out.chi(:) - out.chiExpected) < 0.5);
+    F = nxr_figure('double', 65, {'ABC'}, 'Kinds', struct('A', 'cortex'), 'Titles', struct( ...
+        'A', sprintf('Frame %d: %d critical points', out.frames(o.Frame), numel(c.type)), ...
+        'B', 'Population by type', ...
+        'C', sprintf('Poincaré–Hopf: %s', ternary(ok, 'pass', 'mismatch, check the mesh'))));
+    hFig = F.fig;  hFig.Visible = o.Visible;
+
+    ax1 = F.ax.A;
+    rheome.show.surface(surf, [], 'Parent', ax1, 'View', o.View, 'Title', '');
+    hold(ax1,'on');
     if ~isempty(c.pos)
-        sz = 20 + 130 * (c.strength - min(c.strength)) / max(max(c.strength) - min(c.strength), eps);
+        ms = T.marker.size_pt;
+        sz = (ms * (1 + 2 * (c.strength - min(c.strength)) / max(max(c.strength) - min(c.strength), eps))).^2;
         for i = 1:numel(c.type)
-            scatter3(ax1, c.pos(i,1), c.pos(i,2), c.pos(i,3), sz(i), ...
-                col.(lower(c.type{i})), 'filled', 'MarkerEdgeColor','k','LineWidth',0.4);
+            s = sty.(lower(c.type{i}));
+            scatter3(ax1, c.pos(i,1), c.pos(i,2), c.pos(i,3), sz(i), s{1}, 'MarkerFaceColor', s{2}, ...
+                'MarkerEdgeColor', s{3}, 'LineWidth', T.marker.edge_pt);
         end
     end
-    title(ax1, sprintf('frame %d — %d critical points', out.frames(o.Frame), numel(c.type)), ...
-        'FontWeight','normal');
 
-    ax2 = subplot(1,3,2);
-    bar(ax2, out.counts, 'stacked');
-    set(ax2,'XTick',1:numel(out.frames),'XTickLabel',string(out.frames));
-    legend(ax2, out.kinds, 'Location','eastoutside');
-    xlabel(ax2,'frame'); ylabel(ax2,'count'); grid(ax2,'on');
-    title(ax2,'population by type','FontWeight','normal');
-
-    ax3 = subplot(1,3,3);
-    if isempty(out.chi)
-        text(ax3,0.5,0.5,'no \chi reported','HorizontalAlignment','center'); axis(ax3,'off');
-    else
-        plot(ax3, out.chi, 'o-','LineWidth',1.4,'MarkerFaceColor','w'); hold(ax3,'on');
-        yline(ax3, out.chiExpected, 'r--', sprintf('\\chi = %d expected', out.chiExpected), 'LineWidth',1.4);
-        xlabel(ax3,'frame'); ylabel(ax3,'\Sigma index'); grid(ax3,'on');
-        ok = all(abs(out.chi(:) - out.chiExpected) < 0.5);
-        title(ax3, sprintf('Poincaré–Hopf: %s', ternary(ok,'PASS','MISMATCH — check the mesh')), ...
-            'FontWeight','normal');
+    ax2 = F.ax.B;
+    hb = bar(ax2, out.counts, 'stacked', 'LineWidth', T.line.outline_pt);
+    for i = 1:numel(hb)
+        s = sty.(lower(out.kinds{i}));  hb(i).FaceColor = s{2};  hb(i).EdgeColor = s{3};
     end
-    if ~isempty(o.Title), sgtitle(hFig, o.Title, 'FontWeight','bold','FontSize',13); end
+    set(ax2,'XTick',1:numel(out.frames),'XTickLabel',string(out.frames));
+    ylim(ax2, [0 1.7*max([sum(out.counts, 2); 1])]);   % empty space top-right for the key (tokens: legend)
+    nxr_axes_style(ax2, 'frame (index)', 'critical points (count)');
+    legend(ax2, out.kinds, 'Location','northeast', 'Box', 'off', 'FontSize', T.type.legendText.size_pt);
+
+    ax3 = F.ax.C;
+    if isempty(out.chi)
+        text(ax3,0.5,0.5,'no χ reported','HorizontalAlignment','center'); axis(ax3,'off');
+    else
+        plot(ax3, out.chi, 'o-', 'Color', T.rgb.neutral_ink, 'LineWidth', T.line.data_pt, ...
+            'MarkerSize', T.marker.size_pt, 'MarkerFaceColor', T.rgb.neutral_paper); hold(ax3,'on');
+        yline(ax3, out.chiExpected, '--', sprintf('χ = %d expected', out.chiExpected), 'Color', T.rgb.neutral_slate, ...
+            'LineWidth', T.line.axis_pt, 'FontSize', T.type.annotation.size_pt);
+        nxr_axes_style(ax3, 'frame (index)', 'Σ index (count)');
+    end
+    finish(F, o.Title, o.Export);
 end
 
 function y = ternary(c,a,b), if c, y=a; else, y=b; end, end

@@ -12,16 +12,22 @@ function hFig = jointspectrum(C, f, Lambda, varargin)
 % OPTIONS:
 %   'Speed'   overlay omega = c*sqrt(lambda) lines for these speeds (m/s), e.g. [0.1 0.5 1]
 %   'Log'     true (default) -- log10 colour scale
-%   'Title'   overall title              'Visible' 'on' (default) | 'off'
+%   'Title'   the joint spectrum's panel title    'Unit' of |C|^2 ('a.u.')
+%   'Visible' 'on' (default) | 'off'          'Export' file stem (<stem>.pdf/.svg/.png)
+% Sizes and colours are the figure tokens; 190 x 110 mm: spatial marginal in the space colour,
+% temporal marginal in the time colour (atlas-space / atlas-time).
 %
 % See also: rheome.flow.joint, rheome.filters.joint_scalogram, rheome.show.jointscalogram
 %
 % Author: Diellor Basha, 2026
 
+    T = tokens();
     p = inputParser;
     p.addParameter('Speed', []);
     p.addParameter('Log', true);
     p.addParameter('Title', 'Joint spectrum of cortical vorticity');
+    p.addParameter('Unit', 'a.u.');
+    p.addParameter('Export', '');
     p.addParameter('Visible', 'on');
     p.parse(varargin{:});  o = p.Results;
 
@@ -35,40 +41,47 @@ function hFig = jointspectrum(C, f, Lambda, varargin)
     K  = numel(ls);
     Z  = P;  if o.Log, Z = log10(max(P, max(P(:))*1e-8)); end
 
-    hFig = figure('Color','w','Position',[60 60 1240 560],'Visible',o.Visible);
+    F = nxr_figure('double', 110, {'AAAB'; 'AAAB'; 'CCC.'}, 'Titles', struct( ...
+        'A', o.Title, 'B', 'Spatial marginal', 'C', 'Temporal marginal'));
+    hFig = F.fig;  hFig.Visible = o.Visible;
 
-    ax = subplot(4,4,[1 2 3 5 6 7 9 10 11]);
+    ax = F.ax.A;
     imagesc(ax, f, 1:K, Z);  axis(ax,'xy');
+    colormap(ax, nxr_cmap('atlas-power'));
+    nxr_axes_style(ax, '', 'spatial frequency √λ (rad/m)');
     rheome.show.lambdaaxis(ax, lamv);
-    ylabel(ax,'spatial frequency \surd\lambda (rad m^{-1})');
     set(ax,'XTickLabel',[]);                        % the marginal below carries the x label
-    cb = colorbar(ax);  cb.Label.String = ternary(o.Log,'log_{10} |C|^2','|C|^2');
-    title(ax, o.Title, 'FontWeight','bold');
+    cb = nxr_colorbar(ax, 'power |C|²', ternary(o.Log, ['log10 ' o.Unit], o.Unit), 'power', ...
+        [min(Z(:)) max(Z(:)) + eps], '', 'keep');
+    nicebar(cb, ax);
+    rb = F.rect_mm.B;  rc = F.rect_mm.C;  W = F.size_mm(1);  H = F.size_mm(2);   % the bar in the free cell
+    L = T.spacing.colorbarLength_frac * rb(3);
+    cb.Position = [(rb(1) + (rb(3) - L)/2)/W, 1 - (rc(2) + rc(4)/2)/H, L/W, T.spacing.colorbarThickness_mm/H];
     if ~isempty(o.Speed)
         hold(ax,'on');
         for c = o.Speed(:)'
             fc = c*ls/(2*pi);                        % omega = c*sqrt(lambda) -> f = c*k/2pi
             inR = fc >= min(f) & fc <= max(f);
             if any(inR)
-                plot(ax, fc(inR), find(inR), 'w--', 'LineWidth', 1.4);
+                plot(ax, fc(inR), find(inR), '--', 'Color', T.rgb.neutral_paper, 'LineWidth', T.line.leader_pt);
                 j = find(inR, 1, 'last');
-                text(ax, fc(j), j, sprintf(' %.2g m/s', c), 'Color','w', ...
-                    'VerticalAlignment','bottom','FontSize',9);
+                text(ax, fc(j), j, sprintf('%.2g m/s ', c), 'Color', T.rgb.neutral_paper, ...
+                    'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'right');
             end
         end
         xlim(ax, [min(f) max(f)]);
     end
 
-    ax2 = subplot(4,4,[13 14 15]);
-    plot(ax2, f, sum(P,1), 'LineWidth', 1.2, 'Color', [0.15 0.35 0.65]);
-    xlabel(ax2,'temporal frequency (Hz)'); ylabel(ax2,'power'); grid(ax2,'on');
+    ax2 = F.ax.C;
+    plot(ax2, f, sum(P,1), 'LineWidth', T.line.data_pt, 'Color', T.rgb.atlas_time);
+    nxr_axes_style(ax2, 'temporal frequency (Hz)', ['power (' o.Unit ')']);
     xlim(ax2,[min(f) max(f)]);
 
-    ax3 = subplot(4,4,[4 8 12]);
-    plot(ax3, sum(P,2), 1:K, 'LineWidth', 1.2, 'Color', [0.65 0.35 0.15]);
+    ax3 = F.ax.B;
+    plot(ax3, sum(P,2), 1:K, 'LineWidth', T.line.data_pt, 'Color', T.rgb.atlas_space);
     rheome.show.lambdaaxis(ax3, lamv);
-    xlabel(ax3,'power'); grid(ax3,'on');  ylim(ax3,[1 K]);
-    title(ax3,'spatial marginal','FontWeight','normal');
+    nxr_axes_style(ax3, ['power (' o.Unit ')']);  ylim(ax3,[1 K]);  set(ax3, 'YTickLabel', []);
+    finish(F, '', o.Export);
 end
 
 function y = ternary(c,a,b), if c, y=a; else, y=b; end, end

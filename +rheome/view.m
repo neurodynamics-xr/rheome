@@ -217,24 +217,6 @@ function bad(name, what)
     error('rheome:view:option', '%s: %s is expected.', name, what);
 end
 
-function vdir = viewerFolder()
-% RHEOME_VIEWER, else prefdir/rheome-viewer, installed from <rheome>/viewer when that ships a newer copy
-    vdir = getenv('RHEOME_VIEWER');
-    if ~isempty(vdir), return; end
-    vdir = fullfile(prefdir, 'rheome-viewer');
-    shipped = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'viewer');
-    if isfile(fullfile(shipped, 'viewer.html')) && ~strcmp(stamp(shipped), stamp(vdir))
-        if isfolder(vdir), rmdir(vdir, 's'); end
-        copyfile(shipped, vdir);
-    end
-end
-
-function v = stamp(d)
-    v = '';
-    f = fullfile(d, 'VERSION');
-    if isfile(f), v = strtrim(fileread(f)); end
-end
-
 function [ok, fig, h, ready] = viaEditor(page, manifest, s, timeout)
 % the viewer inside MATLAB; ok = false when it has no WebGPU; h the uihtml ([] when it did not answer)
     persistent hh
