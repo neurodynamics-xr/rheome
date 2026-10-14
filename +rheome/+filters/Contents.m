@@ -14,6 +14,7 @@
 %   rheome.filters.localize   - localize a filter (bank) at cortical vertices -> atoms
 %
 % Wavelet FRAME / filterbank (tile the spectrum, use filters as wavelets):
+%   rheome.filters.atlasband      - analytic signal through the atlas's one-wavelet-per-octave band (alpha 6.07-12.14 Hz)
 %   rheome.filters.frame          - design a wavelet frame  (itersine tight | mexhat | heat)
 %                            COMPATIBILITY SHIM over graphfilterbank -- same output struct,
 %                            same warnings. New code: rheome.graphfilterbank(lrange,'Wavelet',...)

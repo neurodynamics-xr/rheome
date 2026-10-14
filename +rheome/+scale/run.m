@@ -126,6 +126,11 @@ function R = run(name, opts)
         opts.Edf char = ''                 % with Events: import from EEG-BIDS + ProtoDir's forward model
         opts.Events char = ''
         opts.Import (1,1) string {mustBeMember(opts.Import, ["full" "head"])} = "full"   % "head": read no samples
+        opts.Frame (1,1) string {mustBeMember(opts.Frame, ["ms1" "atlas"])} = "ms1"     % grouptrack, inject, aperiodic:
+    end                                                                    % "atlas" = the atlas's alpha time tiles (prototype)
+    fa = {};  fj = {};  if opts.Frame == "atlas", fa = {'Frame', "atlas"};  fj = [fa {'JLevels', [0 1]}]; end
+    if opts.Frame == "atlas" && ismember("eventsensors", opts.Analyses)
+        error('scale:run:frame', 'eventsensors reads 300/s frames; it does not take Frame="atlas" yet');
     end
     if isempty(opts.OutDir), opts.OutDir = fullfile(rheome.load.outroot(), 'scale'); end
     od = fullfile(opts.OutDir, name);  if ~exist(od, 'dir'), mkdir(od); end
@@ -177,7 +182,7 @@ function R = run(name, opts)
                             repmat(opts.Dataset,height(Gf),1), 'VariableNames', {'subject','cohort','dataset'}), Gf];
                     end
                 case "grouptrack"
-                    [Tg, Xg, Best, Xw] = rheome.scale.measure_grouptrack(name, S);
+                    [Tg, Xg, Best, Xw] = rheome.scale.measure_grouptrack(name, S, fj{:});
                     M = [M; Tg];  X.grouptrack = Xg;  X.grouptrackwindows = Xw; %#ok<AGROW>
                 case "fieldsmooth"
                     [Ts, Xs, maps] = rheome.scale.measure_fieldsmooth(name, S);
@@ -217,14 +222,14 @@ function R = run(name, opts)
                     [Tc, X.(a), strips] = rheome.scale.measure_catalogue(name, S, a);  M = [M; Tc]; %#ok<AGROW>
                     if a == "catalogue", save(fullfile(od, 'catalogue_strips.mat'), '-struct', 'strips', '-v7.3'); end
                 case "inject"                  % MS1 G7 (Fig. 8): movers injected into the own recording, tracked
-                    [Ti, X.inject] = rheome.scale.measure_inject(name, S);  M = [M; Ti]; %#ok<AGROW>
+                    [Ti, X.inject] = rheome.scale.measure_inject(name, S, fj{:});  M = [M; Ti]; %#ok<AGROW>
                 case "trackfactorial"          % MS1 G8 (Fig. 9): the 0.52 diagnosis, 2^5 factorial
                     [Tf, X.trackfactorial] = rheome.scale.measure_trackfactorial(name, S);  M = [M; Tf]; %#ok<AGROW>
                 case "panelexamples"           % MS1 Figs. 4-7 panel A: one example per figure (figure data)
                     [Tp, ex] = rheome.scale.measure_panelexamples(name, S);  M = [M; Tp]; %#ok<AGROW>
                     save(fullfile(od, 'panelexamples.mat'), '-struct', 'ex', '-v7');
                 case "aperiodic"               % MS1 G10: a moving 1/f change, threshold and split selectivity
-                    [Ta, X.aperiodic] = rheome.scale.measure_aperiodic(name, S);  M = [M; Ta]; %#ok<AGROW>
+                    [Ta, X.aperiodic] = rheome.scale.measure_aperiodic(name, S, fa{:});  M = [M; Ta]; %#ok<AGROW>
                 case "slowosc"                 % MS1 G15, G16: sleep slow oscillations, the positive control
                     [Tq, X.slowosc, X.slowosc_events] = rheome.scale.measure_slowosc(name, S);  M = [M; Tq]; %#ok<AGROW>
                 case "slowoscplant"            % direction plants (re-planned after a direction audit): planted A->P / P->A

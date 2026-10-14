@@ -46,6 +46,8 @@
 %   rheome.detect.tilepath - ⭐ TRACK-BEFORE-DETECT: Viterbi on the tile graph within one observation window,
 %       scoring Y - baseline along every admissible walk before deciding. At 10 dB it keeps the movers
 %       detect-then-link loses (measured by planting). Use it, not tiletrack, below ~20 dB.
+%   rheome.detect.atlastime / timetiles - the dynamics atlas's time tile for a band (tower of cycles: alpha is
+%       0.1648 s) and frame means over those tiles: detection on the atlas's joint space-time cells (prototype).
 %   rheome.detect.trackstats / tracknull / trackselect - per-track duration, net displacement, straightness,
 %       net speed; thresholds from noise-only windows at a false-trajectory RATE alpha per second.
 %   rheome.detect.blobscale  - the characteristic SIZE of structure, by scale selection over a
