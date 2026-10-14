@@ -70,6 +70,14 @@ function R = run(name, opts)
 %                     surrogates; the alpha orientation tensor per depth-3 group tile in the shared gauge;
 %                     Destrieux -> DK vs the dyadic roll-up and connectome-wavelet widths over a gamma sweep.
 %                     Opt-in. Needs a template cortex (RHEOME_TEMPLATE or RHEOME_BRAINSTORM's ICBM152)
+%   atlasone.csv, atlasone.mat   MS1 3.4 (F8, F12 on the paper's kernel): measure_atlas "atlasone" -- one
+%                     person's alpha atlas at depths 0-6 on one tree, every level the exact roll-up of the leaves,
+%                     events vs phase-randomised surrogates; the .mat holds the towers, event labels and catalogue
+%   xlevel.csv, xlevel.mat   MS1 2.4 (F23 re-run): measure_atlas "xlevel" -- a planted widening mover and the
+%                     largest real alpha event tracked across depths 0-6 of the same tree (the F23 cache fields)
+%   scaleramp.csv     MS1 2.4: rheome.scale.measure_scaleramp -- a peak whose size ramps 10 -> 40 mm read by
+%                     rheome.detect.ridges on a sphere and the left cortex. All three opt-in, not "ported";
+%                     atlasone and xlevel need a template cortex (as cf-atlas)
 %   multimodal.csv, multimodal_assoc.csv, multimodal_connectome.mat   the MS1 multimodal example:
 %                     rheome.scale.measure_multimodal -- MEG band power, PET SUVR and the fibre-degree density
 %                     through one wavelet bank on one dyadic tile ladder, every level an exact roll-up; the
@@ -267,6 +275,11 @@ function R = run(name, opts)
                     end
                 case {"correspondence" "atlasevents" "gaugetensor" "connectome"}   % MS1 G12 (P8, nsp cf-atlas)
                     [Ta, X.(a)] = rheome.scale.measure_atlas(name, S, a);  M = [M; Ta]; %#ok<AGROW>
+                case {"atlasone" "xlevel"}     % MS1 3.4 one person's atlas / 2.4 F23 across levels, one tree (figure data)
+                    [Ta, X.(a), Fg] = rheome.scale.measure_atlas(name, S, a);  M = [M; Ta]; %#ok<AGROW>
+                    save(fullfile(od, a + ".mat"), '-struct', 'Fg', '-v7');
+                case "scaleramp"               % MS1 2.4: a peak whose size ramps 10 -> 40 mm, read by detect.ridges
+                    [Tr, X.scaleramp] = rheome.scale.measure_scaleramp(name, S);  M = [M; Tr]; %#ok<AGROW>
                 case "multimodal"              % MS1 multimodal example: MEG + PET + fibres on one ladder
                     [Tm, Xm, Cn] = rheome.scale.measure_multimodal(name, S);  M = [M; Tm]; %#ok<AGROW>
                     X.multimodal = Xm.tiles;  X.multimodal_assoc = Xm.assoc;
