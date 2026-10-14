@@ -15,30 +15,55 @@ import path from 'node:path'
 const job = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'))
 const [W, H] = job.size ?? [1000, 760]
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
-const fail = (msg) => { console.error('snapshot: ' + msg); cleanup(); process.exit(1) }
-let chrome, server, prof
-function cleanup() {
-  try { chrome?.kill('SIGKILL') } catch {}
-  try { server?.close() } catch {}
-  try { if (prof) fs.rmSync(prof, { recursive: true, force: true }) } catch {}
+// Chrome is always quit through DevTools (Browser.close) and waited for: only a clean exit removes its macOS code-sign
+// clone (/var/folders/.../X/com.google.Chrome.code_sign_clone); then its profile is removed. Every way out goes through quit().
+let chrome, server, prof, ws, send, quitting
+async function quit(code) {
+  if (quitting) return quitting
+  quitting = (async () => {
+    try { server?.close() } catch {}
+    if (chrome && chrome.exitCode === null && chrome.signalCode === null) {
+      const gone = new Promise((r) => chrome.once('exit', r))
+      const within = (ms) => Promise.race([gone.then(() => true), sleep(ms).then(() => false)])
+      try { if (ws?.readyState === 1) send('Browser.close') } catch {}
+      if (!(await within(5000))) { chrome.kill('SIGTERM'); if (!(await within(3000))) { chrome.kill('SIGKILL'); await within(3000) } }
+    }
+    try { ws?.close() } catch {}
+    try { if (prof) fs.rmSync(prof, { recursive: true, force: true, maxRetries: 5 }) } catch {}
+    process.exit(code)
+  })()
+  return quitting
 }
-process.on('exit', cleanup)
+const fail = (msg) => { console.error('snapshot: ' + msg); return quit(1) }
+process.on('exit', () => {   // last resort (quit() not reached): no clean Chrome exit possible here
+  try { chrome?.kill('SIGKILL') } catch {}
+  try { if (prof) fs.rmSync(prof, { recursive: true, force: true }) } catch {}
+})
+process.on('uncaughtException', (e) => fail(e?.stack ?? String(e)))
+process.on('unhandledRejection', (e) => fail(e?.stack ?? String(e)))
+for (const sig of ['SIGTERM', 'SIGINT', 'SIGHUP']) process.on(sig, () => fail('stopped by ' + sig))
+
+// Linux (fir's CPU nodes have no GPU): WebGPU gets an adapter only through SwiftShader (tested on fir 2026-10-14).
+// shortcut: every Linux host takes SwiftShader; a Linux machine with a GPU would want a switch to its hardware adapter
+const gpuless = process.platform === 'darwin' ? [] :
+  ['--enable-unsafe-swiftshader', '--enable-features=Vulkan', '--use-vulkan=swiftshader', '--use-angle=swiftshader']
 
 async function devtools(W, H) {
-  prof = fs.mkdtempSync(path.join(os.tmpdir(), 'rheome-chrome-'))
-  chrome = spawn(job.chrome, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${prof}`, '--enable-unsafe-webgpu',
+  prof = job.profile ?? fs.mkdtempSync(path.join(os.tmpdir(), 'rheome-chrome-'))
+  fs.mkdirSync(prof, { recursive: true })
+  chrome = spawn(job.chrome, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${prof}`, '--enable-unsafe-webgpu', ...gpuless,
     '--no-first-run', '--no-default-browser-check', `--window-size=${W},${H}`, '--hide-scrollbars', '--allow-file-access-from-files', 'about:blank'],
     { stdio: ['ignore', 'ignore', 'pipe'] })
-  chrome.on('error', (e) => fail(`cannot start Chrome (${job.chrome}): ${e.message}`))
+  chrome.on('error', (e) => { chrome = null; fail(`cannot start Chrome (${job.chrome}): ${e.message}`) })
   const wsUrl = await new Promise((ok) => {
     let buf = ''
     chrome.stderr.on('data', (d) => { buf += d; const m = buf.match(/DevTools listening on (ws:\/\/\S+)/); if (m) ok(m[1]) })
     setTimeout(() => ok(null), 20000)
   })
-  if (!wsUrl) fail('Chrome did not open its DevTools port')
+  if (!wsUrl) await fail('Chrome did not open its DevTools port')
   const port = new URL(wsUrl).port
   const page = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find((t) => t.type === 'page')
-  const ws = new WebSocket(page.webSocketDebuggerUrl)
+  ws = new WebSocket(page.webSocketDebuggerUrl)
   await new Promise((r, j) => { ws.addEventListener('open', r); ws.addEventListener('error', j) })
   let id = 0; const pend = new Map(); const logs = []
   ws.addEventListener('message', (ev) => {
@@ -47,7 +72,7 @@ async function devtools(W, H) {
     else if (m.method === 'Runtime.consoleAPICalled') logs.push(m.params.args.map((a) => a.value ?? a.description).join(' '))
     else if (m.method === 'Runtime.exceptionThrown') logs.push('EXC ' + JSON.stringify(m.params.exceptionDetails).slice(0, 400))
   })
-  const send = (method, params = {}) => new Promise((r) => { const i = ++id; pend.set(i, r); ws.send(JSON.stringify({ id: i, method, params })) })
+  send = (method, params = {}) => new Promise((r) => { const i = ++id; pend.set(i, r); ws.send(JSON.stringify({ id: i, method, params })) })
   const evalp = async (expr) => {
     const r = await send('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true })
     if (r.result?.exceptionDetails) throw new Error(JSON.stringify(r.result.exceptionDetails).slice(0, 600))
@@ -58,7 +83,7 @@ async function devtools(W, H) {
 }
 
 async function printPanels() {
-  const { ws, send, evalp } = await devtools(800, 600)
+  const { evalp } = await devtools(800, 600)
   setTimeout(() => fail('printing timed out'), 1000 * (job.timeout ?? 120))
   for (const p of job.print) {
     const wpx = Math.ceil(p.width_mm / 25.4 * 96), hpx = Math.ceil(p.height_mm / 25.4 * 96)
@@ -72,7 +97,7 @@ async function printPanels() {
     if (p.pdf) {
       const r = await send('Page.printToPDF', { paperWidth: p.width_mm / 25.4, paperHeight: p.height_mm / 25.4, marginTop: 0, marginBottom: 0,
         marginLeft: 0, marginRight: 0, printBackground: true, pageRanges: '1', scale: 1, preferCSSPageSize: true, transferMode: 'ReturnAsStream' })
-      if (!r.result?.stream) fail(`${p.svg}: no PDF (${JSON.stringify(r.error ?? {})})`)
+      if (!r.result?.stream) await fail(`${p.svg}: no PDF (${JSON.stringify(r.error ?? {})})`)
       const parts = []   // read in chunks: a PDF of several MB in one reply does not arrive
       for (let eof = false; !eof;) {
         const c = (await send('IO.read', { handle: r.result.stream, size: 1 << 20 })).result
@@ -85,12 +110,12 @@ async function printPanels() {
       await send('Emulation.setDeviceMetricsOverride', { width: wpx, height: hpx, deviceScaleFactor: p.dpi / 96, mobile: false })
       await sleep(200)
       const r = await send('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: p.width_mm / 25.4 * 96, height: p.height_mm / 25.4 * 96, scale: 1 } })
-      if (!r.result?.data) fail(`${p.svg}: no PNG`)
+      if (!r.result?.data) await fail(`${p.svg}: no PNG`)
       fs.writeFileSync(p.png, Buffer.from(r.result.data, 'base64'))
     }
     fs.rmSync(html, { force: true })
   }
-  ws.close(); cleanup(); process.exit(0)
+  await quit(0)
 }
 
 if (job.print) await printPanels()
@@ -108,7 +133,7 @@ server = http.createServer((req, res) => {
 await new Promise((r) => server.listen(0, '127.0.0.1', r))
 const url = `http://127.0.0.1:${server.address().port}/viewer.html?bundle=${encodeURIComponent('/b/manifest.json')}`
 
-const { ws, send, evalp, logs } = await devtools(W, H)
+const { evalp, logs } = await devtools(W, H)
 await send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 1, mobile: false })
 await send('Page.addScriptToEvaluateOnNewDocument', { source:
   `window.__ev=[];for(const n of ['ready','error','screenshot','settings'])window.addEventListener('viewer:'+n,e=>window.__ev.push([n,e.detail]))` })
@@ -118,8 +143,8 @@ for (let t = Date.now(); !opened && Date.now() - t < 1000 * (job.timeout ?? 60);
   await sleep(100)
   opened = await evalp(`(window.__ev||[]).find(e=>e[0]==='ready'||(e[0]==='error'&&e[1].code!=='settings'))`)
 }
-if (!opened) fail('the viewer did not open the bundle in time\n' + logs.join('\n'))
-if (opened[0] === 'error') fail(`the viewer: ${opened[1].code}: ${opened[1].message}`)
+if (!opened) await fail('the viewer did not open the bundle in time\n' + logs.join('\n'))
+if (opened[0] === 'error') await fail(`the viewer: ${opened[1].code}: ${opened[1].message}`)
 
 const done = { ready: opened[1], shots: [] }
 let timer
@@ -127,7 +152,7 @@ for (const shot of job.shots) {
   await evalp(`(async()=>{window.__ev=[];window.viewer.set(${JSON.stringify(shot.settings)})})()`)
   await sleep(shot.wait ?? job.wait ?? 600)
   const errs = await evalp(`window.__ev.filter(e=>e[0]==='error').map(e=>e[1])`)
-  if (errs?.length) fail(`${shot.name}: the viewer refused ${JSON.stringify(errs)}`)
+  if (errs?.length) await fail(`${shot.name}: the viewer refused ${JSON.stringify(errs)}`)
   // a screenshot the viewer never answers (e.g. a canvas too large for the GPU) fails the run instead of hanging it
   const png = await Promise.race([evalp(`(async()=>{const p=new Promise(r=>{window.addEventListener('viewer:screenshot',e=>r(e.detail.png),{once:true});` +
     `window.addEventListener('viewer:error',e=>r('error: '+e.detail.code+': '+e.detail.message),{once:true})});` +
@@ -135,9 +160,9 @@ for (const shot of job.shots) {
     new Promise((r) => { timer = setTimeout(r, 1000 * (job.timeout ?? 60)) })
       .then(() => fail(`${shot.name}: no screenshot in ${job.timeout ?? 60} s at pixel ratio ${shot.scale ?? job.scale ?? 2}`))])
   clearTimeout(timer)   // this shot's clock only
-  if (!png?.startsWith('data:image/png;base64,')) fail(`${shot.name}: no screenshot${png ? ' (' + png + ')' : ''}`)
+  if (!png?.startsWith('data:image/png;base64,')) await fail(`${shot.name}: no screenshot${png ? ' (' + png + ')' : ''}`)
   fs.writeFileSync(path.join(job.out, shot.name + '.png'), Buffer.from(png.split(',')[1], 'base64'))
   done.shots.push({ name: shot.name, settings: await evalp('window.viewer.settings') })
 }
 fs.writeFileSync(path.join(job.out, 'driver.json'), JSON.stringify(done))
-ws.close(); cleanup(); process.exit(0)
+await quit(0)

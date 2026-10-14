@@ -12,7 +12,7 @@ classdef tSnapshot < matlab.unittest.TestCase
     methods (TestMethodSetup)
         function fakeViewer(tc)
         % a viewer folder with the files read before rendering: viewer.html and the default colormap library
-            d = tempname;  mkdir(fullfile(d, 'colormaps', 'default'));
+            d = tc.createTemporaryFolder();  mkdir(fullfile(d, 'colormaps', 'default'));
             fclose(fopen(fullfile(d, 'viewer.html'), 'w'));
             names = {'viridis', 'cividis', 'PuOr_r', 'magma'};
             j = struct('version', 2, 'library', 'default', 'width', 256, 'rows', 4, ...
@@ -20,13 +20,12 @@ classdef tSnapshot < matlab.unittest.TestCase
             fid = fopen(fullfile(d, 'colormaps', 'default', 'colormaps.json'), 'w');  fwrite(fid, jsonencode(j));  fclose(fid);
             imwrite(uint8(repmat(0:255, 4, 1, 3)), fullfile(d, 'colormaps', 'default', 'colormaps.png'), 'Alpha', uint8(255 * ones(4, 256)));
             tc.Fake = d;
-            tc.addTeardown(@() rmdir(d, 's'));
         end
     end
     methods (Test)
         function refusesBadShots(tc)
             r = struct('a', [-1; 0; 1; 2] * ones(1, 4), 'v', zeros(12, 4));
-            run = @(shot) rheome.snapshot(tc.S, r, Shots=shot, Out=tempname, Viewer=tc.Fake, Node='/nonexistent', Chrome=fullfile(tc.Fake, 'viewer.html'));
+            run = @(shot) rheome.snapshot(tc.S, r, Shots=shot, Out=tc.createTemporaryFolder(), Viewer=tc.Fake, Node='/nonexistent', Chrome=fullfile(tc.Fake, 'viewer.html'));
             tc.verifyError(@() run(struct('Field', 'a')), 'rheome:snapshot:unit');                 % a colourbar needs a unit
             tc.verifyError(@() run(struct('Field', 'b', 'Unit', 'mm')), 'rheome:snapshot:option');
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Wrong', 1)), 'rheome:snapshot:shot');
@@ -39,8 +38,8 @@ classdef tSnapshot < matlab.unittest.TestCase
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Vector', 'a')), 'rheome:snapshot:option');
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Name', 'a/b')), 'rheome:snapshot:shot');
             tc.verifyError(@() rheome.snapshot(tc.S, r, Viewer=tc.Fake), 'rheome:snapshot:input');                 % Out
-            tc.verifyError(@() rheome.snapshot(tc.S, r, Out=tempname, Viewer=tempname), 'rheome:snapshot:noviewer');
-            tc.verifyError(@() rheome.snapshot(tc.S, r, Out=tempname, Viewer=tc.Fake, Tokens=[tempname '.json']), 'rheome:snapshot:tokens');
+            tc.verifyError(@() rheome.snapshot(tc.S, r, Out=tc.createTemporaryFolder(), Viewer=tempname), 'rheome:snapshot:noviewer');
+            tc.verifyError(@() rheome.snapshot(tc.S, r, Out=tc.createTemporaryFolder(), Viewer=tc.Fake, Tokens=[tempname '.json']), 'rheome:snapshot:tokens');
             in = struct('Vertices', [1 2 3], 'Label', 'a tile');
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Inset', rmfield(in, 'Label'))), 'rheome:snapshot:inset');   % say what it shows
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Inset', setfield(in, 'Vertices', [1 9]))), 'rheome:snapshot:inset');
@@ -62,15 +61,34 @@ classdef tSnapshot < matlab.unittest.TestCase
         end
     end
     methods (Test, TestTags = {'Viewer'})
+        function leavesNoChromeBehind(tc)
+        % a viewer run that fails (a viewer that never opens the bundle) still quits Chrome cleanly: no profile, no MATLAB
+        % work folder and (macOS) no Chrome code-sign clone are left in the temp folders
+            tc.assumeTrue(hasChrome(), 'needs Chrome');
+            [st, ~] = system('command -v node');  tc.assumeEqual(st, 0, 'needs Node');
+            out = tc.createTemporaryFolder();
+            mine = @() setdiff({dir(fullfile(tempdir, 'tp*')).name, dir(fullfile(tempdir, 'rheome-chrome-*')).name}, {''});
+            before = mine();  clones = codeSignClones();
+            r = struct('a', [-1; 0; 1; 2] * ones(1, 4));
+            try
+                rheome.snapshot(tc.S, r, Shots=struct('Field', 'a', 'Unit', 'mm'), Out=out, Viewer=tc.Fake, Timeout=3);
+                tc.verifyFail('a viewer that never opens the bundle must fail the run');
+            catch e   % Chrome got as far as loading the viewer, then the run failed
+                tc.verifyEqual(e.identifier, 'rheome:snapshot:viewer');
+                tc.verifySubstring(e.message, 'did not open the bundle in time');
+            end
+            [~, o] = fileparts(out);
+            tc.verifyEmpty(setdiff(mine(), [before {o}]), 'a temp folder was left behind');
+            tc.verifyEmpty(setdiff(codeSignClones(), clones), 'Chrome left a code-sign clone (not quit cleanly)');
+        end
         function rendersACortex(tc)
             [vdir, S] = needs(tc);
             V = S.Vertices;  c = mean(V);
             x = (V(:, 1) - c(1)) * 1e3;
             r = struct('x', [x x x], 'm', abs([x x x]));
-            out = rheome.snapshot(S, r, Out=tempname, Viewer=vdir, Fs=100, Shots={ ...
+            out = rheome.snapshot(S, r, Out=tc.createTemporaryFolder(), Viewer=vdir, Fs=100, Shots={ ...
                 struct('Field', 'x', 'Label', 'anterior position', 'Unit', 'mm', 'Name', 'four'), ...
                 struct('Field', 'm', 'Label', 'distance', 'Unit', 'mm', 'Reference', 'centre', 'Frames', 1:3, 'View', 'R lateral', 'Name', 'strip')});
-            tc.addTeardown(@() rmdir(fileparts(out(1).svg), 's'));
             a = out(1);  b = out(2);
             tc.verifyEqual(a.views, {'L lateral', 'L medial', 'R medial', 'R lateral'});
             tc.verifyEqual(a.quantity, 'signed');  tc.verifyEqual(a.colormap, 'PuOr_r');
@@ -97,20 +115,18 @@ classdef tSnapshot < matlab.unittest.TestCase
             V = S.Vertices;  lat = find(V(:, 2) == max(V(:, 2)), 1);
             reg = vecnorm(V - V(lat, :), 2, 2) < 0.012;                         % a 12 mm patch on the lateral surface
             x = (V(:, 1) - mean(V(:, 1))) * 1e3;  fine = x + 3 * sin(V(:, 3) * 900);
-            out = rheome.snapshot(S, struct('x', x, 'fine', fine), Out=tempname, Viewer=vdir, Format=[], ScaleBar=0, ...
+            out = rheome.snapshot(S, struct('x', x, 'fine', fine), Out=tc.createTemporaryFolder(), Viewer=vdir, Format=[], ScaleBar=0, ...
                 Shots=struct('Field', 'x', 'Unit', 'mm', 'Inset', ...
                 struct('Vertices', reg, 'Field', 'fine', 'Label', 'patch, finer field', 'Zoom', 4, 'View', 'L lateral')));
-            tc.addTeardown(@() rmdir(fileparts(out.svg), 's'));
             tc.verifyGreaterThan(out.inset.magnification, 1.5);                % shown larger than on its view
             tc.verifyGreaterThanOrEqual(out.inset.dpi, 600 - 1e-6);              % never enlarged past its pixels (I1 is checked inside)
-            tc.verifyError(@() rheome.snapshot(S, struct('x', x), Out=tempname, Viewer=vdir, Format=[], ScaleBar=0, Shots=struct('Field', 'x', ...
+            tc.verifyError(@() rheome.snapshot(S, struct('x', x), Out=tc.createTemporaryFolder(), Viewer=vdir, Format=[], ScaleBar=0, Shots=struct('Field', 'x', ...
                 'Unit', 'mm', 'View', 'L lateral', 'Inset', struct('Vertices', reg, 'Label', 'p'))), 'rheome:snapshot:inset');   % one view at 600 dpi: < 2x
             tc.verifySubstring(out.legend, 'inset: patch, finer field');
             tc.verifySubstring(fileread(out.svg), 'patch, finer field');
-            paint = rheome.snapshot(S, struct('m', double(reg)), Out=tempname, Viewer=vdir, Format=[], ScaleBar=0, ...
+            paint = rheome.snapshot(S, struct('m', double(reg)), Out=tc.createTemporaryFolder(), Viewer=vdir, Format=[], ScaleBar=0, ...
                 Shots=struct('Field', 'm', 'Unit', 'a.u.', 'Quantity', 'magnitude', 'CLim', [0 1], 'Colormap', 'viridis', ...
                 'Settings', struct('isolines', 0)));
-            tc.addTeardown(@() rmdir(fileparts(paint.svg), 's'));
             [im, ~, al] = imread(paint.renders{1});                             % L lateral, as the inset's view
             w0 = size(imread(out.renders{1}), 2);                               % the renders differ in pixel ratio only
             px = min(max(round((out.inset.px - 0.5) * size(al, 2) / w0 + 0.5), 1), flip(size(al)));
@@ -138,13 +154,12 @@ classdef tSnapshot < matlab.unittest.TestCase
             [~, j] = max(vecnorm(V(near, :) - V(lat, :), 2, 2));  far = near(j);
             x = (V(:, 1) - mean(V(:, 1))) * 1e3;
             tile = vecnorm(V - V(far, :), 2, 2) < 0.008;
-            out = rheome.snapshot(S, struct('x', x), Out=tempname, Viewer=vdir, Format=[], ScaleBar=0, Shots=struct( ...
+            out = rheome.snapshot(S, struct('x', x), Out=tc.createTemporaryFolder(), Viewer=vdir, Format=[], ScaleBar=0, Shots=struct( ...
                 'Field', 'x', 'Unit', 'mm', 'View', 'standard', ...
                 'Selection', [struct('Centre', lat, 'RadiusMM', 12, 'Label', 'disk, 12 mm', 'Vertices', [], 'Dashed', false); ...
                               struct('Centre', [], 'RadiusMM', [], 'Label', 'support', 'Vertices', tile, 'Dashed', true)], ...
                 'Paths', struct('From', lat, 'To', far, 'Label', 'path of the event'), ...
                 'Inset', struct('Label', 'the disk', 'Shape', 'square', 'View', 'L lateral')));
-            tc.addTeardown(@() rmdir(fileparts(out.svg), 's'));
             svg = fileread(out.svg);
             tc.verifySubstring(svg, 'stroke-dasharray');                                % the extent
             tc.verifyEqual({out.selections.kind}, {'disk', 'tile'});
@@ -166,18 +181,16 @@ classdef tSnapshot < matlab.unittest.TestCase
         % render must run through the painted pixels
             [vdir, S] = needs(tc);
             nV = size(S.Vertices, 1);
-            first = rheome.snapshot(S, struct('z', S.Vertices(:, 3) * 1e3), Out=tempname, Viewer=vdir, Format=[], ...
+            first = rheome.snapshot(S, struct('z', S.Vertices(:, 3) * 1e3), Out=tc.createTemporaryFolder(), Viewer=vdir, Format=[], ...
                 Shots=struct('Field', 'z', 'Unit', 'mm', 'View', 'L lateral'));
-            tc.addTeardown(@() rmdir(fileparts(first.svg), 's'));
             tc.verifySubstring(fileread(first.svg), 'width="88mm"');       % one view: single column
             tc.verifyGreaterThanOrEqual(first.dpi, 500);                    % the render scale raised to print it at 500 dpi
             bar = first.scalebar;
             A = sparse(double(S.Faces), double(S.Faces(:, [2 3 1])), 1, nV, nV);  A = A + A' + speye(nV);
             mark = full(A * sparse(bar.vertices, 1, 1, nV, 1)) > 0;
-            second = rheome.snapshot(S, struct('mark', double(mark)), Out=tempname, Viewer=vdir, Format=[], ScaleBar=0, ...
+            second = rheome.snapshot(S, struct('mark', double(mark)), Out=tc.createTemporaryFolder(), Viewer=vdir, Format=[], ScaleBar=0, ...
                 Shots=struct('Field', 'mark', 'Unit', 'a.u.', 'Quantity', 'magnitude', 'CLim', [0 1], 'Colormap', 'viridis', ...
                 'View', 'L lateral', 'Settings', struct('isolines', 0)));
-            tc.addTeardown(@() rmdir(fileparts(second.svg), 's'));
             [im, ~, al] = imread(second.renders{1});
             hot = double(im(:, :, 1)) > 150 & double(im(:, :, 2)) > 150 & double(im(:, :, 3)) < 120 & al > 0;   % viridis' yellow
             [r, c] = find(hot);
@@ -192,7 +205,19 @@ function [vdir, S] = needs(tc)
     vdir = getenv('RHEOME_VIEWER');
     if isempty(vdir), vdir = fullfile(char(java.lang.System.getProperty('user.home')), 'workspace', 'research', 'code', 'nxr-cortical-flow', 'editor', 'dist-viewer'); end
     tc.assumeTrue(isfile(fullfile(vdir, 'viewer.html')), 'needs the viewer (RHEOME_VIEWER)');
-    tc.assumeTrue(isfile('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome') || ~isempty(getenv('RHEOME_CHROME')), 'needs Chrome');
+    tc.assumeTrue(hasChrome(), 'needs Chrome');
     tc.assumeTrue(rheome.load.has('omega_sub0002'), 'needs the omega_sub0002 surface in +data');
     S = rheome.load.surface('omega_sub0002');
+end
+
+function y = hasChrome()
+    y = isfile('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome') || ~isempty(getenv('RHEOME_CHROME'));
+end
+
+function c = codeSignClones()
+% macOS: Chrome copies itself to <user temp>/../X/com.google.Chrome.code_sign_clone/* and removes the copy on a clean exit
+    c = {};
+    if ~ismac, return; end
+    d = dir(fullfile(fileparts(fileparts(tempdir)), 'X', 'com.google.Chrome.code_sign_clone', 'code_sign_clone.*'));
+    c = {d.name};
 end
