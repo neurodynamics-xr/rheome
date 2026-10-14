@@ -19,6 +19,10 @@
 %                 not dense eig: 20484 vertices is not a dense eigenproblem. Measured on the
 %                 reference cortex: 127 nodes to depth 6 in 1 s, each level halving area exactly
 %                 and dividing the diameter by sqrt(2), leaves partitioning all 20484.
+%                 ⭐ Method="Ladder" / Codes= give the ATLAS's tiles instead (VR1 §2.9: Fiedler bisection
+%                 is a different, unequal tree, ARI 0.36-0.40, area CV 25 % at depth 8).
+%   rheome.geom.surfaceladder - the atlas's dyadic ladder (equal-mass cuts across the geodesic diameter),
+%                 bit-exact to nsp's atlas ladder.py: identical on 10 VR1 hemispheres at all 12 levels.
 %   rheome.geom.sphereframe - the group gauge: the registered sphere's meridian pushed to the cortex
 %   rheome.geom.spherepatches - ico patches on the registered sphere (same place in every subject), and
 %                               where the polar gauge turns too much to pool (.excluded -> use chart x)
