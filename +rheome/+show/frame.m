@@ -12,14 +12,17 @@ function hFig = frame(frameStruct, Lambda, varargin)
 % This is the figure that replaces "we chose sigma = [10 15 20 30 40] mm" with a designed bank and
 % a stated coverage.
 %
-% OPTIONS: 'Title', 'Visible'
+% OPTIONS: 'Visible', 'Title' (the figure's name), 'Export' file stem (<stem>.pdf/.svg/.png).
+% Sizes and colours are the figure tokens; 190 x 60 mm; members coloured fine -> coarse.
 %
 % See also: rheome.filters.frame, rheome.filters.frame_bounds, rheome.filters.frame_gains
 %
 % Author: Diellor Basha, 2026
 
+    T = tokens();
     p = inputParser;
     p.addParameter('Title', '');
+    p.addParameter('Export', '');
     p.addParameter('Visible','on');
     p.parse(varargin{:});  o = p.Results;
 
@@ -37,32 +40,34 @@ function hFig = frame(frameStruct, Lambda, varargin)
     end
     isScaling = strcmpi(frameStruct.Family,'mexhat');
 
-    hFig = figure('Color','w','Position',[60 60 1300 400],'Visible',o.Visible);
-    cmap = parula(M);
+    finest = 1000*pi/sqrt(max(lam));
+    F = nxr_figure('double', 60, {'ABC'}, 'Titles', struct( ...
+        'A', sprintf('%s frame, %d members', frameStruct.Family, M), ...
+        'B', sprintf('Coverage: tightness B/A = %.3f', b.Tightness), ...
+        'C', 'Member scales (1 = scaling function)'));
+    hFig = F.fig;  hFig.Visible = o.Visible;
+    ref = {'--', 'Color', T.rgb.neutral_slate, 'LineWidth', T.line.axis_pt, ...
+           'FontSize', T.type.annotation.size_pt};
 
-    ax1 = subplot(1,3,1); hold(ax1,'on');
-    for m = 1:M, plot(ax1, kk, H(:,m), 'LineWidth', 1.5, 'Color', cmap(m,:)); end
-    xlabel(ax1,'\surd\lambda (rad m^{-1})'); ylabel(ax1,'g_m(\lambda)'); grid(ax1,'on');
-    title(ax1, sprintf('%s frame, %d members', frameStruct.Family, M), 'FontWeight','normal');
+    ax1 = F.ax.A;  hold(ax1,'on');  cmap = ramp(M);
+    for m = 1:M, plot(ax1, kk, H(:,m), 'LineWidth', T.line.data_pt, 'Color', cmap(m,:)); end
+    nxr_axes_style(ax1, '√λ (rad/m)', 'member gain (ratio)');
 
-    ax2 = subplot(1,3,2);
-    plot(ax2, kk, sum(H.^2,2), 'k', 'LineWidth', 1.8); hold(ax2,'on');
-    yline(ax2, b.A, 'r--', sprintf('A = %.3g', b.A), 'LineWidth', 1.2);
-    yline(ax2, b.B, 'b--', sprintf('B = %.3g', b.B), 'LineWidth', 1.2);
-    xlabel(ax2,'\surd\lambda (rad m^{-1})'); ylabel(ax2,'\Sigma_m g_m^2'); grid(ax2,'on');
-    title(ax2, sprintf('coverage — tightness B/A = %.3f', b.Tightness), 'FontWeight','normal');
+    ax2 = F.ax.B;
+    plot(ax2, kk, sum(H.^2,2), 'Color', T.rgb.neutral_ink, 'LineWidth', T.line.data_pt); hold(ax2,'on');
+    yline(ax2, b.A, ref{1}, sprintf('A = %.3g', b.A), ref{2:end});
+    yline(ax2, b.B, ref{1}, sprintf('B = %.3g', b.B), ref{2:end});
+    nxr_axes_style(ax2, '√λ (rad/m)', 'coverage Σ g² (ratio)');
 
-    ax3 = subplot(1,3,3);
+    ax3 = F.ax.C;
     idx = 1:M;  lab = 1000*sig;
     if isScaling, lab(1) = NaN; end
-    stem(ax3, idx, lab, 'filled', 'LineWidth', 1.4, 'Color', [0.15 0.35 0.65]);
-    xlabel(ax3,'member'); ylabel(ax3,'\sigma_m (mm)'); grid(ax3,'on');
+    stem(ax3, idx, lab, 'filled', 'LineWidth', T.line.data_pt, 'Color', T.rgb.neutral_ink, 'MarkerSize', T.marker.size_pt);
     set(ax3,'YScale','log');
-    finest = 1000*pi/sqrt(max(lam));
-    yline(ax3, finest, 'r--', sprintf('basis limit %.1f mm', finest), 'LineWidth', 1.2);
-    title(ax3,'member scales (member 1 = scaling function)','FontWeight','normal');
-
-    if ~isempty(o.Title), sgtitle(hFig, o.Title, 'FontWeight','bold','FontSize',13); end
+    yline(ax3, finest, ref{1}, sprintf('basis limit %.1f mm', finest), ref{2:end});
+    nxr_axes_style(ax3, 'member (index)', 'σ (mm)');
+    plainlog(ax3);
+    finish(F, o.Title, o.Export);
 end
 
 % Author: Diellor Basha, 2026

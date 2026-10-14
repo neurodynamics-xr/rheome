@@ -19,13 +19,15 @@ function hFig = ridgestrip(surf, U, out, frames, varargin)
 %   'Top'        show only the N longest-lived ridges (default 12; Inf = all)
 %   'View'       camera [az el] (default [-90 10])
 %   'CLim'       shared colour limits (default from U over the shown frames)
-%   'Colormap'   background colormap (default parula)
+%   'Colormap'   background colormap (default the house flow-magnitude map)
+%   'Unit'       unit of the field amplitude for the colourbar (default 'a.u.')
 %   'Lift'       marker/trail offset along the normal, fraction of mesh extent (default 0.012)
 %   'TrailFrames' how many frames of trail to draw behind the current position (default Inf)
 %   'Zoom'       camera zoom factor applied after rendering (default 1.8)
 %   'Only'       restrict to these ridge indices before the Top sort
 %   'Titles'     {1 x numel(frames)} panel titles (default 'frame k')
-%   'Title'      overall title
+%   'Title'      figure title: the figure's name (the legend carries it, not the artwork)
+%   'Export'     file stem: write <stem>.pdf/.svg/.png at print size (nxr_save)
 %   'Visible'    'on' (default) | 'off'
 %
 % OUTPUT: hFig figure handle.
@@ -34,11 +36,14 @@ function hFig = ridgestrip(surf, U, out, frames, varargin)
 %
 % Author: Diellor Basha, 2026
 
+    T = tokens();
     p = inputParser;
     p.addParameter('Top', 12);
     p.addParameter('View', [-90 10]);
     p.addParameter('CLim', []);
-    p.addParameter('Colormap', parula(256));
+    p.addParameter('Colormap', nxr_cmap('flow-magnitude'));
+    p.addParameter('Unit', 'a.u.');
+    p.addParameter('Export', '');
     p.addParameter('Lift', 0.012);
     p.addParameter('TrailFrames', Inf);
     p.addParameter('Zoom', 1.8);
@@ -71,15 +76,13 @@ function hFig = ridgestrip(surf, U, out, frames, varargin)
     span = max(max(surf.Vertices, [], 1) - min(surf.Vertices, [], 1));
     off  = o.Lift * span;
 
-    cols = lines(max(numel(R), 7));
-    hFig = figure('Color','w','Position',[40 40 300*nF 330],'Visible',o.Visible);
-
+    cols = ramp(numel(R));                              % ridges in order of lifetime, longest first
+    [F, axs, o.CLim] = striprow([], [1 nF], 1, nF, o.Visible, '', ...
+                                {'field amplitude', o.Unit, 'magnitude', o.CLim, o.Colormap});
     for i = 1:nF
-        f  = frames(i);
-        ax = axes('Parent', hFig, 'Position', [(i-1)*0.955/nF + 0.004, 0.02, 0.955/nF - 0.006, 0.84]); %#ok<LAXES>
+        f  = frames(i);  ax = axs(i);
         rheome.show.surface(surf, U(:,f), 'Parent', ax, 'View', o.View, 'CLim', o.CLim, ...
-            'Colormap', o.Colormap, 'Title', '');
-        cb = findobj(hFig,'Type','colorbar');  delete(cb);      % one shared scale, drawn at the end
+            'Colormap', o.Colormap, 'Colorbar', false, 'Title', o.Titles{i});
         camzoom(ax, o.Zoom);
         hold(ax,'on');
         for k = 1:numel(R)
@@ -88,19 +91,13 @@ function hFig = ridgestrip(surf, U, out, frames, varargin)
             if isempty(hit), continue; end
             lo  = max(1, hit - o.TrailFrames);
             P   = r.pos(lo:hit, :) + off * Nrm(r.v(lo:hit), :);
-            plot3(ax, P(:,1), P(:,2), P(:,3), '-', 'LineWidth', 3, 'Color', cols(k,:));
-            plot3(ax, P(end,1), P(end,2), P(end,3), 'o', 'MarkerSize', 15, ...
-                'MarkerFaceColor', cols(k,:), 'MarkerEdgeColor', 'w', 'LineWidth', 1.6);
+            plot3(ax, P(:,1), P(:,2), P(:,3), '-', 'LineWidth', T.line.event_pt, 'Color', cols(k,:));
+            plot3(ax, P(end,1), P(end,2), P(end,3), 'o', 'MarkerSize', 2*T.marker.size_pt, ...
+                'MarkerFaceColor', cols(k,:), 'MarkerEdgeColor', T.rgb.neutral_paper, 'LineWidth', T.marker.edge_pt);
         end
-        title(ax, o.Titles{i}, 'FontWeight','normal', 'FontSize', 10);
     end
-
-    cbAx = axes('Parent', hFig, 'Position', [0.965 0.10 0.01 0.70], 'Visible','off');
-    colormap(cbAx, o.Colormap);  caxis(cbAx, o.CLim);
-    cb = colorbar(cbAx, 'Position', [0.968 0.14 0.008 0.62]);
-    cb.Label.String = 'field amplitude';
-
-    sgtitle(hFig, o.Title, 'FontWeight','bold', 'FontSize', 12);
+    hFig = F.fig;
+    finish(F, o.Title, o.Export);
 end
 
 % Author: Diellor Basha, 2026

@@ -31,15 +31,16 @@ function hFig = resolution(marks, varargin)
 %   'Fields'       [nV x nF] per-vertex scalars, drawn in row 2 with a SHARED colour scale
 %                  after each column is normalised to its own peak
 %   'FieldTitles'  {1 x nF} titles
-%   'FieldColormaps' {1 x nF} colormap per field panel (default hot for all). ⚠ A BINARY
-%                  INDICATOR UNDER 'hot' IS INVISIBLE -- zero is black and the panel reads as
-%                  empty. Pass a sequential map for set-valued panels (an atlas scout) and keep
-%                  hot for graded ones (a point-spread function).
+%   'FieldColormaps' {1 x nF} colormap per field panel (default the house flow-magnitude map).
+%                  ⚠ under 'hot' a BINARY INDICATOR is invisible -- zero is black and the panel
+%                  reads as empty; pass a two-colour map for set-valued panels (an atlas scout).
 %   'Bands'        {lo hi label} per row: shaded regions of the ruler (mm)
 %   'View'         camera [az el] for every cortex panel (default [-90 10], left lateral)
 %   'XLim'         ruler limits in mm (default from the marks, padded)
-%   'Title'        figure title
+%   'Title'        the ruler's panel title
+%   'Export'       file stem: write <stem>.pdf/.svg/.png at print size (nxr_save)
 %   'Visible'      'on' (default) | 'off' for headless export
+% Sizes and colours are the figure tokens; journal width (190 mm), one panel per row.
 %
 % OUTPUT: hFig figure handle.
 %
@@ -47,6 +48,7 @@ function hFig = resolution(marks, varargin)
 %
 % Author: Diellor Basha, 2026
 
+    T = tokens();
     p = inputParser;
     p.addParameter('Surface', []);
     p.addParameter('Patches', {});
@@ -58,6 +60,7 @@ function hFig = resolution(marks, varargin)
     p.addParameter('View', [-90 10]);
     p.addParameter('XLim', []);
     p.addParameter('Title', 'Spatial scales of the cortical problem');
+    p.addParameter('Export', '');
     p.addParameter('Visible', 'on');
     p.parse(varargin{:});
     o = p.Results;
@@ -72,41 +75,54 @@ function hFig = resolution(marks, varargin)
     hasCortex = ~isempty(S) && (nP > 0 || nF > 0);
 
     nCol = max([nP, nF, 1]);
-    nRow = double(nP > 0) + double(nF > 0) + 1;            % + the ruler
-    hFig = figure('Visible', o.Visible, 'Color', 'w', ...
-                  'Position', [60 60 max(300*nCol, 1200) 260*(nRow-1) + 360]);
-    tl = tiledlayout(hFig, nRow, nCol, 'TileSpacing', 'none', 'Padding', 'compact');
-    title(tl, o.Title, 'FontWeight', 'bold');
-
-    r = 0;
-    if nP > 0
-        r = r + 1;
-        for i = 1:nP
-            ax = nexttile(tl, (r-1)*nCol + i);
-            d = zeros(size(S.Vertices,1), 1);  d(o.Patches{i}) = 1;
-            rheome.show.surface(S, d, 'Parent', ax, 'View', o.View, 'CLim', [0 1], ...
-                'Colormap', i_seq(), 'Colorbar', false, 'Title', i_title(o.PatchTitles, i));
-        end
-        for i = nP+1:nCol, ax = nexttile(tl, (r-1)*nCol + i); axis(ax, 'off'); end
+    rows = {};  kinds = struct();  ttl = struct();  hr = [];
+    fw = (T.journalSel.width_mm.double - 2*T.grid.margin_mm) / nCol;
+    viewH = T.grid.header_mm + 3 + 0.76*fw;          % header, view titles, the render aspect (1000 x 760)
+    if hasCortex && nP > 0, rows{end+1} = 'patch'; hr(end+1) = viewH; end
+    if hasCortex && nF > 0, rows{end+1} = 'field'; hr(end+1) = viewH + 10; end
+    rows{end+1} = 'ruler';  hr(end+1) = 45;
+    keys = char('A' + (0:numel(rows)-1));
+    for i = 1:numel(rows)
+        kinds.(keys(i)) = ternary(strcmp(rows{i}, 'ruler'), 'plot', 'image');
+        ttl.(keys(i)) = ternary(strcmp(rows{i}, 'ruler'), o.Title, ...
+                        ternary(strcmp(rows{i}, 'patch'), 'Nested pyramid patches', 'Fields, each to its own peak'));
     end
-    if nF > 0
-        r = r + 1;
-        X = double(o.Fields);
-        X = X ./ max(max(abs(X), [], 1), eps);             % each to its own peak: shapes compare
-        for i = 1:nF
-            ax = nexttile(tl, (r-1)*nCol + i);
-            cm = hot(256);
-            if numel(o.FieldColormaps) >= i && ~isempty(o.FieldColormaps{i})
-                cm = o.FieldColormaps{i};
-            end
-            rheome.show.surface(S, X(:,i), 'Parent', ax, 'View', o.View, 'CLim', [0 1], ...
-                'Colormap', cm, 'Colorbar', false, 'Title', i_title(o.FieldTitles, i));
+    H = min(sum(hr) + (numel(hr)-1)*T.grid.gutter_mm + 2*T.grid.margin_mm, T.journalSel.max_height_mm);
+    F = nxr_figure('double', H, cellstr(keys'), 'Heights', hr, 'Kinds', kinds, 'Titles', ttl);
+    hFig = F.fig;  hFig.Visible = o.Visible;
+
+    for r = 1:numel(rows) - 1
+        hp = F.ax.(keys(r));  P = hp.Position;  axis(hp, 'off');
+        under = 0;
+        if strcmp(rows{r}, 'field')                  % one shared scale under the row
+            under = 10 / F.size_mm(2);
+            cb = nxr_colorbar(hp, 'field', 'ratio to its peak', 'magnitude', [0 1]);
+            L = T.spacing.colorbarLength_frac * P(3);
+            cb.Position = [P(1) + (P(3) - L)/2, P(2) + 6/F.size_mm(2), L, T.spacing.colorbarThickness_mm/F.size_mm(2)];
+            hp.Position = P;
         end
-        for i = nF+1:nCol, ax = nexttile(tl, (r-1)*nCol + i); axis(ax, 'off'); end
+        g = T.spacing.viewGap_mm / F.size_mm(1);  w = (P(3) - g*(nCol-1)) / nCol;
+        hv = P(4) - under - 3/F.size_mm(2);
+        for i = 1:nCol
+            ax = axes(hFig, 'Position', [P(1) + (i-1)*(w+g), P(2) + under, w, hv]);
+            if strcmp(rows{r}, 'patch') && i <= nP
+                d = zeros(size(S.Vertices,1), 1);  d(o.Patches{i}) = 1;
+                rheome.show.surface(S, d, 'Parent', ax, 'View', o.View, 'CLim', [0 1], ...
+                    'Colormap', [T.rgb.neutral_mist; T.rgb.atlas_space], 'Colorbar', false, 'Title', i_title(o.PatchTitles, i));
+            elseif strcmp(rows{r}, 'field') && i <= nF
+                X = double(o.Fields(:, i));  X = X / max(max(abs(X)), eps);   % each to its own peak: shapes compare
+                cm = nxr_cmap('flow-magnitude');
+                if numel(o.FieldColormaps) >= i && ~isempty(o.FieldColormaps{i}), cm = o.FieldColormaps{i}; end
+                rheome.show.surface(S, X, 'Parent', ax, 'View', o.View, 'CLim', [0 1], ...
+                    'Colormap', cm, 'Colorbar', false, 'Title', i_title(o.FieldTitles, i));
+            else
+                axis(ax, 'off');
+            end
+        end
     end
 
     % ---- the ruler ----
-    axR = nexttile(tl, r*nCol + 1, [1 nCol]);
+    axR = F.ax.(keys(end));
     hold(axR, 'on');
     if isempty(o.XLim)
         xl = [0.85*min(marks.mm), 1.2*max(marks.mm)];
@@ -114,64 +130,51 @@ function hFig = resolution(marks, varargin)
         xl = o.XLim;
     end
     kinds = unique(marks.kind, 'stable');
-    yOf = containers.Map(cellstr(string(kinds)), num2cell(1:numel(kinds)));
+    top = numel(kinds) + 2.7;
     for b = 1:size(o.Bands, 1)
         lo = o.Bands{b,1};  hi = min(o.Bands{b,2}, xl(2));
-        patch(axR, [lo hi hi lo], [0 0 numel(kinds)+2.7 numel(kinds)+2.7], i_bandcolor(b), ...
-              'EdgeColor', 'none', 'FaceAlpha', 0.16);
+        patch(axR, [lo hi hi lo], [0 0 top top], ternary(mod(b,2) == 1, T.rgb.neutral_mist, T.rgb.neutral_snow), ...
+              'EdgeColor', 'none', 'FaceAlpha', 0.6);
         text(axR, exp(mean(log([max(lo,xl(1)) hi]))), 0.16, o.Bands{b,3}, ...
-             'HorizontalAlignment', 'center', 'FontSize', 9, 'FontAngle', 'italic', ...
-             'Color', [0.2 0.2 0.2], 'Interpreter', 'none');
+             'HorizontalAlignment', 'center', 'Interpreter', 'none');
     end
-    mk = {'o','s','^','d','v','p'};
-    % ⚠ LABELS COLLIDE ON A LOG AXIS. Several floors land within a few mm of each other
-    % (99, 103, 110 on this cortex), so the text is staggered in height by rank within each
-    % kind rather than drawn at one offset, and the leader line says which mark it belongs to.
-    % marks are already sorted by mm, so the row index IS the rank in x: staggering on it
-    % guarantees that two marks close in x are never drawn at the same label height.
+    % up to 4 kinds told apart by shape AND fill (tokens: marker); more kinds repeat the cycle
+    mk = T.marker.shapes.x_value;  mk = strrep(mk, 'D', 'd');
+    fill = {T.rgb.neutral_ink, T.rgb.neutral_slate, T.rgb.neutral_paper, T.rgb.neutral_mist};
     for kk = 1:numel(kinds)
         sel = find(strcmp(string(marks.kind), string(kinds(kk))));
+        j = mod(kk-1, numel(mk)) + 1;
         for q = 1:numel(sel)
             i = sel(q);  y = kk;
-            plot(axR, marks.mm(i), y, mk{min(kk, numel(mk))}, 'MarkerSize', 8, ...
-                 'MarkerFaceColor', i_kindcolor(kk), 'MarkerEdgeColor', 'k', 'LineWidth', 0.75);
+            plot(axR, marks.mm(i), y, mk{j}, 'MarkerSize', 2*T.marker.size_pt, ...
+                 'MarkerFaceColor', fill{j}, 'MarkerEdgeColor', T.rgb.neutral_ink, 'LineWidth', T.marker.edge_pt);
             if strcmpi(char(string(marks.kind(i))), 'floor')
                 plot(axR, [marks.mm(i) marks.mm(i)], [0.35 numel(kinds)+0.6], '--', ...
-                     'Color', [0.15 0.15 0.15 0.5], 'LineWidth', 1.1);  %#ok<*NBRAK2>
+                     'Color', T.rgb.neutral_slate, 'LineWidth', T.line.leader_pt);  %#ok<*NBRAK2>
             end
             yt = y + 0.12 + 0.30*mod(i-1, 5);
-            plot(axR, [marks.mm(i) marks.mm(i)], [y yt], '-', 'Color', [0.5 0.5 0.5], ...
-                 'LineWidth', 0.5);
+            plot(axR, [marks.mm(i) marks.mm(i)], [y yt], '-', 'Color', T.rgb.neutral_slate, ...
+                 'LineWidth', T.line.leader_pt);
             text(axR, marks.mm(i), yt, sprintf(' %s %.0f', string(marks.name(i)), marks.mm(i)), ...
-                 'Rotation', 30, 'FontSize', 8.5, 'Interpreter', 'none', ...
-                 'VerticalAlignment', 'bottom', 'Clipping', 'on');
+                 'Rotation', 30, 'Interpreter', 'none', 'VerticalAlignment', 'bottom', 'Clipping', 'on');
         end
     end
     tk = [3 5 10 20 30 50 75 100 150 200 300 400 600 1000];
     tk = tk(tk >= xl(1) & tk <= xl(2));
-    set(axR, 'XScale', 'log', 'XLim', xl, 'YLim', [0 numel(kinds)+2.7], ...
-             'YTick', 1:numel(kinds), 'YTickLabel', cellstr(string(kinds)), 'Box', 'on', ...
-             'XTick', tk, 'XTickLabel', compose('%g', tk), 'XGrid', 'on', 'GridAlpha', 0.3, ...
-             'XMinorGrid', 'off', 'FontSize', 9);
-    xlabel(axR, 'length on the cortex (mm, log scale) -- diameter for a patch, wavelength for a pattern');
+    set(axR, 'XScale', 'log', 'XLim', xl, 'YLim', [0 top], ...
+             'YTick', 1:numel(kinds), 'YTickLabel', cellstr(string(kinds)), ...
+             'XTick', tk, 'XTickLabel', compose('%g', tk), 'XMinorTick', 'off');
+    nxr_axes_style(axR, 'length on the cortex (mm, log scale)');
+    P = axR.Position;  inset = 8 / F.size_mm(1);       % room for the kind names on the y axis
+    axR.Position = [P(1) + inset, P(2), P(3) - inset, P(4)];
     hold(axR, 'off');
+    finish(F, o.Title, o.Export);
 end
+
+function y = ternary(c,a,b), if c, y=a; else, y=b; end, end
 
 function t = i_title(C, i)
     if numel(C) >= i, t = C{i}; else, t = ''; end
 end
 
-function c = i_seq()
-    c = [linspace(0.82,0.10,256)', linspace(0.85,0.30,256)', linspace(0.90,0.65,256)'];
-end
-
-function c = i_kindcolor(i)
-    P = [0.85 0.33 0.10; 0.00 0.45 0.74; 0.47 0.67 0.19; 0.49 0.18 0.56; 0.93 0.69 0.13];
-    c = P(mod(i-1, size(P,1)) + 1, :);
-end
-
-function c = i_bandcolor(i)
-    P = [0.80 0.20 0.20; 0.95 0.75 0.20; 0.20 0.65 0.30; 0.45 0.45 0.45];
-    c = P(mod(i-1, size(P,1)) + 1, :);
-end
 % Author: Diellor Basha, 2026

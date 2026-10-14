@@ -21,7 +21,8 @@ function hFig = ridges(surf, out, varargin)
 %                  .speed  true speed (m/s)   -> marked on the speed panel
 %                  .path   [n x 3] true core path -> drawn dashed black on the surface
 %   'Lift'       trajectory offset along the normal, as a fraction of mesh extent (default 0.012)
-%   'Title'      overall title
+%   'Title'      figure title: the figure's name (the legend carries it, not the artwork)
+%   'Export'     file stem: write <stem>.pdf/.svg/.png at print size (nxr_save)
 %   'Visible'    'on' (default) | 'off'
 %
 % OUTPUT: hFig figure handle.
@@ -30,6 +31,7 @@ function hFig = ridges(surf, out, varargin)
 %
 % Author: Diellor Basha, 2026
 
+    T = tokens();
     p = inputParser;
     p.addParameter('MaxRidges', 60);
     p.addParameter('View', [-90 10]);
@@ -37,6 +39,7 @@ function hFig = ridges(surf, out, varargin)
     p.addParameter('Truth', struct());
     p.addParameter('Title', 'scale-space ridges');
     p.addParameter('Lift', 0.012);   % radial offset for trajectories, fraction of the mesh extent
+    p.addParameter('Export', '');
     p.addParameter('Visible', 'on');
     p.parse(varargin{:});
     o = p.Results;
@@ -48,22 +51,25 @@ function hFig = ridges(surf, out, varargin)
     spd  = [R.speedNet];
     smod = [R.sigmaMode];
 
-    hFig = figure('Color','w','Position',[60 60 1600 400],'Visible',o.Visible);
+    [~, ord] = sort([R.nFrames], 'descend');
+    ord = ord(1:min(o.MaxRidges, numel(ord)));
+    lo = min(sig); hi = max(sig);  if hi <= lo, hi = lo + eps; end
+    F = nxr_figure('double', 65, {'ABCD'}, 'Widths', [2 1 1 1], 'Kinds', struct('A', 'cortex'), 'Titles', struct( ...
+        'A', sprintf('%d ridges, longest %d frames', numel(R), R(ord(1)).nFrames), ...
+        'B', 'Selected scale', ...
+        'C', 'Lifetime', 'D', 'Net speed'));      % medians are statistics: the legend's
+    hFig = F.fig;  hFig.Visible = o.Visible;
+    ref = {'--', 'Color', T.rgb.neutral_ink, 'LineWidth', T.line.leader_pt, ...
+           'FontSize', T.type.annotation.size_pt};
 
-    % ---- panel 1: trajectories on the surface, coloured by modal scale (wider than the rest) ----
-    ax1 = axes('Parent', hFig, 'Position', [0.02 0.08 0.30 0.80]);
-    bg = o.Background;
-    flatBg = isempty(bg);
-    if flatBg, bg = zeros(surf.nV,1); end
-    rheome.show.surface(surf, bg, 'Parent', ax1, 'View', o.View, 'Title', '');
-    if flatBg
-        cbs = findobj(hFig, 'Type', 'colorbar');   % a flat background has nothing to scale
-        delete(cbs);
-        colormap(ax1, repmat([0.82 0.82 0.84], 64, 1));
+    % ---- trajectories on the cortex, coloured by scale (the key is panel D's colourbar) ----
+    ax1 = F.ax.A;
+    if isempty(o.Background)                          % flat: the neutral cortex, no colormap used
+        rheome.show.surface(surf, [], 'Parent', ax1, 'View', o.View, 'Title', '');
+    else
+        rheome.show.surface(surf, o.Background, 'Parent', ax1, 'View', o.View, 'Title', '', 'Colorbar', false);
     end
     hold(ax1,'on');
-    % Trajectories lie ON the mesh, so they z-fight with it and disappear behind folds.
-    % Lift them a little along the outward normal (radially, if no normals are stored).
     if isfield(surf,'VertNormals') && ~isempty(surf.VertNormals)
         Nrm = surf.VertNormals ./ max(vecnorm(surf.VertNormals,2,2), eps);
     else
@@ -71,60 +77,43 @@ function hFig = ridges(surf, out, varargin)
     end
     span = max(max(surf.Vertices, [], 1) - min(surf.Vertices, [], 1));
     lift = @(P, idx) P + o.Lift * span * Nrm(idx, :);
-
-    [~, ord] = sort([R.nFrames], 'descend');
-    ord = ord(1:min(o.MaxRidges, numel(ord)));
-    cmap = parula(256);
-    lo = min(sig); hi = max(sig);
+    cmap = nxr_cmap('atlas-tile-code');
     for k = flip(ord)                                   % longest drawn last, so it sits on top
-        f = (R(k).sigmaMode - lo) / max(hi - lo, eps);
+        f = (R(k).sigmaMode - lo) / (hi - lo);
         col = cmap(max(1, min(256, round(1 + f*255))), :);
         P = lift(R(k).pos, R(k).v);
-        isLongest = (k == ord(1));
-        lw = 1.4;  if isLongest, lw = 3.5; end
+        lw = T.line.data_pt;  if k == ord(1), lw = 2*T.line.event_pt; end
         plot3(ax1, P(:,1), P(:,2), P(:,3), '-', 'LineWidth', lw, 'Color', col);
-        plot3(ax1, P(1,1), P(1,2), P(1,3), 'o', 'Color', col, 'MarkerSize', 5, 'MarkerFaceColor', col);
+        plot3(ax1, P(1,1), P(1,2), P(1,3), 'o', 'Color', col, 'MarkerSize', T.marker.size_pt, 'MarkerFaceColor', col);
     end
     if isfield(o.Truth,'path') && ~isempty(o.Truth.path)
-        T = o.Truth.path;
-        T = T .* (1 + 1.4*o.Lift*span./max(vecnorm(T,2,2),eps));
-        plot3(ax1, T(:,1), T(:,2), T(:,3), 'k--', 'LineWidth', 2.5);
+        Tp = o.Truth.path;
+        Tp = Tp .* (1 + 1.4*o.Lift*span./max(vecnorm(Tp,2,2),eps));
+        plot3(ax1, Tp(:,1), Tp(:,2), Tp(:,3), '--', 'Color', T.rgb.neutral_ink, 'LineWidth', T.line.event_pt);
     end
-    title(ax1, sprintf('%d ridges | longest %d frames (colour = \\sigma %.0f-%.0f mm)', ...
-        numel(R), R(ord(1)).nFrames, 1000*lo, 1000*hi), 'FontWeight','normal');
 
-    % ---- panel 2: selected-scale histogram ----
-    ax2 = axes('Parent', hFig, 'Position', [0.385 0.15 0.17 0.70]);
-    bar(ax2, 1000*sig, out.summary.scaleHist, 'FaceColor', [0.30 0.45 0.70], 'EdgeColor','none');
-    xlabel(ax2, '\sigma (mm)'); ylabel(ax2, 'detections');
-    title(ax2, 'selected scale', 'FontWeight','normal');
+    % ---- scale histogram ----
+    ax2 = F.ax.B;
+    bar(ax2, 1000*sig, out.summary.scaleHist, 'FaceColor', T.rgb.neutral_slate, 'EdgeColor','none');
     if isfield(o.Truth,'sigma') && ~isempty(o.Truth.sigma)
-        hold(ax2,'on');
-        xline(ax2, 1000*o.Truth.sigma, 'r--', 'LineWidth', 2, 'Label', 'true \sigma');
+        hold(ax2,'on');  xline(ax2, 1000*o.Truth.sigma, ref{1}, 'true σ', ref{2:end});
     end
-    grid(ax2,'on');
+    nxr_axes_style(ax2, 'σ (mm)', 'detections (count)');
 
-    % ---- panel 3: ridge lifetime ----
-    ax3 = axes('Parent', hFig, 'Position', [0.615 0.15 0.17 0.70]);
-    histogram(ax3, 1000*life, 'FaceColor', [0.35 0.60 0.40], 'EdgeColor','none');
-    xlabel(ax3, 'lifetime (ms)'); ylabel(ax3, 'ridges');
-    title(ax3, sprintf('lifetime (median %.1f ms, max %.0f)', 1000*median(life), 1000*max(life)), ...
-        'FontWeight','normal');
-    grid(ax3,'on');
+    % ---- lifetime ----
+    ax3 = F.ax.C;
+    histogram(ax3, 1000*life, 'FaceColor', T.rgb.neutral_slate, 'EdgeColor','none');
+    nxr_axes_style(ax3, 'lifetime (ms)', 'ridges (count)');
 
-    % ---- panel 4: net speed vs lifetime ----
-    ax4 = axes('Parent', hFig, 'Position', [0.845 0.15 0.13 0.70]);
-    scatter(ax4, 1000*life, spd, 18, 1000*smod, 'filled', 'MarkerFaceAlpha', 0.65);
-    xlabel(ax4, 'lifetime (ms)'); ylabel(ax4, 'net speed (m/s)');
-    cb = colorbar(ax4); cb.Label.String = '\sigma (mm)';
-    title(ax4, sprintf('net speed (median %.3f m/s)', median(spd)), 'FontWeight','normal');
-    grid(ax4,'on');
+    % ---- speed vs lifetime, coloured by scale ----
+    ax4 = F.ax.D;
+    scatter(ax4, 1000*life, spd, T.marker.size_pt^2, 1000*smod, 'filled', 'MarkerFaceAlpha', 0.65);
     if isfield(o.Truth,'speed') && ~isempty(o.Truth.speed)
-        hold(ax4,'on');
-        yline(ax4, o.Truth.speed, 'r--', 'LineWidth', 2, 'Label', 'true speed');
+        hold(ax4,'on');  yline(ax4, o.Truth.speed, ref{1}, 'true speed', ref{2:end});
     end
-
-    sgtitle(hFig, o.Title, 'FontWeight','bold');
+    nxr_axes_style(ax4, 'lifetime (ms)', 'net speed (m/s)');
+    nicebar(nxr_colorbar(ax4, 'ridge scale σ', 'mm', 'code', 1000*[lo hi]), ax4);
+    finish(F, o.Title, o.Export);
 end
 
 % Author: Diellor Basha, 2026
