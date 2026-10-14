@@ -19,6 +19,8 @@ function info = importsubject(name, protoDir, opts)
 %   fibers_subject.mat  the subject's own tractography, when the protocol carries it (rheome.connectome.resolve)
 %   pet.mat       the protocol's PET surface maps, when it carries them: pet(k).name .x [nV x 1] .units .file
 %                 (rheome.scale.measure_multimodal); a map on another surface than the leadfield's is an error
+%   fmri.mat      the resting BOLD runs, when nsp bst-fmri's overlay is unzipped over the protocol: rheome.io.read.bold
+%                 (fmri(k).name .x [nV x nT] .tr .units .confounds .confoundNames .file; measure_multimodal)
 %
 % ⭐ THE RECORDING IS READ FROM THE RAW .bst, NOT AN IMPORTED BLOCK. The protocol holds only the
 % raw link (data_0raw_*), e.g. at 1200 Hz; rheome.io.read.rawbst reads it with the SSP projectors applied,
@@ -82,6 +84,10 @@ function info = importsubject(name, protoDir, opts)
     end
     if ~isempty(L.fibers), copyfile(L.fibers, fullfile(d, 'fibers_subject.mat')); end
     if ~isempty(L.pet), i_pet(L.pet, fullfile(d, 'pet.mat')); end
+    if ~isempty(L.fmri)
+        fmri = rheome.io.read.bold(L.fmri, info.leadfield(2) / 3);  %#ok<NASGU>
+        builtin('save', fullfile(d, 'fmri.mat'), 'fmri', '-v7.3');
+    end
 
     k = dir(fullfile(L.restDir, 'results_*KERNEL*.mat'));  k = k(~startsWith({k.name}, '._'));
     info.shippedKernels = string({k.name});

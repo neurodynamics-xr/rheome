@@ -107,6 +107,35 @@ classdef tScaleAtlasP8 < matlab.unittest.TestCase
             tc.verifyTrue(all(X.rms_width_mm > 0));
         end
 
+        function atlasOneIsOneTreeRolledUp(tc)
+            [T, X, Fig] = rheome.scale.measure_atlas(tc.Name, [], "atlasone", Template=tc.Tmpl, NSurr=2, LeafDepth=4);
+            tc.verifyEqual(unique(X.depth)', 0:4);
+            tc.verifyEqual(height(X), 2 * 5 * 3);                    % hemi x depth x (data + 2)
+            p = T.value(T.metric == "p_rate");  tc.verifyTrue(all(p > 0 & p <= 1));
+            L = Fig.L;  tc.verifyEqual(cellfun(@(d) size(d, 1), L.db), 2.^(0:4));
+            tc.verifyEqual(size(L.event{4}), size(L.db{4}));
+            % every event in the catalogue has its cells in the label matrix, and its peak above threshold
+            c = L.catalogue(L.catalogue.depth == 3, :);
+            tc.verifyEqual(height(c), double(max(L.event{4}, [], 'all')));
+            tc.verifyGreaterThan(c.peak_db, Fig.threshold_db);
+            % one tree: the leaf areas sum to every coarser node's area
+            for l = 0:3, tc.verifyEqual(sum(L.area_m2{l+1}), sum(L.area_m2{5}), 'RelTol', 1e-12); end
+        end
+
+        function xlevelTracksThePlant(tc)
+            [T, X, Fig] = rheome.scale.measure_atlas(tc.Name, [], "xlevel", Template=tc.Tmpl, LeafDepth=5, TrackLevel=3);
+            v = @(m) T.value(T.metric == m);
+            tc.verifyLessThan(v("rollup_rel_err"), 1e-12);
+            tc.verifyGreaterThanOrEqual(v("planted_hit_track_level"), 0.8);
+            tc.verifyEqual(size(Fig.planted.chain), [6 24]);
+            tc.verifyEqual(size(Fig.real.chain), [6 24]);
+            % the chain is an ancestor chain: each level's node is the parent of the one below
+            for e = [Fig.planted Fig.real]
+                tc.verifyEqual(e.chain(1:5, :), floor((e.chain(2:6, :) - 1) / 2) + 1);
+            end
+            tc.verifyEqual(height(X), 2 * 6 * 24);
+        end
+
         function throughTheDriver(tc)
             old = getenv('RHEOME_TEMPLATE');  setenv('RHEOME_TEMPLATE', tc.Tmpl);  tc.addTeardown(@setenv, 'RHEOME_TEMPLATE', old);
             od = fullfile(tc.Root, 'out');

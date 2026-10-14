@@ -4,6 +4,37 @@
 
 ### Added
 
+- **The atlas's tiles in MATLAB (MS1 tree unification).** `rheome.geom.surfaceladder` ports nsp's atlas ladder
+  (`nxr_convert/atlas/ladder.py`: equal-mass cuts across the geodesic diameter) step for step, floating-point order
+  and sort emulation included (`rheome.utils.pysort` = CPython 3.12 `list.sort`). It is identical to ladder.py on
+  the ten VR1 PREVENT-AD hemispheres at all 12 levels. `rheome.geom.tree` gains `Method="Ladder"` (re-build) and
+  `Codes=` (read the stored codes, the only way to match an atlas store built before today's ladder.py: 3 of the
+  10 VR1 hemispheres differ from it from level 7 on). The default stays Fiedler bisection; callers opt in.
+- **Ambient-field and critical-point trajectory panels (MS1 1.4, 2.3)**, no instrument, on the sphere and the
+  subject's left hemisphere. `rheome.scale.measure_ambient` (analysis `ambient`) plants a tilted field and reads it
+  ambient vs tangential: the mean-curvature coupling 2H(J.n) against its closed form (H = 1/R on the sphere, cotan H
+  on the cortex, also at > 60 mm). `rheome.scale.measure_cptrack` (analysis `cptrack`) plants a drifting rotor and a
+  source that waxes and wanes, tracks them with `rheome.detect.track`, and reads core path, speed, curl and div
+  against the closed form -2/s^2 at the core. Both write `<analysis>.csv` and figure data `<analysis>.mat`. Sphere:
+  coupling 1.7 %, rotor path 1.4 mm median, speed 0.029 of 0.030 m/s, curl 5.8 %, source on/off within 1 frame
+  (tests/tScaleAmbient).
+- **fMRI on the same tiles as MEG (MS1 code 5/7).** `rheome.io.read.bold` reads nsp bst-fmri's overlay (the
+  resting BOLD on the leadfield's cortex, with each run's fMRIPrep confounds); `rheome.scale.locate` finds it and
+  `rheome.scale.importsubject` caches it as `fmri.mat`. `rheome.scale.measure_multimodal` (analysis `multimodal`)
+  adds the field `fmri_infraslow`: per run percent signal change, motion/CSF/white-matter confounds and a trend
+  regressed out, 0.01-0.1 Hz band-pass, and its power through the same graph-wavelet bank on the same tiles as the
+  MEG band powers (%^2). Limitation stated: the BOLD point spread through the chain (fsaverage5 sampling,
+  interpolation, haemodynamics) is not measured.
+- **Cohort reducers on the hub (MS1 4.4, 5.5/5.6)**, `reduce/cohort.py` (Python 3.9, numpy + scipy; reads nsp's
+  promoted `<sub>.tar.gz` in place). `gauge`: the cohort tile map of `measure_atlas` "gaugetensor" per dataset and
+  template tile -- median and a distribution-free 95 % CI (order statistics) of anisotropy, normal share and the
+  trace-normalised tensor, the median tensor's axis, axis agreement, polar tiles' axis withheld. `multimodal`:
+  per subject of `measure_multimodal`, relative band power per tile, the whole-cortex relative power and Spearman rho
+  across tiles between each relative band and each non-MEG field; then cohort median and CI per quantity (own-tree
+  tiles are not the same place across people, so tiles are never pooled). Descriptive only.
+- `rheome.scale.measure_multimodal` writes relative band power (`meg_<band>_rel`, the band's share of the four
+  bands' stored sums, exact at every level and member) and includes it in `multimodal_assoc`.
+
 - **Event boundaries and event statistics (MS1 SPEC1 §8)**, generic over an event table (one row per event:
   hemisphere, tiles, first and last time), so the tracker's detections and atlas-cell events are read alike.
   `rheome.detect.eventtable` fits `rheome.detect.risefall` to each event's own area-weighted envelope (tOn, tOff,
