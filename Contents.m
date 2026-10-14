@@ -49,6 +49,7 @@
 %   rheome.load              - Data cache -> analyses, and where outputs go (rheome.load.root, rheome.load.outroot).
 %   rheome.show              - Visualizations.
 %   rheome.view              - A result in the 3D viewer from one call, optional (rheome.show without it).
+%   rheome.snapshot          - Print-ready cortical panels from the viewer, by the lab's figure tokens.
 %   rheome.utils             - Shared helpers.
 %   rheome.demos             - Runnable, self-checking demonstrations (start here).
 %
