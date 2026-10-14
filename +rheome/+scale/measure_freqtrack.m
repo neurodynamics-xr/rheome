@@ -30,7 +30,8 @@ function [T, X] = measure_freqtrack(name, S, opts)
 %             clamped to the band set's centres, which bound the readout). The threshold is calibrated on the
 %             best path per window and the plants may use any of 3: control_found measures that specificity,
 %             and hit_minus_control is the hit rate above it
-%   real      every 2 s window of the recording through the same tracker and threshold (case "real")
+%   real      every 2 s window of the clean span (rheome.scale.cleanspan: edges and bad blocks out, the null
+%             built on the same frames) through the same tracker and threshold (case "real")
 %
 % X (freqtrack.csv): one row per hemisphere x case x plant x arm (and per real window): truth, readout (pass found
 %   near octErr sweepOctS octSpan durS netMM netOct jumpOct sweepErr), the half of the recording, the seed, the
@@ -104,6 +105,10 @@ function [T, X] = measure_freqtrack(name, S, opts)
         E{b} = rheome.flow.envelopemodes(name, Band=ed(b, :), Rate=FR);
     end
     CS = rheome.scale.cleanspan(F, fs, EdgeS=opts.EdgeS);
+    % the envelope frames inside the clean span and off its bad blocks: the recording's onset transient (1-4 Hz at
+    % ~200x) otherwise passes as the one real path and, scattered by the per-mode shift, sets the null's threshold
+    sFr = 1 + (0:size(E{1}.(char(opts.Hemis(1))).C, 2) - 1)*round(fs/FR);
+    keepFr = sFr >= CS.first & sFr <= CS.last & ~CS.mask(min(sFr, numel(CS.mask)));
     nSeg = (W + 2*MARGIN + 2*PAD)*fs;  tSeg = (0:nSeg-1)/fs - (MARGIN + PAD);
     env = i_env(tSeg, W, MARGIN, 0.25);  cIdx = (MARGIN + PAD)*fs + (1:round(fs/FR):W*fs);
     tFr = ((0:nF-1)*bs + bs/2)/FR;                                  % tracker frame centres in the window (s)
@@ -117,11 +122,11 @@ function [T, X] = measure_freqtrack(name, S, opts)
         ge = rheome.geom.edgegraph(Sh);  Tr = rheome.geom.tree(Sh, L=H.lbo.L, M=Mm, MaxDepth=opts.Depth);
         G = rheome.geom.tiles(Tr, Sh, opts.Depth, Ruler=ge);  P = double(G.P);  nTile = size(P, 2);
         Wd = (P'*(av.*Phi))./(P'*av);  Dcv = distances(ge, G.centre);
-        nFr = size(E{1}.(h).C, 2);  nWin = floor(nFr/(W*FR));
+        nFr = nnz(keepFr);  nWin = floor(nFr/(W*FR));
         Yr = zeros(nTile, nB, nF*nWin);  Ys = Yr;
         sh = randi([W*FR, nFr - W*FR], size(E{1}.(h).C, 1), 1);      % one shift per LB mode, shared by every band
         for b = 1:nB                                                % one band at a time: never 7 full-rate copies
-            C = double(E{b}.(h).C);
+            C = double(E{b}.(h).C(:, keepFr));
             Yr(:, b, :) = reshape(i_block(Wd*C, bs, W*FR, nWin), nTile, 1, []);
             for k = 1:size(C, 1), C(k, :) = circshift(C(k, :), sh(k)); end
             Ys(:, b, :) = reshape(i_block(Wd*C, bs, W*FR, nWin), nTile, 1, []);
