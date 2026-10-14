@@ -31,6 +31,15 @@ function out = snapshot(surf, result, varargin)
 %   Hemisphere "both" | "left" | "right", with a viewer camera (default "both")
 %   Surface    the surface shown, a name of surf's struct (default: the first)
 %   Vector     a vector field drawn as arrows (default none); arrows show the same vector the colour shows
+%   Layers     WHAT IS DRAWN, in place of Field/Vector's colour + isolines + arrows: the viewer's 'layers' (its README
+%              'Layers'), a cell of {field, form, as} cells or of layer structs (field, form, as and the look: colormap,
+%              clim, opacity, threshold, bands, density, scale, normalize, color, visible), e.g.
+%                {{"J", "x", "arrows"}}                     arrows only: no colourbar, no Unit needed
+%                {{"div"}, {"J", "x", "arrows"}}            a colour layer and arrows
+%                {}                                         nothing painted: the anatomy (with Paths, Selection ...)
+%              The visible colour layer (at most one) makes the colourbar: its colormap and clim, when not given, come
+%              from Quantity, Colormap and CLim as for Field (a colour layer of a vector form, e.g. {"J", "div"}, needs
+%              CLim: the viewer computes that form, not snapshot)
 %   Settings   struct of further viewer settings, applied last (README of the viewer, 'The settings')
 %   Name       the files' name (default "shot<k>")
 %   Inset      a MULTISCALE INSET (default none): a region of one view re-rendered by the viewer at a higher
@@ -60,11 +69,16 @@ function out = snapshot(surf, result, varargin)
 %                Axis      "space" (default) | "time" | "joint": the colour (atlas-space, atlas-time, atlas-joint-cell)
 %                Dashed    true for an extent (default false)
 %              A Centre (also allowed with Vertices) is drawn as the tokens' centre: one size, filled with the colour.
-%   Paths      GEODESIC paths on the folded surface (default none; tokens cortex.paths): ink at the tokens' width,
-%              an arrowhead at the end, hidden where the surface hides it. A struct (array) with
+%   Paths      GEODESIC paths on the folded surface (default none; tokens cortex.paths), drawn BY THE VIEWER in the
+%              render (the bundle's paths[], a depth-tested tube: hidden in a sulcus or behind a gyrus), ink at the
+%              tokens' width, an arrowhead at the end; so the raw renders carry them too. A struct (array) with
 %                From, To  vertices: traced by rheome.geom.geodesicpath (steepest descent of the heat distance)
-%                Points    or a path the caller traced, [n x 3] on the shown surface, with How (its method) REQUIRED
+%                Faces, Weights  or a path the caller traced, as points of triangles: Faces [n x 1] (rows of surf's
+%                          Faces) and barycentric Weights [n x 3], with How (its method)
+%                Points    or [n x 3] on the folded surface (each snapped to its nearest face), with How
 %                Label     what it is ("path of the event")                                            REQUIRED
+%                Color     a figure-token colour's name, a neutral or #rrggbb (default "ink")
+%                Width     pt (default the tokens' cortex.paths.width_pt)
 %
 % OPTIONS (name/value):
 %   'Out'       folder written (created)                                                     REQUIRED
@@ -90,8 +104,10 @@ function out = snapshot(surf, result, varargin)
 %         views, surface, the bar's distance, the interval, the inset) .settings (each render's viewer settings)
 %         .inset (.label .view .magnification (x, the inset's length per the view's) .dpi .vertices .px (the
 %         region's outline on the view, render pixels) .shape) or []
+%         (.clim, .colormap, .quantity empty with no colour layer)
 %         .selections (.label .kind ("tile" | "disk") .axis .colour .dashed .vertices) .paths (.label .how .length_mm
-%         along the folded surface, .geodesic_mm the heat distance between its ends (From/To), .points)
+%         along the folded surface, .geodesic_mm the heat distance between its ends (From/To), .points, .name (the
+%         bundle's), .color, .width)
 %         .cameras, one per render, so a caller can place vector marks on the page: .view .render .R (2 x 3) .s
 %         (px per mesh unit) .off (px) .d (view direction) .crop (render px [c1 c2 r1 r2]) .origin_mm .mm_per_px:
 %             page_mm = origin_mm + mm_per_px * (s * X * R' + off - [crop(1) crop(3)] + 0.5)
@@ -161,7 +177,13 @@ function out = snapshot(surf, result, varargin)
     % one bundle, one viewer run for every render
     work = tempname;  mkdir(work);  cleanWork = onCleanup(@() rmdir(work, 's'));
     if isfield(surf, 'Vertices'), bs = surf; else, bs = surfs; end
-    rheome.io.write.bundle(fullfile(work, 'bundle'), bs, result, 'Fs', o.Fs, 'Name', 'rheome.snapshot');
+    bp = struct('name', {}, 'faces', {}, 'weights', {}, 'color', {}, 'width', {}, 'arrow', {});   % every shot's paths
+    for k = 1:numel(shots)
+        for q = shots(k).Paths
+            bp(end+1) = struct('name', q.name, 'faces', q.faces, 'weights', q.bary, 'color', q.color, 'width', q.width, 'arrow', true); %#ok<AGROW>
+        end
+    end
+    rheome.io.write.bundle(fullfile(work, 'bundle'), bs, result, 'Fs', o.Fs, 'Name', 'rheome.snapshot', 'Paths', bp);
     if ~isfolder(o.Out), mkdir(o.Out); end
     renders = {};
     J = tok.theme.(tok.theme.default).page;
@@ -212,7 +234,7 @@ function shots = normalise(in, result, surfs, T, fs, tok, cmaps, Sf)
     if isstruct(in), in = num2cell(in); end
     if ~iscell(in), error('rheome:snapshot:input', 'Shots: a struct array or a cell array of structs is expected.'); end
     known = {'Field', 'Unit', 'Label', 'Reference', 'Quantity', 'CLim', 'Colormap', 'Time', 'Frames', 'View', ...
-        'Hemisphere', 'Surface', 'Vector', 'Settings', 'Name', 'Inset', 'Selection', 'Paths'};
+        'Hemisphere', 'Surface', 'Vector', 'Layers', 'Settings', 'Name', 'Inset', 'Selection', 'Paths'};
     fields = fieldnames(result);
     nV = size(surfs.(firstOf(fieldnames(surfs))).Vertices, 1);
     real = fields(cellfun(@(f) size(result.(f), 1) == nV, fields));
@@ -226,13 +248,22 @@ function shots = normalise(in, result, surfs, T, fs, tok, cmaps, Sf)
         g = @(n, d) get(a, n, d);
         s.Name = char(g('Name', sprintf('shot%d', k)));
         if isempty(regexp(s.Name, '^[\w\-\.]+$', 'once')), error('rheome:snapshot:shot', 'Name: letters, digits, - _ . only (%s).', s.Name); end
-        if isempty(real), error('rheome:snapshot:shot', 'The result has no real ([nV x T]) field to paint.'); end
-        s.Field = pickName(g('Field', real{1}), real, 'Field');
+        % the layers drawn: given (Layers), or the shot's Field in colour and its Vector as arrows (below)
+        given = isfield(a, 'Layers') && ~(isnumeric(a.Layers) && isempty(a.Layers));   % a struct array's unset field: []
+        L = {};  if given, L = shotLayers(a.Layers, s.Name, real, vec); end
+        ci = find(cellfun(@(y) strcmp(y.as, 'colour') && (~isfield(y, 'visible') || y.visible), L), 1);
+        s.colour = ~given || ~isempty(ci);       % a colour layer, so a colourbar
+        isVec = false;
+        if given && ~isempty(ci), s.Field = L{ci}.field;  isVec = any(strcmp(s.Field, vec));
+        elseif ~isempty(real), s.Field = pickName(g('Field', real{1}), real, 'Field');   % the colour's, or the inset's
+        elseif s.colour, error('rheome:snapshot:shot', 'The result has no real ([nV x T]) field to paint.');
+        else, s.Field = '';
+        end
+        if given && ~isempty(g('Vector', '')), error('rheome:snapshot:layers', '%s: Vector or Layers (a {field, "x", "arrows"} layer), not both.', s.Name); end
         s.Unit = char(g('Unit', ''));
-        if isempty(s.Unit), error('rheome:snapshot:unit', '%s: a colourbar needs a unit (Unit="a.u." only when there is none; say why in the legend).', s.Name); end
+        if s.colour && isempty(s.Unit), error('rheome:snapshot:unit', '%s: a colourbar needs a unit (Unit="a.u." only when there is none; say why in the legend).', s.Name); end
         s.Label = char(g('Label', s.Field));
         s.Reference = char(g('Reference', ''));
-        x = result.(s.Field);
 
         % frames: 1-based columns; a strip is equally spaced
         if isfield(a, 'Frames') && isfield(a, 'Time'), error('rheome:snapshot:shot', '%s: Time or Frames, not both.', s.Name); end
@@ -260,53 +291,37 @@ function shots = normalise(in, result, surfs, T, fs, tok, cmaps, Sf)
         if numel(fr) > 1 && size(s.views, 1) > 1, error('rheome:snapshot:shot', '%s: a strip takes one view (one view and one scale for the whole strip).', s.Name); end
         s.Surface = pickName(g('Surface', firstOf(fieldnames(surfs))), fieldnames(surfs), 'Surface');
 
-        % quantity -> colormap and limits, by the tokens
-        if isempty(hemi), hemi = hemispheres(surfs.(firstOf(fieldnames(surfs)))); end
-        shown = ismember(hemi, find(ismember({'left', 'right'}, s.views(:, 2)))) | any(strcmp(s.views(:, 2), 'both'));
-        xs = x(shown, fr);  xs = xs(isfinite(xs));
-        q = char(g('Quantity', ''));
-        if isempty(q), if any(xs < 0) && any(xs > 0), q = 'signed'; else, q = 'magnitude'; end, end
-        s.Quantity = pickName(q, {'signed', 'magnitude', 'power', 'phase', 'coupling', 'code'}, 'Quantity');
-        qn = s.Quantity;  if strcmp(qn, 'signed'), qn = 'divergence'; end   % the tokens name each signed quantity; one map
-        bq = tok.quantity.(qn);
-        tokenName = regexp(bq.colormap, '^[\w\-]+', 'match', 'once');
-        s.Colormap = char(g('Colormap', tok.colour.colormap.(strrep(tokenName, '-', '_')).x_value));
-        if ~isKey(cmaps, s.Colormap)
-            error('rheome:snapshot:colormap', '%s: the viewer has no colormap ''%s'' (%s quantity); give Colormap= or add it to the viewer.', s.Name, s.Colormap, s.Quantity);
-        end
-        diverging = any(strcmp(s.Quantity, {'signed', 'coupling'}));
-        c = g('CLim', []);
-        if isempty(c)
-            switch s.Quantity
-                case {'signed', 'coupling'}, L = prctile(abs(xs), 95); c = [-L L];
-                case 'magnitude', c = [0 prctile(xs, 99)];
-                case 'power', c = prctile(xs, [1 99]);
-                case 'phase', c = [-pi pi];
-                case 'code', c = [min(xs) max(xs)];
-            end
-            if ~(c(2) > c(1)), c = c(1) + [-1 1] * max(1, abs(c(1))) * eps(1e6); end   % a constant field: any non-empty range
-        end
-        c = double(c(:)');
-        if numel(c) ~= 2 || ~all(isfinite(c)) || c(1) >= c(2), error('rheome:snapshot:shot', '%s: CLim [lo hi], lo < hi.', s.Name); end
-        if diverging && abs(c(1) + c(2)) > 1e-9 * max(abs(c)), error('rheome:snapshot:clim', '%s: a diverging scale is symmetric around 0 (got [%g %g]).', s.Name, c(1), c(2)); end
-        s.CLim = c;  s.diverging = diverging;
         s.Vector = char(g('Vector', ''));
         if ~isempty(s.Vector), s.Vector = pickName(s.Vector, vec, 'Vector'); end
+        s.Selection = selections(g('Selection', []), s.Name, nV, Sf, tok);
+        s.Paths = paths(g('Paths', []), s.Name, nV, Sf, tok);
         extra = g('Settings', struct());
         if ~isstruct(extra), error('rheome:snapshot:shot', '%s: Settings is a struct of viewer settings.', s.Name); end
+        s.Quantity = '';  s.Colormap = '';  s.CLim = [];  s.diverging = false;
+        if s.colour
+            if isempty(hemi), hemi = hemispheres(surfs.(firstOf(fieldnames(surfs)))); end
+            s = colourOf(s, g, L, ci, isVec, result, hemi, fr, tok, cmaps);
+        end
+        c = s.CLim;
+        if ~given   % the shot's Field in colour (isolines on a signed map) and its Vector as arrows
+            L = {struct('field', s.Field, 'form', 'f', 'as', 'colour', 'colormap', s.Colormap, 'clim', c, 'opacity', 1)};
+            if strcmp(s.Quantity, 'signed'), L{end+1} = struct('field', s.Field, 'form', 'f', 'as', 'isolines', 'clim', c, 'bands', tok.cortex.viewer.isolines); end
+            if ~isempty(s.Vector)
+                ar = struct('field', s.Vector, 'form', 'x', 'as', 'arrows', 'density', tok.cortex.viewer.arrowDensity, 'color', 'ink');
+                if s.diverging, ar.density = tok.cortex.viewer.arrowDensitySigned; end
+                if any(strcmp(s.Quantity, {'magnitude', 'power'})), ar.color = 'paper'; end   % paper on a dark map
+                L{end+1} = ar;
+            end
+        elseif s.colour
+            L{ci}.colormap = s.Colormap;  L{ci}.clim = c;   % the colourbar's, so the render matches it
+        end
 
         % the viewer's settings, every one that a render depends on (each render is set whole)
-        base = struct('controls', false, 'background', 'transparent', 'scaleBar', false, 'opacity', 1, 'threshold', NaN, ...   % NaN: JSON null, everywhere
-            'labelling', '', 'points', {{}}, 'scalar', s.Field, 'vector', s.Vector, 'colormap', s.Colormap, 'clim', c, ...
-            'surface', s.Surface, 'isolines', 0, 'halfMax', false, 'playing', false);
-        if strcmp(s.Quantity, 'signed'), base.isolines = tok.cortex.viewer.isolines; end
-        if ~isempty(s.Vector)
-            base.arrowDensity = tok.cortex.viewer.arrowDensity;
-            if diverging, base.arrowDensity = tok.cortex.viewer.arrowDensitySigned; end
-            base.arrowColor = 'ink';
-            if any(strcmp(s.Quantity, {'magnitude', 'power'})), base.arrowColor = 'paper'; end   % paper on a dark map
-        end
+        base = struct('controls', false, 'background', 'transparent', 'scaleBar', false, 'labelling', '', 'points', {{}}, ...
+            'layers', {L}, 'surface', s.Surface, 'playing', false);
+        base.paths = {s.Paths.name};   % this shot's paths of the bundle's ({}: none)
         for f = fieldnames(extra)', base.(f{1}) = extra.(f{1}); end
+        if isstruct(base.layers), base.layers = num2cell(base.layers(:)'); end   % a cell: the inset edits it
         rs = struct('file', {}, 'label', {}, 'view', {}, 'hemisphere', {}, 'camera', {}, 'frame', {}, 'settings', {});
         for vi = 1:size(s.views, 1)
             for fi = 1:numel(fr)
@@ -318,11 +333,89 @@ function shots = normalise(in, result, surfs, T, fs, tok, cmaps, Sf)
             end
         end
         s.renders = rs;  s.dir = '';
-        s.Selection = selections(g('Selection', []), s.Name, nV, Sf, tok);
-        s.Paths = paths(g('Paths', []), s.Name, nV, Sf);
         s.Inset = inset(g('Inset', []), s, k, real, nV);
         shots(k) = s;
     end
+end
+
+function s = colourOf(s, g, L, ci, isVec, result, hemi, fr, tok, cmaps)
+% the colour layer's quantity -> colormap and limits, by the tokens (a layer's own colormap and clim kept)
+    lay = struct();  if ~isempty(ci), lay = L{ci}; end
+    shown = ismember(hemi, find(ismember({'left', 'right'}, s.views(:, 2)))) | any(strcmp(s.views(:, 2), 'both'));
+    xs = [];
+    if ~isVec, x = result.(s.Field);  xs = x(shown, fr);  xs = xs(isfinite(xs)); end
+    q = char(g('Quantity', ''));
+    if isempty(q)
+        if isVec, q = 'signed'; if strcmp(lay.form, 'abs'), q = 'magnitude'; end
+        elseif any(xs < 0) && any(xs > 0), q = 'signed'; else, q = 'magnitude';
+        end
+    end
+    s.Quantity = pickName(q, {'signed', 'magnitude', 'power', 'phase', 'coupling', 'code'}, 'Quantity');
+    qn = s.Quantity;  if strcmp(qn, 'signed'), qn = 'divergence'; end   % the tokens name each signed quantity; one map
+    bq = tok.quantity.(qn);
+    tokenName = regexp(bq.colormap, '^[\w\-]+', 'match', 'once');
+    s.Colormap = char(g('Colormap', tok.colour.colormap.(strrep(tokenName, '-', '_')).x_value));
+    if isfield(lay, 'colormap') && ~isempty(lay.colormap), s.Colormap = char(lay.colormap); end
+    if ~isKey(cmaps, s.Colormap)
+        error('rheome:snapshot:colormap', '%s: the viewer has no colormap ''%s'' (%s quantity); give Colormap= or add it to the viewer.', s.Name, s.Colormap, s.Quantity);
+    end
+    diverging = any(strcmp(s.Quantity, {'signed', 'coupling'}));
+    c = g('CLim', []);
+    if isfield(lay, 'clim') && isnumeric(lay.clim) && ~isempty(lay.clim), c = lay.clim; end   % 'auto': computed here
+    if isempty(c) && isVec
+        error('rheome:snapshot:clim', '%s: a colour layer of %s''s form "%s" needs CLim (the viewer computes the form; snapshot cannot).', s.Name, s.Field, lay.form);
+    end
+    if isempty(c)
+        switch s.Quantity
+            case {'signed', 'coupling'}, m = prctile(abs(xs), 95); c = [-m m];
+            case 'magnitude', c = [0 prctile(xs, 99)];
+            case 'power', c = prctile(xs, [1 99]);
+            case 'phase', c = [-pi pi];
+            case 'code', c = [min(xs) max(xs)];
+        end
+        if ~(c(2) > c(1)), c = c(1) + [-1 1] * max(1, abs(c(1))) * eps(1e6); end   % a constant field: any non-empty range
+    end
+    c = double(c(:)');
+    if numel(c) ~= 2 || ~all(isfinite(c)) || c(1) >= c(2), error('rheome:snapshot:shot', '%s: CLim [lo hi], lo < hi.', s.Name); end
+    if diverging && abs(c(1) + c(2)) > 1e-9 * max(abs(c)), error('rheome:snapshot:clim', '%s: a diverging scale is symmetric around 0 (got [%g %g]).', s.Name, c(1), c(2)); end
+    s.CLim = c;  s.diverging = diverging;
+end
+
+function L = shotLayers(L, name, real, vec)
+% the shot's layers as the viewer's (README 'Layers'): {field, form, as} cells or layer structs, a cell of structs;
+% field, form and as checked here (a look key the viewer does not know it refuses by name, and the run fails)
+    id = 'rheome:snapshot:layers';
+    if isstruct(L), L = num2cell(L(:)'); end
+    if ~iscell(L), error(id, '%s: Layers is a cell of {field, form, as} cells or of layer structs.', name); end
+    if ~isempty(L) && ~iscell(L{1}) && ~isstruct(L{1}), L = {L}; end   % one layer {field, form, as}
+    for k = 1:numel(L)
+        x = L{k};
+        if iscell(x)
+            n = {'field', 'form', 'as'};
+            if isempty(x) || numel(x) > 3, error(id, '%s: Layers{%d}: a layer {field, form, as}.', name, k); end
+            x = cell2struct(cellfun(@char, x(:), 'UniformOutput', false), n(1:numel(x)), 1);
+        end
+        if ~isstruct(x) || ~isscalar(x) || ~isfield(x, 'field'), error(id, '%s: Layers{%d}: a layer with a field.', name, k); end
+        x.field = pickName(x.field, [real(:); vec(:)], 'Layers field');
+        isv = any(strcmp(x.field, vec));
+        forms = {'f'};  if isv, forms = {'abs', 'nx', 'div', 'curl', 'x', 'xt'}; end
+        as = '';  if isfield(x, 'as') && ~isempty(x.as), as = pickName(x.as, {'colour', 'isolines', 'halfMax', 'arrows'}, 'Layers as'); end
+        if isfield(x, 'form') && ~isempty(x.form), form = pickName(x.form, forms, ['Layers form of ' x.field]);
+        elseif ~isv, form = 'f';
+        elseif isempty(as) || strcmp(as, 'arrows'), form = 'x';
+        else, form = 'abs';
+        end
+        vf = any(strcmp(form, {'x', 'xt'}));
+        if isempty(as), as = 'colour';  if vf, as = 'arrows'; end, end
+        if vf ~= strcmp(as, 'arrows')
+            error(id, '%s: "%s" of %s drawn as %s: a vector form as arrows, a scalar form as colour, isolines or halfMax.', name, form, x.field, as);
+        end
+        x.form = form;  x.as = as;  L{k} = x;
+    end
+    if sum(cellfun(@(y) strcmp(y.as, 'colour') && (~isfield(y, 'visible') || y.visible), L)) > 1
+        error(id, '%s: at most one visible colour layer (the surface draws one scalar form).', name);
+    end
+    L = L(:)';
 end
 
 function in = inset(a, s, k, real, nV)
@@ -345,8 +438,14 @@ function in = inset(a, s, k, real, nV)
     if ~(isscalar(z) && z >= 2), error('rheome:snapshot:inset', '%s: Inset.Zoom >= 2 (an inset shows more: tokens annotation.inset, I1).', s.Name); end
     vi = find(strcmpi(char(get(a, 'View', s.views{1, 1})), s.views(:, 1)), 1);
     if isempty(vi), error('rheome:snapshot:inset', '%s: Inset.View: one of %s.', s.Name, strjoin(s.views(:, 1), ', ')); end
-    f = pickName(get(a, 'Field', s.Field), real, 'Inset.Field');
-    r = s.renders(vi);  r.settings.scalar = f;
+    f = s.Field;  r = s.renders(vi);
+    if isfield(a, 'Field') && ~isempty(a.Field)   % the inset's field in the scalar layers of the shot's field
+        f = pickName(a.Field, real, 'Inset.Field');
+        for j = 1:numel(r.settings.layers)
+            y = r.settings.layers{j};
+            if ~strcmp(y.as, 'arrows') && strcmp(y.field, s.Field), y.field = f;  y.form = 'f';  r.settings.layers{j} = y; end
+        end
+    end
     r.file = sprintf('s%d_inset', k);  r.label = [r.label '_inset'];
     in = struct('mask', m, 'Label', lab, 'Zoom', z, 'view', vi, 'Field', f, 'render', r, 'Shape', shape);
 end
@@ -385,20 +484,31 @@ function sel = selections(a, name, nV, Sf, tok)
     end
 end
 
-function P = paths(a, name, nV, Sf)
-% the shot's paths: traced on the folded surface (From/To) or given (Points, with How); each point kept as a face and
-% barycentric coordinates, so it is drawn on whichever surface the shot shows
-    P = struct('label', {}, 'how', {}, 'points', {}, 'faces', {}, 'bary', {}, 'length_mm', {}, 'geodesic_mm', {});
+function P = paths(a, name, nV, Sf, tok)
+% the shot's paths: traced on the folded surface (From/To) or given (Faces + Weights, or Points, with How); each point
+% kept as a face and barycentric coordinates, so the viewer draws it on whichever surface the shot shows
+    P = struct('name', {}, 'label', {}, 'how', {}, 'points', {}, 'faces', {}, 'bary', {}, 'length_mm', {}, 'geodesic_mm', {}, ...
+        'color', {}, 'width', {});
     if isempty(a), return; end
     if ~isstruct(a), error('rheome:snapshot:path', '%s: Paths is a struct (array).', name); end
     solver = [];
     for j = 1:numel(a)
         b = a(j);  id = 'rheome:snapshot:path';
-        bad = setdiff(fieldnames(b), {'From', 'To', 'Points', 'How', 'Label'});
+        bad = setdiff(fieldnames(b), {'From', 'To', 'Faces', 'Weights', 'Points', 'How', 'Label', 'Color', 'Width'});
         if ~isempty(bad), error(id, '%s: %s is not a path field.', name, strjoin(bad, ', ')); end
         lab = char(get(b, 'Label', ''));
         if isempty(lab), error(id, '%s: Paths.Label: what the path is, for the key.', name); end
-        if isfield(b, 'Points') && ~isempty(b.Points)
+        if isfield(b, 'Faces') && ~isempty(b.Faces)
+            how = char(get(b, 'How', ''));
+            if isempty(how), error(id, '%s: Paths.How: a given path states how it was traced on the surface (tokens cortex.paths).', name); end
+            fc = double(b.Faces(:));  bc = double(get(b, 'Weights', []));  nF = size(Sf.Faces, 1);
+            if numel(fc) < 2 || any(fc < 1 | fc > nF | fc ~= round(fc)), error(id, '%s: Paths.Faces: >= 2 faces in 1..%d.', name, nF); end
+            if ~isequal(size(bc), [numel(fc) 3]) || any(bc(:) < -1e-6) || any(abs(sum(bc, 2) - 1) > 1e-6)
+                error(id, '%s: Paths.Weights: [n x 3] barycentric (>= 0, rows summing to 1), one row a face.', name);
+            end
+            V = double(Sf.Vertices);  Fd = double(Sf.Faces);
+            X = bc(:, 1) .* V(Fd(fc, 1), :) + bc(:, 2) .* V(Fd(fc, 2), :) + bc(:, 3) .* V(Fd(fc, 3), :);  geo = NaN;
+        elseif isfield(b, 'Points') && ~isempty(b.Points)
             how = char(get(b, 'How', ''));
             if isempty(how), error(id, '%s: Paths.How: a given path states how it was traced on the surface (tokens cortex.paths).', name); end
             X = double(b.Points);
@@ -407,14 +517,16 @@ function P = paths(a, name, nV, Sf)
         else
             fr = get(b, 'From', []);  to = get(b, 'To', []);
             if ~(isscalar(fr) && isscalar(to) && all([fr to] >= 1 & [fr to] <= nV & [fr to] == round([fr to])))
-                error(id, '%s: Paths: From and To (vertices in 1..%d), or Points with How.', name, nV);
+                error(id, '%s: Paths: From and To (vertices in 1..%d), or Faces and Weights, or Points, with How.', name, nV);
             end
             [X, info] = rheome.geom.geodesicpath(Sf, fr, to, solver);  solver = info.solver;
             fc = info.faces([1:end end]);  bc = bary(X, Sf, fc);  geo = 1e3 * info.distance;
             how = 'steepest descent of the heat-method distance on the folded surface (rheome.geom.geodesicpath)';
         end
-        P(end+1) = struct('label', lab, 'how', how, 'points', X, 'faces', fc, 'bary', bc, ...
-            'length_mm', 1e3 * sum(vecnorm(diff(X), 2, 2)), 'geodesic_mm', geo); %#ok<AGROW>
+        bc = max(bc, 0);  bc = bc ./ sum(bc, 2);   % a traced or snapped point a rounding off its triangle: onto it
+        P(end+1) = struct('name', sprintf('%s_path%d', name, j), 'label', lab, 'how', how, 'points', X, 'faces', fc, 'bary', bc, ...
+            'length_mm', 1e3 * sum(vecnorm(diff(X), 2, 2)), 'geodesic_mm', geo, ...
+            'color', char(get(b, 'Color', 'ink')), 'width', double(get(b, 'Width', tok.cortex.paths.width_pt))); %#ok<AGROW>
     end
 end
 
@@ -662,6 +774,7 @@ function [r, G, job] = compose(s, surfs, F, hemi, folded, G, tok, cmaps, o)
     below = 1.6 * fv * pt;  if strip, below = 2.4 * fa * pt + 1; end
     yBar = y1 + below + tok.spacing.colorbarGap_mm;  th = tok.spacing.colorbarThickness_mm;
     H = yBar + th + 0.6 + 1.25 * (tok.type.colorbarTick.size_pt + tok.type.colorbarLabel.size_pt) * pt + 0.4;
+    if ~s.colour, H = y1 + below + 0.4; end   % no colour layer: no colourbar
 
     svg = {sprintf(['<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="%gmm" height="%gmm" ' ...
         'viewBox="0 0 %g %g" font-family="%s">'], W, H, W, H, fam), ...
@@ -676,7 +789,7 @@ function [r, G, job] = compose(s, surfs, F, hemi, folded, G, tok, cmaps, o)
     for j = 1:numel(s.Selection), r.selections(j).vertices = find(s.Selection(j).mask); end
     Vd = surfs.(s.Surface).Vertices;
     E = double(F);  el = median(vecnorm(Vd(E(:, 1), :) - Vd(E(:, 2), :), 2, 2));   % the shown mesh's edge
-    marks = ~isempty(s.Selection) || ~isempty(s.Paths);
+    marks = ~isempty(s.Selection);   % the paths are the viewer's (drawn in the renders)
     cams = struct('view', {}, 'render', {}, 'R', {}, 's', {}, 'off', {}, 'd', {}, 'crop', {}, 'origin_mm', {}, 'mm_per_px', {});
     for i = 1:nview
         c = crop(i, :);  wpx = c(2) - c(1) + 1;  hpx = c(4) - c(3) + 1;
@@ -737,6 +850,7 @@ function [r, G, job] = compose(s, surfs, F, hemi, folded, G, tok, cmaps, o)
     end
 
     % the colourbar: the viewer's own colours, quantity (unit re reference), both ends ticked, 0 on a diverging bar
+    if s.colour
     cmap = cmaps(s.Colormap);
     len = tok.spacing.colorbarLength_frac * W;  xb = (W - len) / 2;
     svg{end+1} = sprintf('<image x="%.3f" y="%.3f" width="%.3f" height="%.3f" preserveAspectRatio="none" xlink:href="data:image/png;base64,%s"/>', ...
@@ -755,6 +869,7 @@ function [r, G, job] = compose(s, surfs, F, hemi, folded, G, tok, cmaps, o)
     end
     if isempty(s.Reference), r.colorbar = sprintf('%s (%s)', s.Label, s.Unit); else, r.colorbar = sprintf('%s (%s re %s)', s.Label, s.Unit, s.Reference); end
     svg{end+1} = T(W / 2, H - 0.4 - 0.2 * tok.type.colorbarLabel.size_pt * pt, r.colorbar, tok.type.colorbarLabel.size_pt, ink, 'middle', '');
+    end
     svg{end+1} = '</svg>';
 
     % what the legend must say
@@ -857,8 +972,7 @@ function q = squareOf(m)
 end
 
 function [svg, r] = drawMarks(svg, r, s, cam, alpha, Vd, F, shown, el, xy, k, c, tok, pt, i)
-% the selections (a blended fill in the axis colour, or a dashed extent) and the paths (geodesics, ink, an arrowhead)
-% on one view, placed by the render's own camera and hidden where the surface hides them
+% the selections (a blended fill in the axis colour, or a dashed extent) on one view, placed by the render's own camera and hidden where the surface hides them
     ink = tok.colour.neutral.neutral_ink.x_value;  paper = tok.colour.neutral.neutral_paper.x_value;
     toPage = @(px) xy + k * (px - [c(1) c(3)] + 0.5);
     Fs = F(all(shown(F), 2), :);
@@ -881,30 +995,6 @@ function [svg, r] = drawMarks(svg, r, s, cam, alpha, Vd, F, shown, el, xy, k, c,
             p0 = toPage(project(cam, Vd(q.centre, :)));
             svg{end+1} = sprintf('<circle cx="%.3f" cy="%.3f" r="%.4f" fill="%s" stroke="%s" stroke-width="%.4f"/>', ...
                 p0, tok.marker.size_pt / 2 * pt, q.colour, ink, tok.marker.edge_pt * pt); %#ok<AGROW>
-        end
-    end
-    wl = tok.cortex.paths.width_pt * pt;
-    for j = 1:numel(s.Paths)
-        q = s.Paths(j);
-        X = q.bary(:, 1) .* Vd(F(q.faces, 1), :) + q.bary(:, 2) .* Vd(F(q.faces, 2), :) + q.bary(:, 3) .* Vd(F(q.faces, 3), :);
-        vis = all(shown(F(q.faces, :)), 2) & visible(X, cam.d, Vd, Fs);   % on the shown hemisphere, in front
-        P = toPage(project(cam, X));
-        r.paths(j).px{i} = project(cam, X);  r.paths(j).visible{i} = vis;
-        run = diff([0; vis(:); 0]);  a = find(run == 1);  b = find(run == -1) - 1;
-        for u = 1:numel(a)
-            if b(u) <= a(u), continue; end
-            pts = strjoin(ptsText(P(a(u):b(u), :)), ' ');
-            svg{end+1} = sprintf(['<polyline points="%s" fill="none" stroke="%s" stroke-width="%.4f" stroke-linejoin="round" stroke-linecap="round"/>' ...
-                '<polyline points="%s" fill="none" stroke="%s" stroke-width="%.4f" stroke-linejoin="round" stroke-linecap="round"/>'], ...
-                pts, paper, wl + 2 * 0.6 * pt, pts, ink, wl); %#ok<AGROW>   % ink over a paper halo, as the scale bar
-        end
-        if vis(end)          % the arrowhead at the end, along the last visible millimetre
-            e = P(end, :);  back = find(vecnorm(P - e, 2, 2) > 0.5, 1, 'last');
-            if ~isempty(back)
-                u = (e - P(back, :)) / norm(e - P(back, :));  nn = [-u(2) u(1)];  hl = 4 * wl;
-                svg{end+1} = sprintf('<polygon points="%.3f,%.3f %.3f,%.3f %.3f,%.3f" fill="%s"/>', e + u * 0.2 * hl, ...
-                    e - u * hl + nn * 0.45 * hl, e - u * hl - nn * 0.45 * hl, ink); %#ok<AGROW>
-            end
         end
     end
 end

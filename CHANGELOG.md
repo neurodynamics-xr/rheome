@@ -18,6 +18,19 @@
 
 ### Added
 
+- **`rheome.snapshot` sets the viewer's `layers`; an arrows-only shot works; paths are drawn by the viewer.**
+  - Every render's settings carry the viewer's `layers` list and none of the old single-layer keys (`scalar`,
+    `vector`, `colormap`, `clim`, `isolines`, `opacity`, `threshold`, `halfMax`, `arrowDensity`, `arrowColor`). A
+    shot whose layers had no colour layer was refused ("colormap: there is no colour layer").
+  - The shot field `Layers` takes the layers whole, as `rheome.view` does: `{{"J", "x", "arrows"}}` (arrows only:
+    no colourbar, no `Unit`), `{{"div"}, {"J", "x", "arrows"}}`, or `{}` (the anatomy only). The colour layer's
+    colormap and limits come from `Quantity` / `Colormap` / `CLim` when not given, so the colourbar matches.
+  - `Paths` also take a path the caller traced as `Faces` + barycentric `Weights` (with `How`), and a `Color` and
+    `Width`. They are written into the bundle's `paths[]` and drawn by the viewer (a depth-tested tube with an
+    arrowhead), so the raw renders carry them too; snapshot no longer draws its own SVG line for a path.
+- **`rheome.io.write.bundle` writes `paths[]`** (`Paths` option): per path a name, its points as vertices or as
+  faces + barycentric weights (1-based in MATLAB, 0-based in the files), and optional color, width, arrow and
+  geodesic, as the viewer reads them (nxr-cortical-flow PR #44).
 - **`rheome.snapshot` draws selections, geodesic paths and shaped insets, and returns each render's camera**
   (figure system revision 3, Diellor's board comments 24-26).
   - `Selection`: a tile (`Vertices`) or a geodesic disk (`Centre`, `RadiusMM` along the folded surface). It is

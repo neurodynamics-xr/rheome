@@ -33,6 +33,19 @@ function manifest = bundle(folder, surf, result, varargin)
 %               sinks) and <v>_psi (stream function, vortices), from rheome.differential.helmholtz on the first
 %               surface (its .Hemi, if any, sets the per-hemisphere solves), tagged "derivedFrom": "<v>" and
 %               "form": "phi" | "psi" in the manifest (additive to rheome.bundle@1). The viewer cannot solve them.
+%   'Paths'  PATHS ON THE SURFACE (a trajectory: a geodesic traced over the cortex), the manifest's 'paths' (viewer README
+%            'paths[]'): a struct array with
+%              name      the path's name (the viewer's 'paths' setting shows paths by name)                   REQUIRED
+%              vertices  its points as vertices, [n x 1] 1-based                                      one of these two
+%              faces, weights   or points of triangles: faces [n x 1] (1-based rows of the first surface's Faces, the
+%                        corners as given) and barycentric weights [n x 3] (>= 0, summing to 1)
+%              color     a figure-token colour's name ("atlas-event", "neutral-ink" ...), a neutral or "#rrggbb"
+%                        (default: the viewer's, atlas-event)
+%              width     pt (default: the viewer's, the tokens' line.event_pt)
+%              arrow     true: an arrowhead at the end (default false)
+%              geodesic  true: the vertices are waypoints the viewer joins by geodesics (default false)
+%            Each is written as path<k>_v.bin (int32, 0-based) or path<k>_f.bin (int32, 0-based) + path<k>_w.bin
+%            (float32 [3 x n]).
 %
 % OUTPUT:
 %   manifest : full path of the manifest.json written.
@@ -46,6 +59,7 @@ function manifest = bundle(folder, surf, result, varargin)
     p.addParameter('Name', 'Rheome result', @(x) ischar(x) || isstring(x));
     p.addParameter('Settings', [], @(x) isempty(x) || isstruct(x));
     p.addParameter('Potentials', false);
+    p.addParameter('Paths', [], @(x) isempty(x) || isstruct(x));
     p.parse(varargin{:});
     o = p.Results;
 
@@ -106,6 +120,7 @@ function manifest = bundle(folder, surf, result, varargin)
     m = struct('format', 'rheome.bundle@1', 'name', char(o.Name), ...
         'surface', sm, 'time', struct('samples', T, 'fs', o.Fs, 'origin', 0), 'fields', {fl});
     if numel(surfs) > 1, m.surfaces = num2cell(alt); end   % a JSON array even for one
+    if ~isempty(o.Paths), m.paths = writePaths(folder, o.Paths, nV, size(F, 1)); end
     if ~isempty(o.Settings), m.settings = o.Settings; end
     manifest = fullfile(folder, 'manifest.json');
     fid = fopen(manifest, 'w');
@@ -124,6 +139,47 @@ function pot = potentials(x, names, result, nV)
     pot = cellstr(x);
     bad = setdiff(pot, vec);
     if ~isempty(bad), error('rheome:bundle:potentials', 'Potentials: %s is not a vector field of the result.', strjoin(bad, ', ')); end
+end
+
+function P = writePaths(folder, a, nV, nF)
+% the paths, checked (as the viewer reads them: bundle.ts readPath) and written; a cell, a JSON array even for one
+    id = 'rheome:bundle:paths';
+    bad = setdiff(fieldnames(a), {'name', 'vertices', 'faces', 'weights', 'color', 'width', 'arrow', 'geodesic'});
+    if ~isempty(bad), error(id, 'Paths: %s is not a path field.', strjoin(bad, ', ')); end
+    P = cell(1, numel(a));
+    for k = 1:numel(a)
+        b = a(k);
+        if ~isfield(b, 'name') || isempty(b.name), error(id, 'Paths(%d): a name.', k); end
+        q = struct('name', char(b.name));
+        if isfield(b, 'vertices') && ~isempty(b.vertices)
+            v = double(b.vertices(:));
+            if numel(v) < 2 || any(v < 1 | v > nV | v ~= round(v)), error(id, '%s: vertices, >= 2 of them in 1..%d.', q.name, nV); end
+            q.vertices = sprintf('path%d_v.bin', k);  put(folder, q.vertices, v - 1, 'int32');
+        elseif isfield(b, 'faces') && isfield(b, 'weights') && ~isempty(b.faces)
+            f = double(b.faces(:));  w = double(b.weights);
+            if numel(f) < 2 || any(f < 1 | f > nF | f ~= round(f)), error(id, '%s: faces, >= 2 of them in 1..%d.', q.name, nF); end
+            if ~isequal(size(w), [numel(f) 3]) || any(w(:) < -1e-6) || any(abs(sum(w, 2) - 1) > 1e-6)
+                error(id, '%s: weights [n x 3], barycentric (>= 0, each row summing to 1).', q.name);
+            end
+            q.faces = sprintf('path%d_f.bin', k);  put(folder, q.faces, f - 1, 'int32');
+            q.weights = sprintf('path%d_w.bin', k);  put(folder, q.weights, w', 'single');
+        else
+            error(id, '%s: vertices, or faces and weights.', q.name);
+        end
+        if isfield(b, 'color') && ~isempty(b.color)
+            c = char(b.color);
+            if isempty(regexp(c, '^(#[0-9a-fA-F]{6}|[a-z][a-z0-9-]*)$', 'once')), error(id, '%s: color, a colour token''s name or #rrggbb.', q.name); end
+            q.color = c;
+        end
+        if isfield(b, 'width') && ~isempty(b.width)
+            if ~(isscalar(b.width) && b.width > 0 && b.width <= 20), error(id, '%s: width in pt, 0 < width <= 20.', q.name); end
+            q.width = double(b.width);
+        end
+        for t = {'arrow', 'geodesic'}
+            if isfield(b, t{1}) && ~isempty(b.(t{1})), q.(t{1}) = logical(b.(t{1})); end
+        end
+        P{k} = q;
+    end
 end
 
 function put(folder, name, x, cls)
