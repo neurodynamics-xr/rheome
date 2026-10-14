@@ -19,6 +19,23 @@
   interpreter; units through `texunit`), never Unicode glyphs. `tests/tShowTokens` runs every figure in both themes
   against `figure_check.py --theme`, and also refuses the retired kind, colourbars without a token quantity, software
   colormap names and Unicode maths glyphs in `+show`.
+- **`rheome.view` draws LAYERS: a field, a form, a representation.** The painted colours and the arrows are both
+  fields, of two types (Diellor, 2026-10-14), so `Layers=` names what is drawn: one field, one form of it (a real
+  field's value `f`; a vector field's `abs`, `nx`, `div`, `curl`, or the vector `x`, `xt`) and one representation
+  (`colour`, `isolines`, `halfMax`; `arrows`), with its look, in draw order. A cell of `{field, form, as}` or a struct
+  array with the viewer's layer keys; each is checked before anything is written (a vector field is never painted
+  itself). It is sent as the Cortical Flow viewer's `layers` setting (viewer 0.1.0+57f83b55 and later). `Colormap`,
+  `CLim` and `Threshold` set the colour layer's look, `ArrowDensity` and `ArrowScale` the arrows layers'; `out.set`
+  acts on the layers last sent. The old viewer keys (`scalar`, `vector`, ...) are no longer sent.
+- **Hodge potentials in the bundle (`rheome.io.write.bundle` `'Potentials'`, `rheome.view` `Potentials=`).** The
+  scalar potential and the stream function of a vector field need a Poisson solve the viewer does not do: they are
+  solved with `rheome.differential.helmholtz` and written as real fields `<v>_phi`, `<v>_psi` tagged
+  `"derivedFrom": "<v>"` and `"form": "phi" | "psi"` (additive to `rheome.bundle@1`).
+
+### Deprecated
+
+- `rheome.view` `Field` and `Arrows`: rewritten into `Layers` with a warning (`rheome:view:deprecated`); removed in
+  the next release.
 
 - **`rheome.show` figures read the lab's figure tokens.** Every figure function (eventsensors, activity, critical,
   filmstrip, vectorstrip, ridgestrip, ridges, frame, jointscalogram, jointspectrum, specparam, resolution) and the
