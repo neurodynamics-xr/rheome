@@ -150,11 +150,18 @@ classdef tViewBundle < matlab.unittest.TestCase
             j = jsondecode(fileread(m));
             tc.verifyEqual(cellfun(@(x) x.name, j.fields, 'UniformOutput', false)', {'a', 'J', 'J_phi', 'J_psi'});
             g = j.fields(3:4);  if iscell(g), g = [g{:}]; end
-            tc.verifyEqual({g.name; g.derivedFrom; g.form; g.type}, {'J_phi', 'J_psi'; 'J', 'J'; 'phi', 'psi'; 'real', 'real'});
+            tc.verifyEqual({g.name; g.derivedFrom; g.byOperator; g.type}, {'J_phi', 'J_psi'; 'J', 'J'; 'hodge:potential', 'hodge:stream'; 'real', 'real'});
+            tc.verifyFalse(isfield(g, 'form'));   % the old tag is not written
             fg = rheome.operators.face_gradient(S.Vertices, S.Faces);  S.VertNormals = fg.W * fg.FaceNormal;
             H = rheome.differential.helmholtz(J, S);
             tc.verifyEqual(reshape(rd(d, g(2).values, 'single'), nV, 2), single(H.Psi));
             tc.verifyError(@() rheome.io.write.bundle(d, S, struct('J', J), 'Potentials', "a"), 'rheome:bundle:potentials');
+            m = rheome.io.write.bundle(d, S, struct('J', J), 'DivCurl', true);
+            j = jsondecode(fileread(m));  g = j.fields(2:3);  if iscell(g), g = [g{:}]; end
+            tc.verifyEqual({g.name; g.derivedFrom; g.byOperator}, {'J_div', 'J_curl'; 'J', 'J'; 'divergence', 'curl'});
+            tc.verifyEqual(reshape(rd(d, g(1).values, 'single'), nV, 2), single(rheome.differential.divergence(J, S)));
+            tc.verifyEqual(reshape(rd(d, g(2).values, 'single'), nV, 2), single(rheome.differential.curl(J, S)));
+            tc.verifyError(@() rheome.io.write.bundle(d, S, struct('J', J, 'J_div', J), 'DivCurl', "J"), 'rheome:bundle:derived');
             old = getenv('RHEOME_VIEWER');  setenv('RHEOME_VIEWER', [d '_v']);  c2 = onCleanup(@() cleanup([d '_v'], old));
             out = rheome.view(S, struct('J', J), Viewer="none", Potentials=true, Layers={{"J_phi"}, {"J"}});
             tc.verifyEqual(out.settings.layers{1}, struct('field', 'J_phi', 'form', 'f', 'as', 'colour'));
