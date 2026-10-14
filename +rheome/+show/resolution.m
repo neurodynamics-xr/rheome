@@ -31,7 +31,8 @@ function hFig = resolution(marks, varargin)
 %   'Fields'       [nV x nF] per-vertex scalars, drawn in row 2 with a SHARED colour scale
 %                  after each column is normalised to its own peak
 %   'FieldTitles'  {1 x nF} titles
-%   'FieldColormaps' {1 x nF} colormap per field panel (default the house flow-magnitude map).
+%   'FieldQuantity' what the fields are (tokens quantity, default 'magnitude'): their colormap.
+%   'FieldColormaps' {1 x nF} colormap per field panel, in place of the quantity's.
 %                  ⚠ under 'hot' a BINARY INDICATOR is invisible -- zero is black and the panel
 %                  reads as empty; pass a two-colour map for set-valued panels (an atlas scout).
 %   'Bands'        {lo hi label} per row: shaded regions of the ruler (mm)
@@ -40,7 +41,9 @@ function hFig = resolution(marks, varargin)
 %   'Title'        the ruler's panel title
 %   'Export'       file stem: write <stem>.pdf/.svg/.png at print size (nxr_save)
 %   'Visible'      'on' (default) | 'off' for headless export
-% Sizes and colours are the figure tokens; journal width (190 mm), one panel per row.
+%   'Theme'        figure theme ('' = the tokens' default, Pergammon; 'neuroimage' for MS1)
+% Sizes and colours are the figure tokens; double column, one panel per row; the fields' shared colourbar
+% in their panel's key band.
 %
 % OUTPUT: hFig figure handle.
 %
@@ -48,7 +51,6 @@ function hFig = resolution(marks, varargin)
 %
 % Author: Diellor Basha, 2026
 
-    T = tokens();
     p = inputParser;
     p.addParameter('Surface', []);
     p.addParameter('Patches', {});
@@ -56,14 +58,18 @@ function hFig = resolution(marks, varargin)
     p.addParameter('Fields', []);
     p.addParameter('FieldTitles', {});
     p.addParameter('FieldColormaps', {});
+    p.addParameter('FieldQuantity', 'magnitude');
     p.addParameter('Bands', {});
     p.addParameter('View', [-90 10]);
     p.addParameter('XLim', []);
     p.addParameter('Title', 'Spatial scales of the cortical problem');
     p.addParameter('Export', '');
     p.addParameter('Visible', 'on');
+    p.addParameter('Theme', '');
     p.parse(varargin{:});
     o = p.Results;
+    T = tokens(o.Theme);
+    o.FieldQuantity = quantity(o.FieldQuantity, []);
 
     if ~istable(marks) || ~all(ismember({'name','mm','kind'}, marks.Properties.VariableNames))
         error('show:resolution:marks', 'marks must be a table with name, mm and kind.');
@@ -75,43 +81,41 @@ function hFig = resolution(marks, varargin)
     hasCortex = ~isempty(S) && (nP > 0 || nF > 0);
 
     nCol = max([nP, nF, 1]);
-    rows = {};  kinds = struct();  ttl = struct();  hr = [];
-    fw = (T.journalSel.width_mm.double - 2*T.grid.margin_mm) / nCol;
+    rows = {};  kinds = struct();  ttl = struct();  hr = [];  keyb = struct();
+    fw = (T.page.width_mm.double - 2*T.grid.margin_mm) / nCol;
     viewH = T.grid.header_mm + 3 + 0.76*fw;          % header, view titles, the render aspect (1000 x 760)
     if hasCortex && nP > 0, rows{end+1} = 'patch'; hr(end+1) = viewH; end
-    if hasCortex && nF > 0, rows{end+1} = 'field'; hr(end+1) = viewH + 10; end
+    KB = T.legend.keyBand;
+    if hasCortex && nF > 0, rows{end+1} = 'field'; hr(end+1) = viewH + KB.scaleRow_mm + KB.gap_below_mm; end
     rows{end+1} = 'ruler';  hr(end+1) = 45;
     keys = char('A' + (0:numel(rows)-1));
     for i = 1:numel(rows)
         kinds.(keys(i)) = ternary(strcmp(rows{i}, 'ruler'), 'plot', 'image');
+        if strcmp(rows{i}, 'field'), keyb.(keys(i)) = 's'; end
         ttl.(keys(i)) = ternary(strcmp(rows{i}, 'ruler'), o.Title, ...
                         ternary(strcmp(rows{i}, 'patch'), 'Nested pyramid patches', 'Fields, each to its own peak'));
     end
-    H = min(sum(hr) + (numel(hr)-1)*T.grid.gutter_mm + 2*T.grid.margin_mm, T.journalSel.max_height_mm);
-    F = nxr_figure('double', H, cellstr(keys'), 'Heights', hr, 'Kinds', kinds, 'Titles', ttl);
+    H = min(sum(hr) + (numel(hr)-1)*T.grid.gutter_mm + 2*T.grid.margin_mm, T.page.max_height_mm);
+    F = nxr_figure('double', H, cellstr(keys'), 'Theme', o.Theme, 'Heights', hr, 'Kinds', kinds, 'Titles', ttl, 'Keys', keyb);
     hFig = F.fig;  hFig.Visible = o.Visible;
 
     for r = 1:numel(rows) - 1
         hp = F.ax.(keys(r));  P = hp.Position;  axis(hp, 'off');
-        under = 0;
-        if strcmp(rows{r}, 'field')                  % one shared scale under the row
-            under = 10 / F.size_mm(2);
-            cb = nxr_colorbar(hp, 'field', 'ratio to its peak', 'magnitude', [0 1]);
-            L = T.spacing.colorbarLength_frac * P(3);
-            cb.Position = [P(1) + (P(3) - L)/2, P(2) + 6/F.size_mm(2), L, T.spacing.colorbarThickness_mm/F.size_mm(2)];
+        if strcmp(rows{r}, 'field')                  % one shared scale, in the panel's key band
+            nicebar(nxr_colorbar(hp, 'field', 'ratio to its peak', o.FieldQuantity, [0 1], 'F', F), hp);
             hp.Position = P;
         end
         g = T.spacing.viewGap_mm / F.size_mm(1);  w = (P(3) - g*(nCol-1)) / nCol;
-        hv = P(4) - under - 3/F.size_mm(2);
+        hv = P(4) - 3/F.size_mm(2);
         for i = 1:nCol
-            ax = axes(hFig, 'Position', [P(1) + (i-1)*(w+g), P(2) + under, w, hv]);
+            ax = axes(hFig, 'Position', [P(1) + (i-1)*(w+g), P(2), w, hv]);
             if strcmp(rows{r}, 'patch') && i <= nP
                 d = zeros(size(S.Vertices,1), 1);  d(o.Patches{i}) = 1;
                 rheome.show.surface(S, d, 'Parent', ax, 'View', o.View, 'CLim', [0 1], ...
                     'Colormap', [T.rgb.neutral_mist; T.rgb.atlas_space], 'Colorbar', false, 'Title', i_title(o.PatchTitles, i));
             elseif strcmp(rows{r}, 'field') && i <= nF
                 X = double(o.Fields(:, i));  X = X / max(max(abs(X)), eps);   % each to its own peak: shapes compare
-                cm = nxr_cmap('flow-magnitude');
+                cm = nxr_cmap(T.quantity.(o.FieldQuantity).colormap);
                 if numel(o.FieldColormaps) >= i && ~isempty(o.FieldColormaps{i}), cm = o.FieldColormaps{i}; end
                 rheome.show.surface(S, X, 'Parent', ax, 'View', o.View, 'CLim', [0 1], ...
                     'Colormap', cm, 'Colorbar', false, 'Title', i_title(o.FieldTitles, i));
@@ -156,7 +160,7 @@ function hFig = resolution(marks, varargin)
             plot(axR, [marks.mm(i) marks.mm(i)], [y yt], '-', 'Color', T.rgb.neutral_slate, ...
                  'LineWidth', T.line.leader_pt);
             text(axR, marks.mm(i), yt, sprintf(' %s %.0f', string(marks.name(i)), marks.mm(i)), ...
-                 'Rotation', 30, 'Interpreter', 'none', 'VerticalAlignment', 'bottom', 'Clipping', 'on');
+                 'Interpreter', 'none', 'VerticalAlignment', 'bottom', 'Clipping', 'on');   % staggered rows, upright
         end
     end
     tk = [3 5 10 20 30 50 75 100 150 200 300 400 600 1000];

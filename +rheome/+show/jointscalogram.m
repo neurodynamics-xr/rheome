@@ -10,27 +10,28 @@ function hFig = jointscalogram(scal, varargin)
 % frequency interval carrying 90%% of the energy -- if the ridge does not span it, the slope is
 % clipped and should not be believed.
 %
-% OPTIONS: 'Visible', 'Title' (the figure's name), 'Export' file stem (<stem>.pdf/.svg/.png).
-% Sizes and colours are the figure tokens; 190 x 58 mm.
+% OPTIONS: 'Visible', 'Title' (the figure's name), 'Export' file stem (<stem>.pdf/.svg/.png),
+%          'Theme' ('' = the tokens' default, Pergammon; 'neuroimage' for MS1).
+% Sizes and colours are the figure tokens; double column x 58 mm; colourbars in the key bands.
 %
 % See also: rheome.filters.joint_scalogram, rheome.show.jointspectrum
 %
 % Author: Diellor Basha, 2026
 
-    T = tokens();
     p = inputParser;
     p.addParameter('Title','');
     p.addParameter('Export','');
     p.addParameter('Visible','on');
+    p.addParameter('Theme', '');
     p.parse(varargin{:});  o = p.Results;
+    T = tokens(o.Theme);
 
     hasRidge = ~isempty(scal.kbar);
     tB = 'No ridge';
     if hasRidge
-        tB = sprintf('Speed ridge: c = %.3f m/s (R² = %.3f), support %.1f–%.1f Hz', ...
-            scal.slope, scal.slopeR2, scal.fSupport(1), scal.fSupport(2));
+        tB = sprintf('Speed ridge %.3f m/s over %.1f–%.1f Hz', scal.slope, scal.fSupport(1), scal.fSupport(2));
     end
-    F = nxr_figure('double', 58, {'AB'}, 'Titles', struct('A', 'Joint scalogram', 'B', tB));
+    F = nxr_figure('double', 58, {'AB'}, 'Theme', o.Theme, 'Keys', struct('A', 's', 'B', 's'), 'Titles', struct('A', 'Joint scalogram', 'B', tB));
     hFig = F.fig;  hFig.Visible = o.Visible;
 
     ax1 = F.ax.A;
@@ -39,8 +40,8 @@ function hFig = jointscalogram(scal, varargin)
     imagesc(ax1, scal.f, 1:numel(scal.sigma), Z);
     axis(ax1,'xy');
     set(ax1,'YTick',1:numel(lab),'YTickLabel',lab);
-    nxr_axes_style(ax1, 'temporal frequency (Hz)', 'member σ (mm)');
-    nicebar(nxr_colorbar(ax1, 'energy', 'log10 a.u.', 'power', [min(Z(:)) max(Z(:)) + eps]), ax1);
+    nxr_axes_style(ax1, 'temporal frequency (Hz)', 'member scale $\sigma$ (mm)');
+    nicebar(nxr_colorbar(ax1, 'energy $\log_{10} E$', 'a.u.', 'power', [min(Z(:)) max(Z(:)) + eps], 'F', F), ax1);
 
     ax2 = F.ax.B;
     if hasRidge
@@ -48,8 +49,10 @@ function hFig = jointscalogram(scal, varargin)
         kfit = linspace(min(scal.kbar), max(scal.kbar), 50);
         plot(ax2, kfit, scal.slope*kfit + (2*pi*mean(scal.fRidge) - scal.slope*mean(scal.kbar)), ...
             '-', 'Color', T.rgb.neutral_ink, 'LineWidth', T.line.data_pt);
-        nxr_axes_style(ax2, 'energy-weighted √λ (rad/m)', 'ω (rad/s)');
-        nicebar(nxr_colorbar(ax2, 'energy weight', 'ratio', 'magnitude', [0 max(max(scal.wRidge), eps)]), ax2);
+        text(ax2, 0.03, 0.97, sprintf('$\\omega = c\\sqrt{\\lambda}$, $R^2 = %.3f$', scal.slopeR2), 'Units', 'normalized', ...
+            'VerticalAlignment', 'top', 'FontSize', T.type.annotation.size_pt);
+        nxr_axes_style(ax2, 'energy-weighted $\sqrt{\lambda}$ (rad/m)', 'angular frequency $\omega$ (rad/s)');
+        nicebar(nxr_colorbar(ax2, 'energy weight', 'ratio', 'power', [0 max(max(scal.wRidge), eps)], 'F', F), ax2);
     else
         axis(ax2,'off');
     end

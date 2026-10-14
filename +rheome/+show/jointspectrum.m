@@ -14,14 +14,15 @@ function hFig = jointspectrum(C, f, Lambda, varargin)
 %   'Log'     true (default) -- log10 colour scale
 %   'Title'   the joint spectrum's panel title    'Unit' of |C|^2 ('a.u.')
 %   'Visible' 'on' (default) | 'off'          'Export' file stem (<stem>.pdf/.svg/.png)
-% Sizes and colours are the figure tokens; 190 x 110 mm: spatial marginal in the space colour,
+%   'Theme'   '' = the tokens' default (Pergammon); 'neuroimage' for MS1
+% Sizes and colours are the figure tokens; double column x 110 mm, the colourbar in A's key band: spatial
+% marginal in the space colour,
 % temporal marginal in the time colour (atlas-space / atlas-time).
 %
 % See also: rheome.flow.joint, rheome.filters.joint_scalogram, rheome.show.jointscalogram
 %
 % Author: Diellor Basha, 2026
 
-    T = tokens();
     p = inputParser;
     p.addParameter('Speed', []);
     p.addParameter('Log', true);
@@ -29,7 +30,9 @@ function hFig = jointspectrum(C, f, Lambda, varargin)
     p.addParameter('Unit', 'a.u.');
     p.addParameter('Export', '');
     p.addParameter('Visible', 'on');
+    p.addParameter('Theme', '');
     p.parse(varargin{:});  o = p.Results;
+    T = tokens(o.Theme);
 
     f  = double(f(:)).';
     lamv = double(Lambda(:));
@@ -41,22 +44,17 @@ function hFig = jointspectrum(C, f, Lambda, varargin)
     K  = numel(ls);
     Z  = P;  if o.Log, Z = log10(max(P, max(P(:))*1e-8)); end
 
-    F = nxr_figure('double', 110, {'AAAB'; 'AAAB'; 'CCC.'}, 'Titles', struct( ...
+    F = nxr_figure('double', 110, {'AAAB'; 'AAAB'; 'CCC.'}, 'Theme', o.Theme, 'Keys', struct('A', 's'), 'Titles', struct( ...
         'A', o.Title, 'B', 'Spatial marginal', 'C', 'Temporal marginal'));
     hFig = F.fig;  hFig.Visible = o.Visible;
 
     ax = F.ax.A;
     imagesc(ax, f, 1:K, Z);  axis(ax,'xy');
-    colormap(ax, nxr_cmap('atlas-power'));
-    nxr_axes_style(ax, '', 'spatial frequency √λ (rad/m)');
+    nxr_axes_style(ax, '', 'spatial frequency $\sqrt{\lambda}$ (rad/m)');
     rheome.show.lambdaaxis(ax, lamv);
     set(ax,'XTickLabel',[]);                        % the marginal below carries the x label
-    cb = nxr_colorbar(ax, 'power |C|²', ternary(o.Log, ['log10 ' o.Unit], o.Unit), 'power', ...
-        [min(Z(:)) max(Z(:)) + eps], '', 'keep');
-    nicebar(cb, ax);
-    rb = F.rect_mm.B;  rc = F.rect_mm.C;  W = F.size_mm(1);  H = F.size_mm(2);   % the bar in the free cell
-    L = T.spacing.colorbarLength_frac * rb(3);
-    cb.Position = [(rb(1) + (rb(3) - L)/2)/W, 1 - (rc(2) + rc(4)/2)/H, L/W, T.spacing.colorbarThickness_mm/H];
+    nicebar(nxr_colorbar(ax, ternary(o.Log, 'power $\log_{10}|C|^2$', 'power $|C|^2$'), texunit(o.Unit), 'power', ...
+        [min(Z(:)) max(Z(:)) + eps], 'F', F), ax);
     if ~isempty(o.Speed)
         hold(ax,'on');
         for c = o.Speed(:)'
@@ -65,7 +63,7 @@ function hFig = jointspectrum(C, f, Lambda, varargin)
             if any(inR)
                 plot(ax, fc(inR), find(inR), '--', 'Color', T.rgb.neutral_paper, 'LineWidth', T.line.leader_pt);
                 j = find(inR, 1, 'last');
-                text(ax, fc(j), j, sprintf('%.2g m/s ', c), 'Color', T.rgb.neutral_paper, ...
+                text(ax, fc(j), j, sprintf('%.2g m/s ', c), 'Color', T.rgb.neutral_paper, 'Tag', 'nxr-speed-label', ...
                     'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'right');
             end
         end
@@ -74,13 +72,13 @@ function hFig = jointspectrum(C, f, Lambda, varargin)
 
     ax2 = F.ax.C;
     plot(ax2, f, sum(P,1), 'LineWidth', T.line.data_pt, 'Color', T.rgb.atlas_time);
-    nxr_axes_style(ax2, 'temporal frequency (Hz)', ['power (' o.Unit ')']);
+    nxr_axes_style(ax2, 'temporal frequency (Hz)', ['power (' texunit(o.Unit) ')']);
     xlim(ax2,[min(f) max(f)]);
 
     ax3 = F.ax.B;
     plot(ax3, sum(P,2), 1:K, 'LineWidth', T.line.data_pt, 'Color', T.rgb.atlas_space);
     rheome.show.lambdaaxis(ax3, lamv);
-    nxr_axes_style(ax3, ['power (' o.Unit ')']);  ylim(ax3,[1 K]);  set(ax3, 'YTickLabel', []);
+    nxr_axes_style(ax3, ['power (' texunit(o.Unit) ')']);  ylim(ax3,[1 K]);  set(ax3, 'YTickLabel', []);
     finish(F, '', o.Export);
 end
 

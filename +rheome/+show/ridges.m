@@ -24,6 +24,8 @@ function hFig = ridges(surf, out, varargin)
 %   'Title'      figure title: the figure's name (the legend carries it, not the artwork)
 %   'Export'     file stem: write <stem>.pdf/.svg/.png at print size (nxr_save)
 %   'Visible'    'on' (default) | 'off'
+%   'Theme'      figure theme ('' = the tokens' default, Pergammon; 'neuroimage' for MS1)
+% Sizes and colours are the figure tokens; the scale colourbar (tile code) in D's key band.
 %
 % OUTPUT: hFig figure handle.
 %
@@ -31,7 +33,6 @@ function hFig = ridges(surf, out, varargin)
 %
 % Author: Diellor Basha, 2026
 
-    T = tokens();
     p = inputParser;
     p.addParameter('MaxRidges', 60);
     p.addParameter('View', [-90 10]);
@@ -41,8 +42,10 @@ function hFig = ridges(surf, out, varargin)
     p.addParameter('Lift', 0.012);   % radial offset for trajectories, fraction of the mesh extent
     p.addParameter('Export', '');
     p.addParameter('Visible', 'on');
+    p.addParameter('Theme', '');
     p.parse(varargin{:});
     o = p.Results;
+    T = tokens(o.Theme);
 
     R = out.ridges;
     if isempty(R), error('show:ridges:empty', 'No ridges to show.'); end
@@ -54,7 +57,7 @@ function hFig = ridges(surf, out, varargin)
     [~, ord] = sort([R.nFrames], 'descend');
     ord = ord(1:min(o.MaxRidges, numel(ord)));
     lo = min(sig); hi = max(sig);  if hi <= lo, hi = lo + eps; end
-    F = nxr_figure('double', 65, {'ABCD'}, 'Widths', [2 1 1 1], 'Kinds', struct('A', 'cortex'), 'Titles', struct( ...
+    F = nxr_figure('double', 65, {'ABCD'}, 'Theme', o.Theme, 'Keys', struct('D', 's'), 'Widths', [2 1 1 1], 'Kinds', struct('A', 'cortex'), 'Titles', struct( ...
         'A', sprintf('%d ridges, longest %d frames', numel(R), R(ord(1)).nFrames), ...
         'B', 'Selected scale', ...
         'C', 'Lifetime', 'D', 'Net speed'));      % medians are statistics: the legend's
@@ -77,7 +80,7 @@ function hFig = ridges(surf, out, varargin)
     end
     span = max(max(surf.Vertices, [], 1) - min(surf.Vertices, [], 1));
     lift = @(P, idx) P + o.Lift * span * Nrm(idx, :);
-    cmap = nxr_cmap('atlas-tile-code');
+    cmap = nxr_cmap(T.quantity.code.colormap);
     for k = flip(ord)                                   % longest drawn last, so it sits on top
         f = (R(k).sigmaMode - lo) / (hi - lo);
         col = cmap(max(1, min(256, round(1 + f*255))), :);
@@ -96,9 +99,9 @@ function hFig = ridges(surf, out, varargin)
     ax2 = F.ax.B;
     bar(ax2, 1000*sig, out.summary.scaleHist, 'FaceColor', T.rgb.neutral_slate, 'EdgeColor','none');
     if isfield(o.Truth,'sigma') && ~isempty(o.Truth.sigma)
-        hold(ax2,'on');  xline(ax2, 1000*o.Truth.sigma, ref{1}, 'true σ', ref{2:end});
+        hold(ax2,'on');  xline(ax2, 1000*o.Truth.sigma, ref{1}, 'true $\sigma$', ref{2:end});
     end
-    nxr_axes_style(ax2, 'σ (mm)', 'detections (count)');
+    nxr_axes_style(ax2, 'scale $\sigma$ (mm)', 'detections (count)');
 
     % ---- lifetime ----
     ax3 = F.ax.C;
@@ -112,7 +115,7 @@ function hFig = ridges(surf, out, varargin)
         hold(ax4,'on');  yline(ax4, o.Truth.speed, ref{1}, 'true speed', ref{2:end});
     end
     nxr_axes_style(ax4, 'lifetime (ms)', 'net speed (m/s)');
-    nicebar(nxr_colorbar(ax4, 'ridge scale σ', 'mm', 'code', 1000*[lo hi]), ax4);
+    nicebar(nxr_colorbar(ax4, 'ridge scale $\sigma$', 'mm', 'code', 1000*[lo hi], 'F', F), ax4);
     finish(F, o.Title, o.Export);
 end
 
