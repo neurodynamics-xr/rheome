@@ -4,6 +4,13 @@
 
 ### Added
 
+- **The atlas's tiles in MATLAB (MS1 tree unification).** `rheome.geom.surfaceladder` ports nsp's atlas ladder
+  (`nxr_convert/atlas/ladder.py`: equal-mass cuts across the geodesic diameter) step for step, floating-point order
+  and sort emulation included (`rheome.utils.pysort` = CPython 3.12 `list.sort`). It is identical to ladder.py on
+  the ten VR1 PREVENT-AD hemispheres at all 12 levels. `rheome.geom.tree` gains `Method="Ladder"` (re-build) and
+  `Codes=` (read the stored codes, the only way to match an atlas store built before today's ladder.py: 3 of the
+  10 VR1 hemispheres differ from it from level 7 on). The default stays Fiedler bisection; callers opt in.
+
 - **Event boundaries and event statistics (MS1 SPEC1 §8)**, generic over an event table (one row per event:
   hemisphere, tiles, first and last time), so the tracker's detections and atlas-cell events are read alike.
   `rheome.detect.eventtable` fits `rheome.detect.risefall` to each event's own area-weighted envelope (tOn, tOff,
