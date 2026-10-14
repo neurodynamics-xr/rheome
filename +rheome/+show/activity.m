@@ -17,7 +17,9 @@ function [hFig, info] = activity(surf, c, Psi, t, varargin)
 %   'Percentile'  mark windows above this percentile of amplitude (default 90)
 %   'Unit'        unit of the amplitude (default 'a.u.')
 %   'View','Visible'; 'Title' the figure's name (the legend carries it); 'Export' file stem
-%   Sizes and colours are the figure tokens; 190 x 65 mm. The peak is ringed.
+%   'Theme' figure theme ('' = the tokens' default, Pergammon; 'neuroimage' for MS1)
+%   Sizes and colours are the figure tokens; double column x 65 mm. The windows are a labelled trace
+%   (nxr_event_trace), the peak is ringed, keys sit in the panels' key bands.
 %
 % OUTPUT:
 %   info .whenPower [1 x nT] energy per frame (Parseval)   .peakT time of maximum
@@ -28,7 +30,6 @@ function [hFig, info] = activity(surf, c, Psi, t, varargin)
 %
 % Author: Diellor Basha, 2026
 
-    T = tokens();
     p = inputParser;
     p.addParameter('Percentile', 90);
     p.addParameter('View', [-90 10]);
@@ -36,7 +37,9 @@ function [hFig, info] = activity(surf, c, Psi, t, varargin)
     p.addParameter('Title','');
     p.addParameter('Export','');
     p.addParameter('Visible','on');
+    p.addParameter('Theme', '');
     p.parse(varargin{:});  o = p.Results;
+    T = tokens(o.Theme);
 
     t  = double(t(:)).';
     pw = sum(abs(c).^2, 1);                 % Parseval: energy per frame, no synthesis
@@ -53,7 +56,8 @@ function [hFig, info] = activity(surf, c, Psi, t, varargin)
     [~,ip] = max(pw);  info.peakT = t(ip);
     info.windows = runs;
 
-    F = nxr_figure('double', 65, {'ABC'}, 'Kinds', struct('A', 'cortex'), 'Titles', struct( ...
+    F = nxr_figure('double', 65, {'ABC'}, 'Theme', o.Theme, 'Kinds', struct('A', 'cortex'), ...
+        'Keys', struct('A', 's', 'B', 'gg'), 'Titles', struct( ...
         'A', 'Where: time-averaged amplitude', ...
         'B', sprintf('When: %d window(s) above p%g', size(runs,1), o.Percentile), ...
         'C', 'Amplitude distribution'));
@@ -61,23 +65,24 @@ function [hFig, info] = activity(surf, c, Psi, t, varargin)
 
     ax1 = F.ax.A;
     rheome.show.surface(surf, mp, 'Parent', ax1, 'View', o.View, 'Colorbar', false, 'Title', '');
-    nicebar(nxr_colorbar(ax1, 'mean |ω|', o.Unit, 'magnitude', [0 max(max(mp), eps)]), ax1);
+    nicebar(nxr_colorbar(ax1, 'mean amplitude $|\omega|$', texunit(o.Unit), 'amplitude', [0 max(max(mp), eps)], 'F', F), ax1);
 
     ax2 = F.ax.B;  hold(ax2, 'on');
-    plot(ax2, t, pw, 'Color', T.rgb.trace_neutral, 'LineWidth', T.line.data_pt);
-    y = pw;  y(~above) = NaN;                % the windows on the trace itself (§5c), no shaded spans
-    plot(ax2, t, y, 'Color', T.rgb.trace_event, 'LineWidth', T.line.event_pt);
+    ev = sprintf('above p%g', o.Percentile);   % the windows on the trace itself (tokens traceWithEvent)
+    nxr_event_trace(ax2, t, pw, above, 'Label', ev);
     yline(ax2, thr, '--', sprintf('p%g', o.Percentile), 'Color', T.rgb.neutral_slate, ...
         'LineWidth', T.line.axis_pt, 'FontSize', T.type.annotation.size_pt);
     plot(ax2, info.peakT, pw(ip), 'o', 'MarkerSize', 2*T.marker.size_pt, 'MarkerEdgeColor', T.rgb.neutral_ink, ...
         'LineWidth', T.marker.edge_pt);
-    nxr_axes_style(ax2, 'time (s)', ['energy Σ|ω|² (' o.Unit '²)']);
+    nxr_axes_style(ax2, 'time (s)', ['energy $\sum|\omega|^2$ (' texunit([o.Unit '^2']) ')']);
+    nxr_key(F, 'B', {struct('kind', 'line', 'text', 'energy per frame', 'color', T.rgb.trace_neutral), ...
+                     struct('kind', 'event', 'text', ev), struct('kind', 'marker', 'text', 'peak', 'color', T.rgb.neutral_paper)});
     xlim(ax2, [t(1) t(end)]);
 
     ax3 = F.ax.C;
     histogram(ax3, A(:), 60, 'FaceColor', T.rgb.neutral_slate, 'EdgeColor', 'none');
     set(ax3, 'YScale', 'log');
-    nxr_axes_style(ax3, ['|ω| per vertex and frame (' o.Unit ')'], 'count (vertex-frames)');
+    nxr_axes_style(ax3, ['$|\omega|$ per vertex and frame (' texunit(o.Unit) ')'], 'count (vertex-frames)');
     plainlog(ax3);
     finish(F, o.Title, o.Export);
 end

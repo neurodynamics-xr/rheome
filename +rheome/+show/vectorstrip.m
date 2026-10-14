@@ -20,8 +20,9 @@ function hFig = vectorstrip(surf, J, frames, varargin)
 %   'Row'       which grid row this strip occupies (default 1)
 %   'NumArrows' arrows per panel, at the top-magnitude vertices (default 200)
 %   'View'      camera [az el] (default [-90 10])
-%   'Colormap'  magnitude colormap (default the house flow-magnitude map)
+%   'Colormap'  in place of the magnitude's colormap (tokens quantity magnitude)
 %   'Unit'      unit of |J| for the colourbar (default 'a.u.')
+%   'Theme'     figure theme ('' = the tokens' default, Pergammon; 'neuroimage' for MS1)
 %   'RowLabel'  the row's panel title, after its letter
 %   'Titles'    {1 x numel(frames)} per-panel titles
 %   'Title'     figure title: the figure's name (the legend carries it, not the artwork)
@@ -34,14 +35,14 @@ function hFig = vectorstrip(surf, J, frames, varargin)
 %
 % Author: Diellor Basha, 2026
 
-    tokens();
     p = inputParser;
     p.addParameter('Parent', []);
     p.addParameter('Grid', []);
     p.addParameter('Row', 1);
     p.addParameter('NumArrows', 200);
     p.addParameter('View', [-90 10]);
-    p.addParameter('Colormap', nxr_cmap('flow-magnitude'));
+    p.addParameter('Colormap', []);
+    p.addParameter('Theme', '');
     p.addParameter('RowLabel', '');
     p.addParameter('Titles', []);
     p.addParameter('Unit', 'a.u.');
@@ -52,6 +53,8 @@ function hFig = vectorstrip(surf, J, frames, varargin)
     p.addParameter('Target', []);
     p.parse(varargin{:});
     opt = p.Results;
+    T = tokens(opt.Theme);
+    if isempty(opt.Colormap), opt.Colormap = nxr_cmap(T.quantity.magnitude.colormap); end
 
     if ischar(surf) || (isstring(surf) && isscalar(surf)), surf = rheome.io.read.surface(char(surf)); end
     V  = surf.Vertices;
@@ -71,7 +74,7 @@ function hFig = vectorstrip(surf, J, frames, varargin)
     end
 
     [F, axs, lim] = striprow(opt.Parent, grid, opt.Row, nF, opt.Visible, opt.RowLabel, ...
-                             {'current magnitude |J|', opt.Unit, 'magnitude', [0 gmax], opt.Colormap});
+                             {'current magnitude $|\mathbf{J}|$', texunit(opt.Unit), 'magnitude', [0 gmax], opt.Colormap}, opt.Theme);
     for c = 1:nF
         V3 = [J(1:3:end,frames(c)), J(2:3:end,frames(c)), J(3:3:end,frames(c))];
         ttl = '';  if ~isempty(opt.Titles), ttl = opt.Titles{c}; end

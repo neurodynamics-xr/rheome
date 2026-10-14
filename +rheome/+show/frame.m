@@ -12,19 +12,21 @@ function hFig = frame(frameStruct, Lambda, varargin)
 % This is the figure that replaces "we chose sigma = [10 15 20 30 40] mm" with a designed bank and
 % a stated coverage.
 %
-% OPTIONS: 'Visible', 'Title' (the figure's name), 'Export' file stem (<stem>.pdf/.svg/.png).
-% Sizes and colours are the figure tokens; 190 x 60 mm; members coloured fine -> coarse.
+% OPTIONS: 'Visible', 'Title' (the figure's name), 'Export' file stem (<stem>.pdf/.svg/.png),
+%          'Theme' ('' = the tokens' default, Pergammon; 'neuroimage' for MS1).
+% Sizes and colours are the figure tokens; double column x 60 mm; members coloured fine -> coarse.
 %
 % See also: rheome.filters.frame, rheome.filters.frame_bounds, rheome.filters.frame_gains
 %
 % Author: Diellor Basha, 2026
 
-    T = tokens();
     p = inputParser;
     p.addParameter('Title', '');
     p.addParameter('Export', '');
     p.addParameter('Visible','on');
+    p.addParameter('Theme', '');
     p.parse(varargin{:});  o = p.Results;
+    T = tokens(o.Theme);
 
     lam = sort(double(Lambda(:)));
     H   = rheome.filters.frame_gains(frameStruct, lam);       % [K x M]
@@ -41,9 +43,9 @@ function hFig = frame(frameStruct, Lambda, varargin)
     isScaling = strcmpi(frameStruct.Family,'mexhat');
 
     finest = 1000*pi/sqrt(max(lam));
-    F = nxr_figure('double', 60, {'ABC'}, 'Titles', struct( ...
+    F = nxr_figure('double', 60, {'ABC'}, 'Theme', o.Theme, 'Titles', struct( ...
         'A', sprintf('%s frame, %d members', frameStruct.Family, M), ...
-        'B', sprintf('Coverage: tightness B/A = %.3f', b.Tightness), ...
+        'B', sprintf('Coverage, tightness %.3f', b.Tightness), ...
         'C', 'Member scales (1 = scaling function)'));
     hFig = F.fig;  hFig.Visible = o.Visible;
     ref = {'--', 'Color', T.rgb.neutral_slate, 'LineWidth', T.line.axis_pt, ...
@@ -51,13 +53,13 @@ function hFig = frame(frameStruct, Lambda, varargin)
 
     ax1 = F.ax.A;  hold(ax1,'on');  cmap = ramp(M);
     for m = 1:M, plot(ax1, kk, H(:,m), 'LineWidth', T.line.data_pt, 'Color', cmap(m,:)); end
-    nxr_axes_style(ax1, '√λ (rad/m)', 'member gain (ratio)');
+    nxr_axes_style(ax1, '$\sqrt{\lambda}$ (rad/m)', 'member gain $g_m$ (ratio)');
 
     ax2 = F.ax.B;
     plot(ax2, kk, sum(H.^2,2), 'Color', T.rgb.neutral_ink, 'LineWidth', T.line.data_pt); hold(ax2,'on');
-    yline(ax2, b.A, ref{1}, sprintf('A = %.3g', b.A), ref{2:end});
-    yline(ax2, b.B, ref{1}, sprintf('B = %.3g', b.B), ref{2:end});
-    nxr_axes_style(ax2, '√λ (rad/m)', 'coverage Σ g² (ratio)');
+    yline(ax2, b.A, ref{1}, sprintf('$A = %.3g$', b.A), ref{2:end});
+    yline(ax2, b.B, ref{1}, sprintf('$B = %.3g$, $B/A = %.3f$', b.B, b.Tightness), ref{2:end});
+    nxr_axes_style(ax2, '$\sqrt{\lambda}$ (rad/m)', 'coverage $\sum_m g_m^2$ (ratio)');
 
     ax3 = F.ax.C;
     idx = 1:M;  lab = 1000*sig;
@@ -65,7 +67,7 @@ function hFig = frame(frameStruct, Lambda, varargin)
     stem(ax3, idx, lab, 'filled', 'LineWidth', T.line.data_pt, 'Color', T.rgb.neutral_ink, 'MarkerSize', T.marker.size_pt);
     set(ax3,'YScale','log');
     yline(ax3, finest, ref{1}, sprintf('basis limit %.1f mm', finest), ref{2:end});
-    nxr_axes_style(ax3, 'member (index)', 'σ (mm)');
+    nxr_axes_style(ax3, 'member (index)', 'scale $\sigma$ (mm)');
     plainlog(ax3);
     finish(F, o.Title, o.Export);
 end

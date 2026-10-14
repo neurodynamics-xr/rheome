@@ -17,8 +17,10 @@ function hAx = surface(surf, data, varargin)
 %
 % OPTIONS (name/value):
 %   'Faces'      [nF x 3] faces, required only if 'surf' is a bare vertex matrix
-%   'Colormap'   colormap for the overlay (default: the house maps of the figure tokens,
-%                flow-signed-field for signed data, flow-magnitude for one-signed data)
+%   'Quantity'   what the data are (tokens quantity: divergence, curl, potential, stream, magnitude,
+%                amplitude, speed, power, phase ...): one colormap per quantity. Default inferred:
+%                signed data -> divergence, one-signed -> magnitude; name it to get its own map
+%   'Colormap'   colormap for the overlay, in place of the quantity's
 %   'FaceAlpha'  surface opacity 0..1 (default 1)
 %   'EdgeColor'  edge color (default 'none')
 %   'View'       [az el] camera view (default [-90 10], left-lateral-ish)
@@ -40,6 +42,7 @@ function hAx = surface(surf, data, varargin)
     p = inputParser;
     p.addParameter('Faces', []);
     p.addParameter('Colormap', []);
+    p.addParameter('Quantity', '');
     p.addParameter('FaceAlpha', 1);
     p.addParameter('EdgeColor', 'none');
     p.addParameter('View', [-90 10]);
@@ -92,14 +95,13 @@ function hAx = surface(surf, data, varargin)
               'FaceVertexCData', data, 'FaceColor', 'interp', ...
               'EdgeColor', opt.EdgeColor, 'FaceAlpha', opt.FaceAlpha, ...
               'FaceLighting', 'gouraud');
-        isSigned = any(data < 0) && any(data > 0);
+        tok = T.quantity.(quantity(opt.Quantity, data)).colormap;
+        isSigned = strcmp(T.colour.colormap.(matlab.lang.makeValidName(tok)).scale, 'diverging');
         cmap = opt.Colormap;
-        if isempty(cmap)
-            if isSigned, cmap = nxr_cmap('flow-signed-field'); else, cmap = nxr_cmap('flow-magnitude'); end
-        end
+        if isempty(cmap), cmap = nxr_cmap(tok); end
         colormap(hAx, cmap);
         if isempty(opt.CLim)
-            if isSigned                            % signed field -> symmetric limits
+            if isSigned                            % diverging map -> symmetric limits
                 m = max(abs(data));  if m > 0, set(hAx, 'CLim', [-m m]); end
             else
                 lo = min(data); hi = max(data);

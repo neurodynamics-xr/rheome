@@ -10,7 +10,8 @@ function hFig = critical(surf, out, varargin)
 % surface, so a departure means mesh trouble rather than anything about the data.
 %
 % OPTIONS: 'Frame' which frame to draw (default 1), 'View', 'Visible', 'Title' (the figure's name),
-%          'Export' file stem (<stem>.pdf/.svg/.png). Sizes and colours are the figure tokens; 190 x 65 mm.
+%          'Export' file stem (<stem>.pdf/.svg/.png), 'Theme' ('' = Pergammon; 'neuroimage' for MS1).
+%          Sizes and colours are the figure tokens; double column x 65 mm; the type key in B's key band.
 % Vortex = flow-vortex circles, source = flow-source triangles, sink = open flow-source triangles
 % (pointing down), saddle = slate squares.
 %
@@ -18,14 +19,15 @@ function hFig = critical(surf, out, varargin)
 %
 % Author: Diellor Basha, 2026
 
-    T = tokens();
     p = inputParser;
     p.addParameter('Frame', 1);
     p.addParameter('View', [-90 10]);
     p.addParameter('Title','');
     p.addParameter('Export','');
     p.addParameter('Visible','on');
+    p.addParameter('Theme', '');
     p.parse(varargin{:});  o = p.Results;
+    T = tokens(o.Theme);
 
     % Helmholtz colours of the tokens; shape doubles colour (source/sink share a colour, not a shape)
     sty = struct('vortex', {{'o', T.rgb.flow_vortex, T.rgb.flow_vortex}}, ...
@@ -34,7 +36,7 @@ function hFig = critical(surf, out, varargin)
                  'saddle', {{'s', T.rgb.neutral_slate, T.rgb.neutral_ink}});
     c = out.cp(o.Frame);
     ok = ~isempty(out.chi) && all(abs(out.chi(:) - out.chiExpected) < 0.5);
-    F = nxr_figure('double', 65, {'ABC'}, 'Kinds', struct('A', 'cortex'), 'Titles', struct( ...
+    F = nxr_figure('double', 65, {'ABC'}, 'Theme', o.Theme, 'Kinds', struct('A', 'cortex'), 'Keys', struct('B', 'gg'), 'Titles', struct( ...
         'A', sprintf('Frame %d: %d critical points', out.frames(o.Frame), numel(c.type)), ...
         'B', 'Population by type', ...
         'C', sprintf('Poincaré–Hopf: %s', ternary(ok, 'pass', 'mismatch, check the mesh'))));
@@ -59,19 +61,18 @@ function hFig = critical(surf, out, varargin)
         s = sty.(lower(out.kinds{i}));  hb(i).FaceColor = s{2};  hb(i).EdgeColor = s{3};
     end
     set(ax2,'XTick',1:numel(out.frames),'XTickLabel',string(out.frames));
-    ylim(ax2, [0 1.7*max([sum(out.counts, 2); 1])]);   % empty space top-right for the key (tokens: legend)
     nxr_axes_style(ax2, 'frame (index)', 'critical points (count)');
-    legend(ax2, out.kinds, 'Location','northeast', 'Box', 'off', 'FontSize', T.type.legendText.size_pt);
+    nxr_key(F, 'B', cellfun(@(k) struct('kind', 'patch', 'text', k, 'color', sty.(lower(k)){2}), out.kinds, 'UniformOutput', false));
 
     ax3 = F.ax.C;
     if isempty(out.chi)
-        text(ax3,0.5,0.5,'no χ reported','HorizontalAlignment','center'); axis(ax3,'off');
+        text(ax3,0.5,0.5,'no $\chi$ reported','HorizontalAlignment','center'); axis(ax3,'off');
     else
         plot(ax3, out.chi, 'o-', 'Color', T.rgb.neutral_ink, 'LineWidth', T.line.data_pt, ...
             'MarkerSize', T.marker.size_pt, 'MarkerFaceColor', T.rgb.neutral_paper); hold(ax3,'on');
-        yline(ax3, out.chiExpected, '--', sprintf('χ = %d expected', out.chiExpected), 'Color', T.rgb.neutral_slate, ...
+        yline(ax3, out.chiExpected, '--', sprintf('$\\chi = %d$ expected', out.chiExpected), 'Color', T.rgb.neutral_slate, ...
             'LineWidth', T.line.axis_pt, 'FontSize', T.type.annotation.size_pt);
-        nxr_axes_style(ax3, 'frame (index)', 'Σ index (count)');
+        nxr_axes_style(ax3, 'frame (index)', 'index sum $\sum \mathrm{ind}$ (count)');
     end
     finish(F, o.Title, o.Export);
 end

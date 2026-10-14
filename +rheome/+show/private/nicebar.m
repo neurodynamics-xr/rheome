@@ -6,8 +6,8 @@ function nicebar(cb, ax)
     lim = ax.CLim;  r = diff(lim);
     if ~(r > 0), return; end
     d = 10^floor(log10(r));
-    for s = [0.2 0.5 1 2] * d                    % the finest round step giving at most 6 ticks
-        if floor(r/s) + 1 <= 6, break; end
+    for s = [0.2 0.5 1 2 5] * d                  % the finest round step giving at most 4 ticks (a key-band bar is short)
+        if floor(r/s) + 1 <= 4, break; end
     end
     k = floor(lim(1)/s + 1e-9):ceil(lim(2)/s - 1e-9);
     tk = k * s;  clim(ax, tk([1 end]));
