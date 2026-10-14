@@ -40,8 +40,10 @@ function R = risefall(a, fs, t0, t1, opts)
 %            timing error into tau (x0.7-0.8). Held-out plants, 4 participants at 10 dB, vs "quadrature": median
 %            |tOn| 0.13-0.14 s (0.17-0.19), |tOff| 0.11-0.18 s (0.12-0.22), tau x0.73-0.98 (x0.62-0.87), fit
 %            share 0.90-0.99 (0.81-0.88); at 20 dB tau x0.97-1.02. ⚠ At 10 dB timing sits near one 165 ms tile
-%            and tau can stay compressed: the beat, not the fit, sets that limit. ~0.3 s per event.
-%   Chunk    "posterior" only: elements per block of the (tOn, tOff) grid (2e7, ~1 GB peak); results do not depend on it
+%            and tau can stay compressed: the beat, not the fit, sets that limit. ~0.6 s per event; bounded past a 10-s window (GridMax, FramesMax: ~10 s at 120 s).
+%   GridMax  "posterior" only: at most this many tOn (and tOff) points per pass (400: the 25-ms grid up to a 10-s window);
+%            a longer window is read coarse, then at 25 ms over its posterior's support
+%   FramesMax  "posterior" only: at most this many frames (1200: 30 Hz up to a 40-s window, slower past it)
 %   TauMax   upper bound of tauR and tauF (1 s). On two OMEGA participants tau reached 1 s at the 95th
 %            percentile (labelling design section 7); a fit AT the bound is flagged (.atBound), not trusted
 %
@@ -63,7 +65,8 @@ function R = risefall(a, fs, t0, t1, opts)
         opts.Smooth (1,1) double {mustBeNonnegative} = 0.1
         opts.TauMax (1,1) double {mustBePositive} = 1
         opts.Model (1,1) string {mustBeMember(opts.Model, ["linear" "quadrature" "posterior"])} = "linear"
-        opts.Chunk (1,1) double {mustBePositive} = 2e7
+        opts.GridMax (1,1) double {mustBeInteger, mustBeGreaterThanOrEqual(opts.GridMax, 2)} = 400
+        opts.FramesMax (1,1) double {mustBeInteger, mustBePositive} = 1200
     end
     R = struct('tOn',NaN,'tOff',NaN,'tauR',NaN,'tauF',NaN,'b',NaN,'h',NaN,'r2',NaN,'ok',false,'atBound',false, ...
         'buildup',[],'plateau',[],'decay',[]);
@@ -111,46 +114,28 @@ end
 % Model "posterior": profile posterior of the power double sigmoid, marginal medians of tOn, tOff, then tau given them.
 function R = i_posterior(R, y, t, t0, t1, sc, S, opts)
     STEP = 0.025;  NTAU = 16;  RATE = 30;  TAUMIN = 0.02;                       % grid: 25 ms, 16 log-spaced tau
-    dec = max(1, round(numel(t)/max(t(end) - t(1), eps)/RATE));
-    td = t(1:dec:end)';  Pd = (y(1:dec:end).^2)';  n = numel(td);
+    % ⚠ TIME: cost is frames x tOn points x tOff points x 256, i.e. the window CUBED at a fixed step (cf-events: >30 min
+    % on one event). Declared bound: <= FramesMax frames (the rate drops below 30 Hz past FramesMax/30 s) and <= GridMax
+    % points per axis. A capped axis is read coarse first, then at 25 ms (or GridMax points) over its posterior's
+    % support (mass outside < 1e-6). Below the caps the result is the uncapped grid's, to rounding.
+    span = max(t(end) - t(1), eps);
+    dec = max([1, round(numel(t)/span/RATE), ceil(numel(t)/opts.FramesMax)]);
+    td = t(1:dec:end)';  Pd = (y(1:dec:end).^2)';
     w = 1 ./ max(movmean(Pd, 3), 1e-3);                                        % amplitude noise ~ constant: var(P) ~ P
-    onG = t(1):STEP:t1;  offG = t0:STEP:t(end);  tauG = exp(linspace(log(TAUMIN), log(opts.TauMax), NTAU));
-    if isempty(onG) || isempty(offG), return; end
-    [I, J] = ndgrid(1:numel(onG), 1:numel(offG));  k = offG(J) > onG(I);  I = I(k);  J = J(k);
-    if isempty(I), return; end
-    % ⚠ MEMORY: an n x pairs block grows as the window cubed (36 s: ~9 GB each); the pairs are read in blocks of
-    % <= opts.Chunk elements, each pair's SSE computed exactly as in one block. L itself is pairs x 256 (36 s: 2 GB).
-    sw = sum(w);  swp = w'*Pd;  swpp = w'*Pd.^2;  nP = numel(I);  L = zeros(nP, NTAU, NTAU);
-    m = max(1, floor(opts.Chunk / n));
-    for a1 = 1:NTAU
-        SR = S((td - onG)/tauG(a1));
-        for a2 = 1:NTAU
-            SF = S(-(td - offG)/tauG(a2));
-            for b0 = 1:m:nP
-                b = b0:min(b0 + m - 1, nP);
-                G = (SR(:, I(b)) .* SF(:, J(b))).^2;
-                swg = w'*G;  swgg = w'*G.^2;  swgp = (w.*Pd)'*G;
-                H = (sw*swgp - swg*swp) ./ max(sw*swgg - swg.^2, realmin);  B = (swp - H.*swg)/sw;
-                e = swpp - 2*B*swp - 2*H.*swgp + B.^2*sw + 2*B.*H.*swg + H.^2.*swgg;  % weighted SSE at the profiled B, H
-                z = B < 0;                                                           % B clipped at 0
-                if any(z), H(z) = swgp(z)./max(swgg(z), realmin);  e(z) = swpp - H(z).^2.*swgg(z); end
-                e(H <= 0) = Inf;  L(b, a1, a2) = e;
-            end
-        end
+    tauG = exp(linspace(log(TAUMIN), log(opts.TauMax), NTAU));
+    onG = i_axis(t(1), t1, STEP, opts.GridMax);  offG = i_axis(t0, t(end), STEP, opts.GridMax);
+    if isempty(onG) || isempty(offG) || ~any(offG(:) > onG, 'all'), return; end
+    [p, emin] = i_post(i_sse(td, Pd, w, onG, offG, tauG, S), td, Pd, w, onG, offG, tauG, S);
+    if ~isfinite(emin), return; end
+    if numel(onG) > 1 && onG(2) - onG(1) > STEP*(1 + 1e-9) || numel(offG) > 1 && offG(2) - offG(1) > STEP*(1 + 1e-9)
+        onG = i_refine(onG, sum(p, [2 3 4]), STEP, opts.GridMax);  offG = i_refine(offG, sum(p, [1 3 4]), STEP, opts.GridMax);
+        if ~any(offG(:) > onG, 'all'), return; end
+        [p, emin] = i_post(i_sse(td, Pd, w, onG, offG, tauG, S), td, Pd, w, onG, offG, tauG, S);
+        if ~isfinite(emin), return; end
     end
-    [emin, kb] = min(L(:));  if ~isfinite(emin), return; end
-    [ib, a1, a2] = ind2sub(size(L), kb);                                        % the mode: for the residuals' ACF
-    X = [ones(n, 1), (S((td - onG(I(ib)))/tauG(a1)) .* S(-(td - offG(J(ib)))/tauG(a2))).^2];
-    r = Pd - X*((X.*sqrt(w)) \ (Pd.*sqrt(w)));  r = r - mean(r);
-    ac = xcorr(r, 'coeff');  ac = ac(n:end);  m = find(ac < 0, 1);  if isempty(m), m = n; end
-    Tint = max(1, 1 + 2*sum(ac(2:m-1)));                                         % frames per independent sample
-    p = L;  clear L                                                              % in place: no second pairs x 256
-    T = 2*emin/n*Tint;  for a = 1:NTAU^2, p(:, a) = exp(-(p(:, a) - emin) / T); end
-    s = sum(p(:));  for a = 1:NTAU^2, p(:, a) = p(:, a) / s; end
-    pt = sum(sum(p, 3), 2);
-    q = [i_median(onG, accumarray(I, pt, [numel(onG) 1])), i_median(offG, accumarray(J, pt, [numel(offG) 1]))];
+    q = [i_median(onG, sum(p, [2 3 4])), i_median(offG, sum(p, [1 3 4]))];
     if q(2) <= q(1), return; end
-    tq = exp([i_median(log(tauG), squeeze(sum(sum(p, 3), 1))), i_median(log(tauG), squeeze(sum(sum(p, 2), 1)))]);
+    tq = exp([i_median(log(tauG), sum(p, [1 2 4])), i_median(log(tauG), sum(p, [1 2 3]))]);
     f = @(x, t) sqrt(x(1)^2 + (x(2)*S((t - q(1))/x(3)) .* S(-(t - q(2))/x(4))).^2);
     b0 = prctile(y, 5);  x0 = [b0, sqrt(max(max(y)^2 - b0^2, 1e-6)), tq];
     lb = [0 0 0.01 0.01];  ub = [max(y), 3*x0(2), opts.TauMax, opts.TauMax];  x0 = min(max(x0, lb), ub);
@@ -165,6 +150,49 @@ function R = i_posterior(R, y, t, t0, t1, sc, S, opts)
     R.buildup = [R.tOn - 2*R.tauR, R.tOn + 2*R.tauR];  R.decay = [R.tOff - 2*R.tauF, R.tOff + 2*R.tauF];
     if R.tOff - 2*R.tauF > R.tOn + 2*R.tauR, R.plateau = [R.tOn + 2*R.tauR, R.tOff - 2*R.tauF]; end
     R.atBound = max(R.tauR, R.tauF) >= 0.99 * opts.TauMax;  R.ok = true;
+end
+
+% Grid a:step:b, or nMax points over [a, b] when that is more.
+function g = i_axis(a, b, step, nMax)
+    g = a:step:b;
+    if numel(g) > nMax, g = linspace(a, b, nMax); end
+end
+
+% The fine grid over a coarse axis' posterior support (cumulative 1e-6 .. 1 - 1e-6, one coarse point either side).
+function g = i_refine(g, pm, step, nMax)
+    c = cumsum(pm(:)) / sum(pm);  lo = max(1, find(c >= 1e-6, 1) - 1);  hi = min(numel(g), find(c >= 1 - 1e-6, 1) + 1);
+    g = i_axis(g(lo), g(hi), step, nMax);
+end
+
+% Weighted SSE of P = B + H g at the profiled B, H for every (tOn, tOff, tauR, tauF): [nOn x nOff x NTAU x NTAU], Inf where
+% tOff <= tOn or H <= 0. Its sums over time are matrix products: g = SR^2 SF^2, so w'g = SR2' (w.SF2) for all pairs at once.
+function L = i_sse(td, Pd, w, onG, offG, tauG, S)
+    n = numel(td);  nOn = numel(onG);  nOff = numel(offG);  NTAU = numel(tauG);
+    sw = sum(w);  swp = w'*Pd;  swpp = w'*Pd.^2;
+    SF2 = zeros(n, nOff, NTAU);
+    for a2 = 1:NTAU, SF2(:, :, a2) = S(-(td - offG)/tauG(a2)).^2; end
+    SF2 = reshape(SF2, n, []);  wSF2 = w.*SF2;  wpSF2 = (w.*Pd).*SF2;  wSF4 = wSF2.*SF2;  clear SF2
+    bad = repmat(offG <= onG(:), 1, NTAU);  L = zeros(nOn, nOff, NTAU, NTAU);
+    for a1 = 1:NTAU
+        SR2 = S((td - onG)/tauG(a1)).^2;
+        swg = SR2'*wSF2;  swgg = (SR2.^2)'*wSF4;  swgp = SR2'*wpSF2;            % [nOn x nOff*NTAU]
+        H = (sw*swgp - swg*swp) ./ max(sw*swgg - swg.^2, realmin);  B = (swp - H.*swg)/sw;
+        e = swpp - 2*B*swp - 2*H.*swgp + B.^2*sw + 2*B.*H.*swg + H.^2.*swgg;      % weighted SSE at the profiled B, H
+        z = B < 0;                                                               % B clipped at 0
+        if any(z, 'all'), H(z) = swgp(z)./max(swgg(z), realmin);  e(z) = swpp - H(z).^2.*swgg(z); end
+        e(H <= 0 | bad) = Inf;  L(:, :, a1, :) = reshape(e, nOn, nOff, 1, NTAU);
+    end
+end
+
+% The tempered posterior over L (in place), its minimum and mode: the temperature from the residuals' integrated ACF.
+function [p, emin, kb] = i_post(p, td, Pd, w, onG, offG, tauG, S)
+    n = numel(td);  [emin, kb] = min(p(:));  if ~isfinite(emin), return; end
+    [i, j, a1, a2] = ind2sub(size(p), kb);
+    X = [ones(n, 1), (S((td - onG(i))/tauG(a1)) .* S(-(td - offG(j))/tauG(a2))).^2];
+    r = Pd - X*((X.*sqrt(w)) \ (Pd.*sqrt(w)));  r = r - mean(r);
+    ac = xcorr(r, 'coeff');  ac = ac(n:end);  m = find(ac < 0, 1);  if isempty(m), m = n; end
+    Tint = max(1, 1 + 2*sum(ac(2:m-1)));                                         % frames per independent sample
+    T = 2*emin/n*Tint;  p = exp(-(p - emin) / T);  p = p / sum(p(:));
 end
 
 % The median of a discrete distribution p over x, interpolated on its cumulative.

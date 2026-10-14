@@ -57,11 +57,24 @@ classdef tEvents < matlab.unittest.TestCase
                 a = abs(10*Sg((t - on)/tau(1)) .* Sg(-(t - off)/tau(2)) + n);
                 R = rheome.detect.risefall(a, fs, on + 0.1, off - 0.1, Model="posterior");
                 tc.verifyTrue(R.ok);
-                tc.verifyEqual(rheome.detect.risefall(a, fs, on + 0.1, off - 0.1, Model="posterior", Chunk=997), R);  % blocks: bit-identical
+                if k <= 5                                            % capped grid: coarse, then 25 ms over the support
+                    Rc = rheome.detect.risefall(a, fs, on + 0.1, off - 0.1, Model="posterior", GridMax=60, FramesMax=100);
+                    tc.verifyTrue(Rc.ok);  tc.verifyEqual([Rc.tOn Rc.tOff], [R.tOn R.tOff], 'AbsTol', 0.025);
+                end
                 e(k, :) = [R.tOn - on, R.tOff - off, R.tauR / tau(1), R.tauF / tau(2)];
             end
             tc.verifyLessThan(median(abs(e(:, 1:2))), [0.165 0.165]);
             tc.verifyGreaterThan(median(e(:, 3:4)), [0.8 0.8]);  tc.verifyLessThan(median(e(:, 3:4)), [1.25 1.25]);
+        end
+
+        function posteriorTimeIsBoundedOnALongEvent(tc)
+            % a 120-s episode: the capped grid and frames keep the fit to seconds, and it still finds the edges
+            fs = 300;  t = (0:fs*126-1)/fs;  Sg = @(x) 1 ./ (1 + exp(-x));  rng(7);
+            n = movmean(randn(1, numel(t)) + 1i*randn(1, numel(t)), round(0.2*fs));  n = n / median(abs(n));
+            a = abs(10*Sg((t - 3)/0.2) .* Sg(-(t - 123)/0.3) + n);
+            tic;  R = rheome.detect.risefall(a, fs, 3.1, 122.9, Model="posterior");  s = toc;
+            tc.verifyTrue(R.ok);  tc.verifyEqual([R.tOn R.tOff], [3 123], 'AbsTol', 0.165);
+            tc.verifyLessThan(s, 120);
         end
 
         function eventlockedFindsTheBurstFrequency(tc)
