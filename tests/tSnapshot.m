@@ -55,6 +55,11 @@ classdef tSnapshot < matlab.unittest.TestCase
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Paths', struct('Points', tc.S.Vertices(1:2, :), 'Label', 'p'))), 'rheome:snapshot:path');   % How
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Paths', struct('From', 1, 'To', 9, 'Label', 'p'))), 'rheome:snapshot:path');
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Inset', setfield(in, 'Shape', 'star'))), 'rheome:snapshot:option');
+            ob = struct('Name', 'shell', 'Vertices', 2 * tc.S.Vertices, 'Faces', tc.S.Faces);
+            tc.verifyError(@() rheome.snapshot(tc.S, r, Out=tempname, Viewer=tc.Fake, Objects=ob, ...
+                Shots=struct('Field', 'a', 'Unit', 'mm', 'Selection', sel)), 'rheome:snapshot:objects');   % no camera for the marks
+            tc.verifyError(@() rheome.snapshot(tc.S, r, Out=tempname, Viewer=tc.Fake, Objects=ob, Node='/nonexistent', ...
+                Shots=struct('Field', 'a', 'Unit', 'mm', 'Selection', sel, 'Settings', struct('objects', {{}}))), 'rheome:snapshot:node');   % none shown
             % every check passed: it gets as far as looking for Node
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Selection', struct('Centre', 1, 'RadiusMM', 80, 'Label', 'disk'), ...
                 'Paths', struct('From', 1, 'To', 4, 'Label', 'p'), 'Inset', struct('Label', 'the disk'))), 'rheome:snapshot:node');
@@ -129,6 +134,23 @@ classdef tSnapshot < matlab.unittest.TestCase
             tc.verifyGreaterThan(mean(dOut <= tol), 0.95, 'the region drawn spills off where the viewer paints it');
             tc.verifyGreaterThan(mean(dIn <= tol), 0.95, 'the region drawn misses part of where the viewer paints it');
         end
+        function rendersSceneObjects(tc)
+        % a scene object from the media library drawn around the cortex: framed with it ('fit' scene), hidden by
+        % 'objects'; the shot showing it has no camera read and no scale bar
+            [vdir, S] = needs(tc);
+            tc.assumeTrue(isfolder(fullfile(char(java.lang.System.getProperty('user.home')), 'workspace', 'library', 'media', ...
+                'illustrations', 'objects', 'meg-helmet-306')), 'needs the media library''s objects');
+            x = (S.Vertices(:, 1) - mean(S.Vertices(:, 1))) * 1e3;
+            sh = @(name, st) struct('Field', 'x', 'Unit', 'mm', 'View', 'L lateral', 'Name', name, 'Settings', st);
+            out = rheome.snapshot(S, struct('x', x), Out=tempname, Viewer=vdir, Format=[], Objects="meg-helmet-306", Shots={ ...
+                sh('helmet', struct()), sh('scene', struct('fit', 'scene')), sh('bare', struct('objects', {{}}))});
+            tc.addTeardown(@() rmdir(fileparts(out(1).svg), 's'));
+            tc.verifyEmpty(out(1).scalebar);  tc.verifyEmpty(out(1).cameras(1).R);
+            tc.verifyNotEmpty(out(3).scalebar);  tc.verifyNotEmpty(out(3).cameras(1).R);   % hidden: a data figure again
+            f = @(o) nnz(alphaOf(o.renders{1})) / numel(alphaOf(o.renders{1}));
+            tc.verifyGreaterThan(f(out(1)), 1.5 * f(out(3)), 'the helmet is not drawn around the cortex');
+            tc.verifyLessThan(f(out(2)), f(out(1)), '''fit'' scene does not frame the helmet');   % the camera pulled back
+        end
         function selectionPathAndCameraAreWhereTheViewerDraws(tc)
         % a geodesic disk selected (filled), a tile as an extent (dashed), a geodesic path, a square inset; the camera
         % returned places a vertex where the render's own camera does, and the path is a geodesic on the folded surface
@@ -186,6 +208,10 @@ classdef tSnapshot < matlab.unittest.TestCase
             tc.verifyLessThan(max(d), 8, 'the drawn bar is off the painted vertices (px)');
         end
     end
+end
+
+function a = alphaOf(f)
+    [~, ~, a] = imread(f);
 end
 
 function [vdir, S] = needs(tc)

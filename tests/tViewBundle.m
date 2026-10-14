@@ -160,6 +160,59 @@ classdef tViewBundle < matlab.unittest.TestCase
             tc.verifyEqual(out.settings.layers{1}, struct('field', 'J_phi', 'form', 'f', 'as', 'colour'));
             tc.verifyTrue(contains(fileread(out.manifest), '"derivedFrom":"J"'));
         end
+        function writesObjects(tc)
+            d = tempname;  c = onCleanup(@() rmdir(d, 's'));
+            % a media-style object folder: 0-based faces, its object.json's manifest entry
+            od = [d '_obj'];  mkdir(od);  c2 = onCleanup(@() rmdir(od, 's'));
+            P = single(rand(3, 5));  Fc = int32([0 1 2; 2 3 4]');
+            wr(od, 'positions.bin', P, 'single');  wr(od, 'faces.bin', Fc, 'int32');
+            T = [0 1 0 0; -1 0 0 0; 0 0 1 0; 0 0 0 1];
+            j = struct('name', 'helmet', 'unit', 'mm', 'manifest_entry', struct('name', 'helmet', 'unit', 'mm', ...
+                'transform', reshape(T', 1, []), 'color', 'snow'));
+            fid = fopen(fullfile(od, 'object.json'), 'w');  fwrite(fid, jsonencode(j));  fclose(fid);
+            V = rand(4, 3);
+            ob = {struct('Name', 'scalp', 'Vertices', V, 'Faces', tc.S.Faces, 'Unit', 'cm', 'Transform', T, 'Role', 'skin'), ...
+                struct('Folder', od, 'Visible', false)};
+            m = rheome.io.write.bundle(d, tc.S, rand(4, 2), 'Objects', ob);
+            o = jsondecode(fileread(m)).objects;  o1 = o{1};  o2 = o{2};   % a cell: the entries' keys differ
+            tc.verifyEqual({o1.name, o2.name}, {'scalp', 'helmet'});
+            tc.verifyEqual({o1.unit, o2.unit}, {'cm', 'mm'});
+            tc.verifyEqual(o1.transform', reshape(T', 1, []));   % row-major
+            tc.verifyEqual(o2.transform, o1.transform);           % the folder's
+            tc.verifyEqual(o1.role, 'skin');  tc.verifyEqual(o2.color, 'snow');
+            tc.verifyFalse(o2.visible);  tc.verifyFalse(isfield(o1, 'visible'));
+            tc.verifyEqual(reshape(rd(d, o1.positions, 'single'), 3, []), single(V'));
+            tc.verifyEqual(reshape(rd(d, o1.faces, 'int32'), 3, []), int32(tc.S.Faces' - 1));
+            tc.verifyEqual(rd(d, o2.positions, 'single'), P(:));
+            tc.verifyEqual(rd(d, o2.faces, 'int32'), Fc(:));
+            one = jsondecode(fileread(rheome.io.write.bundle(d, tc.S, rand(4, 2), 'Objects', od)));
+            tc.verifyTrue(contains(fileread(fullfile(d, 'manifest.json')), '"objects":[{'));   % a JSON array even for one
+            tc.verifyEqual(one.objects.name, 'helmet');
+            tc.verifyFalse(contains(fileread(rheome.io.write.bundle(d, tc.S, rand(4, 2))), 'objects'));
+            w = @(x) rheome.io.write.bundle(d, tc.S, rand(4, 2), 'Objects', x);
+            s0 = ob{1};
+            tc.verifyError(@() w(setfield(s0, 'Faces', [1 2 9])), 'rheome:bundle:objects');
+            tc.verifyError(@() w(setfield(s0, 'Role', 'hat')), 'rheome:bundle:objects');
+            tc.verifyError(@() w(setfield(s0, 'Unit', 'in')), 'rheome:bundle:objects');
+            tc.verifyError(@() w(setfield(s0, 'Transform', eye(3))), 'rheome:bundle:objects');
+            tc.verifyError(@() w(setfield(s0, 'Name', 'a/b')), 'rheome:bundle:objects');
+            tc.verifyError(@() w(setfield(s0, 'Size', 2)), 'rheome:bundle:objects');
+            tc.verifyError(@() w({s0, s0}), 'rheome:bundle:objects');            % each name once
+            tc.verifyError(@() w(tempname), 'rheome:bundle:objects');            % no such folder
+            wr(od, 'faces.bin', int32([0 1 7]), 'int32');
+            tc.verifyError(@() w(od), 'rheome:bundle:objects');                  % an index past its positions
+        end
+        function writesAMediaObject(tc)
+            lib = fullfile(char(java.lang.System.getProperty('user.home')), 'workspace', 'library', 'media', 'illustrations', 'objects', 'meg-helmet-306');
+            tc.assumeTrue(isfolder(lib), 'needs the media library''s objects');
+            d = tempname;  c = onCleanup(@() rmdir(d, 's'));
+            j = jsondecode(fileread(fullfile(lib, 'object.json')));
+            o = jsondecode(fileread(rheome.io.write.bundle(d, tc.S, rand(4, 2), 'Objects', "meg-helmet-306"))).objects;
+            tc.verifyEqual(o.name, 'meg-helmet-306');  tc.verifyEqual(o.unit, 'mm');
+            tc.verifyEqual(o.transform, j.to_scs);
+            tc.verifyEqual(dir(fullfile(d, o.positions)).bytes, 12 * j.n_vertices);
+            tc.verifyEqual(dir(fullfile(d, o.faces)).bytes, 12 * j.n_faces);
+        end
         function editorRoundTrip(tc)
             tc.assumeFalse(isMATLABReleaseOlderThan('R2026a'), 'uihtml viewer path: R2026a+');
             tc.assumeTrue(usejava('desktop') || feature('ShowFigureWindows'), 'needs a display');
@@ -229,6 +282,10 @@ end
 
 function x = rd(d, f, cls)
     fid = fopen(fullfile(d, f), 'r', 'ieee-le');  x = fread(fid, inf, ['*' cls]);  fclose(fid);
+end
+
+function wr(d, f, x, cls)
+    fid = fopen(fullfile(d, f), 'w', 'ieee-le');  fwrite(fid, x, cls);  fclose(fid);
 end
 
 function cleanup(d, old)
