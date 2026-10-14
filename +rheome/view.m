@@ -38,6 +38,8 @@ function out = view(varargin)
 %                    normalize  arrows, true | false;  color  arrows, a neutral token ("paper", "ink" ...) or #rrggbb
 %                  A vector field is never painted itself: paint a scalar form of it, or draw it as arrows.
 %                  Not given: the first real field in colour and the first vector field as arrows.
+%   'Tracks'       TIME-TRACKS under the stage (rheome.io.write.bundle 'Tracks', as rheome.show.timetracks takes them):
+%                  the planted and detected courses of a pattern's parameters, the playhead at the frame shown
 %   'Potentials'   vector fields whose Hodge potentials are written too, as real fields <v>_phi and <v>_psi
 %                  (rheome.io.write.bundle 'Potentials'): names, true (every vector field) or false (default)
 %   'Colormap'     a colormap name (e.g. "viridis", "coolwarm", "magma", "turbo"): the colour layer's
@@ -54,6 +56,12 @@ function out = view(varargin)
 %   'Time'         the time shown, s from the first sample (the nearest frame)
 %   'Play'         true | false: play on open
 %   'Speed'        playback speed, x real time (> 0)
+%   'Zoom'         the camera on a REGION (the viewer's 'zoom'): vertex indices (1-based) or a logical [nV x 1], or a
+%                  struct with Vertices, or BBox [lo; hi] ([2 x 3], surface units), and optionally Margin (0-4, the
+%                  viewer's default 0.08); false: the whole surface again. The camera keeps its direction
+%   'Phasor'       the PHASOR GLYPH (the viewer's 'phasor', rheome.show.phasor's): a real field's name, or a struct with
+%                  Field (phases, rad), Amplitude (a real field: the radii) and Vertices (1-based or logical; default
+%                  every vertex shown); false: none
 % and how it is opened:
 %   'Fs'      sampling rate of the T columns, Hz (default 1)
 %   'Name'    the bundle's name (default 'Rheome result')
@@ -105,7 +113,7 @@ function out = view(varargin)
         if isfolder(root), rmdir(root, 's'); end
         id = char(datetime('now', 'Format', 'yyyyMMdd''T''HHmmssSSS'));
         out.manifest = rheome.io.write.bundle(fullfile(root, id), surf, result, 'Fs', o.Fs, 'Name', o.Name, 'Settings', s, ...
-            'Potentials', o.Potentials);
+            'Potentials', o.Potentials, 'Tracks', o.Tracks);
     end
 
     switch out.viewer
@@ -147,12 +155,13 @@ function o = options(args, opening)
     p = inputParser;
     p.FunctionName = 'rheome.view';
     for k = {'Layers', 'Field', 'Arrows', 'Colormap', 'CLim', 'Threshold', 'Surface', 'Hemisphere', 'View', 'ArrowDensity', ...
-            'ArrowScale', 'Time', 'Play', 'Speed'}
+            'ArrowScale', 'Time', 'Play', 'Speed', 'Zoom', 'Phasor'}
         p.addParameter(k{1}, []);
     end
     if opening
         p.addParameter('Fs', 1);
         p.addParameter('Potentials', false);
+        p.addParameter('Tracks', []);
         p.addParameter('Name', 'Rheome result');
         p.addParameter('Viewer', 'auto', @(x) any(strcmpi(x, {'auto', 'editor', 'app', 'show', 'none'})));
         p.addParameter('Timeout', 60);
@@ -190,6 +199,46 @@ function s = settings(o, surf, result, T, base)
     end
     if ~isempty(o.Play), s.playing = flag(o.Play, 'Play'); end
     if ~isempty(o.Speed), s.fps = positive(o.Speed, 'Speed', false) * o.Fs; end
+    nV = size(S1.Vertices, 1);
+    if ~isempty(o.Zoom), s.zoom = zoom(o.Zoom, nV); end
+    if ~isempty(o.Phasor), s.phasor = phasor(o.Phasor, names, types, nV); end
+end
+
+function z = zoom(x, nV)
+% the viewer's zoom: {vertices (0-based)} or {bbox [[lo] [hi]]}, with margin; false: null (the whole surface)
+    if islogical(x) && isscalar(x), z = NaN;  if x, bad('Zoom', 'vertices, a struct with Vertices or BBox, or false'); end, return; end
+    if ~isstruct(x), x = struct('Vertices', x); end
+    other = setdiff(fieldnames(x), {'Vertices', 'BBox', 'Margin'});
+    if ~isempty(other) || isfield(x, 'Vertices') == isfield(x, 'BBox'), bad('Zoom', 'Vertices or BBox (and Margin)'); end
+    if isfield(x, 'Vertices'), z = struct('vertices', {vertices(x.Vertices, nV, 'Zoom')});
+    else
+        b = double(x.BBox);
+        if ~isequal(size(b), [2 3]) || ~all(isfinite(b(:))) || any(b(1, :) > b(2, :)), bad('Zoom.BBox', '[lo; hi], [2 x 3], lo <= hi'); end
+        z = struct('bbox', {{b(1, :), b(2, :)}});
+    end
+    if isfield(x, 'Margin') && ~isempty(x.Margin)
+        if ~isscalar(x.Margin) || ~(x.Margin >= 0 && x.Margin <= 4), bad('Zoom.Margin', 'in [0, 4]'); end
+        z.margin = double(x.Margin);
+    end
+end
+
+function q = phasor(x, names, types, nV)
+% the viewer's phasor: {field, amplitude?, vertices? (0-based)}; false: null
+    if islogical(x) && isscalar(x), q = NaN;  if x, bad('Phasor', 'a real field''s name, a struct with Field, or false'); end, return; end
+    if ~isstruct(x), x = struct('Field', x); end
+    other = setdiff(fieldnames(x), {'Field', 'Amplitude', 'Vertices'});
+    if ~isempty(other) || ~isfield(x, 'Field'), bad('Phasor', 'a struct with Field (and Amplitude, Vertices)'); end
+    real = names(strcmp(types, 'real'));
+    q = struct('field', pick(x.Field, real, 'Phasor field'));
+    if isfield(x, 'Amplitude') && ~isempty(x.Amplitude), q.amplitude = pick(x.Amplitude, real, 'Phasor amplitude'); end
+    if isfield(x, 'Vertices') && ~isempty(x.Vertices), q.vertices = vertices(x.Vertices, nV, 'Phasor'); end
+end
+
+function v = vertices(x, nV, name)
+% 1-based indices or a logical [nV x 1] -> 0-based indices, a JSON array (a cell: one index is not written bare)
+    if islogical(x) && numel(x) == nV, x = find(x); end
+    if ~isnumeric(x) || isempty(x) || any(x(:) < 1 | x(:) > nV | x(:) ~= round(x(:))), bad([name ' vertices'], sprintf('indices in 1..%d or a logical [nV x 1]', nV)); end
+    v = num2cell(double(x(:)') - 1);
 end
 
 function [names, types] = fieldTypes(result, nV, pot)

@@ -4,6 +4,7 @@ function manifest = bundle(folder, surf, result, varargin)
 %   manifest = rheome.io.write.bundle(folder, surf, result)
 %   manifest = rheome.io.write.bundle(folder, surf, result, 'Fs', fs, 'Name', name, 'Settings', s)
 %   manifest = rheome.io.write.bundle(folder, surf, result, 'Potentials', "J")   % + J's Hodge potentials phi, psi
+%   manifest = rheome.io.write.bundle(folder, surf, result, 'Tracks', tracks)     % + time-tracks under the stage
 %
 % The folder holds raw little-endian arrays and one manifest.json, written with fwrite and nothing else:
 %   positions.bin  float32 [3 x nV]  (the vertices, meters)      faces.bin  int32 [3 x nF], 0-based
@@ -33,6 +34,10 @@ function manifest = bundle(folder, surf, result, varargin)
 %               sinks) and <v>_psi (stream function, vortices), from rheome.differential.helmholtz on the first
 %               surface (its .Hemi, if any, sets the per-hemisphere solves), tagged "derivedFrom": "<v>" and
 %               "form": "phi" | "psi" in the manifest (additive to rheome.bundle@1). The viewer cannot solve them.
+%   'Tracks'  TIME-TRACKS, the tracks rheome.show.timetracks takes (a struct array or cell of structs: Label, Unit
+%             REQUIRED; Kind, Spec (the plant, rheome.show.track's), Values (detected; NaN none), Time (s, default the
+%             bundle's time axis), Driver), written as the manifest's 'tracks' with the viewer's lowercase keys. The
+%             viewer evaluates each plant over the bundle's time axis with the Editor's trackValue (default: none)
 %
 % OUTPUT:
 %   manifest : full path of the manifest.json written.
@@ -46,6 +51,7 @@ function manifest = bundle(folder, surf, result, varargin)
     p.addParameter('Name', 'Rheome result', @(x) ischar(x) || isstring(x));
     p.addParameter('Settings', [], @(x) isempty(x) || isstruct(x));
     p.addParameter('Potentials', false);
+    p.addParameter('Tracks', []);
     p.parse(varargin{:});
     o = p.Results;
 
@@ -64,6 +70,7 @@ function manifest = bundle(folder, surf, result, varargin)
     if isempty(names), error('rheome:bundle:empty', 'The result has no field.'); end
     T = size(result.(names{1}), 2);
     pot = potentials(o.Potentials, names, result, nV);
+    tr = tracks(o.Tracks);
 
     if ~isfolder(folder), mkdir(folder); end
     put(folder, 'positions.bin', V', 'single');
@@ -106,6 +113,7 @@ function manifest = bundle(folder, surf, result, varargin)
     m = struct('format', 'rheome.bundle@1', 'name', char(o.Name), ...
         'surface', sm, 'time', struct('samples', T, 'fs', o.Fs, 'origin', 0), 'fields', {fl});
     if numel(surfs) > 1, m.surfaces = num2cell(alt); end   % a JSON array even for one
+    if ~isempty(tr), m.tracks = tr; end
     if ~isempty(o.Settings), m.settings = o.Settings; end
     manifest = fullfile(folder, 'manifest.json');
     fid = fopen(manifest, 'w');
@@ -124,6 +132,65 @@ function pot = potentials(x, names, result, nV)
     pot = cellstr(x);
     bad = setdiff(pot, vec);
     if ~isempty(bad), error('rheome:bundle:potentials', 'Potentials: %s is not a vector field of the result.', strjoin(bad, ', ')); end
+end
+
+function tr = tracks(in)
+% the time-tracks as the viewer reads them (tracks.ts): lowercase keys, arrays always arrays (a cell: jsonencode writes a
+% 1-element vector or a 1x1 struct bare), NaN as null; each plant checked by rheome.show.track, as timetracks does
+    tr = {};
+    if isempty(in), return; end
+    if isstruct(in), in = num2cell(in); end
+    if ~iscell(in), error('rheome:bundle:tracks', 'Tracks: a struct array or a cell of structs (rheome.show.timetracks).'); end
+    for i = 1:numel(in)
+        a = in{i};  at = sprintf('Tracks(%d)', i);
+        if ~isstruct(a) || ~isscalar(a), error('rheome:bundle:tracks', '%s: a struct.', at); end
+        bad = setdiff(fieldnames(a), {'Label', 'Unit', 'Kind', 'Spec', 'Values', 'Time', 'Driver'});
+        if ~isempty(bad), error('rheome:bundle:tracks', '%s: %s is not a track field.', at, strjoin(bad, ', ')); end
+        if ~isfield(a, 'Label') || isempty(a.Label) || ~isfield(a, 'Unit') || isempty(a.Unit)
+            error('rheome:bundle:tracks', '%s: Label and Unit are required (a lane says its quantity and unit).', at);
+        end
+        t = struct('label', char(a.Label), 'unit', char(a.Unit));
+        if isfield(a, 'Kind') && ~isempty(a.Kind)
+            t.kind = char(a.Kind);
+            if ~any(strcmp(t.kind, {'value', 'angle', 'sign'})), error('rheome:bundle:tracks', '%s.Kind: value, angle or sign.', at); end
+        end
+        has = @(f) isfield(a, f) && ~isempty(a.(f));
+        if has('Spec'), rheome.show.track(a.Spec, 0);  t.spec = spec(a.Spec); end   % refuses a bad plant here
+        if has('Values')
+            t.values = num2cell(double(a.Values(:)'));
+            if has('Time')
+                if numel(a.Time) ~= numel(a.Values), error('rheome:bundle:tracks', '%s: %d values and %d times.', at, numel(a.Values), numel(a.Time)); end
+                t.time = num2cell(double(a.Time(:)'));
+            end
+        end
+        if ~isfield(t, 'spec') && ~isfield(t, 'values'), error('rheome:bundle:tracks', '%s: a Spec (the plant) or Values (detected).', at); end
+        if has('Driver'), t.driver = char(a.Driver); end
+        tr{end+1} = t; %#ok<AGROW>
+    end
+end
+
+function s = spec(a)
+% rheome.show.track's spec with the viewer's keys: keys [{x, v, seg}], start, to, profile, osc {rate, depth, phase, shape}
+    s = struct();
+    if isfield(a, 'Keys') && ~isempty(a.Keys)
+        K = a.Keys;
+        if isnumeric(K), K = struct('x', num2cell(K(:, 1)), 'v', num2cell(K(:, 2))); end
+        k = cell(1, numel(K));
+        for j = 1:numel(K)
+            k{j} = struct('x', K(j).x, 'v', K(j).v);
+            if isfield(K, 'seg') && ~isempty(K(j).seg), k{j}.seg = char(K(j).seg); end
+        end
+        s.keys = k;
+    end
+    for f = {'Start', 'To', 'Profile'}
+        if isfield(a, f{1}) && ~isempty(a.(f{1})), s.(lower(f{1})) = a.(f{1}); end
+    end
+    if isfield(s, 'profile'), s.profile = char(s.profile); end
+    if isfield(a, 'Osc') && ~isempty(a.Osc)
+        o = a.Osc;  s.osc = struct('rate', o.rate, 'depth', o.depth);
+        if isfield(o, 'phase') && ~isempty(o.phase), s.osc.phase = o.phase; end
+        if isfield(o, 'shape') && ~isempty(o.shape), s.osc.shape = char(o.shape); end
+    end
 end
 
 function put(folder, name, x, cls)
