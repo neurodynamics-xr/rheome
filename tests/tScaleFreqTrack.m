@@ -58,6 +58,13 @@ classdef tScaleFreqTrack < matlab.unittest.TestCase
                                                     Hemis="L", Cases="still", Rates=0);
             tc.verifyEqual(mean(X.pass(X.arm == "noiseless")), 1, 'the onset transient must not set the threshold');
             tc.verifyLessThan(sum(X.case == "real"), 20, 'real windows come from the clean span only');
+            % the guard is used, not only computed: without it (GuardDB ~ 0) the span is 2 x guard_s longer, which on
+            % 2 s windows is at least 2 more real windows (review of PR #74: keepFr reverted to the bare clean span)
+            [T0, X0] = rheome.scale.measure_freqtrack('synth_freqtrack_onset', S, Depth=3, JLevel=4, NPer=2, SNRs=20, ...
+                                                      Hemis="L", Cases="still", Rates=0, GuardDB=1e-6);
+            tc.verifyLessThan(T0.value(T0.metric == "guard_s"), 0.05, 'GuardDB ~ 0 gives no guard');
+            tc.verifyLessThanOrEqual(sum(X.case == "real") + 2, sum(X0.case == "real"), ...
+                'the default guard removes the clean span''s first and last guard_s from the real windows');
         end
 
         function theDriverWritesTheTable(tc)
