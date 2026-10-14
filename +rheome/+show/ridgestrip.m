@@ -19,7 +19,8 @@ function hFig = ridgestrip(surf, U, out, frames, varargin)
 %   'Top'        show only the N longest-lived ridges (default 12; Inf = all)
 %   'View'       camera [az el] (default [-90 10])
 %   'CLim'       shared colour limits (default from U over the shown frames)
-%   'Colormap'   background colormap (default the house flow-magnitude map)
+%   'Colormap'   in place of the amplitude's colormap (tokens quantity amplitude: |U|)
+%   'Theme'      figure theme ('' = the tokens' default, Pergammon; 'neuroimage' for MS1)
 %   'Unit'       unit of the field amplitude for the colourbar (default 'a.u.')
 %   'Lift'       marker/trail offset along the normal, fraction of mesh extent (default 0.012)
 %   'TrailFrames' how many frames of trail to draw behind the current position (default Inf)
@@ -36,12 +37,12 @@ function hFig = ridgestrip(surf, U, out, frames, varargin)
 %
 % Author: Diellor Basha, 2026
 
-    T = tokens();
     p = inputParser;
     p.addParameter('Top', 12);
     p.addParameter('View', [-90 10]);
     p.addParameter('CLim', []);
-    p.addParameter('Colormap', nxr_cmap('flow-magnitude'));
+    p.addParameter('Colormap', []);
+    p.addParameter('Theme', '');
     p.addParameter('Unit', 'a.u.');
     p.addParameter('Export', '');
     p.addParameter('Lift', 0.012);
@@ -53,6 +54,8 @@ function hFig = ridgestrip(surf, U, out, frames, varargin)
     p.addParameter('Visible', 'on');
     p.parse(varargin{:});
     o = p.Results;
+    T = tokens(o.Theme);
+    if isempty(o.Colormap), o.Colormap = nxr_cmap(T.quantity.amplitude.colormap); end
 
     R = out.ridges;
     if isempty(R), error('show:ridgestrip:empty', 'No ridges.'); end
@@ -78,7 +81,7 @@ function hFig = ridgestrip(surf, U, out, frames, varargin)
 
     cols = ramp(numel(R));                              % ridges in order of lifetime, longest first
     [F, axs, o.CLim] = striprow([], [1 nF], 1, nF, o.Visible, '', ...
-                                {'field amplitude', o.Unit, 'magnitude', o.CLim, o.Colormap});
+                                {'field amplitude', texunit(o.Unit), 'amplitude', o.CLim, o.Colormap}, o.Theme);
     for i = 1:nF
         f  = frames(i);  ax = axs(i);
         rheome.show.surface(surf, U(:,f), 'Parent', ax, 'View', o.View, 'CLim', o.CLim, ...
