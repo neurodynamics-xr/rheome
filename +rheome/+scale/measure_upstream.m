@@ -203,7 +203,7 @@ function H = i_geometry(name, S, V1, opts)
     if ~isfield(S.Sf, 'Sphere') || isempty(S.Sf.Sphere), error('scale:upstream:sphere', '%s: the cortex has no registered sphere', name); end
     gAll = nan(S.nV, 1);  H = struct('Gp', [], 'front', false(1, 0), 'group', zeros(1, 0));
     for h = ["L" "R"]
-        Hh = S.B.(h);  gv = double(Hh.gv(:));  Sh = Hh.S;  lbo = Hh.lbo;  a = full(sum(lbo.Mass, 2));
+        Hh = S.B.(h);  gv = double(Hh.gv(:));  Sh = Hh.S;  lbo = Hh.lbo;  a = full(sum(lbo.Mass, 2)) .* rheome.geom.cortexmask(Sh);
         Tr = rheome.geom.tree(Sh, L=lbo.L, M=lbo.M, MaxDepth=V1.Depth);  G = rheome.geom.tiles(Tr, Sh, V1.Depth);
         Pa = double(G.P) .* a;  Pa = Pa ./ sum(Pa, 1);                     % area-weighted tile mean [nVh x nTile]
         Wc = cell(1, 3);  for c = 1:3, Wc{c} = Pa' * K((gv-1)*3 + c, :); end

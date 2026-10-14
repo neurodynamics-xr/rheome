@@ -93,7 +93,7 @@ function C = coefficients(B, K, F, fs, opts)
                   'node ids are not ladder codes. Use a smaller Depth.'], h, opts.Depth);
         end
         [code, o] = sort(G.node_id + 2.^opts.Depth * hi);        % hemisphere bit: L under 2, R under 3
-        a = full(sum(Mm, 2));  P = double(G.P(:, o));
+        a = full(sum(Mm, 2)) .* rheome.geom.cortexmask(H.S);  P = double(G.P(:, o));
         Pw = (P ./ (P' * a)')' .* a';                            % [nTile x nV] area-weighted tile mean
 
         Wh = zeros(numel(code), numel(keep), nT, 'single');

@@ -127,7 +127,7 @@ function [X, strips] = i_catalogue_run(S, N, o)
     X = table();  strips = struct();
     for h = o.Hemis
         C = i_hemi(S, h, o);
-        cIdx = randperm(C.nV, o.Centres);  bAx = randn(o.Centres, 3);
+        cvx = find(C.Sg.Cortex);  cIdx = cvx(randperm(numel(cvx), o.Centres))';  bAx = randn(o.Centres, 3);   % centres on cortex
         for r = 1:o.Centres
             for p = P'
                 [fs, dec, t] = i_time(p, N.fs, o);
@@ -429,8 +429,8 @@ function X = i_nulls_run(S, N, o)
         for ty = ["coherent" "lagged"]
             lag = 0;  if ty == "lagged", lag = o.NullLag; end
             for n = 1:o.NullsPerHemi
-                v1 = randi(C.nV);  d1 = distances(C.ge, v1)';  cand = find(d1 >= o.NullSepMM(1)*1e-3 & d1 <= o.NullSepMM(2)*1e-3);
-                if isempty(cand), [~, k] = min(abs(d1 - mean(o.NullSepMM)*1e-3)); cand = k; end
+                cvx = C.Sg.Cortex;  v1 = find(cvx);  v1 = v1(randi(numel(v1)));  d1 = distances(C.ge, v1)';  cand = find(d1 >= o.NullSepMM(1)*1e-3 & d1 <= o.NullSepMM(2)*1e-3 & cvx);   % generators on cortex
+                if isempty(cand), [~, k] = min(abs(d1 - mean(o.NullSepMM)*1e-3) + 1e9 * ~cvx); cand = k; end
                 v2 = cand(randi(numel(cand)));  d2 = distances(C.ge, v2)';  pv = shortestpath(C.ge, v1, v2);
                 mid = pv(ceil(numel(pv)/2));  r = distances(C.ge, mid)';
                 X0 = exp(-d1.^2/(2*E^2)) * cos(2*pi*p.f*t) + exp(-d2.^2/(2*E^2)) * cos(2*pi*p.f*t - lag);
@@ -485,9 +485,9 @@ function C = i_hemi(S, h, o)
     C.Knl = Nl(:,1).*K(3*gv-2,:) + Nl(:,2).*K(3*gv-1,:) + Nl(:,3).*K(3*gv,:);            % G3 rule 11: local normals
     C.Gn  = S.G(:,3*gv-2).*Nl(:,1)' + S.G(:,3*gv-1).*Nl(:,2)' + S.G(:,3*gv).*Nl(:,3)';     % the plant is a normal current
     C.Sg = struct('Vertices', C.V, 'Faces', C.F, 'VertNormals', Nl, 'nV', C.nV, 'Hemi', {{(1:C.nV)'}}, ...
-                  'HemiLabel', {{char("Cortex " + h)}}, 'Comment', '', 'SurfaceFile', '');
+                  'HemiLabel', {{char("Cortex " + h)}}, 'Comment', '', 'SurfaceFile', '', 'Cortex', rheome.geom.cortexmask(Sh));
     C.fg = rheome.operators.face_gradient(C.V, C.F);  C.op = rheome.detect.operator(C.Sg);  C.ge = rheome.geom.edgegraph(Sh);
-    C.av = full(sum(M, 2));  nF = size(C.F, 1);
+    C.av = full(sum(M, 2)) .* C.Sg.Cortex;  nF = size(C.F, 1);   % cortex only
     C.Afv = sparse(C.F(:), repmat((1:nF)',3,1), repmat(C.fg.FaceArea,3,1), C.nV, nF);  C.afv = full(sum(C.Afv, 2));
     C.gfb = rheome.graphfilterbank(lam, 'Wavelet','mexhat', 'VoicesPerOctave',8, 'SizeLimits',[4 80]*1e-3, ...
         'Transform', rheome.graphtransform.eigen(Phi, M, lam));

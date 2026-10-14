@@ -155,7 +155,7 @@ function d = i_diameter(S, Tp, depth)
 % the participant's median tile diameter at a depth, 2 sqrt(A / pi), mm
     a = [];
     for h = ["L" "R"]
-        P = rheome.scale.grouptiles(S, Tp, h, depth);  m = full(sum(S.B.(h).lbo.Mass, 2));
+        P = rheome.scale.grouptiles(S, Tp, h, depth);  m = full(sum(S.B.(h).lbo.Mass, 2)) .* rheome.geom.cortexmask(S.B.(h).S);
         a = [a, full(sum(P .* m, 1))]; %#ok<AGROW>
     end
     d = 2e3 * sqrt(median(a) / pi);

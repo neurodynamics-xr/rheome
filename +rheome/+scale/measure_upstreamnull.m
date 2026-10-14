@@ -68,7 +68,7 @@ function [T, X] = measure_upstreamnull(name, S, opts)
     nT = size(F, 2);  t = (0:nT-1) / fs;
     N = double(S.Sf.VertNormals);  N = N ./ vecnorm(N, 2, 2);
     Gn = N(:,1)' .* S.G(:, 1:3:end) + N(:,2)' .* S.G(:, 2:3:end) + N(:,3)' .* S.G(:, 3:3:end);   % [nSel x nV]
-    w = zeros(S.nV, 1);  for h = ["L" "R"], w(S.B.(h).gv) = full(sum(S.B.(h).lbo.Mass, 2)); end
+    w = zeros(S.nV, 1);  for h = ["L" "R"], w(S.B.(h).gv) = full(sum(S.B.(h).lbo.Mass, 2)) .* rheome.geom.cortexmask(S.B.(h).S); end   % generators on cortex only
     x = double(S.Sf.Vertices) * (opts.Axis(:) / norm(opts.Axis));     % metres along Axis
     C = fft(F, [], 2);  f = (0:nT-1) * fs / nT;  C(:, ~(f >= 1 & f <= 8 | f >= fs-8 & f <= fs-1)) = 0;
     pBand = mean(real(ifft(C, [], 2)).^2, 'all');  clear C

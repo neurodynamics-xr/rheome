@@ -67,15 +67,15 @@ function [T, X, Z] = measure_eventplants(name, S, opts)
     Sg = @(x) 1 ./ (1 + exp(-x));  X = table();  Z = table();  keepZ = nargout > 2;
     for hh = opts.Hemis
         h = char(hh);  H = S.B.(h);  Phi = H.lbo.Phi;  Mm = H.lbo.Mass;  lam = H.lbo.Lambda(:);
-        av = full(sum(Mm, 2));  gv = double(H.gv(:));  nV = numel(gv);  nrm = double(H.S.VertNormals);
+        av = full(sum(Mm, 2)) .* rheome.geom.cortexmask(H.S);  gv = double(H.gv(:));  nV = numel(gv);  nrm = double(H.S.VertNormals);
         rows = reshape((gv' - 1)*3 + (1:3)', [], 1);  K = S.Res.ImagingKernel(rows, :);  GL = S.G(:, rows);
         hk = exp(-lam*(opts.SigmaMM*1e-3)^2/2);
         Tr = rheome.geom.tree(H.S, L=H.lbo.L, M=Mm, MaxDepth=opts.Depth);
-        G = rheome.geom.tiles(Tr, H.S, opts.Depth);  P = double(G.P);  Wd = (P'*(av.*Phi)) ./ (P'*av);
+        G = rheome.geom.tiles(Tr, H.S, opts.Depth);  P = double(G.P);  Wd = (P'*(av.*Phi)) ./ (P'*av);  Wd(~isfinite(Wd)) = 0;   % a tile wholly on the medial wall: no cortex, reads 0 (weight 0)
         Yt = Wd*double(E.(h).C);  med = median(Yt(:, ceil(CS.first*FR/fs):floor(CS.last*FR/fs)), 2);  clear Yt
         A = struct(h, P'*av);
         for q = 1:opts.NPer
-            v0 = randi(nV);  k0 = G.tileOf(v0);
+            cvx = find(rheome.geom.cortexmask(H.S));  v0 = cvx(randi(numel(cvx)));  k0 = G.tileOf(v0);   % plant on cortex
             d = opts.DurRange(1) + rand*diff(opts.DurRange);  tau = opts.TauRange(1) + rand(1, 2)*diff(opts.TauRange);
             on = SEG/2 - d/2;  off = SEG/2 + d/2;
             env = Sg((tSeg - on)/tau(1)) .* Sg(-(tSeg - off)/tau(2));

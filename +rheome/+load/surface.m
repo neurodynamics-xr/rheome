@@ -18,6 +18,7 @@ function [S, L, M] = surface(name)
     end
     C = builtin('load', f);
     S = C.S;
+    if ~isfield(S, 'Cortex'), S.Cortex = rheome.geom.cortexmask(name, S.nV); end   % medial wall excluded from measurements
     if nargout > 1, L = C.L; end
     if nargout > 2, M = C.M; end
 end

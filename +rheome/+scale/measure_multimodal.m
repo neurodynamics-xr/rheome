@@ -121,7 +121,7 @@ function [T, X, Cn] = measure_multimodal(name, S, opts)
     codes = [];  A = [];  S1 = [];  S2 = [];  tileOf = zeros(nV, 1);  errDirect = 0;  direct = cell(2, D);
     for hi = 1:2
         H = S.B.(hemis(hi));  gv = double(H.gv(:));  Phi = H.lbo.Phi;  Mm = H.lbo.Mass;  lam = H.lbo.Lambda(:);
-        a = full(sum(Mm, 2));  nVh = numel(gv);
+        a = full(sum(Mm, 2)) .* rheome.geom.cortexmask(H.S);  nVh = numel(gv);   % cortex only
         g = zeros(numel(lam), numel(keep));
         for j = 1:numel(keep), gm = gain(gfb, keep(j)); g(:, j) = gm(lam); end
         V = zeros(nVh, nF, nJ);

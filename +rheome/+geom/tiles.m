@@ -37,6 +37,11 @@ function G = tiles(T, S, depth, opts)
 % distance between every pair of centres -- so a track's displacement and path length are read on
 % the same ruler as the planted truth (rheome.geom.edgegraph, +1.4% against the analytic geodesic).
 %
+% ⭐ CORTEX AREA (decision 3882c4ce, 2026-10-14). Tiles are built on the CLOSED hemisphere (the tree is a
+% geometric scaffold), but a tile's size is its cortex: `.cortex_area` (m^2, lumped vertex areas over the
+% vertices S.Cortex marks, rheome.geom.cortexmask) and `.cortex_fraction` of its closed area. A tile wholly
+% on the medial wall has cortex_area 0; rheome.geom.tilemean gives it NaN. Without S.Cortex every vertex counts.
+%
 % INPUTS
 %   T      rheome.geom.tree table            S  the surface T was built on (.Faces, .Vertices)
 %   depth  tree depth to tile at
@@ -48,6 +53,8 @@ function G = tiles(T, S, depth, opts)
 %   .P       [nV x nTile] sparse logical membership
 %   .A       [nTile x nTile] sparse, cut-edge count between tiles, zero diagonal
 %   .heap    true iff parent_id == floor(node_id/2) for every node of T
+%   .cortex [nV x 1] logical (S.Cortex, else all true)   .area [nV x 1] lumped vertex areas (m^2)
+%   .cortex_area [nTile x 1] m^2   .cortex_fraction [nTile x 1] cortex area / closed area
 %   .centre  [nTile x 1] centre vertex; .D [nTile x nTile] Ruler distance between centres (m)
 %            (both [] without a Ruler)
 %
@@ -84,6 +91,12 @@ function G = tiles(T, S, depth, opts)
     G.tileOf = tileOf;
     G.P = sparse((1:nV)', tileOf, true, nV, nTile);
     G.A = A;
+    Vx = double(S.Vertices);
+    fa = 0.5 * vecnorm(cross(Vx(F(:,2),:) - Vx(F(:,1),:), Vx(F(:,3),:) - Vx(F(:,1),:), 2), 2, 2);
+    G.area = accumarray(F(:), repmat(fa / 3, 3, 1), [nV 1]);
+    G.cortex = rheome.geom.cortexmask(S);
+    G.cortex_area = double(G.P)' * (G.area .* G.cortex);
+    G.cortex_fraction = G.cortex_area ./ (double(G.P)' * G.area);
     nr = T.parent_id ~= 0;
     G.heap = all(T.parent_id(nr) == floor(T.node_id(nr) / 2));
     G.centre = [];  G.D = [];

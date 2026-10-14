@@ -29,7 +29,10 @@ function [T, X, Z] = measure_geometry(name, S, opts)
 %    Z.tiles: one row per rheome.geom.tree tile at depths opts.SizeDepths (depth 0 = the hemisphere) --
 %    hemi, depth, node_id, n_vertices, area_mm2, d_eq_mm, geodesic_diameter_mm (double-sweep on the
 %    mesh edge graph: a lower bound on the longest geodesic in the tile, and specific to this Fiedler tiling).
-%    Rows: hemisphere_area (cm2, band "L" | "R"); parcel_deq_median, n_parcels (band = atlas, over both
+%    ⭐ CORTEX ONLY (decision 3882c4ce, 2026-10-14): a tile's area, d_eq and the hemisphere's area are its
+%    CORTEX (rheome.geom.cortexmask), the medial wall excluded; the tree is still built on the closed mesh.
+%    Z.tiles also carries closed_area_mm2 and cortex_fraction; hemisphere_area_closed keeps the old number.
+%    Rows: hemisphere_area (cortex, cm2, band "L" | "R"), hemisphere_area_closed (cm2); parcel_deq_median, n_parcels (band = atlas, over both
 %    hemispheres); tile_deq_median, tile_area_median (band "D<depth>"). A missing atlas gives n_parcels 0.
 %    The fraction of parcels below 2 r50 needs r50 (cf-scale) and is taken at the group reduction.
 %
@@ -64,20 +67,22 @@ function [T, X, Z] = measure_geometry(name, S, opts)
     dmax = max([opts.Levels opts.RollupDepths opts.SizeDepths]);
     for h = opts.Hemis(:)'
         Hh = S.B.(h);  Sh = Hh.S;  lbo = Hh.lbo;  V = double(Sh.Vertices);  Fc = double(Sh.Faces);
-        a = full(sum(lbo.Mass, 2));  Atot = sum(a);  lam = lbo.Lambda(:);  P = lbo.Phi;
+        a = full(sum(lbo.Mass, 2));  Atot = sum(a);  cv = rheome.geom.cortexmask(Sh);  ac = a .* cv;  lam = lbo.Lambda(:);  P = lbo.Phi;
         Tr = rheome.geom.tree(Sh, L=lbo.L, M=lbo.M, MaxDepth=dmax);
         E = unique(sort([Fc(:,[1 2]); Fc(:,[2 3]); Fc(:,[3 1])], 2), 'rows');
         Gm = graph(E(:,1), E(:,2), vecnorm(V(E(:,1),:) - V(E(:,2),:), 2, 2), size(V, 1));
-        ag(Hh.gv) = a; %#ok<AGROW>                            % the whole cortex's vertex areas, for the parcels
+        ag(Hh.gv) = ac; %#ok<AGROW>                            % the whole cortex's vertex areas, for the parcels
 
         % 4. tile size (G12h): the tree's own area and equivalent-disc diameter
         for r = find(ismember(Tr.depth, opts.SizeDepths))'
             in = Tr.members{r}(:);  Gs = subgraph(Gm, in);
             d1 = distances(Gs, 1);  d1(~isfinite(d1)) = -1;  [~, f] = max(d1);   % double sweep from vertex 1
             dg = distances(Gs, f);  dg = max(dg(isfinite(dg)));
-            Zt = [Zt; {h, Tr.depth(r), Tr.node_id(r), numel(in), 1e6 * Tr.area(r), 1e3 * Tr.diameter(r), 1e3 * dg}]; %#ok<AGROW>
+            Ac = sum(ac(in));
+            Zt = [Zt; {h, Tr.depth(r), Tr.node_id(r), numel(in), 1e6 * Ac, 2e3 * sqrt(Ac / pi), 1e3 * dg, ...
+                       1e6 * Tr.area(r), Ac / Tr.area(r)}]; %#ok<AGROW>
         end
-        T = [T; rheome.scale.rows("geometry", "hemisphere_area", 1e4 * Atot, "cm2", h)]; %#ok<AGROW>
+        T = [T; rheome.scale.rows("geometry", ["hemisphere_area" "hemisphere_area_closed"], 1e4 * [sum(ac) Atot], ["cm2" "cm2"], h)]; %#ok<AGROW>
 
         % 1. wavelet-tile match
         for l = opts.Levels
@@ -90,7 +95,7 @@ function [T, X, Z] = measure_geometry(name, S, opts)
                 psi = P * (g .* P(c, :)');
                 pos = find(psi > 0);  lobe = [];
                 if psi(c) > 0, cc = conncomp(subgraph(Gm, pos));  lobe = pos(cc == cc(pos == c)); end
-                X = [X; {h, l, s, c, numel(in), sum(a(lobe)) / sum(a(in)), sum(a(in) .* psi(in).^2) / sum(a .* psi.^2)}]; %#ok<AGROW>
+                X = [X; {h, l, s, c, numel(in), sum(ac(lobe)) / sum(ac(in)), sum(ac(in) .* psi(in).^2) / sum(ac .* psi.^2)}]; %#ok<AGROW>   % cortex areas
             end
         end
 
@@ -105,7 +110,7 @@ function [T, X, Z] = measure_geometry(name, S, opts)
         if ~Gd.heap, error('scale:geometry:heap', 'hemisphere %s: tree not full to depth %d, ancestors are not arithmetic', h, dd); end
         Xd = 0;  Cd = 0;
         for k = 1:3                                            % x, y, z: tile sums of each current component
-            Xk = (double(Gd.P)' * S.Res.ImagingKernel((gv - 1)*3 + k, :)) * Fa;
+            Xk = ((double(Gd.P) .* cv)' * S.Res.ImagingKernel((gv - 1)*3 + k, :)) * Fa;   % cortex vertices only
             Cd = Cd + real(Xk * Xk');
         end
         err = 0;
@@ -114,7 +119,7 @@ function [T, X, Z] = measure_geometry(name, S, opts)
             Ag = sparse(1:numel(par), par, 1, numel(par), numel(Gl.node_id));
             Cl = 0;
             for k = 1:3
-                Xk = (double(Gl.P)' * S.Res.ImagingKernel((gv - 1)*3 + k, :)) * Fa;  Cl = Cl + real(Xk * Xk');
+                Xk = ((double(Gl.P) .* cv)' * S.Res.ImagingKernel((gv - 1)*3 + k, :)) * Fa;  Cl = Cl + real(Xk * Xk');
             end
             err = max(err, max(abs(Ag' * Cd * Ag - Cl), [], 'all') / max(abs(Cl), [], 'all'));
         end
@@ -122,7 +127,7 @@ function [T, X, Z] = measure_geometry(name, S, opts)
         fprintf('[geometry %s] %s: %d singular faces, %.1f deg, roll-up %.2e\n', name, h, numel(gT.singular), gT.neighbourAngle, err);
     end
     X.Properties.VariableNames = {'hemi','level','tile','centre','n_vertices','lobe_ratio','energy_in_tile'};
-    Zt.Properties.VariableNames = {'hemi','depth','node_id','n_vertices','area_mm2','d_eq_mm','geodesic_diameter_mm'};
+    Zt.Properties.VariableNames = {'hemi','depth','node_id','n_vertices','area_mm2','d_eq_mm','geodesic_diameter_mm','closed_area_mm2','cortex_fraction'};
     for d = opts.SizeDepths
         k = Zt.depth == d;
         T = [T; rheome.scale.rows("geometry", ["tile_deq_median" "tile_area_median"], ...

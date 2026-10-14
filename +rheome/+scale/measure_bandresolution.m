@@ -27,7 +27,7 @@ function T = measure_bandresolution(name, S, snr)
                                            'nVert', S.nV, 'SnrFixed', sf));
         Lam = R.SNR / mean(R.SL.^2);  gs = (Lam*R.SL.^2) ./ (Lam*R.SL.^2 + 1);
         out = rheome.inverse.resolution(R.ImagingKernel, S.G, S.B.L.lbo, Vertices=SL.Vertices, Faces=SL.Faces, ...
-                  Normals=SL.VertNormals, GlobalIdx=S.B.L.gv, SensorLoc=S.Loc, NumSeeds=200);
+                  Normals=SL.VertNormals, GlobalIdx=S.B.L.gv, SensorLoc=S.Loc, Cortex=rheome.geom.cortexmask(S.Sf), NumSeeds=200);
         q = discretize(out.depth, prctile(out.depth, [0 25 50 75 100]));
         md = accumarray(q, out.r50, [4 1], @median);
         r50(i) = 1e3*median(out.r50);  cen(i) = 1e3*out.mtfCentroid;  dr(i) = md(4)/md(1);

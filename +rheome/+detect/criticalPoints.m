@@ -39,6 +39,9 @@ function cp = criticalPoints(J, S, types, op)
 % OUTPUT (struct cp, arrays [nc x 1] sorted by DESCENDING strength = max(|curl|,|div|)):
 %   .pos [nc x 3]  .charge (+1/-1)  .type {cellstr}  .circulation (|curl|)  .divergence (signed)
 %   .strength (max(|curl|,|div|))  .hemi  .chi [1 x nHemi]  (Poincare-Hopf check = Euler chi)
+%   .wall  the points whose core lies on the MEDIAL WALL (S.Cortex false on >= 2 of the face's vertices;
+%          rheome.geom.cortexmask), same fields: FLAGGED AND NOT REPORTED (decision 3882c4ce, 2026-10-14).
+%          The wall is filled, not measured (rheome.operators.harmonicfill). .chi still counts every face.
 %
 % See also: rheome.operators.connection_laplacian, rheome.differential.divergence, rheome.differential.curl, detect_validate
 %
@@ -59,7 +62,8 @@ function cp = criticalPoints(J, S, types, op)
     divv  = rheome.differential.divergence(J, S, op.fg);   % [nV] whole-surface divergence (source +, sink -)
     curlv = rheome.differential.curl(J, S, op.fg);         % [nV] whole-surface vorticity
 
-    pos=zeros(0,3); charge=zeros(0,1); circ=zeros(0,1); dvg=zeros(0,1); hemi=zeros(0,1); ty={};
+    pos=zeros(0,3); charge=zeros(0,1); circ=zeros(0,1); dvg=zeros(0,1); hemi=zeros(0,1); ty={};  onw=false(0,1);
+    isWall = ~rheome.geom.cortexmask(S);
     chi = zeros(1, nH);
     for hh = 1:nH
         Sh = op.Sh{hh};  gv = op.gv{hh};  C = op.C{hh};    % precomputed hemisphere + connection
@@ -84,15 +88,17 @@ function cp = criticalPoints(J, S, types, op)
             end
             ty{end+1,1} = tk; %#ok<AGROW>
         end
+        onw=[onw; sum(isWall(gf), 2) >= 2]; %#ok<AGROW>
         pos=[pos;cen]; charge=[charge;q(sel)]; circ=[circ;abs(cC)]; dvg=[dvg;dC]; hemi=[hemi;hh*ones(numel(sel),1)]; %#ok<AGROW>
     end
 
     keep = ismember(ty, types);                             % filter to the requested type(s)
-    pos=pos(keep,:); charge=charge(keep); circ=circ(keep); dvg=dvg(keep); hemi=hemi(keep); ty=ty(keep);
+    pos=pos(keep,:); charge=charge(keep); circ=circ(keep); dvg=dvg(keep); hemi=hemi(keep); ty=ty(keep); onw=onw(keep);
     strength = max(circ, abs(dvg));                         % type-agnostic saliency
-    [strength, o] = sort(strength, 'descend');
-    cp = struct('pos',pos(o,:), 'charge',charge(o), 'type',{ty(o)}, 'circulation',circ(o), ...
-                'divergence',dvg(o), 'strength',strength, 'hemi',hemi(o), 'chi',chi);
+    [strength, o] = sort(strength, 'descend');  w = onw(o);
+    pk = @(k) struct('pos',pos(o(k),:), 'charge',charge(o(k)), 'type',{ty(o(k))}, 'circulation',circ(o(k)), ...
+                     'divergence',dvg(o(k)), 'strength',strength(k), 'hemi',hemi(o(k)));
+    cp = pk(~w);  cp.chi = chi;  cp.wall = pk(w);           % wall cores flagged, not reported
 end
 
 % ----- helper -----

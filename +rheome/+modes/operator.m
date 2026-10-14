@@ -55,7 +55,7 @@ function Op = operator(S, Tp, opts)
         if ~any(keep), error('modes:operator:cutoff', 'no bank member has a wavelength in [%g, %g) mm (members %s mm)', opts.CutoffMM, opts.MaxWavelengthMM, mat2str(round(wl))); end
         hg = sqrt(sum(G(:, keep).^2, 2));  kept = union(kept, wl(keep));
         [P, Ah, ids, C] = rheome.scale.grouptiles(S, Tp, h, opts.Depth);
-        a = full(sum(lbo.Mass, 2));  Pa = (P .* a) ./ full(sum(P .* a, 1));      % area-weighted mean
+        a = full(sum(lbo.Mass, 2)) .* rheome.geom.cortexmask(S.B.(h).S);  Pa = (P .* a) ./ full(sum(P .* a, 1));      % area-weighted mean
         Lw = lbo.Phi * (hg .* (lbo.Phi' * (lbo.Mass * Kq)));                    % low-passed q per vertex
         W = [W; full(Pa' * Lw)]; %#ok<AGROW>
         Gh = nrm(:,1)' .* S.G(:, (gv-1)*3 + 1) + nrm(:,2)' .* S.G(:, (gv-1)*3 + 2) + nrm(:,3)' .* S.G(:, (gv-1)*3 + 3);

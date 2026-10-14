@@ -25,7 +25,7 @@ function T = measure_resolution(name, S)
     if nargin < 2 || isempty(S), S = rheome.scale.sensors(name); end
     SL = S.B.L.S;
     out = rheome.inverse.resolution(S.Res.ImagingKernel, S.G, S.B.L.lbo, Vertices=SL.Vertices, Faces=SL.Faces, ...
-              Normals=SL.VertNormals, GlobalIdx=S.B.L.gv, SensorLoc=S.Loc, NumSeeds=300);
+              Normals=SL.VertNormals, GlobalIdx=S.B.L.gv, SensorLoc=S.Loc, Cortex=rheome.geom.cortexmask(S.Sf), NumSeeds=300);
     q = discretize(out.depth, prctile(out.depth, [0 25 50 75 100]));
     md = accumarray(q, out.r50, [4 1], @median);
     m  = ["r50_median" "r50_q25" "r50_q75" "ple_median" "offhemi_median" "mtf_half" ...
