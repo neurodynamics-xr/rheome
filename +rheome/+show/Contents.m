@@ -1,6 +1,9 @@
-% SHOW  Visualizations and plots for the atom-design demo.
+% SHOW  Plots in MATLAB graphics; on the cortex, the FALLBACK, tests and quick looks.
 %
-% Rendering helpers built on base MATLAB graphics.
+% Cortical visuals belong to rheome.view and rheome.snapshot (the Cortical Flow viewer; see rheome.viz). The cortex
+% renders here (surface, vectors, filmstrip, vectorstrip, gif, frame, critical) are kept for a machine with no WebGPU
+% (rheome.view falls back to them), for tests and for quick looks; no figure pipeline calls them. The plots that are not
+% surfaces (spectra, scalograms, ridges, the resolution ruler) stay here, by the figure tokens.
 %
 % Functions:
 %   rheome.show.surface     - render a cortical surface, optionally colored by a per-vertex field

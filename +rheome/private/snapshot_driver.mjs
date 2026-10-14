@@ -127,10 +127,12 @@ for (const shot of job.shots) {
   await sleep(shot.wait ?? job.wait ?? 600)
   const errs = await evalp(`window.__ev.filter(e=>e[0]==='error').map(e=>e[1])`)
   if (errs?.length) fail(`${shot.name}: the viewer refused ${JSON.stringify(errs)}`)
-  const png = await evalp(`(async()=>{const p=new Promise(r=>window.addEventListener('viewer:screenshot',e=>r(e.detail),{once:true}));` +
-    `await window.viewer.screenshot(${shot.scale ?? job.scale ?? 2}, true);return (await p).png})()`)
+  const shotEv = await evalp(`(async()=>{const p=new Promise(r=>window.addEventListener('viewer:screenshot',e=>r(e.detail),{once:true}));` +
+    `await window.viewer.screenshot(${shot.scale ?? job.scale ?? 2}, true);const d=await p;return {png:d.png,marks:d.marks}})()`)
+  const png = shotEv?.png
   if (!png?.startsWith('data:image/png;base64,')) fail(`${shot.name}: no screenshot`)
   fs.writeFileSync(path.join(job.out, shot.name + '.png'), Buffer.from(png.split(',')[1], 'base64'))
+  if (shotEv.marks) fs.writeFileSync(path.join(job.out, shot.name + '.marks.json'), JSON.stringify(shotEv.marks, null, 2))   // keyed overlays
   done.shots.push({ name: shot.name, settings: await evalp('window.viewer.settings') })
 }
 fs.writeFileSync(path.join(job.out, 'driver.json'), JSON.stringify(done))

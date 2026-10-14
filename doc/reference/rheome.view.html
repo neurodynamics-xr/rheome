@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.view</title></head><body>
+<h1>rheome.view</h1>
+<p><em>function rheome</em> &mdash; Rheome</p>
+<pre>  VIEW  Show a result on the cortex in Rheome's 3D viewer, from one call; rheome.show when there is no viewer.
+ 
+    rheome.view(surf, result)
+    rheome.view(result)                         % result.surface carries the surface
+    rheome.view(surf, struct('activity', I, 'velocity', v), Fs=100, Layers={{&quot;activity&quot;}, {&quot;velocity&quot;, &quot;x&quot;, &quot;arrows&quot;}})
+    rheome.view(surf, struct('J', J), Potentials=&quot;J&quot;, Layers={{&quot;J_psi&quot;}, {&quot;J&quot;, &quot;x&quot;, &quot;arrows&quot;}})   % J's stream function
+    out = rheome.view(..., Name=Value)
+ 
+  Rheome RUNS without the viewer (R2023b and later); its figures of the cortex are drawn by it (rheome.viz).
+  The result is written as a rheome.bundle@1 folder (rheome.io.write.bundle) and opened:
+    R2026a+       inside MATLAB, a uifigure + uihtml on the viewer's viewer.html (the Cortical Flow viewer,
+                  nxr-cortical-flow editor/dist-viewer; its README.md has the format and protocol). The viewer folder is RHEOME_VIEWER, default prefdir/rheome-viewer, installed
+                  there from the copy shipped in &lt;rheome&gt;/viewer when that exists; the bundle is written beneath
+                  it, because uihtml serves only that folder's tree. The figure is reused by the next call.
+    R2023b-R2025b the Cortical Flow desktop app, by its URL (corticalflow://view?bundle=&lt;folder&gt;).
+  With no viewer, no WebGPU (the viewer's 'no-webgpu' error) or no app that handles corticalflow://, the chosen
+  field is drawn at the chosen time with rheome.show.surface (real) or rheome.show.vectors (vector).
+ 
+  INPUTS:
+    surf   : surface struct (.Vertices meters, .Faces 1-based), a Brainstorm surface .mat path, or a struct of
+             surfaces of one mesh by name (struct('pial', S, 'inflated', Si, 'sphere', Ss); the first is the default)
+    result : [nV x T] or [3nV x T] array, or a struct of such arrays (see rheome.io.write.bundle); in the
+             one-argument form, a struct with a 'surface' field as surf above and the arrays
+ 
+  OPTIONS (name/value) -- the viewer's settings; one not given is left to the viewer's default:
+    'Layers'       what is drawn, in draw order: each layer is ONE field, ONE form of it and ONE representation
+                   (the viewer's 'layers', its README 'Layers'). A cell of {field, form, as} cells (form and as
+                   optional), or a struct array (or cell of structs) with the viewer's layer keys:
+                     field      a field's name (required): one of the result's, or a potential (see Potentials)
+                     form       real field: &quot;f&quot; (default); vector field: &quot;abs&quot; |v|, &quot;nx&quot; n.v, &quot;div&quot;, &quot;curl&quot; (scalar
+                                forms), &quot;x&quot; v, &quot;xt&quot; the tangential part (vector forms; default &quot;x&quot;, or &quot;abs&quot; when
+                                'as' is a scalar representation)
+                     as         scalar form: &quot;colour&quot; (default) | &quot;isolines&quot; | &quot;halfMax&quot;; vector form: &quot;arrows&quot;
+                     visible    true | false;  colormap  a colormap name;  clim  [lo hi] or &quot;auto&quot;;
+                     threshold  [min max], NaN an open side;  opacity  0-1;  bands  isolines, 1-100;
+                     density    arrows, (0, 1];  scale  arrows, &gt;= 0 (m; 0: 4 % of the surface);
+                     normalize  arrows, true | false;  color  arrows, a neutral token (&quot;paper&quot;, &quot;ink&quot; ...) or #rrggbb
+                   A vector field is never painted itself: paint a scalar form of it, or draw it as arrows.
+                   Not given: the first real field in colour and the first vector field as arrows.
+    'Potentials'   vector fields whose Hodge potentials are written too, as real fields &lt;v&gt;_phi and &lt;v&gt;_psi
+                   (rheome.io.write.bundle 'Potentials'): names, true (every vector field) or false (default)
+    'Colormap'     a colormap name (e.g. &quot;viridis&quot;, &quot;coolwarm&quot;, &quot;magma&quot;, &quot;turbo&quot;): the colour layer's
+    'CLim'         [lo hi] colour limits, in the field's units (default: 1st-99th percentile): the colour layer's
+    'Threshold'    [min max]: paint only where min &lt;= x &lt;= max; NaN for an open side (e.g. [0.5 NaN]): the colour layer's
+    'Field'        DEPRECATED (one release; use Layers): a real field painted, a vector field as arrows
+    'Arrows'       DEPRECATED (one release; use Layers): true | false, the arrows of the first vector field, or none
+    'Surface'      the surface shown, a name of surf's struct (e.g. &quot;inflated&quot;)
+    'Hemisphere'   &quot;both&quot; | &quot;left&quot; | &quot;right&quot; (the mesh's two largest connected components)
+    'View'         camera: &quot;left&quot; | &quot;right&quot; | &quot;top&quot; | &quot;bottom&quot; | &quot;front&quot; | &quot;back&quot;
+    'ArrowDensity' fraction of vertices with an arrow, (0, 1]: every arrows layer's density
+    'ArrowScale'   arrow length at the top of its range, in the surface's units (m); 0: 4 % of the surface's
+                   size: every arrows layer's scale
+    'Time'         the time shown, s from the first sample (the nearest frame)
+    'Labelling'    the labelling painted in the colour layer's place (a name of Labellings), &quot;&quot; for none
+    'Play'         true | false: play on open
+    'Speed'        playback speed, x real time (&gt; 0)
+  and how it is opened:
+    'Fs'      sampling rate of the T columns, Hz (default 1)
+    'Labellings'  partitions for the viewer (rheome.viz.tiles: tiles by level; see rheome.io.write.bundle)
+    'Points'      point sets for the viewer (rheome.viz.points: critical points, one set a type)
+    'Name'    the bundle's name (default 'Rheome result')
+    'Viewer'  'auto' (default) | 'editor' (uihtml) | 'app' | 'show' | 'none' (write the bundle only)
+    'Timeout' seconds to wait for the viewer's 'ready' (default 60)
+ 
+  OUTPUT:
+    out : struct .viewer (the path taken: 'editor' | 'app' | 'show' | 'none'), .manifest (the bundle's
+          manifest.json, '' for 'show'), .settings (the viewer's settings sent, as in the manifest's 'settings';
+          the layer options are sent as 'layers', a cell of layer structs, set whole),
+          .figure (the uifigure or figure, [] for 'app' and 'none'), and on the 'editor' path:
+          .ready      what the viewer said when it opened the bundle (its fields, surfaces, every setting)
+          .set(Name=Value, ...)      changes the open view (the options above) without reopening it; a layer
+                                     option given acts on the layers last sent
+          .screenshot(file, scale)   writes the view as a PNG (scale, default 1: the window's pixels), and beside it
+                                     &lt;file&gt;.marks.json, every overlay drawn with its key (rheome.viz.marks)
+ 
+  The viewer gets the settings twice: as the manifest's 'settings', and with the bundle in uihtml's Data
+  (struct('bundle', &lt;manifest, relative&gt;, 'settings', settings)); it answers with the event 'ready' or 'error'
+  (data.code 'no-webgpu' when it cannot draw: rheome.show instead; 'settings' when it refused one: a warning,
+  the rest applied; 'bundle' or 'boot': an error).
+ 
+  Example:
+    [V, F] = rheome.geom.icosphere(3);  S = struct('Vertices', 0.07*V, 'Faces', F);
+    I = exp(-sum((V - [0 0 1]).^2, 2) / 0.1) .* cos(linspace(0, 2*pi, 20));
+    out = rheome.view(S, I, Fs=10, CLim=[-1 1], View=&quot;top&quot;, Viewer=&quot;show&quot;);
+    assert(strcmp(out.viewer, 'show'));  close(out.figure)
+ 
+  THE PRIMARY API for the cortex, with rheome.snapshot (print); rheome.show is the fallback (see rheome.viz).
+ 
+  See also: rheome.viz, rheome.snapshot, rheome.io.write.bundle, rheome.show.surface, rheome.show.vectors
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>
