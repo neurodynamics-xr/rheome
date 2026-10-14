@@ -19,7 +19,7 @@ the bands, per tile, level and member, from the stored sums (exact; taken from t
 has them); (b) the whole-cortex relative band power (level 0); (c) Spearman rho across tiles, levels >= 3, between
 each relative band and each non-MEG field (PET, fibres, later BOLD) and between non-MEG fields (mean at member 0
 and for MEG, ms -- the coefficient energy -- for the signed members j > 0). Then per quantity the cohort median and
-CI. ⚠ Each person's tiles are their OWN rheome.geom.tree, so tile codes are not the same place across people: the
+CI, grouped by member (scale index); scale_mm is the median over subjects of each person's own member scale. ⚠ Each person's tiles are their OWN rheome.geom.tree, so tile codes are not the same place across people: the
 cohort step reduces per-subject quantities, never tiles.
 
 CI: the order-statistic interval for the median, [x_(k), x_(n-k+1)], k = binom.ppf(0.025, n, 0.5): coverage >= 95 %
@@ -192,14 +192,15 @@ def multimodal(out_dir, dirs, min_level=3):
                                   field_a=a, field_b=f, value=float(rho), n_tiles=len(codes)))
     if not S:
         raise SystemExit("no multimodal.csv under %s" % " ".join(dirs))
+    # group by member, not scale_mm: each person's own tree gives member j its own mm, so scale_mm is reported as the median
     G = defaultdict(list)
     for s in S:
-        G[(s["dataset"], s["quantity"], s["level"], s["member"], s["scale_mm"], s["field_a"], s["field_b"])].append(s["value"])
+        G[(s["dataset"], s["quantity"], s["level"], s["member"], s["field_a"], s["field_b"])].append((s["value"], s["scale_mm"]))
     C = []
     for key in sorted(G):
-        n, med, lo, hi = median_ci(G[key])
-        C.append(dict(zip(["dataset", "quantity", "level", "member", "scale_mm", "field_a", "field_b"], key),
-                      n=n, median=med, ci_lo=lo, ci_hi=hi))
+        n, med, lo, hi = median_ci([v for v, _ in G[key]])
+        d = dict(zip(["dataset", "quantity", "level", "member", "field_a", "field_b"], key))
+        C.append(dict(d, scale_mm=float(np.median([m for _, m in G[key]])), n=n, median=med, ci_lo=lo, ci_hi=hi))
     os.makedirs(out_dir, exist_ok=True)
     _write(os.path.join(out_dir, "multimodal_relative.csv"), R)
     _write(os.path.join(out_dir, "multimodal_subjects.csv"), S)

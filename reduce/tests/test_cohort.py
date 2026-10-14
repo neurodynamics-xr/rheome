@@ -65,6 +65,24 @@ class Cohort(unittest.TestCase):
             self.assertAlmostEqual(rel[(0, 1, 0)]["alpha"], 0.3)
             self.assertAlmostEqual(sum(rel[(0, 1, 0)].values()), 1.0)
 
+    def test_multimodal_pools_members_across_own_scales(self):
+        hdr = "level,code,hemisphere,field,modality,unit,member,scale_mm,area_m2,sum_ax,sum_ax2,mean,ms\n"
+        with tempfile.TemporaryDirectory() as d:
+            ind = os.path.join(d, "in")
+            os.makedirs(ind)
+            for i in range(7):            # each subject's member 1 has its own scale_mm, as with own trees
+                rows = "".join("%d,%d,0,meg_%s,MEG,u,%d,%g,1,%g,1,1,1\n" % (lv, c, b, m, 0 if m == 0 else 8 + i, v + c * (b == "alpha"))
+                               for lv, cs in ((0, [1]), (3, [1, 2, 3, 4])) for c in cs for m in (0, 1)
+                               for b, v in (("alpha", 1.0 + i), ("beta", 2.0)))
+                rows += "".join("3,%d,0,pet_x,PET,u,%d,%g,1,1,1,%g,%g\n" % (c, m, 0 if m == 0 else 8 + i, c, c)
+                                for c in (1, 2, 3, 4) for m in (0, 1))
+                open(os.path.join(ind, "sub-%02d_multimodal.csv" % i), "w").write(hdr + rows)
+            _, _, C = cohort.multimodal(os.path.join(d, "out"), [ind])
+            m1 = [r for r in C if r["quantity"] == "relative_power_cortex" and r["member"] == 1]
+            self.assertEqual(len(m1), 2)                       # alpha, beta: one row each, not one per subject
+            self.assertEqual([(r["quantity"], r["member"], r["n"]) for r in C if r["n"] != 7], [])
+            self.assertAlmostEqual(m1[0]["scale_mm"], 11.0)    # median of 8..14
+
 
 if __name__ == "__main__":
     unittest.main()
