@@ -77,8 +77,9 @@ function out = snapshot(surf, result, varargin)
 %   'Folded'    the name of the folded surface in surf, on which the bar is measured (default "pial" when surf has
 %               it, else the first); on another surface shown, the legend says the distance is on the folded one
 %   'Format'    printed from the SVG (always written): "pdf", "png", both (default) or [] (the SVG only)
-%   'Tokens'    the figure tokens' JSON (default $NXR_FIGURE_TOKENS, else ~/workspace/library/styles/tokens/
-%               figure-tokens.json)
+%   'Tokens'    the figure tokens' JSON (default $NXR_FIGURE_TOKENS, else $HOME/workspace/library/styles/tokens/
+%               figure-tokens.json if it exists, else the viewer's vendored viewer/figure/figure-tokens.json). The viewer
+%               reads the file used, and its sha256 and path go into every <render>.marks.json (tokens_sha256, tokens_path).
 %   'Viewer'    the viewer folder (default as rheome.view: $RHEOME_VIEWER, else prefdir/rheome-viewer)
 %   'Chrome'    Chrome or Chromium (default $RHEOME_CHROME, else the usual install)
 %   'Node'      Node.js 22+ (default $RHEOME_NODE, else the usual install)
@@ -151,7 +152,8 @@ function out = snapshot(surf, result, varargin)
     F = surfs.(snames{1}).Faces;
     T = size(result.(firstOf(fieldnames(result))), 2);
 
-    tok = tokens(o.Tokens);
+    work = tempname;  mkdir(work);  cleanWork = onCleanup(@() rmdir(work, 's'));
+    [tok, tokFile, tokSha, tokShown] = tokens(o.Tokens, work);
     if isempty(o.Scale), o.Scale = tok.cortex.viewer.pixelRatio; end
     vdir = char(o.Viewer);
     if isempty(vdir), vdir = viewerFolder(); end
@@ -165,7 +167,6 @@ function out = snapshot(surf, result, varargin)
     hemi = hemispheres(surfs.(snames{1}));
 
     % one bundle, one viewer run for every render
-    work = tempname;  mkdir(work);  cleanWork = onCleanup(@() rmdir(work, 's'));
     if isfield(surf, 'Vertices'), bs = surf; else, bs = surfs; end
     rheome.io.write.bundle(fullfile(work, 'bundle'), bs, result, 'Fs', o.Fs, 'Name', 'rheome.snapshot', ...
         'Labellings', o.Labellings, 'Points', o.Points);
@@ -191,7 +192,7 @@ function out = snapshot(surf, result, varargin)
         end
     end
     job = struct('viewer', vdir, 'bundle', fullfile(work, 'bundle'), 'out', work, 'chrome', chromePath(o.Chrome), ...
-        'size', tok.cortex.viewer.size_px(:)', 'scale', o.Scale, 'wait', o.Wait, 'timeout', o.Timeout, 'shots', {renders});
+        'tokens', tokFile, 'tokens_sha256', tokSha, 'tokens_path', tokShown, 'size', tok.cortex.viewer.size_px(:)', 'scale', o.Scale, 'wait', o.Wait, 'timeout', o.Timeout, 'shots', {renders});
     runDriver(job, nodePath(o.Node), work);
 
     graphCache = [];
@@ -464,13 +465,18 @@ end
 
 %% ---------------------------------------------------------------- tokens, colormaps, tools
 
-function T = tokens(file)
-% the lab's figure tokens (Graphics; library/styles/tokens/figure-tokens.json)
-    if isstruct(file), T = file; return; end
-    file = char(file);
-    if isempty(file), file = getenv('NXR_FIGURE_TOKENS'); end
-    if isempty(file), file = fullfile(char(java.lang.System.getProperty('user.home')), 'workspace', 'library', 'styles', 'tokens', 'figure-tokens.json'); end
-    if ~isfile(file), error('rheome:snapshot:tokens', 'No figure tokens at %s (Tokens= or NXR_FIGURE_TOKENS).', file); end
+function [T, file, sha, shown] = tokens(file, work)
+% the lab's figure tokens (Graphics): $NXR_FIGURE_TOKENS, else the library's, else the viewer's vendored copy
+% (rheome.viz.tokenspath); a struct is written to the work folder so the viewer and the marks sidecar name it
+    if isstruct(file)
+        T = file;  file = fullfile(work, 'figure-tokens.json');
+        fid = fopen(file, 'w');  fwrite(fid, jsonencode(T));  fclose(fid);
+        [file, sha] = rheome.viz.tokenspath(file);
+        shown = '<struct>';   % the temporary file is deleted with the work folder
+        return
+    end
+    [file, sha] = rheome.viz.tokenspath(file);
+    shown = file;   % the viewer is served this file's own bytes
     T = jsondecode(fileread(file));
 end
 
