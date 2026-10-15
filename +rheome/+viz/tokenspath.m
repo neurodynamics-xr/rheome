@@ -18,7 +18,10 @@ function [file, sha, source] = tokenspath(file, vendored)
     file = char(file);  source = "argument";
     if isempty(file), file = getenv('NXR_FIGURE_TOKENS'); source = "env"; end
     if isempty(file)
-        lib = fullfile(getenv('HOME'), 'workspace', 'library', 'styles', 'tokens', 'figure-tokens.json');
+        home = getenv('HOME');
+        if isempty(home), home = getenv('USERPROFILE'); end
+        if isempty(home), home = char(java.lang.System.getProperty('user.home')); end
+        lib = fullfile(home, 'workspace', 'library', 'styles', 'tokens', 'figure-tokens.json');
         if isfile(lib), file = lib; source = "library"; else, file = char(vendored); source = "vendored"; end
     end
     if ~isfile(file), error('rheome:viz:tokens', 'No figure tokens at %s (Tokens= or NXR_FIGURE_TOKENS).', file); end

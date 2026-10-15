@@ -153,7 +153,7 @@ function out = snapshot(surf, result, varargin)
     T = size(result.(firstOf(fieldnames(result))), 2);
 
     work = tempname;  mkdir(work);  cleanWork = onCleanup(@() rmdir(work, 's'));
-    [tok, tokFile, tokSha] = tokens(o.Tokens, work);
+    [tok, tokFile, tokSha, tokShown] = tokens(o.Tokens, work);
     if isempty(o.Scale), o.Scale = tok.cortex.viewer.pixelRatio; end
     vdir = char(o.Viewer);
     if isempty(vdir), vdir = viewerFolder(); end
@@ -192,7 +192,7 @@ function out = snapshot(surf, result, varargin)
         end
     end
     job = struct('viewer', vdir, 'bundle', fullfile(work, 'bundle'), 'out', work, 'chrome', chromePath(o.Chrome), ...
-        'tokens', tokFile, 'tokens_sha256', tokSha, 'size', tok.cortex.viewer.size_px(:)', 'scale', o.Scale, 'wait', o.Wait, 'timeout', o.Timeout, 'shots', {renders});
+        'tokens', tokFile, 'tokens_sha256', tokSha, 'tokens_path', tokShown, 'size', tok.cortex.viewer.size_px(:)', 'scale', o.Scale, 'wait', o.Wait, 'timeout', o.Timeout, 'shots', {renders});
     runDriver(job, nodePath(o.Node), work);
 
     graphCache = [];
@@ -465,16 +465,18 @@ end
 
 %% ---------------------------------------------------------------- tokens, colormaps, tools
 
-function [T, file, sha] = tokens(file, work)
+function [T, file, sha, shown] = tokens(file, work)
 % the lab's figure tokens (Graphics): $NXR_FIGURE_TOKENS, else the library's, else the viewer's vendored copy
 % (rheome.viz.tokenspath); a struct is written to the work folder so the viewer and the marks sidecar name it
     if isstruct(file)
         T = file;  file = fullfile(work, 'figure-tokens.json');
         fid = fopen(file, 'w');  fwrite(fid, jsonencode(T));  fclose(fid);
         [file, sha] = rheome.viz.tokenspath(file);
+        shown = '<struct>';   % the temporary file is deleted with the work folder
         return
     end
     [file, sha] = rheome.viz.tokenspath(file);
+    shown = file;   % the viewer is served this file's own bytes
     T = jsondecode(fileread(file));
 end
 

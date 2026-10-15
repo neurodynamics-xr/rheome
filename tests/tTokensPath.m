@@ -4,7 +4,8 @@ classdef tTokensPath < matlab.unittest.TestCase
         function order(t)
             d = tempname;  mkdir(d);  c = onCleanup(@() rmdir(d, 's'));
             a = fullfile(d, 'a.json');  b = fullfile(d, 'b.json');  v = fullfile(d, 'v.json');
-            for f = {a, b, v}, fid = fopen(f{1}, 'w'); fwrite(fid, ['{"x":"' f{1}(end-5) '"}']); fclose(fid); end
+            files = {a, '{"x":"a"}'; b, '{"x":"b"}'; v, '{"x":"v"}'};
+            for k = 1:3, fid = fopen(files{k,1}, 'w'); fwrite(fid, files{k,2}); fclose(fid); end
             oldE = getenv('NXR_FIGURE_TOKENS');  oldH = getenv('HOME');
             r = onCleanup(@() restore(oldE, oldH));
             setenv('HOME', d);  setenv('NXR_FIGURE_TOKENS', '');
@@ -18,6 +19,10 @@ classdef tTokensPath < matlab.unittest.TestCase
             [f, sha, s] = rheome.viz.tokenspath(v, v);  t.verifyEqual(s, "argument");
             if isunix, [~, w] = system(sprintf('shasum -a 256 "%s"', f)); t.verifyEqual(sha, w(1:64)); end
             t.verifyError(@() rheome.viz.tokenspath(fullfile(d, 'none.json'), v), 'rheome:viz:tokens');
+            setenv('NXR_FIGURE_TOKENS', fullfile(d, 'missing.json'));   % a named env file that is missing is an error
+            t.verifyError(@() rheome.viz.tokenspath('', v), 'rheome:viz:tokens');
+            setenv('NXR_FIGURE_TOKENS', '');  setenv('HOME', '');   % HOME unset: USERPROFILE / java user.home, still resolves
+            [~, ~, s] = rheome.viz.tokenspath('', v);  t.verifyTrue(ismember(s, ["library" "vendored"]));
         end
     end
 end
