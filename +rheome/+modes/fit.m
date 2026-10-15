@@ -366,14 +366,14 @@ end
 
 function [names, P] = i_planted(S, W)
 % the N3 calibration patterns (protocol section 13) on this head, as in the methods benchmark:
-% a 200 mm plane wave travelling A->P along SCS x over the whole cortex, and two lagged pairs of 30 mm blobs
+% a 200 mm plane wave travelling A->P along SCS x over the whole cortex (the medial wall left out), and two lagged pairs of 30 mm blobs
 % (frontal-occipital, frontal leading by 90 deg; lateral, 60 deg) -- the normal current seen through W * gain
     V = S.Sf.Vertices;  nr = S.Sf.VertNormals ./ vecnorm(S.Sf.VertNormals, 2, 2);  G = S.G;
     Gn = nr(:,1)' .* G(:, 1:3:end) + nr(:,2)' .* G(:, 2:3:end) + nr(:,3)' .* G(:, 3:3:end);
     c0 = mean(V(V(:,1) <= prctile(V(:,1), 10), :), 1);  c1 = mean(V(V(:,1) >= prctile(V(:,1), 90), :), 1);
     g = @(c) exp(-vecnorm(V - c, 2, 2).^2 / (2 * 0.030^2));
-    P = W * Gn * [exp(1i * 2*pi/0.200 * V(:,1)), g(c1) + exp(-1i*pi/2) * g(c0), ...
-                  g(c1 + [0 0.04 0]) + exp(-1i*pi/3) * g(c0 - [0 0.04 0])];
+    P = W * Gn * (rheome.geom.cortexmask(S.Sf) .* [exp(1i * 2*pi/0.200 * V(:,1)), g(c1) + exp(-1i*pi/2) * g(c0), ...
+                  g(c1 + [0 0.04 0]) + exp(-1i*pi/3) * g(c0 - [0 0.04 0])]);         % planted on cortex only (decision 3882c4ce)
     names = ["planted_wave200_ap" "planted_pair_fo" "planted_pair_lateral"];
 end
 
