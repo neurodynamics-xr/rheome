@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.scale.measure_scaleramp</title></head><body>
+<h1>rheome.scale.measure_scaleramp</h1>
+<p><em>function rheome.scale</em> &mdash; Rheome</p>
+<pre>  SCALE.MEASURE_SCALERAMP  Tracking across scale: a peak whose size ramps 10 -&gt; 40 mm, read by rheome.detect.ridges.
+ 
+    [T, X] = rheome.scale.measure_scaleramp(name, S)
+    [T, X] = rheome.scale.measure_scaleramp(name, S, SigmaMM=[10 40], NFrames=49, Surfaces=[&quot;sphere&quot; &quot;cortex&quot;])
+ 
+  MS1 2.4 (VR1). Can the instrument follow one pattern as it changes SIZE, and read that size in mm? A heat-kernel
+  peak sits at one vertex while its width sigma ramps linearly from SigmaMM(1) to SigmaMM(2) over NFrames;
+  rheome.detect.ridges reads the field (no noise, no forward model: this calibrates the detector's scale axis,
+  not the inverse). Two surfaces:
+    sphere  an ico5 sphere (10242 vertices) with the area of the participant's left hemisphere, its own LBO
+            basis (KSphere modes), built inside the job
+    cortex  the participant's left hemisphere and its cached LBO basis (S.B.L.lbo), the peak at the vertex
+            nearest the hemisphere's area centroid
+ 
+  THE FIELD. f_t = Phi diag(exp(-lambda sigma_t^2 / 2)) Phi' M delta_c, normalised to peak 1 per frame: the
+  heat kernel at diffusion time sigma_t^2/2, a Gaussian of width sigma_t (geodesic, m) on a flat patch.
+ 
+  ⭐ THE CALIBRATION FOR A SCALAR PEAK IS gamma = 1, NOT ridges' 1/sqrt(2). The mexhat member
+  t lambda e^{-t lambda} meets the peak's spectrum e^{-lambda sigma^2/2} at its centre; with Weyl's
+  uniform mode density the response is int t lam e^{-t lam} e^{-lam sigma^2/2} dlam = t / (t + sigma^2/2)^2,
+  maximal at t = sigma^2/2, i.e. at the member sigma_m = sqrt(2t) = sigma. ridges' .sigmaTrue
+  (= sqrt(2) sigma_m) is the VORTEX calibration (spectrum lambda e^{-lambda sigma^2/2}); it does not apply
+  here. The read size reported is the member label sigma_m, refined by a parabola in log sigma through the
+  response of the member and its two neighbours at the ridge vertex; the slope against the planted sigma
+  should be 1.
+ 
+  ROWS (band = surface): slope and intercept (mm) of read vs planted sigma, ratio_median (read / planted),
+  log_err_max (max |log(read / planted)|), continuity (frames on the longest ridge / NFrames), n_ridges,
+  n_scales_visited (members the longest ridge visits), centre_err_mm_max (ridge vertex to the planted
+  vertex, Euclidean), and the bank's finest usable member. X: one row per surface x frame.
+ 
+  See also: rheome.detect.ridges, rheome.filters.mexhat, rheome.scale.run
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

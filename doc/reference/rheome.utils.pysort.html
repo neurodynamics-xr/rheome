@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.utils.pysort</title></head><body>
+<h1>rheome.utils.pysort</h1>
+<p><em>function rheome.utils</em> &mdash; Rheome</p>
+<pre>  UTILS.PYSORT  CPython 3.12's list.sort (TimSort, powersort merge policy, galloping) on 1:numel(k) with
+  the comparator x &lt; y  &lt;=&gt;  k(x) - k(y) &lt; 0 (NaN reads as &quot;not less&quot;), step for step.
+ 
+  Why: nsp's atlas ladder sorts a disconnected tile of &gt;= 64 vertices with Python's sorted() and a
+  comparator that is inconsistent where keys are NaN; the result then depends on the exact steps.
+  A port of Objects/listobject.c (count_run, binarysort, powerloop, merge_at, gallop_left/right,
+  merge_lo/hi, merge_force_collapse). Pinned against Python 3.12 by tests/tSurfaceLadder.m.
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

@@ -9,7 +9,9 @@
  
   Lays out a row of cortex renders (one per frame) with a SHARED colour scale, so the
   evolution of a space-time field (e.g. a joint-filter impulse response) can be read
-  left-to-right. Can place its row into a multi-filter montage grid.
+  left-to-right. Can place its row into a multi-filter montage grid. The figure is column width (the
+  theme's double column), one panel per row with one colourbar in its key band; sizes and colours are the
+  figure tokens.
  
   INPUTS:
     surf   surface struct or file path
@@ -17,14 +19,21 @@
     frames vector of frame indices to show
  
   OPTIONS:
-    'Parent'   figure handle to draw into (default: new figure)
+    'Parent'   a figure made by a strip before, to draw another row into (default: new figure)
     'Grid'     [nRows nCols] montage layout (default [1 numel(frames)])
     'Row'      which row of the grid this filmstrip occupies (default 1)
     'CLim'     shared colour limits (default symmetric from U(:,frames))
-    'Colormap' default: diverging (signed) via rheome.show.surface
+    'Quantity' what U is (tokens quantity: divergence, curl, potential, stream, magnitude, amplitude ...):
+               its own colormap. Default inferred: signed -&gt; divergence, one-signed -&gt; magnitude
+    'Colormap' in place of the quantity's colormap
+    'Label', 'Unit'  the colourbar label, 'label (unit)' (default the quantity's name, or 'field' when
+               inferred; 'a.u.'). $...$ is set by LaTeX
+    'Theme'    figure theme ('' = the tokens' default, Pergammon; 'neuroimage' for MS1)
     'View'     camera [az el] (default [-90 10])
     'Titles'   {1 x numel(frames)} per-panel titles (default '')
-    'RowLabel' text label for the row (shown on the first panel's y-axis)
+    'RowLabel' the row's panel title, after its letter
+    'Title'    figure title: the figure's name (the journal legend carries it, not the artwork)
+    'Export'   file stem: write &lt;stem&gt;.pdf/.svg/.png at print size (nxr_save)
     'Visible'  'on' (default) | 'off'
  
   OUTPUT: hFig figure handle.

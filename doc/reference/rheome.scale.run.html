@@ -7,6 +7,7 @@
     R = rheome.scale.run('sub02', ProtoDir='/path/to/protocol', Cohort=&quot;norm&quot;, Dataset=&quot;mydata&quot;)
     R = rheome.scale.run('sub01')                       % already cached: skip the import
     R = rheome.scale.run(name, ..., Analyses=[&quot;resolution&quot; &quot;bandresolution&quot;], OutDir=...)
+    R = rheome.scale.run(name, ProtoDir=..., Analyses=&quot;lambdaedge&quot;, Import=&quot;head&quot;)   % the head only, no samples
  
   Writes to OutDir/&lt;name&gt;/ (default rheome.load.outroot()/scale/&lt;name&gt;):
     metrics.csv       long format: subject, cohort, dataset, analysis, metric, band, value, unit
@@ -18,6 +19,14 @@
     fieldsmooth.csv   fieldsmooth: one row per (band, map, frame) -- Dirichlet wavelength, coherence
     fieldsmooth_maps.mat   fieldsmooth: the strongest frame's raw and band-limited fields (figure data)
     eventsensors.mat  eventsensors: the tracked event on the sensor data (figure data)
+    grouptrackwindows.csv  grouptrack: per configuration x 2 s window, real and surrogate path scores and threshold
+    panelexamples.mat panelexamples: MS1 Figs. 4-7 panel A examples (figure data)
+    ambient.csv, ambient.mat   MS1 1.4 (nsp rheome-ms1-panels): rheome.scale.measure_ambient -- a planted tilted
+                      field on the sphere and the subject's left hemisphere, ambient vs tangential divergence and
+                      the 2H(J.n) coupling against its closed form, per surface x tilt; .mat: figure data. Opt-in
+    cptrack.csv, cptrack.mat   MS1 2.3 (nsp rheome-ms1-panels): rheome.scale.measure_cptrack -- a drifting rotor
+                      and a waxing/waning source tracked by rheome.detect.track, core path, curl and div against
+                      the truth, per surface; .mat: figure data. Opt-in; neither reads the recording
     plantfloors.csv, movingvortex.csv, composition.csv, sizeruler.csv, vortexscale.csv, rotation.csv,
     detection.csv, diracangles.csv   the MS1 group plants (P1, nsp cf-plant-floors): the per-plant /
                       per-placement tables of rheome.scale.measure_plantfloors, measure_movingvortex and
@@ -41,6 +50,16 @@
     inject.csv, trackfactorial.csv   MS1 G7 / G8 (P5, nsp cf-track): per-injection rows of
                       rheome.scale.measure_inject and the factorial rows of measure_trackfactorial
                       (RefHead from RHEOME_REFHEAD); opt-in, not in the &quot;ported&quot; default
+    events.csv, eventacf.csv, eventtf.mat   MS1 SPEC1 §8 (nsp cf-events): rheome.scale.measure_events -- the
+                      tracker's detections as an event table with shape-based boundaries (risefall), peak
+                      frequency and cycles; the event-train and envelope autocorrelation against the surrogate and
+                      Poisson; the onset/offset-locked TF maps (dB vs matched random onsets); opt-in, not &quot;ported&quot;
+    eventplants.csv   MS1 SPEC1 §8 A (nsp cf-events): rheome.scale.measure_eventplants -- planted episodes of known
+                      tOn/tOff/tau in own rest, boundaries read back at 5/10/20 dB; opt-in, not &quot;ported&quot;
+    freqtrack.csv     MS1 2.5 (nsp cf-chirps): rheome.scale.measure_freqtrack -- planted chirps (still, hop, 0.5-2
+                      oct/s) in own rest, tracked across frequency on the joint (tile x band) graph
+                      (rheome.detect.jointpath): per plant x arm (noiseless, SNRs, control) and per real window, with
+                      the surrogate's held-out false and cross-band false rates; opt-in, not in the &quot;ported&quot; default
     aperiodic.csv     MS1 G10 (P6, nsp cf-aperiodic): rheome.scale.measure_aperiodic -- per cell (arm x plant x
                       sigma x speed x signal) the on-patch Viterbi rate against the held-out null, the split's
                       reduction, band-map errors and along-path speed; opt-in, not in the &quot;ported&quot; default
@@ -58,6 +77,14 @@
                       surrogates; the alpha orientation tensor per depth-3 group tile in the shared gauge;
                       Destrieux -&gt; DK vs the dyadic roll-up and connectome-wavelet widths over a gamma sweep.
                       Opt-in. Needs a template cortex (RHEOME_TEMPLATE or RHEOME_BRAINSTORM's ICBM152)
+    atlasone.csv, atlasone.mat   MS1 3.4 (F8, F12 on the paper's kernel): measure_atlas &quot;atlasone&quot; -- one
+                      person's alpha atlas at depths 0-6 on one tree, every level the exact roll-up of the leaves,
+                      events vs phase-randomised surrogates; the .mat holds the towers, event labels and catalogue
+    xlevel.csv, xlevel.mat   MS1 2.4 (F23 re-run): measure_atlas &quot;xlevel&quot; -- a planted widening mover and the
+                      largest real alpha event tracked across depths 0-6 of the same tree (the F23 cache fields)
+    scaleramp.csv     MS1 2.4: rheome.scale.measure_scaleramp -- a peak whose size ramps 10 -&gt; 40 mm read by
+                      rheome.detect.ridges on a sphere and the left cortex. All three opt-in, not &quot;ported&quot;;
+                      atlasone and xlevel need a template cortex (as cf-atlas)
     multimodal.csv, multimodal_assoc.csv, multimodal_connectome.mat   the MS1 multimodal example:
                       rheome.scale.measure_multimodal -- MEG band power, PET SUVR and the fibre-degree density
                       through one wavelet bank on one dyadic tile ladder, every level an exact roll-up; the
@@ -68,11 +95,22 @@
                       the nulls N1, N4, N5 (the Zm struct + one top-level variable per series); opt-in
     modesfit.csv, modesmaps.csv, modestrans.csv, modesseries.csv   stage 3 (nsp rheome-modes-fit):
                       rheome.modes.fit against the frozen centroids in RHEOME_MODES_CENTROIDS (hash checked,
-                      and against RHEOME_MODES_SHA256 when set); opt-in
+                      and against RHEOME_MODES_SHA256 when set), N5 at RHEOME_MODES_NSURR surrogates (unset: 99;
+                      recorded as metric n_surr); opt-in
+    joint_fields.mat, jointseries.csv, jointscales.csv, jointbands.csv, jointtransfer.csv, jointfspread.csv
+                      H4 ATLAS-1 (nsp rheome-joint-fields): rheome.modes.jointfields -- the joint graph-time
+                      wavelet field on tile x scale per octave, null F (field spread), N4, N5, and the scale
+                      transfer T(s) with its edge; opt-in. &quot;jointcanary&quot; (nsp rheome-joint-canary): the J5 plants
+                      on F instead of the data (no real-data series), + jointcanary.csv
     upstream.csv      AGE-1 / WAVE-OR-LEAKAGE (nsp rheome-upstream): rheome.scale.measure_upstream -- the
                       participant readout v1 of rheome.flow.upstreamshare per (span, pass, hemisphere): U
                       (periodic), U_surrogate (lagged-source null), U_total (periodic gain off), U_of (optical
-                      flow comparator), and its covariates in metrics.csv. Needs RHEOME_G1; opt-in, not &quot;ported&quot;
+                      flow comparator), and its covariates in metrics.csv. Needs RHEOME_G1; opt-in, not &quot;ported&quot;.
+                      RHEOME_UPSTREAM_READOUT=&quot;v2&quot; reads the tiles by fwdLS (measure_upstream Readout=; default
+                      v1); metrics.csv records it as readout_version
+    lambdaedge.csv    TP2/TP3 gate S (nsp rheome-lambdaedge): rheome.scale.measure_lambdaedge -- per (lambda, dir)
+                      how readout v2 reads a noiseless plane wave along G1 on this head; edge_mm and the grid in
+                      metrics.csv. Needs RHEOME_G1; reads no recording (use Import=&quot;head&quot;); opt-in, not &quot;ported&quot;
     timing.csv        analysis, seconds, peak_rss_GB, status, message
     rheome_coeffs.mat Analyses=&quot;coefficients&quot; only: graph-wavelet envelopes per tile x scale x time,
                       Prognome's contract (rheome.scale.coefficients)

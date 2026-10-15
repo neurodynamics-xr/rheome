@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.group.spin</title></head><body>
+<h1>rheome.group.spin</h1>
+<p><em>function rheome.group</em> &mdash; Rheome</p>
+<pre>  GROUP.SPIN  Does an effect map follow reference maps more than its own spatial smoothness explains? Spin test, FWER over the references.
+ 
+    R = rheome.group.spin(M, Ref, U, hemi)
+    R = rheome.group.spin(M, Ref, U, hemi, NSpin=1000, Seed=1)
+    R = rheome.group.spin(M, Ref, U, hemi, Index=R0.index)       % the same rotations as an earlier call
+ 
+    M     [m x 1] the tile map tested (e.g. rheome.group.glm's t)
+    Ref   [m x K] K reference maps on the same tiles
+    U     [m x 3] tile centres on the template sphere (unit vectors)
+    hemi  [m x 1] &quot;L&quot; / &quot;R&quot;
+ 
+  r_k = Pearson(M, Ref_k). The null rotates M on the sphere (Alexander-Bloch et al. 2018): one random rotation
+  per spin for both hemispheres, the right one mirrored (x -&gt; -x), each tile taking the value of the tile nearest
+  its rotated centre within its hemisphere, as rheome.modes.fit's N2. p_k = (1 + #{|r*_k| &gt;= |r_k|}) / (1 + NSpin);
+  p_fwer_k compares |r_k| with max_k |r*_k| of each spin (FWER over the K references).
+ 
+  A NaN r (M or a reference constant, or holding NaN) gets p = p_fwer = 1.
+ 
+  Returns R with .r .p .p_fwer [1 x K], .rnull [NSpin x K] and .index [NSpin x m] (spin s maps tile i to tile
+  index(s, i); pass it back as Index= to test many maps against one set of rotations).
+ 
+  ⚠ FEW TILES, FEW DISTINCT SPINS. Nearest-tile reassignment on m/2 tiles per hemisphere repeats maps across
+  spins (m = 16 at depth 3) and many rotations land a tile on itself: ties are counted against the effect (&gt;=),
+  so the test is conservative there and cannot reach small p. Read its calibration (rheome.group.calibrate).
+ 
+  See also: rheome.group.glm, rheome.modes.fit
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

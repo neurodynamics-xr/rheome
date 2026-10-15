@@ -23,7 +23,8 @@
     .mri     anat/&lt;sub&gt;/subjectimage*.mat (not a volume atlas): its SCS/NCS place the cortex in MNI
     .fibers  anat/&lt;sub&gt;/tess_fibers*.mat: the subject's OWN tractography (nsp bst-fibers' augmented protocol)
   and .pet, a cell of data/&lt;sub&gt;/PET/results_surface_PET_*.mat (nsp bst-pet / bst-multimodal: one SUVR map per
-  tracer on the cortex), {} when absent
+  tracer on the cortex), {} when absent, and .fmri, a cell of data/&lt;sub&gt;/fmri_*_task-rest/results_surface_fmri_*.mat
+  (nsp bst-fmri's overlay unzipped over the protocol: one BOLD run each, confounds beside it), {} when absent
  
   See also: rheome.scale.importsubject, rheome.scale.run
  

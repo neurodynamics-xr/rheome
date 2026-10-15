@@ -18,6 +18,16 @@
 
 ### Added
 
+- **Rheome's visualization package is the Cortical Flow viewer (`rheome.viz`; Diellor, 2026-10-14).** Every cortical
+  visual is drawn by the viewer: `rheome.view` (interactive) and `rheome.snapshot` (print) are the primary API, and
+  `rheome.viz` gives the viewer what it draws: `rheome.viz.tiles` (a `rheome.geom.tree` level as a labelling: tiles by
+  level), `rheome.viz.points` (critical points as point sets, one a type, in the tokens' flow-source / flow-vortex) and
+  `rheome.viz.marks` (a render's marks sidecar `<render>.marks.json`, nxr.marks@1, for figure_check E1).
+  `rheome.io.write.bundle` writes `'Labellings'` and `'Points'` (the viewer's bundle keys); `rheome.view` takes
+  `Labellings=`, `Points=`, `Labelling=` and its `.screenshot` writes the marks sidecar beside the PNG; `rheome.snapshot`
+  takes `Labellings=`, `Points=` and keeps each render's marks sidecar. `rheome.show`'s cortex renders are the
+  fallback (no WebGPU), tests and quick looks; the figures guide now draws with the viewer. The rasteriser-to-viewer
+  capability table and the viewer's gaps are in `rheome.viz` (`help rheome.viz`).
 - **`rheome.snapshot` draws selections, geodesic paths and shaped insets, and returns each render's camera**
   (figure system revision 3, Diellor's board comments 24-26).
   - `Selection`: a tile (`Vertices`) or a geodesic disk (`Centre`, `RadiusMM` along the folded surface). It is

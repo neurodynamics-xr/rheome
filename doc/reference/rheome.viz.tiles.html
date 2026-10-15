@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.viz.tiles</title></head><body>
+<h1>rheome.viz.tiles</h1>
+<p><em>function rheome.viz</em> &mdash; Rheome</p>
+<pre>  VIZ.TILES  A tile level of a cortical pyramid as a viewer labelling: tiles by level on the cortex.
+ 
+    L = rheome.viz.tiles(T, level)                                  % T = rheome.geom.tree(S, ...)
+    L = rheome.viz.tiles({TL, TR}, 8, Vertices={iL, iR}, NV=nV)     % per-hemisphere trees (the atlas's ladder)
+    rheome.view(S, x, Labellings=L, Labelling=L.name)
+ 
+  Each vertex gets the code of the tile that holds it at depth LEVEL (a leaf above that depth keeps its own tile), so
+  the bundle carries the partition and the viewer paints it (setting 'labelling'). The tiles are numbered in table order,
+  hemisphere after hemisphere; entries name each by its node and depth.
+ 
+  INPUTS:
+    T      a rheome.geom.tree table, or a cell of them (one a hemisphere)
+    level  the depth shown (0: the root)
+  OPTIONS:
+    Vertices  with a cell T: a cell of the vertex indices (1-based, into the whole surface) each tree's members index
+    NV        with a cell T: the whole surface's vertex count
+    Name      the labelling's name (default &quot;tiles level &lt;level&gt;&quot;)
+ 
+  OUTPUT:
+    L : struct .name .codes [nV x 1] int (-1: no tile) .entries (.code .name), for rheome.io.write.bundle 'Labellings'
+ 
+  NOT YET (the viewer): tile OUTLINES with major/minor weights (cortex.marks 'tile outlines' and 'coarser-level
+  boundaries') -- the viewer paints a labelling's fill only; filed with Product.
+ 
+  Example:
+    [V, F] = rheome.geom.icosphere(3);  S = struct('Vertices', 0.07*V, 'Faces', F);
+    L = rheome.viz.tiles(rheome.geom.tree(S, MaxDepth=3), 2);
+    assert(numel(L.entries) == 4 &amp;&amp; all(L.codes &gt;= 0))
+ 
+  See also: rheome.geom.tree, rheome.io.write.bundle, rheome.view
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

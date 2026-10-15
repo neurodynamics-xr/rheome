@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.snapshot</title></head><body>
+<h1>rheome.snapshot</h1>
+<p><em>function rheome</em> &mdash; Rheome</p>
+<pre>  SNAPSHOT  Print-ready cortical panels from the Cortical Flow viewer, headless, by the lab's figure tokens.
+ 
+    out = rheome.snapshot(surf, result, Shots=shots, Out=folder)
+    out = rheome.snapshot(surf, result, Shots=struct('Field', &quot;div&quot;, 'Unit', &quot;1/s&quot;, 'Label', &quot;divergence&quot;), Out=&quot;figs&quot;)
+ 
+  Every cortical panel of a figure the same way: the viewer (nxr-cortical-flow editor/dist-viewer, the renderer of
+  rheome.view) draws each view in headless Chrome at print resolution, and MATLAB lays the views out with the
+  figure tokens (library/styles/tokens/figure-tokens.json): the colormap and limits by quantity, the colourbar with
+  quantity, unit and reference, view labels, a geodesic scale bar on the folded surface, and for a time series one
+  strip with the interval stated once. Each shot is written as &lt;Out&gt;/&lt;Name&gt;.svg (text, bars and colourbar editable;
+  the views embedded at their rendered resolution), printed by Chrome to &lt;Out&gt;/&lt;Name&gt;.pdf (fonts embedded, the views
+  at full resolution: MATLAB's own PDF export resamples images to screen pixels) and .png (at the journal's
+  combination dpi), and the viewer's raw renders are kept as &lt;Out&gt;/&lt;Name&gt;/*.png (for boards composed elsewhere), each with
+  its marks sidecar &lt;render&gt;.marks.json (every overlay drawn and its key: figure_check.py E1, rheome.viz.marks).
+  THE PRIMARY API for printed cortex, with rheome.view (interactive); see rheome.viz.
+ 
+  THE SHOT LIST -- Shots is a struct array or a cell array of structs, one panel each, with the fields:
+    Field      the real field painted (a field of result)                                  (default: the first real)
+    Unit       its unit, as printed on the colourbar (&quot;a.u.&quot; only when it has none)        REQUIRED
+    Label      the quantity's name on the colourbar                                         (default: Field)
+    Reference  what a level is relative to (&quot;4-min median&quot;): &quot;quantity (unit re reference)&quot; (default: none)
+    Quantity   &quot;signed&quot; | &quot;magnitude&quot; | &quot;power&quot; | &quot;phase&quot; | &quot;coupling&quot; | &quot;code&quot;: the token's colormap and limits
+               (default: &quot;signed&quot; when the field has both signs, else &quot;magnitude&quot;)
+    CLim       [lo hi] in the field's units (default by quantity: signed/coupling +-p95 of |x|, magnitude [0 p99],
+               power [p1 p99], phase [-pi pi], code [min max], over the frames and hemispheres shown)
+    Colormap   a viewer colormap name, in place of the quantity's token
+    Time       s from the first sample; a vector of equally spaced times is a strip (default 0)
+    Frames     1-based frames, in place of Time
+    View       &quot;standard&quot; (L lateral, L medial, R medial, R lateral: the figure system's four), one of those four,
+               or a viewer camera &quot;left&quot; | &quot;right&quot; | &quot;top&quot; | &quot;bottom&quot; | &quot;front&quot; | &quot;back&quot; with Hemisphere
+               (default &quot;standard&quot;; a strip takes one view)
+    Hemisphere &quot;both&quot; | &quot;left&quot; | &quot;right&quot;, with a viewer camera (default &quot;both&quot;)
+    Surface    the surface shown, a name of surf's struct (default: the first)
+    Vector     a vector field drawn as arrows (default none); arrows show the same vector the colour shows
+    Settings   struct of further viewer settings, applied last (README of the viewer, 'The settings')
+    Name       the files' name (default &quot;shot&lt;k&gt;&quot;)
+ 
+  OPTIONS (name/value):
+    'Out'       folder written (created)                                                     REQUIRED
+    'Fs'        sampling rate of result's columns, Hz (default 1)
+    'Width'     the panel's width: &quot;single&quot; | &quot;onehalf&quot; | &quot;double&quot; (the token journal's widths) or mm
+                (default: &quot;double&quot; for four views or a strip, &quot;single&quot; for one view)
+    'ScaleBar'  the scale bar's length, mm along the folded surface; 0: none (default 20)
+    'Folded'    the name of the folded surface in surf, on which the bar is measured (default &quot;pial&quot; when surf has
+                it, else the first); on another surface shown, the legend says the distance is on the folded one
+    'Format'    printed from the SVG (always written): &quot;pdf&quot;, &quot;png&quot;, both (default) or [] (the SVG only)
+    'Tokens'    the figure tokens' JSON (default $NXR_FIGURE_TOKENS, else ~/workspace/library/styles/tokens/
+                figure-tokens.json)
+    'Viewer'    the viewer folder (default as rheome.view: $RHEOME_VIEWER, else prefdir/rheome-viewer)
+    'Chrome'    Chrome or Chromium (default $RHEOME_CHROME, else the usual install)
+    'Node'      Node.js 22+ (default $RHEOME_NODE, else the usual install)
+    'Labellings' partitions for the viewer (rheome.viz.tiles), shown by a shot's Settings.labelling
+    'Points'    point sets for the viewer (rheome.viz.points: critical points), shown by Settings.points (default all)
+    'Scale'     the viewer's least pixel ratio (default: the tokens' cortex.viewer.pixelRatio); raised per shot so the
+                views print at the journal's combination dpi
+ 
+  OUTPUT:
+    out : struct array, one per shot: .name .svg .pdf .png .renders (the viewer's PNGs) .clim .colormap .quantity
+          .colorbar (its label) .views .times (s) .dpi (resolution of the views as printed) .scalebar (.mm, .view,
+          .length_mm measured along the drawn curve, .vertices) .legend (the sentence the figure legend needs:
+          views, surface, the bar's distance, the interval) .settings (each render's viewer settings)
+ 
+  THE SCALE BAR is a curve on the surface, not a line on the image: the shortest path along the mesh edges of the
+  folded surface (rheome.geom.edgegraph, no diagonals, so the curve lies on the mesh), cut at exactly 'ScaleBar' mm
+  of that path's length, and drawn where it lies on the view, a visible stretch near the view's lower edge. Its
+  length is the drawn curve's length on the folded surface; a mesh-edge path is 3-13 % longer than the geodesic
+  between its ends (rheome.geom.edgegraph), so its ends are a little closer than the label says, never farther.
+  The camera is read from each render (the viewer's stage is orthographic): the silhouette of the shown vertices is
+  fitted to the PNG's alpha and checked (rheome:snapshot:camera when it does not fit).
+ 
+  Needs the viewer (WebGPU), Chrome and Node; nothing else in Rheome does.
+ 
+  Example:
+    S = rheome.load.surface('omega_sub0002');  x = S.Vertices(:, 1) * 1e3;
+    out = rheome.snapshot(S, struct('x', x), Out=tempname, ...
+        Shots=struct('Field', &quot;x&quot;, 'Label', &quot;anterior position&quot;, 'Unit', &quot;mm&quot;));
+    open(out.pdf)
+ 
+  See also: rheome.view, rheome.io.write.bundle, rheome.geom.edgegraph
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

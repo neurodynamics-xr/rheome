@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Rheome reference</title></head><body>
 <h1>Rheome reference</h1>
+<h2>rheome</h2>
+<ul>
+<li><a href="rheome.snapshot.html">rheome.snapshot</a> &mdash; Print-ready cortical panels from the Cortical Flow viewer, headless, by the lab's figure tokens.</li>
+<li><a href="rheome.view.html">rheome.view</a> &mdash; Show a result on the cortex in Rheome's 3D viewer, from one call; rheome.show when there is no viewer.</li>
+</ul>
 <h2>Classes</h2>
 <ul>
 <li><a href="rheome.flowbrowser.html">rheome.flowbrowser</a> &mdash; Interactive browser for the band- and scale-resolved cortical flow.</li>
@@ -40,7 +45,11 @@
 <li><a href="rheome.detect.chargedensity.html">rheome.detect.chargedensity</a> &mdash; DETECT.CHARGEDENSITY  Topological charge of a phase field, at a chosen spatial aperture.</li>
 <li><a href="rheome.detect.chirality.html">rheome.detect.chirality</a> &mdash; DETECT.CHIRALITY  Annotate tracked ridges with the handedness of the field they sit in.</li>
 <li><a href="rheome.detect.criticalPoints.html">rheome.detect.criticalPoints</a> &mdash; DETECT.CRITICALPOINTS  Classified critical points of an ambient source vector field.</li>
+<li><a href="rheome.detect.eventlocked.html">rheome.detect.eventlocked</a> &mdash; DETECT.EVENTLOCKED  Time-frequency power around event anchors (onsets, offsets, random times).</li>
 <li><a href="rheome.detect.eventsensors.html">rheome.detect.eventsensors</a> &mdash; DETECT.EVENTSENSORS  Which sensor samples and channels carry a tracked event.</li>
+<li><a href="rheome.detect.eventtable.html">rheome.detect.eventtable</a> &mdash; DETECT.EVENTTABLE  Shape-based boundaries of each event: a double-sigmoid on the event's own envelope.</li>
+<li><a href="rheome.detect.jointpath.html">rheome.detect.jointpath</a> &mdash; DETECT.JOINTPATH  Track-before-detect across frequency: the best walk on the joint (tile x octave) graph in a window.</li>
+<li><a href="rheome.detect.jointpathnull.html">rheome.detect.jointpathnull</a> &mdash; DETECT.JOINTPATHNULL  Normalisation, baseline, threshold, cross-band criterion and held-out false rates for rheome.detect.jointpath.</li>
 <li><a href="rheome.detect.occupancy.html">rheome.detect.occupancy</a> &mdash; DETECT.OCCUPANCY  A dyadic pyramid of on/off occupancy: how long a state lasts, at every scale.</li>
 <li><a href="rheome.detect.onsetspread.html">rheome.detect.onsetspread</a> &mdash; DETECT.ONSETSPREAD  How a burst's ONSET spreads across tiles: slowness from half-rise times.</li>
 <li><a href="rheome.detect.onstate.html">rheome.detect.onstate</a> &mdash; DETECT.ONSTATE  Binary on/off state of an amplitude series from the bimodality of its log.</li>
@@ -225,6 +234,7 @@
 <li><a href="rheome.geom.sphereframe.html">rheome.geom.sphereframe</a> &mdash; GEOM.SPHEREFRAME  The group gauge: &quot;north&quot; and &quot;west&quot; on a cortex, from its FreeSurfer sphere.</li>
 <li><a href="rheome.geom.spherepatches.html">rheome.geom.spherepatches</a> &mdash; GEOM.SPHEREPATCHES  Shared tiles on the registered sphere, and where the polar gauge breaks.</li>
 <li><a href="rheome.geom.spiralorder.html">rheome.geom.spiralorder</a> &mdash; GEOM.SPIRALORDER  A 1-D order of sphere points along a pole-to-pole spiral: vertices or tiles.</li>
+<li><a href="rheome.geom.surfaceladder.html">rheome.geom.surfaceladder</a> &mdash; GEOM.SURFACELADDER  The atlas's dyadic surface ladder: equal-mass geodesic bisection, bit-exact to nsp.</li>
 <li><a href="rheome.geom.tilemean.html">rheome.geom.tilemean</a> &mdash; GEOM.TILEMEAN  Summarise a vertex map over each tile: the observation a tile makes of a field.</li>
 <li><a href="rheome.geom.tiles.html">rheome.geom.tiles</a> &mdash; GEOM.TILES  The tiles of one rheome.geom.tree depth: vertex lookup, membership and adjacency.</li>
 <li><a href="rheome.geom.tree.html">rheome.geom.tree</a> &mdash; GEOM.TREE  Recursive spectral bisection of a surface: the cortical position pyramid.</li>
@@ -234,6 +244,12 @@
 <li><a href="rheome.graphtransform.chebyshev.html">rheome.graphtransform.chebyshev</a> &mdash; GRAPHTRANSFORM.CHEBYSHEV  Apply g(L) by polynomial recursion -- no eigenvectors.</li>
 <li><a href="rheome.graphtransform.eigen.html">rheome.graphtransform.eigen</a> &mdash; GRAPHTRANSFORM.EIGEN  Exact-eigenbasis transform for a graphfilterbank.</li>
 <li><a href="rheome.graphtransform.validate.html">rheome.graphtransform.validate</a> &mdash; GRAPHTRANSFORM.VALIDATE  Is T a usable graphfilterbank transform?</li>
+</ul>
+<h2>rheome.group</h2>
+<ul>
+<li><a href="rheome.group.calibrate.html">rheome.group.calibrate</a> &mdash; GROUP.CALIBRATE  Does tile-wise group inference hold its error rate and find planted effects on the real cohort tile maps? Null labels and plants.</li>
+<li><a href="rheome.group.glm.html">rheome.group.glm</a> &mdash; GROUP.GLM  Tile-wise GLM: one effect's t per tile, its permutation p and the family-wise (max |t|) p over tiles.</li>
+<li><a href="rheome.group.spin.html">rheome.group.spin</a> &mdash; GROUP.SPIN  Does an effect map follow reference maps more than its own spatial smoothness explains? Spin test, FWER over the references.</li>
 </ul>
 <h2>rheome.import</h2>
 <ul>
@@ -313,11 +329,16 @@
 <li><a href="rheome.modes.fields.html">rheome.modes.fields</a> &mdash; MODES.FIELDS  One participant's complex band tile series z(t) and the nulls N1, N4, N5 (stage 1 of the atlas).</li>
 <li><a href="rheome.modes.fit.html">rheome.modes.fit</a> &mdash; MODES.FIT  Back-fit the frozen centroids to one participant: states, physical features and the per-person nulls.</li>
 <li><a href="rheome.modes.hash.html">rheome.modes.hash</a> &mdash; MODES.HASH  SHA-256 (hex) of numeric arrays: the fingerprint of frozen centroids.</li>
+<li><a href="rheome.modes.jointcheck.html">rheome.modes.jointcheck</a> &mdash; MODES.JOINTCHECK  The J5 canary validation of joint discovery (protocol section 14), over the canary heads.</li>
+<li><a href="rheome.modes.jointfields.html">rheome.modes.jointfields</a> &mdash; MODES.JOINTFIELDS  One participant's joint graph-time wavelet field W(v,s,t,f) on group tiles, its nulls and T(s).</li>
 <li><a href="rheome.modes.lagged.html">rheome.modes.lagged</a> &mdash; MODES.LAGGED  N3: the best non-travelling two-generator model of a complex mode, as the instrument shows it.</li>
 <li><a href="rheome.modes.match.html">rheome.modes.match</a> &mdash; MODES.MATCH  Hungarian matching of two sets of complex modes by phase-invariant |r|.</li>
+<li><a href="rheome.modes.octave.html">rheome.modes.octave</a> &mdash; MODES.OCTAVE  The time factor of the joint field: one jointfilterbank band member as an analytic, decimated signal.</li>
 <li><a href="rheome.modes.operator.html">rheome.modes.operator</a> &mdash; MODES.OPERATOR  Sensors -&gt; group tiles: the normal current, low-passed at a declared wavelength, per tile.</li>
 <li><a href="rheome.modes.phaserand.html">rheome.modes.phaserand</a> &mdash; MODES.PHASERAND  Multivariate Fourier phase randomisation: one random phase per frequency bin, shared by rows.</li>
 <li><a href="rheome.modes.reduce.html">rheome.modes.reduce</a> &mdash; MODES.REDUCE  The keep rule per mode x band over a cohort's back-fits: Level 1, phase-layout labels, Level 2.</li>
+<li><a href="rheome.modes.scaletransfer.html">rheome.modes.scaletransfer</a> &mdash; MODES.SCALETRANSFER  Per participant: how much of the energy planted at graph scale s the instrument returns at s.</li>
+<li><a href="rheome.modes.seriescheck.html">rheome.modes.seriescheck</a> &mdash; MODES.SERIESCHECK  Are the series a back-fit recomputed the same as the series the discovery read?</li>
 <li><a href="rheome.modes.split.html">rheome.modes.split</a> &mdash; MODES.SPLIT  Periodic and aperiodic parts of tile series, by the Welch background fit of each row.</li>
 </ul>
 <h2>rheome.operators</h2>
@@ -368,32 +389,41 @@
 <li><a href="rheome.scale.cleanspan.html">rheome.scale.cleanspan</a> &mdash; SCALE.CLEANSPAN  Where a recording is stationary enough to tile: artefact blocks and trimmed edges.</li>
 <li><a href="rheome.scale.cleanwelch.html">rheome.scale.cleanwelch</a> &mdash; SCALE.CLEANWELCH  Welch PSD of a span, averaging only the segments that touch no artefact block.</li>
 <li><a href="rheome.scale.coefficients.html">rheome.scale.coefficients</a> &mdash; SCALE.COEFFICIENTS  Graph-wavelet coefficient envelopes rolled up to cortical tiles: Prognome's MEG input.</li>
+<li><a href="rheome.scale.groupevents.html">rheome.scale.groupevents</a> &mdash; SCALE.GROUPEVENTS  MS1 event statistics across participants, per cohort: medians, CIs, split-half ICC, the boundary acceptance and the group TF maps.</li>
 <li><a href="rheome.scale.groupslowosc.html">rheome.scale.groupslowosc</a> &mdash; SCALE.GROUPSLOWOSC  The MS1 positive control across participants: one mean direction each, V-test for A-&gt;P, proportion and speed (G15, G16).</li>
 <li><a href="rheome.scale.grouptiles.html">rheome.scale.grouptiles</a> &mdash; SCALE.GROUPTILES  A participant's vertices in the group tiles of depth l, through the registered sphere.</li>
 <li><a href="rheome.scale.groupupstream.html">rheome.scale.groupupstream</a> &mdash; SCALE.GROUPUPSTREAM  Gate G of AGE-1 (TP2) and WAVE-OR-LEAKAGE (TP3): reliability of U* and its spread, and nothing else.</li>
 <li><a href="rheome.scale.importeeg.html">rheome.scale.importeeg</a> &mdash; SCALE.IMPORTEEG  A sleep EEG subject -&gt; the data cache the analyses load from: template forward model + scored NREM.</li>
 <li><a href="rheome.scale.importsubject.html">rheome.scale.importsubject</a> &mdash; SCALE.IMPORTSUBJECT  One Brainstorm-protocol subject -&gt; the data cache the analyses load from.</li>
 <li><a href="rheome.scale.locate.html">rheome.scale.locate</a> &mdash; SCALE.LOCATE  Find one subject's files inside an unzipped Brainstorm protocol.</li>
+<li><a href="rheome.scale.measure_ambient.html">rheome.scale.measure_ambient</a> &mdash; SCALE.MEASURE_AMBIENT  A planted tilted field read ambient vs tangential, on the sphere and the subject's cortex.</li>
 <li><a href="rheome.scale.measure_aperiodic.html">rheome.scale.measure_aperiodic</a> &mdash; SCALE.MEASURE_APERIODIC  A moving change of the aperiodic (1/f) background planted through this participant's</li>
 <li><a href="rheome.scale.measure_atlas.html">rheome.scale.measure_atlas</a> &mdash; SCALE.MEASURE_ATLAS  MS1 group P8 (G12) on one participant: correspondence, atlas events, the shared-gauge</li>
 <li><a href="rheome.scale.measure_bandperiodic.html">rheome.scale.measure_bandperiodic</a> &mdash; SCALE.MEASURE_BANDPERIODIC  Table 5 for one subject: per band, rhythm against background and instrument.</li>
 <li><a href="rheome.scale.measure_bandresolution.html">rheome.scale.measure_bandresolution</a> &mdash; SCALE.MEASURE_BANDRESOLUTION  Resolution at each octave's OWN measured SNR, for one subject.</li>
 <li><a href="rheome.scale.measure_catalogue.html">rheome.scale.measure_catalogue</a> &mdash; SCALE.MEASURE_CATALOGUE  The catalogue's patterns planted through this participant's own head, and three estimators reading them (MS1 G6, G3 rule 11, G16).</li>
+<li><a href="rheome.scale.measure_cptrack.html">rheome.scale.measure_cptrack</a> &mdash; SCALE.MEASURE_CPTRACK  A drifting rotor and a waxing/waning source, tracked by rheome.detect.track, against the truth.</li>
+<li><a href="rheome.scale.measure_eventplants.html">rheome.scale.measure_eventplants</a> &mdash; SCALE.MEASURE_EVENTPLANTS  Planted alpha episodes of known timing in the participant's own rest, boundaries read back (MS1 SPEC1 §8 A).</li>
+<li><a href="rheome.scale.measure_events.html">rheome.scale.measure_events</a> &mdash; SCALE.MEASURE_EVENTS  What a detected alpha event is: boundaries from its shape, its spectrum, its timing (MS1 SPEC1 §8).</li>
 <li><a href="rheome.scale.measure_eventsensors.html">rheome.scale.measure_eventsensors</a> &mdash; SCALE.MEASURE_EVENTSENSORS  The sensor samples and channels that carry the tracked alpha events.</li>
 <li><a href="rheome.scale.measure_fieldsmooth.html">rheome.scale.measure_fieldsmooth</a> &mdash; SCALE.MEASURE_FIELDSMOOTH  How smooth the cortical current, div and curl are, per vertex and band-limited.</li>
+<li><a href="rheome.scale.measure_freqtrack.html">rheome.scale.measure_freqtrack</a> &mdash; SCALE.MEASURE_FREQTRACK  Planted chirps in the participant's own rest, tracked across frequency (MS1 2.5).</li>
 <li><a href="rheome.scale.measure_fusion.html">rheome.scale.measure_fusion</a> &mdash; SCALE.MEASURE_FUSION  Fused flow kernels against reconstruct-then-differentiate, on one subject's data.</li>
 <li><a href="rheome.scale.measure_geometry.html">rheome.scale.measure_geometry</a> &mdash; SCALE.MEASURE_GEOMETRY  The atlas geometry checks on one subject's cortex: atom-tile overlap, gauge, roll-up,</li>
 <li><a href="rheome.scale.measure_grouptrack.html">rheome.scale.measure_grouptrack</a> &mdash; SCALE.MEASURE_GROUPTRACK  Viterbi tile tracking of the alpha envelope, real against the mode-shift surrogate.</li>
 <li><a href="rheome.scale.measure_helmholtzbands.html">rheome.scale.measure_helmholtzbands</a> &mdash; SCALE.MEASURE_HELMHOLTZBANDS  Helmholtz-band recovery on the subject's own cortex (geometry only; no MEG).</li>
 <li><a href="rheome.scale.measure_inject.html">rheome.scale.measure_inject</a> &mdash; SCALE.MEASURE_INJECT  Known movers injected into this participant's own recording, tracked back (MS1 G7, Fig. 8).</li>
+<li><a href="rheome.scale.measure_lambdaedge.html">rheome.scale.measure_lambdaedge</a> &mdash; SCALE.MEASURE_LAMBDAEDGE  The shortest wavelength at which upstream readout v2 reads travel along G1 the right way, on one head.</li>
 <li><a href="rheome.scale.measure_movingvortex.html">rheome.scale.measure_movingvortex</a> &mdash; SCALE.MEASURE_MOVINGVORTEX  A moving vortex planted through this participant's MEG and read back (MS1 G11).</li>
-<li><a href="rheome.scale.measure_multimodal.html">rheome.scale.measure_multimodal</a> &mdash; SCALE.MEASURE_MULTIMODAL  MEG, PET and the fibre connectome through ONE surface wavelet bank on ONE set of</li>
+<li><a href="rheome.scale.measure_multimodal.html">rheome.scale.measure_multimodal</a> &mdash; SCALE.MEASURE_MULTIMODAL  MEG, fMRI, PET and the fibre connectome through ONE surface wavelet bank on ONE set of</li>
 <li><a href="rheome.scale.measure_noisefloor.html">rheome.scale.measure_noisefloor</a> &mdash; SCALE.MEASURE_NOISEFLOOR  What the noise floor and the inverse manufacture, in this participant (MS1 G2, section 9.4).</li>
 <li><a href="rheome.scale.measure_ownregion.html">rheome.scale.measure_ownregion</a> &mdash; SCALE.MEASURE_OWNREGION  Readout rule 5 for one subject: which Desikan-Killiany regions own their flux.</li>
+<li><a href="rheome.scale.measure_panelexamples.html">rheome.scale.measure_panelexamples</a> &mdash; SCALE.MEASURE_PANELEXAMPLES  The single-participant example data of MS1 Figs. 4-7 panel A (figure data, no group metric).</li>
 <li><a href="rheome.scale.measure_patterns.html">rheome.scale.measure_patterns</a> &mdash; SCALE.MEASURE_PATTERNS  The catalogue's detectors on this participant's resting MEG against its own nulls (MS1 G5, G13).</li>
 <li><a href="rheome.scale.measure_periodicflow.html">rheome.scale.measure_periodicflow</a> &mdash; SCALE.MEASURE_PERIODICFLOW  Apparent alpha flow on the TOTAL and the PERIODIC envelope, over many tiles.</li>
 <li><a href="rheome.scale.measure_plantfloors.html">rheome.scale.measure_plantfloors</a> &mdash; SCALE.MEASURE_PLANTFLOORS  Helmholtz-band resolution floors through this participant's MEG (MS1 G1, G9).</li>
 <li><a href="rheome.scale.measure_resolution.html">rheome.scale.measure_resolution</a> &mdash; SCALE.MEASURE_RESOLUTION  The resolution report's headline numbers for one subject.</li>
+<li><a href="rheome.scale.measure_scaleramp.html">rheome.scale.measure_scaleramp</a> &mdash; SCALE.MEASURE_SCALERAMP  Tracking across scale: a peak whose size ramps 10 -&gt; 40 mm, read by rheome.detect.ridges.</li>
 <li><a href="rheome.scale.measure_slowosc.html">rheome.scale.measure_slowosc</a> &mdash; SCALE.MEASURE_SLOWOSC  Sleep slow oscillations as a positive control with known propagation: direction and speed per event, four estimators, two nulls (MS1 G15, G16).</li>
 <li><a href="rheome.scale.measure_trackfactorial.html">rheome.scale.measure_trackfactorial</a> &mdash; SCALE.MEASURE_TRACKFACTORIAL  The 0.52 diagnosis as a 2^5 factorial on this participant (MS1 G8, Fig. 9).</li>
 <li><a href="rheome.scale.measure_upstream.html">rheome.scale.measure_upstream</a> &mdash; SCALE.MEASURE_UPSTREAM  The AGE-1 participant readout: U, U_surrogate, U_total, U_of and their covariates per recording.</li>
@@ -496,6 +526,13 @@
 <h2>rheome.utils</h2>
 <ul>
 <li><a href="rheome.utils.hemisphere.html">rheome.utils.hemisphere</a> &mdash; UTILS.HEMISPHERE  Restrict a cortex surface + Dirac basis to ONE hemisphere.</li>
+<li><a href="rheome.utils.pysort.html">rheome.utils.pysort</a> &mdash; UTILS.PYSORT  CPython 3.12's list.sort (TimSort, powersort merge policy, galloping) on 1:numel(k) with</li>
+</ul>
+<h2>rheome.viz</h2>
+<ul>
+<li><a href="rheome.viz.marks.html">rheome.viz.marks</a> &mdash; VIZ.MARKS  Write a render's marks sidecar (&lt;render&gt;.marks.json): every overlay drawn on the cortex, with its key.</li>
+<li><a href="rheome.viz.points.html">rheome.viz.points</a> &mdash; VIZ.POINTS  Critical points (vortices, sources, sinks, saddles) as viewer point sets, one set a type.</li>
+<li><a href="rheome.viz.tiles.html">rheome.viz.tiles</a> &mdash; VIZ.TILES  A tile level of a cortical pyramid as a viewer labelling: tiles by level on the cortex.</li>
 </ul>
 <hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference.</small></p>
 </body></html>

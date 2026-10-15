@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.modes.jointfields</title></head><body>
+<h1>rheome.modes.jointfields</h1>
+<p><em>function rheome.modes</em> &mdash; Rheome</p>
+<pre>  MODES.JOINTFIELDS  One participant's joint graph-time wavelet field W(v,s,t,f) on group tiles, its nulls and T(s).
+ 
+    [Z, Y] = rheome.modes.jointfields(name)
+    [Z, Y] = rheome.modes.jointfields(name, S, Depths=0:5, Octaves=[1 2; 2 4; 4 8; 8 16; 16 32], Seed=1)
+    [Z, Y] = rheome.modes.jointfields(name, S, Canary=true)     % J5: planted patterns on F, no real-data series
+ 
+  Protocol section 14 (H4 ATLAS-1), J1, J3, J4 and the J5 plants. Same recording, clean span and work rate as
+  rheome.modes.fields; the band-limited field of section 4.1 is untouched.
+ 
+  J1 FIELD. The separable members of the joint filterbank (MD24, rheome.jointfilterbank: graph factor x time
+  factor) applied factor by factor -- wt would materialise [K x nOmega x Nf]:
+    graph scale s  one dyadic depth d of the group tree (Depths, 0-5). The tight logitersine bank's members
+                   (2 voices, as rheome.modes.operator) whose wavelength lies in the depth's window are kept:
+                   windows are cut at the geometric midpoints between the depths' tile diameters (the
+                   participant's median tile area, 2 sqrt(A/pi)); the coarsest depth is open above. The scale
+                   is pooled to the group tiles AT ITS OWN DEPTH (area-weighted mean): one row per tile x scale
+                   (Z.tiles{1}: hemi, tile, depth, scale_mm, ...; tile codes are unique across depths)
+    octave f       the jointfilterbank's raised-cosine band member for each row of Octaves, applied to the
+                   one-sided spectrum: an analytic signal, decimated to the largest rate fs/m &gt;= 3 x the upper
+                   edge (rheome.modes.octave). valid as rheome.modes.analytic
+  The field is computed on the PERIODIC part (MS1 rule 8): each tile x scale row is split by its own Welch
+  background fit (rheome.modes.split) before the octave.
+ 
+  J3 NULLS (each through the participant's own gain, kernel, bank and split):
+    f_fieldspread  F, field spread: independent normal sources at every vertex, one spectrum per generator
+                   tile (depth GenDepth = 6), variance ~ area, plus the participant's own empty room on the
+                   channels it shares. The generator spectra are the nonnegative least-squares solution that
+                   makes F's tile power spectra at GenDepth equal the data's minus the empty room's
+                   (M(i,j) = W_i C_j W_i', C_j the sensor covariance of tile j's sources: Op.Cgen), per
+                   0.5 Hz bin; then one scalar recalibration of total power. So each location keeps its own
+                   spectrum and power, and every coupling between locations is removed (what remains is the
+                   instrument's spread). An empty-room channel whose level exceeds 10x the rest run's on that
+                   channel is a sensor fault the noise run's flags missed (OMEGA: MLC11-17 at ~1 nT) and is
+                   dropped. Z.fspread: fit error, recalibration factor, empty room used, emptyroomDropped (names)
+    n4_aperiodic   N4: the aperiodic complement of each row's split
+    n5_phaserand   N5: the periodic rows with one random phase per frequency bin shared by every row (keeps
+                   every auto- and cross-spectrum, across scales too)
+  N2 (spin) and N3 act on fitted atoms, not here.
+ 
+  J4 RESOLUTION. Z.transfer = rheome.modes.scaletransfer(S, Z.scales): T(s) per depth and the scale edge (mm).
+ 
+  J5 CANARY (Canary=true). No real-data series is written. Four patterns are planted (normal current on the
+  participant's cortex, through its gain, then the same pipeline) on F as the background, in turn (states of
+  0.2-0.4 s, 20 ms ramps) at CanaryHz, each, while on, at the sensor power of F in the plant's octave (0 dB):
+    wave200_ap    a 200 mm plane wave travelling A-&gt;P (SCS x) over the whole cortex
+    pair_fo       two lagged 30 mm blobs, frontal leading occipital by 90 deg
+    standing200   cos(2 pi z / 200 mm), a standing (zero-lag) dorsal-ventral pattern
+    fine50        a 50 mm wave (A-&gt;P) in a 40 mm-sigma posterior-dorsal patch
+  Sources: canary, f_fieldspread, f_fieldspread2, f_fieldspread3 (second and third F realisations, made whenever F
+  is: the F null is the union of the realisations' atoms over every K, design §14 F union amendment, 2026-10-12;
+  F1 vs F2 set the Level-1 (i) threshold r_min and F3 tests it, F calibration amendment, 2026-10-13).
+  Y.canary_truth [rows x 4] the noise-free joint coefficients of each plant; Z.canary the plant table.
+ 
+  Z: .name .workRate .bands (band, lo, hi, peak_hz, rate) .scales (depth, n_tiles, diameter_mm, lo_mm, hi_mm,
+     scale_mm) .variants .tiles {1} .A .R {per depth} .sources .series .transfer .fspread .seed .spanS .channels
+     .kind = &quot;joint&quot;
+  Y: Y.(z_&lt;source&gt;_&lt;band&gt;_v1) single complex [rows x T], Y.(valid_&lt;band&gt;), Y.mask, Y.yper (the data's periodic
+     rows at WorkRate: rheome.modes.fit draws its N5 surrogates from it)
+ 
+  See also: rheome.modes.fields, rheome.modes.operator, rheome.modes.scaletransfer, rheome.modes.discover,
+    rheome.modes.jointcheck, rheome.jointfilterbank
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

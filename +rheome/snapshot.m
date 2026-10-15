@@ -11,7 +11,9 @@ function out = snapshot(surf, result, varargin)
 % strip with the interval stated once. Each shot is written as <Out>/<Name>.svg (text, bars and colourbar editable;
 % the views embedded at their rendered resolution), printed by Chrome to <Out>/<Name>.pdf (fonts embedded, the views
 % at full resolution: MATLAB's own PDF export resamples images to screen pixels) and .png (at the journal's
-% combination dpi), and the viewer's raw renders are kept as <Out>/<Name>/*.png (for boards composed elsewhere).
+% combination dpi), and the viewer's raw renders are kept as <Out>/<Name>/*.png (for boards composed elsewhere), each with
+% its marks sidecar <render>.marks.json (every overlay drawn and its key: figure_check.py E1, rheome.viz.marks).
+% THE PRIMARY API for printed cortex, with rheome.view (interactive); see rheome.viz.
 %
 % THE SHOT LIST -- Shots is a struct array or a cell array of structs, one panel each, with the fields:
 %   Field      the real field painted (a field of result)                                  (default: the first real)
@@ -80,6 +82,8 @@ function out = snapshot(surf, result, varargin)
 %   'Viewer'    the viewer folder (default as rheome.view: $RHEOME_VIEWER, else prefdir/rheome-viewer)
 %   'Chrome'    Chrome or Chromium (default $RHEOME_CHROME, else the usual install)
 %   'Node'      Node.js 22+ (default $RHEOME_NODE, else the usual install)
+%   'Labellings' partitions for the viewer (rheome.viz.tiles), shown by a shot's Settings.labelling
+%   'Points'    point sets for the viewer (rheome.viz.points: critical points), shown by Settings.points (default all)
 %   'Scale'     the viewer's least pixel ratio (default: the tokens' cortex.viewer.pixelRatio); raised per shot so the
 %               views print at the journal's combination dpi
 %
@@ -131,6 +135,8 @@ function out = snapshot(surf, result, varargin)
     p.addParameter('Node', '');
     p.addParameter('Scale', []);
     p.addParameter('Wait', 600);
+    p.addParameter('Labellings', []);
+    p.addParameter('Points', []);
     p.addParameter('Timeout', 60);
     p.parse(varargin{:});
     o = p.Results;
@@ -161,7 +167,8 @@ function out = snapshot(surf, result, varargin)
     % one bundle, one viewer run for every render
     work = tempname;  mkdir(work);  cleanWork = onCleanup(@() rmdir(work, 's'));
     if isfield(surf, 'Vertices'), bs = surf; else, bs = surfs; end
-    rheome.io.write.bundle(fullfile(work, 'bundle'), bs, result, 'Fs', o.Fs, 'Name', 'rheome.snapshot');
+    rheome.io.write.bundle(fullfile(work, 'bundle'), bs, result, 'Fs', o.Fs, 'Name', 'rheome.snapshot', ...
+        'Labellings', o.Labellings, 'Points', o.Points);
     if ~isfolder(o.Out), mkdir(o.Out); end
     renders = {};
     J = tok.theme.(tok.theme.default).page;
@@ -193,6 +200,8 @@ function out = snapshot(surf, result, varargin)
         s = shots(k);
         for r = 1:numel(s.renders)
             movefile(fullfile(work, [s.renders(r).file '.png']), fullfile(s.dir, [s.renders(r).label '.png']), 'f');
+            mk = fullfile(work, [s.renders(r).file '.marks.json']);   % the render's overlays and keys (rheome.viz.marks)
+            if isfile(mk), movefile(mk, fullfile(s.dir, [s.renders(r).label '.marks.json']), 'f'); end
         end
         if ~isempty(s.Inset), movefile(fullfile(work, [s.Inset.render.file '.png']), fullfile(s.dir, [s.Inset.render.label '.png']), 'f'); end
         [o1, graphCache, pj] = compose(s, surfs, F, hemi, folded, graphCache, tok, cmaps, o);

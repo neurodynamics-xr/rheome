@@ -18,14 +18,18 @@
     frames vector of frame indices to show
  
   OPTIONS:
-    'Parent'    figure handle to draw into (default: new figure)
+    'Parent'    a figure made by a strip before, to draw another row into (default: new figure)
     'Grid'      [nRows nCols] montage layout (default [1 numel(frames)])
     'Row'       which grid row this strip occupies (default 1)
     'NumArrows' arrows per panel, at the top-magnitude vertices (default 200)
     'View'      camera [az el] (default [-90 10])
-    'Colormap'  magnitude colormap (default hot)
-    'RowLabel'  text label for the row
+    'Colormap'  in place of the magnitude's colormap (tokens quantity magnitude)
+    'Unit'      unit of |J| for the colourbar (default 'a.u.')
+    'Theme'     figure theme ('' = the tokens' default, Pergammon; 'neuroimage' for MS1)
+    'RowLabel'  the row's panel title, after its letter
     'Titles'    {1 x numel(frames)} per-panel titles
+    'Title'     figure title: the figure's name (the legend carries it, not the artwork)
+    'Export'    file stem: write &lt;stem&gt;.pdf/.svg/.png at print size (nxr_save)
     'Visible'   'on' (default) | 'off'
  
   OUTPUT: hFig figure handle.

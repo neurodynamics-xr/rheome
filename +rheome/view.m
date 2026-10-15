@@ -7,7 +7,7 @@ function out = view(varargin)
 %   rheome.view(surf, struct('J', J), Potentials="J", Layers={{"J_psi"}, {"J", "x", "arrows"}})   % J's stream function
 %   out = rheome.view(..., Name=Value)
 %
-% OPTIONAL: nothing else in Rheome needs the viewer, and Rheome works without it (R2023b and later).
+% Rheome RUNS without the viewer (R2023b and later); its figures of the cortex are drawn by it (rheome.viz).
 % The result is written as a rheome.bundle@1 folder (rheome.io.write.bundle) and opened:
 %   R2026a+       inside MATLAB, a uifigure + uihtml on the viewer's viewer.html (the Cortical Flow viewer,
 %                 nxr-cortical-flow editor/dist-viewer; its README.md has the format and protocol). The viewer folder is RHEOME_VIEWER, default prefdir/rheome-viewer, installed
@@ -52,10 +52,13 @@ function out = view(varargin)
 %   'ArrowScale'   arrow length at the top of its range, in the surface's units (m); 0: 4 % of the surface's
 %                  size: every arrows layer's scale
 %   'Time'         the time shown, s from the first sample (the nearest frame)
+%   'Labelling'    the labelling painted in the colour layer's place (a name of Labellings), "" for none
 %   'Play'         true | false: play on open
 %   'Speed'        playback speed, x real time (> 0)
 % and how it is opened:
 %   'Fs'      sampling rate of the T columns, Hz (default 1)
+%   'Labellings'  partitions for the viewer (rheome.viz.tiles: tiles by level; see rheome.io.write.bundle)
+%   'Points'      point sets for the viewer (rheome.viz.points: critical points, one set a type)
 %   'Name'    the bundle's name (default 'Rheome result')
 %   'Viewer'  'auto' (default) | 'editor' (uihtml) | 'app' | 'show' | 'none' (write the bundle only)
 %   'Timeout' seconds to wait for the viewer's 'ready' (default 60)
@@ -68,7 +71,8 @@ function out = view(varargin)
 %         .ready      what the viewer said when it opened the bundle (its fields, surfaces, every setting)
 %         .set(Name=Value, ...)      changes the open view (the options above) without reopening it; a layer
 %                                    option given acts on the layers last sent
-%         .screenshot(file, scale)   writes the view as a PNG (scale, default 1: the window's pixels)
+%         .screenshot(file, scale)   writes the view as a PNG (scale, default 1: the window's pixels), and beside it
+%                                    <file>.marks.json, every overlay drawn with its key (rheome.viz.marks)
 %
 % The viewer gets the settings twice: as the manifest's 'settings', and with the bundle in uihtml's Data
 % (struct('bundle', <manifest, relative>, 'settings', settings)); it answers with the event 'ready' or 'error'
@@ -81,7 +85,9 @@ function out = view(varargin)
 %   out = rheome.view(S, I, Fs=10, CLim=[-1 1], View="top", Viewer="show");
 %   assert(strcmp(out.viewer, 'show'));  close(out.figure)
 %
-% See also: rheome.io.write.bundle, rheome.show.surface, rheome.show.vectors
+% THE PRIMARY API for the cortex, with rheome.snapshot (print); rheome.show is the fallback (see rheome.viz).
+%
+% See also: rheome.viz, rheome.snapshot, rheome.io.write.bundle, rheome.show.surface, rheome.show.vectors
 %
 % Author: Diellor Basha, 2026
 
@@ -105,7 +111,7 @@ function out = view(varargin)
         if isfolder(root), rmdir(root, 's'); end
         id = char(datetime('now', 'Format', 'yyyyMMdd''T''HHmmssSSS'));
         out.manifest = rheome.io.write.bundle(fullfile(root, id), surf, result, 'Fs', o.Fs, 'Name', o.Name, 'Settings', s, ...
-            'Potentials', o.Potentials);
+            'Potentials', o.Potentials, 'Labellings', o.Labellings, 'Points', o.Points);
     end
 
     switch out.viewer
@@ -147,12 +153,14 @@ function o = options(args, opening)
     p = inputParser;
     p.FunctionName = 'rheome.view';
     for k = {'Layers', 'Field', 'Arrows', 'Colormap', 'CLim', 'Threshold', 'Surface', 'Hemisphere', 'View', 'ArrowDensity', ...
-            'ArrowScale', 'Time', 'Play', 'Speed'}
+            'ArrowScale', 'Time', 'Play', 'Speed', 'Labelling'}
         p.addParameter(k{1}, []);
     end
     if opening
         p.addParameter('Fs', 1);
         p.addParameter('Potentials', false);
+        p.addParameter('Labellings', []);
+        p.addParameter('Points', []);
         p.addParameter('Name', 'Rheome result');
         p.addParameter('Viewer', 'auto', @(x) any(strcmpi(x, {'auto', 'editor', 'app', 'show', 'none'})));
         p.addParameter('Timeout', 60);
@@ -182,6 +190,10 @@ function s = settings(o, surf, result, T, base)
         s.surface = pick(o.Surface, names, 'Surface');
     end
     if ~isempty(o.Hemisphere), s.hemisphere = pick(o.Hemisphere, {'both', 'left', 'right'}, 'Hemisphere'); end
+    if ~isempty(o.Labelling)
+        if ~(ischar(o.Labelling) || (isstring(o.Labelling) && isscalar(o.Labelling))), bad('Labelling', 'a labelling''s name, or ""'); end
+        s.labelling = char(o.Labelling);   % '' : none
+    end
     if ~isempty(o.View), s.view = pick(o.View, {'left', 'right', 'top', 'bottom', 'front', 'back'}, 'View'); end
     if ~isempty(o.Time)
         t = o.Time;
@@ -419,6 +431,7 @@ function screenshot(h, file, timeout, scale)
     fid = fopen(file, 'w');
     if fid < 0, error('rheome:view:screenshot', 'Cannot write %s.', file); end
     fwrite(fid, matlab.net.base64decode(extractAfter(png, ',')));  fclose(fid);
+    if isfield(d, 'marks') && ~isempty(d.marks), rheome.viz.marks(d.marks, file); end   % its overlays, keyed
 end
 
 function ok = viaApp(folder)

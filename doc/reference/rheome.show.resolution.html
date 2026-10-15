@@ -34,15 +34,19 @@
     'Fields'       [nV x nF] per-vertex scalars, drawn in row 2 with a SHARED colour scale
                    after each column is normalised to its own peak
     'FieldTitles'  {1 x nF} titles
-    'FieldColormaps' {1 x nF} colormap per field panel (default hot for all). ⚠ A BINARY
-                   INDICATOR UNDER 'hot' IS INVISIBLE -- zero is black and the panel reads as
-                   empty. Pass a sequential map for set-valued panels (an atlas scout) and keep
-                   hot for graded ones (a point-spread function).
+    'FieldQuantity' what the fields are (tokens quantity, default 'magnitude'): their colormap.
+    'FieldColormaps' {1 x nF} colormap per field panel, in place of the quantity's.
+                   ⚠ under 'hot' a BINARY INDICATOR is invisible -- zero is black and the panel
+                   reads as empty; pass a two-colour map for set-valued panels (an atlas scout).
     'Bands'        {lo hi label} per row: shaded regions of the ruler (mm)
     'View'         camera [az el] for every cortex panel (default [-90 10], left lateral)
     'XLim'         ruler limits in mm (default from the marks, padded)
-    'Title'        figure title
+    'Title'        the ruler's panel title
+    'Export'       file stem: write &lt;stem&gt;.pdf/.svg/.png at print size (nxr_save)
     'Visible'      'on' (default) | 'off' for headless export
+    'Theme'        figure theme ('' = the tokens' default, Pergammon; 'neuroimage' for MS1)
+  Sizes and colours are the figure tokens; double column, one panel per row; the fields' shared colourbar
+  in their panel's key band.
  
   OUTPUT: hFig figure handle.
  

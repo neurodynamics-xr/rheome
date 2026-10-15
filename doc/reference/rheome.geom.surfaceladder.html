@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.geom.surfaceladder</title></head><body>
+<h1>rheome.geom.surfaceladder</h1>
+<p><em>function rheome.geom</em> &mdash; Rheome</p>
+<pre>  GEOM.SURFACELADDER  The atlas's dyadic surface ladder: equal-mass geodesic bisection, bit-exact to nsp.
+ 
+    [labels, mass] = rheome.geom.surfaceladder(V, F)
+    [labels, mass] = rheome.geom.surfaceladder(V, F, maxTiles)
+ 
+  A port, step for step, of nsp's atlas ladder (nxr_convert/atlas/ladder.py, itself a port of
+  cortical-flow's surfaceLadder), so labels(:, l+1) is the stored atlas code of every vertex at
+  level l. Each level halves every tile by EQUAL MASS across its geodesic diameter: two Dijkstra
+  sweeps inside the tile find the far ends a and b, vertices are STABLY sorted by d_a - d_b and cut
+  where the running mass first reaches half the tile's. Level l has 2^l tiles; tile t has children
+  2t and 2t+1, so a vertex's level-l tile is floor(code_L / 2^(L-l)). The ladder stops before a
+  level that would leave a tile empty.
+ 
+  ⚠ BIT-EXACT MEANS THE SAME FLOATING-POINT ORDER. Mass is accumulated face by face (a, b, c), edge
+  lengths use V8's Math.hypot (scaled, Kahan-summed), tile masses are summed in vertex order: each
+  is written as the reference does it. Dijkstra distances are the fixed point min_u fl(d_u + w_uv),
+  so any exact Dijkstra (MATLAB's distances, scipy's) returns the same bits.
+ 
+  INPUTS   V [n x 3] positions, F [m x 3] faces (1-based), maxTiles (default 2^floor(log2 n))
+  OUTPUTS  labels [n x (finest+1)] int32 tile codes, 0-based, column l+1 = level l;
+           mass [n x 1] barycentric lumped vertex areas (a third of each incident triangle)
+ 
+  See also: rheome.geom.tree (Method=&quot;Ladder&quot;), tests/tSurfaceLadder.m
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

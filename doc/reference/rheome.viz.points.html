@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.viz.points</title></head><body>
+<h1>rheome.viz.points</h1>
+<p><em>function rheome.viz</em> &mdash; Rheome</p>
+<pre>  VIZ.POINTS  Critical points (vortices, sources, sinks, saddles) as viewer point sets, one set a type.
+ 
+    P = rheome.viz.points(rheome.flow.critical(dbasis, a, S, frames), S)       % at their frames
+    P = rheome.viz.points(rheome.detect.criticalPoints(J, S), S)               % one frame: shown at every frame
+    rheome.view(S, struct('J', J), Points=P)
+ 
+  Each point goes to its nearest vertex. One set a type, so the marks sidecar keys each type (cortex.marks 'critical
+  points': &quot;each type&quot;); sources and sinks in flow-source, vortices in flow-vortex (the figure tokens), saddles in the
+  viewer's default; the sign is the charge.
+ 
+  INPUTS:
+    cp  a rheome.detect.criticalPoints struct (.pos .type .charge), or rheome.flow.critical's output (.cp .frames)
+    S   the surface the points lie on (.Vertices)
+  OPTIONS:
+    Name    the sets' prefix (default &quot;critical&quot;): sets &quot;&lt;Name&gt;: &lt;type&gt;&quot;
+    Tokens  the figure tokens' JSON (default $NXR_FIGURE_TOKENS, else ~/workspace/library/styles/tokens/figure-tokens.json;
+            missing: no colour)
+ 
+  OUTPUT:
+    P : struct array .name .vertices (1-based) .frames (1-based; 0: every frame) .signs .color, for
+        rheome.io.write.bundle 'Points'
+ 
+  NOT YET (the viewer): the tokens' glyphs (+ source, - sink, open circle vortex); the viewer draws plus/minus badges.
+ 
+  Example:
+    S = struct('Vertices', eye(3), 'Faces', [1 2 3]);
+    cp = struct('pos', [0.9 0 0; 0 0 1], 'type', {{'vortex'; 'source'}}, 'charge', [1; 1]);
+    P = rheome.viz.points(cp, S);  assert(isequal([P.vertices], [1 3]))
+ 
+  See also: rheome.flow.critical, rheome.detect.criticalPoints, rheome.io.write.bundle
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

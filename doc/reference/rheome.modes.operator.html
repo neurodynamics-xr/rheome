@@ -25,6 +25,11 @@
     through the participant's gain (S.G) -- the instrument's view of one tile generator (leakage, N3)
   Op.C1 [nSel x nSel] sensor covariance of independent normal sources at every vertex, variance ~ area (N1)
   Op.keptWavelengthMM, Op.cutoffMM, Op.depth
+  Op.Cgen [nSel x nSel x nTiles] (GenCov=true only) the sensor covariance of independent normal sources at the
+    vertices of each tile (variance ~ area): Op.C1 split by tile, the generators of the field-spread null F
+ 
+  MaxWavelengthMM (default Inf) closes the kept band from above: members with CutoffMM &lt;= wavelength &lt;
+  MaxWavelengthMM, a graph BAND-pass, one depth of the joint field (rheome.modes.jointfields).
  
   See also: rheome.modes.fields, rheome.flow.bandlimit, rheome.scale.grouptiles
  

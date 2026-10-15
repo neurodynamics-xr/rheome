@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.modes.scaletransfer</title></head><body>
+<h1>rheome.modes.scaletransfer</h1>
+<p><em>function rheome.modes</em> &mdash; Rheome</p>
+<pre>  MODES.SCALETRANSFER  Per participant: how much of the energy planted at graph scale s the instrument returns at s.
+ 
+    Tr = rheome.modes.scaletransfer(S, win)       % win: table depth, lo_mm, hi_mm, scale_mm (rheome.modes.jointfields)
+    Tr = rheome.modes.scaletransfer(S, win, Edge=0.5)
+ 
+  Protocol section 14, J4 (resolution per measurement, never a cut), extending the modulation transfer of
+  rheome.inverse.resolution (.mtf: the diagonal of the resolution matrix R in the normally oriented mode family,
+  B_kk = &lt;n phi_k, R n phi_k&gt;, the amplitude kernel's Wiener gain per mode) from modes to the graph scales of
+  the joint field. A random normal current is planted in one hemisphere with its energy in scale window s only
+  (Laplace-Beltrami coefficients white, weighted by g_s, the window's members of the tight logitersine bank that
+  rheome.modes.operator uses), seen through the participant's gain and unconstrained minimum-norm kernel, and
+  read with the same bank. Exact in expectation, no draws (B = Phi' M Kq Gq Phi):
+ 
+    T_abs(s)  E&lt;P_s q, P_s q_hat&gt; / E||P_s q||^2 = sum_k g_s^4 B_kk / sum_k g_s^4: the share of the planted
+              scale-s pattern returned, coherently, at s -- the MTF averaged over the scale with the bank's
+              weights. Absolute (1 = perfect), small for normally oriented patterns (a smooth normal pattern
+              flips across every gyrus and largely cancels at the sensors: rheome.inverse.resolution)
+    T(s)      T_abs / its peak over every member of the bank (the finer members included): the curve the
+              scale edge is read on, as .mtfHalf reads half of the MTF's peak. Each atom's T-bar uses T
+    edge_mm   where T falls through Edge (0.5) going finer from its peak over the depths, interpolated in log
+              scale; NaN with edge_flag &quot;beyond_finest&quot; (T &gt;= Edge from the peak to the finest depth) or
+              &quot;below_edge&quot; (no depth reaches Edge). The coarsest depth sits below its neighbour (one OMEGA head:
+              T 0.14 at 400 mm, 1.00 at 270 mm; the near-constant mode cancels at the sensors) and is reported,
+              not used for the edge. Same head: edge 114 mm (T 0.55 at 130 mm, 0.42 at 92 mm). ⚠ Like .mtfHalf this
+              crossing can jump on a bumpy curve: centroid_mm (the T-weighted centroid in log scale over the
+              depths, as .mtfCentroid) is the stable summary
+    share(s)  purity: of the estimate's whole energy (both hemispheres, every member), the share that falls
+              in window s of the planted hemisphere, over the same share for a perfect instrument (B = I).
+              ⚠ Measured on one OMEGA head: 0.03-0.14 at depths 0-5 -- whatever the planted scale, about
+              70 % of the minimum-norm normal current's energy lies in the members finer than 56 mm
+ 
+  ⚠ Noiseless: the resolution part of the transfer; SNR is reported separately. ⚠ Energy outside the K
+  eigenmodes of the hemisphere's basis is not seen by the bank and is left out.
+ 
+  Measured on that head: T_abs peaks at 0.019 (270 mm).
+ 
+  Tr.table (depth, scale_mm, T, T_abs, share, and per hemisphere T_abs_&lt;h&gt;, share_&lt;h&gt;)  Tr.member (wavelength_mm,
+  T_abs per bank member, mean of hemispheres)  Tr.peak  Tr.edge_mm  Tr.edge_flag  Tr.centroid_mm
+ 
+  See also: rheome.modes.jointfields, rheome.modes.operator, rheome.inverse.resolution
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

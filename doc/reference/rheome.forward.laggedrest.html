@@ -31,12 +31,17 @@
     lagged 20-40 mm discs that do not travel leave |U*| up to 0.24, as large as planted travel at 100-1000 mm,
     0.5-2 m/s; travel power 0. Tile candidates fit compact generators at r2 ~0.7, and the per-channel phase-
     randomised residual loses the background's zero-lag structure. Do not read U* as travel until redesigned.
+    The redesign (Keep=true, Residual=&quot;zerolag&quot;, depth-6 tile candidates; measure_upstream Null=&quot;v2&quot;) fixes the
+    residual (with the true generators as candidates it cancels 87-97 % of the lag) but not the fit: with tile
+    candidates it cancels 13-44 % in a held-out MEG head (2026-10-12). Still NOT VALIDATED.
  
   INPUTS
     Y      [nChan x nT] real sensor signal    Gp [nChan x nPatch] candidate generator topographies
     front  [1 x nPatch] logical, frontal candidates     fs  sampling rate (Hz)
   NAME-VALUE
     WindowS (4)   MaxLagS (0.5)   Group [1 x nPatch] (one group)   Mask [1 x nT] logical (none)
+    Keep (false)  Residual (&quot;perchan&quot;): passed to rheome.forward.laggedpair. The null v2 of measure_upstream is
+                  Keep=true, Residual=&quot;zerolag&quot; on depth-6 tile candidates (see measure_upstream, Null=).
   OUTPUT
     Ys     [nChan x nT] the surrogate
     info   .read [1 x nT] logical (samples carrying a surrogate)   .windows table: first, last, lagS, ratio,

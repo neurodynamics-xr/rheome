@@ -24,8 +24,11 @@
                    .speed  true speed (m/s)   -&gt; marked on the speed panel
                    .path   [n x 3] true core path -&gt; drawn dashed black on the surface
     'Lift'       trajectory offset along the normal, as a fraction of mesh extent (default 0.012)
-    'Title'      overall title
+    'Title'      figure title: the figure's name (the legend carries it, not the artwork)
+    'Export'     file stem: write &lt;stem&gt;.pdf/.svg/.png at print size (nxr_save)
     'Visible'    'on' (default) | 'off'
+    'Theme'      figure theme ('' = the tokens' default, Pergammon; 'neuroimage' for MS1)
+  Sizes and colours are the figure tokens; the scale colourbar (tile code) in D's key band.
  
   OUTPUT: hFig figure handle.
  

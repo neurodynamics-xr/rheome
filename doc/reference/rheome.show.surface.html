@@ -20,8 +20,10 @@
  
   OPTIONS (name/value):
     'Faces'      [nF x 3] faces, required only if 'surf' is a bare vertex matrix
-    'Colormap'   colormap for the overlay (default: diverging for signed data
-                 (blue-white-red), sequential (parula) for one-signed data)
+    'Quantity'   what the data are (tokens quantity: divergence, curl, potential, stream, magnitude,
+                 amplitude, speed, power, phase ...): one colormap per quantity. Default inferred:
+                 signed data -&gt; divergence, one-signed -&gt; magnitude; name it to get its own map
+    'Colormap'   colormap for the overlay, in place of the quantity's
     'FaceAlpha'  surface opacity 0..1 (default 1)
     'EdgeColor'  edge color (default 'none')
     'View'       [az el] camera view (default [-90 10], left-lateral-ish)

@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Cortical Flow viewer</title>
+    <!-- HOSTED BY MATLAB (uihtml) unless a ?bundle= names the data: MATLAB calls setup(htmlComponent) once the page loads, and the
+         viewer waits for it (src/viewer/main.ts). In a browser, viewer.html?bundle=<manifest.json url>. -->
+    <script>if (!new URLSearchParams(location.search).has('bundle')) window.__matlab = new Promise(function (ok) { window.setup = ok })</script>
+    <script type="module" crossorigin src="./assets/viewer-CqIWUymN.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/viewer-CGZW1Zlv.css">
+  </head>
+  <body class="editor dark">
+    <div id="root"><div id="controls"></div><div id="stage"><div id="legend"></div><div id="scalebar" class="scalebar" hidden><span></span><i></i></div><svg id="geobar" class="geobar" hidden><polyline fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><text text-anchor="middle" fill="currentColor"></text></svg><canvas id="phasor" class="phasor" hidden></canvas><p id="msg" class="msg">Loading…</p></div><canvas id="tracks" class="tracks" hidden></canvas></div>
+  </body>
+</html>

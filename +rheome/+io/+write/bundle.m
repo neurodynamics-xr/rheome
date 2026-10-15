@@ -10,6 +10,8 @@ function manifest = bundle(folder, surf, result, varargin)
 %   field<k>.bin   float32, the field's [nV x T] ('real') or [3nV x T] ('vector', interleaved x1,y1,z1,...) as is
 %   positions_<name>.bin  float32 [3 x nV], each further surface of the same mesh (inflated, sphere ...), optional,
 %                         listed in the manifest's 'surfaces'
+%   codes_<k>.bin  int32 [nV], labelling k's code a vertex (< 0: none)          optional, the manifest's 'labellings'
+%   points_<k>_{vertices,frames,signs}.bin  int32 [n], point set k (0-based)      optional, the manifest's 'points'
 % The manifest may carry 'settings', the viewer's settings to open with (rheome.view writes them).
 % Every file is .bin: MATLAB's uihtml server answers 404 for an extension it does not know (.f32, .i32; R2026a).
 % The reader is the Cortical Flow viewer (nxr-cortical-flow editor/src/viewer/bundle.ts; format and protocol in its
@@ -33,6 +35,13 @@ function manifest = bundle(folder, surf, result, varargin)
 %               sinks) and <v>_psi (stream function, vortices), from rheome.differential.helmholtz on the first
 %               surface (its .Hemi, if any, sets the per-hemisphere solves), tagged "derivedFrom": "<v>" and
 %               "form": "phi" | "psi" in the manifest (additive to rheome.bundle@1). The viewer cannot solve them.
+%   'Labellings'  struct array (or cell of structs), one partition each: .name, .codes [nV x 1] integers (< 0: none),
+%               optional .entries struct array (.code .name .color '#rrggbb'). rheome.viz.tiles makes one from a
+%               rheome.geom.tree level. The viewer paints it in the colour layer's place (setting 'labelling').
+%   'Points'    struct array (or cell of structs), one point set each: .name, .vertices [n x 1] (1-BASED), optional
+%               .frames [n x 1] (1-based frame each point is shown at; 0: every frame; none: every frame), .signs
+%               [n x 1] (+1 / -1, drawn as plus / minus; none: +1), .color '#rrggbb'. rheome.viz.points makes one
+%               from rheome.detect.criticalPoints / rheome.flow.critical.
 %
 % OUTPUT:
 %   manifest : full path of the manifest.json written.
@@ -46,6 +55,8 @@ function manifest = bundle(folder, surf, result, varargin)
     p.addParameter('Name', 'Rheome result', @(x) ischar(x) || isstring(x));
     p.addParameter('Settings', [], @(x) isempty(x) || isstruct(x));
     p.addParameter('Potentials', false);
+    p.addParameter('Labellings', []);
+    p.addParameter('Points', []);
     p.parse(varargin{:});
     o = p.Results;
 
@@ -106,6 +117,8 @@ function manifest = bundle(folder, surf, result, varargin)
     m = struct('format', 'rheome.bundle@1', 'name', char(o.Name), ...
         'surface', sm, 'time', struct('samples', T, 'fs', o.Fs, 'origin', 0), 'fields', {fl});
     if numel(surfs) > 1, m.surfaces = num2cell(alt); end   % a JSON array even for one
+    if ~isempty(o.Labellings), m.labellings = labellings(folder, o.Labellings, nV); end
+    if ~isempty(o.Points), m.points = points(folder, o.Points, nV, T); end
     if ~isempty(o.Settings), m.settings = o.Settings; end
     manifest = fullfile(folder, 'manifest.json');
     fid = fopen(manifest, 'w');
@@ -124,6 +137,56 @@ function pot = potentials(x, names, result, nV)
     pot = cellstr(x);
     bad = setdiff(pot, vec);
     if ~isempty(bad), error('rheome:bundle:potentials', 'Potentials: %s is not a vector field of the result.', strjoin(bad, ', ')); end
+end
+
+function out = labellings(folder, L, nV)
+% each labelling's codes written, its manifest entry returned (a cell: a JSON array even for one)
+    L = asCell(L, 'Labellings');  out = cell(1, numel(L));
+    for k = 1:numel(L)
+        x = L{k};  need(x, {'name', 'codes'}, 'Labellings');
+        c = double(x.codes(:));
+        if numel(c) ~= nV || any(c ~= round(c)), error('rheome:bundle:labellings', '%s: codes must be %d integers (one a vertex).', char(x.name), nV); end
+        file = sprintf('codes_%d.bin', k);  put(folder, file, c, 'int32');
+        out{k} = struct('name', char(x.name), 'codes', file);
+        if isfield(x, 'entries') && ~isempty(x.entries), out{k}.entries = num2cell(x.entries(:)'); end
+    end
+end
+
+function out = points(folder, P, nV, T)
+% each point set's vertices (0-based), frames (0-based, -1 every) and signs written, its manifest entry returned
+    P = asCell(P, 'Points');  out = cell(1, numel(P));
+    for k = 1:numel(P)
+        x = P{k};  need(x, {'name', 'vertices'}, 'Points');
+        v = double(x.vertices(:));  n = numel(v);
+        if any(v < 1 | v > nV | v ~= round(v)), error('rheome:bundle:points', '%s: vertices must be 1-based indices into the %d vertices.', char(x.name), nV); end
+        pre = sprintf('points_%d_', k);
+        put(folder, [pre 'vertices.bin'], v - 1, 'int32');
+        out{k} = struct('name', char(x.name), 'vertices', [pre 'vertices.bin']);
+        if isfield(x, 'frames') && ~isempty(x.frames)
+            f = double(x.frames(:));
+            if isscalar(f), f = repmat(f, n, 1); end
+            if numel(f) ~= n || any(f < 0 | f > T | f ~= round(f)), error('rheome:bundle:points', '%s: frames must be %d integers in 0 (every frame) .. %d.', char(x.name), n, T); end
+            put(folder, [pre 'frames.bin'], f - 1, 'int32');   % 0 (every) -> -1
+            out{k}.frames = [pre 'frames.bin'];
+        end
+        if isfield(x, 'signs') && ~isempty(x.signs)
+            g = sign(double(x.signs(:)));
+            if numel(g) ~= n || any(g == 0), error('rheome:bundle:points', '%s: signs must be %d values of +1 or -1.', char(x.name), n); end
+            put(folder, [pre 'signs.bin'], g, 'int32');
+            out{k}.signs = [pre 'signs.bin'];
+        end
+        if isfield(x, 'color') && ~isempty(x.color), out{k}.color = char(x.color); end
+    end
+end
+
+function c = asCell(x, name)
+    if isstruct(x), c = num2cell(x(:)'); elseif iscell(x), c = x(:)'; else, c = {}; end
+    if isempty(c) || ~all(cellfun(@(e) isstruct(e) && isscalar(e), c)), error(['rheome:bundle:' lower(name)], '%s: a struct array or a cell of structs is expected.', name); end
+end
+
+function need(x, keys, name)
+    miss = keys(~isfield(x, keys));
+    if ~isempty(miss), error(['rheome:bundle:' lower(name)], '%s: each needs %s.', name, strjoin(miss, ', ')); end
 end
 
 function put(folder, name, x, cls)

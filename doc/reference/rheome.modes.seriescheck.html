@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.modes.seriescheck</title></head><body>
+<h1>rheome.modes.seriescheck</h1>
+<p><em>function rheome.modes</em> &mdash; Rheome</p>
+<pre>  MODES.SERIESCHECK  Are the series a back-fit recomputed the same as the series the discovery read?
+ 
+    [T, S] = rheome.modes.seriescheck(&quot;fits.txt&quot;, &quot;fields.txt&quot;, outDir)
+ 
+  rheome.modes.fit recomputes each participant's fields (the discovery's primary variant and seed) and writes
+  their SHA-256 per series to modesseries.csv; stage 1 (rheome.modes.fields) wrote the same table for the
+  series the discovery clustered. Equal hashes mean the fit worked on numerically identical data, whatever
+  commit it ran on. fitFiles / fieldsFiles: the participants' modesseries.csv (paths, or a text file of
+  paths), named &lt;subject&gt;_modesseries.csv. A &lt;subject&gt;_provenance.json next to a file gives its commit.
+  Series are matched on (subject, source, band, variant); the fit holds the primary variant only, so the
+  sensitivity variants of stage 1 are not compared.
+ 
+  Writes outDir/seriescheck.csv (one row per matched or unmatched series: sha256 and n_valid of each side,
+  equal), seriescheck_summary.csv (per fit commit x source x band: n equal, n differ, n missing) and
+  seriescheck.json (n_subjects, n_series, n_equal, n_differ, n_missing, all_equal, the subjects that differ).
+ 
+  See also: rheome.modes.fit, rheome.modes.fields, rheome.modes.reduce
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

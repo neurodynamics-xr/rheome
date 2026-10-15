@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>rheome.group.glm</title></head><body>
+<h1>rheome.group.glm</h1>
+<p><em>function rheome.group</em> &mdash; Rheome</p>
+<pre>  GROUP.GLM  Tile-wise GLM: one effect's t per tile, its permutation p and the family-wise (max |t|) p over tiles.
+ 
+    R = rheome.group.glm(Y, X, j)
+    R = rheome.group.glm(Y, X, j, NPerm=5000, Seed=1, Subject=sid)
+ 
+    Y  [n x m] one value per row (recording) and tile, all finite
+    X  [n x p] the design, the intercept included (e.g. [ones(n,1) group covariates])
+    j  the column of X tested (two-sided): a group indicator or a covariate
+ 
+  The t of column j is read at every tile. Its null is Freedman-Lane (Freedman &amp; Lane 1983; Winkler et al. 2014):
+  the residuals of the reduced model (X without column j) are permuted, its fit added back and the full model
+  refitted, NPerm times (the identity counted once). The tile's p is (1 + #{|t*| &gt;= |t|}) / (1 + NPerm); the
+  family-wise p compares |t| with the max |t*| over all tiles of each permutation, so it holds FWER at any
+  spatial dependence between tiles (Nichols &amp; Holmes 2002).
+ 
+  Repeated recordings: Subject (n x 1) averages each subject's rows first and tests the means. For an effect and
+  nuisance constant within subject this is the random-intercept mixed model by summary statistics (Holmes &amp;
+  Friston 1998), exact when every subject has the same number of rows; X must be constant within subject.
+ 
+  Returns R with .t .beta [1 x m], .p .p_fwer [1 x m], .df, .n (rows tested), .maxnull [NPerm x 1] (max |t*|),
+  .untestable [1 x m]: tiles whose residuals are zero to round-off (e.g. a constant tile). Their t is NaN, their
+  p and p_fwer are 1, and they are left out of the max (a round-off t would otherwise be of arbitrary size).
+ 
+  ⚠ Rows are exchangeable under the null: one cohort per call (no exchangeability blocks across sites).
+ 
+  See also: rheome.group.spin, rheome.group.calibrate
+ 
+  Author: Diellor Basha, 2026
+</pre>
+<hr><p><small>Generated from the help text at commit <code>v1.1.0</code> by build_reference. Do not edit: fix the help text and rebuild.</small></p>
+<p><a href="index.html">Rheome reference</a></p>
+</body></html>

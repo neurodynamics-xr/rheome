@@ -1,0 +1,2105 @@
+{
+ "$description": "Figure tokens of Neurodynamics-XR: the rules of every figure as machine-readable values. Read by library/styles/schematics/style.py (matplotlib), library/styles/matlab/nxr_figure_tokens.m (MATLAB) and figure_check.py; the viewer and rheome exporters are asked to read it too. The colour group is synced from the design tokens (workspace.pergammon design_tokens) by sync_colour.py; never edit it by hand. Units are in the key names (_pt, _mm). Each rule carries why it is so and its source (keys of 'sources').",
+ "meta": {
+  "version": "2.1.0",
+  "status": "ADOPTED 2026-10-14 (Diellor): v1.0.0 and revisions 1-2 are the figure system in force; the production board shows it, the figure template board keeps the change history",
+  "owner": "org:design-lead",
+  "request": "5539a66784c7e6476d17bf5305c41bb3",
+  "updated": "2026-10-14",
+  "format": "Structure after the Design Tokens Community Group format ($value, $description, groups); units in key names for simple consumption from Python and MATLAB.",
+  "board": "library/styles/design-board/board.html (production; generated: make design-board)",
+  "guide": "library/styles/cortical-flow-visual-language.md §3, §4, §7, §8",
+  "text_side_rules": "Folded in 2026-10-14 from Science's request 5356c232: see textSide.",
+  "previous_request": "995affd06a18b6f24cfac3d89702d6eb",
+  "revision1": [
+   "1 themes: default Pergammon theme; journals are themes (theme)",
+   "2 panel A: a mini graphical abstract (panelA)",
+   "3-4 one key place (legend.keyBand) and layout controls (layout)",
+   "5 Chekhov's gun: every mark explained (explain)",
+   "6 descriptive colormap names (colormapName)",
+   "7 one colormap per quantity (quantity)",
+   "8 cortical view layouts (cortex.layouts)",
+   "9 math typesetting (type.math)",
+   "10 medial wall: with Science (request bb0d7cbd)",
+   "11 icons vs pictograms, frames (icon; library/styles/icon-board)",
+   "12 events on traces: labelled trace default, spans allowed (dynamics.traceWithEvent)"
+  ],
+  "revision2": [
+   "13 figure titles: plain and precise, tied to the claim or hypothesis (textSide.figure_title)",
+   "14 legend commentary (why the figure is shown) after the title; word limits are theme values (textSide.legend, theme.*.overrides)",
+   "15 space-time plot and time-tracks (dynamics.spaceTime, dynamics.timeTrack)",
+   "16 insets: higher resolution, any shape (annotation.inset)",
+   "17 panel title vs axis label: layout check O4 (layout.codes), plot top pad 2 mm",
+   "18 phase: cyclic map for now; phasor glyph with Methods (marker.phasor, proposed)",
+   "19 levels are the grid, not a field: no colormap; level indicator and level scalogram (levels)",
+   "20 no sentences in figures (textSide.in_figure_text X1); folded cortex the default, inflated an option (cortex.surface)",
+   "21 Chekhov's gun on the cortex: every overlay keyed (cortex.marks)",
+   "22 arrows show the full field by default (cortex.arrows)"
+  ],
+  "change_history": "library/styles/figure-board/board.html (revisions 1-2 and the comments behind them)",
+  "adopted_request": "31fb7a21f84d227d0de148010fa6856b"
+ },
+ "sources": {
+  "elsevier-sizing": {
+   "cite": "Elsevier. Artwork sizing (author artwork instructions).",
+   "url": "https://www.elsevier.com/about/policies-and-standards/author/artwork-and-media-instructions/artwork-sizing",
+   "read": "2026-10-14, page text kept in the request's attachments",
+   "says": "Widths 30 / 90 / 140 / 190 mm; lettering 7 pt for normal text, no smaller than 6 pt for sub- and superscripts (rule of thumb); 300 dpi halftone, 500 dpi combination, 1000 dpi line art; consistency in size between similar diagrams."
+  },
+  "elsevier-overview": {
+   "cite": "Elsevier. Artwork overview (author artwork instructions).",
+   "url": "https://www.elsevier.com/about/policies-and-standards/author/artwork-and-media-instructions/artwork-overview",
+   "read": "2026-10-14",
+   "says": "Fonts Arial (or Helvetica), Courier, Symbol, Times; embed fonts."
+  },
+  "nature-spec": {
+   "cite": "Nature Research figure guide: Preparing figures, our specifications.",
+   "url": "https://research-figure-guide.nature.com/figures/preparing-figures-our-specifications/",
+   "read": "2026-10-14",
+   "says": "Axis lines and tick marks; axes labelled with units in parentheses, Data (unit); accessible palette (Wong 2011); text >= 5 pt; Arial/Helvetica; avoid background gridlines, decorative icons, drop shadows, patterns, text on busy images, overlapping text, coloured text (use keylines and keys); panel letters 8 pt bold upright lower case; text 5-7 pt; scale bars on a separate editable layer, not magnification; export vector."
+  },
+  "nature-build": {
+   "cite": "Nature Research figure guide: Building and exporting figure panels.",
+   "url": "https://research-figure-guide.nature.com/figures/building-and-exporting-figure-panels/",
+   "read": "2026-10-14",
+   "says": "Widths 89 / 183 mm; max height 170 mm to leave room for the legend; fonts 5-7 pt; panels in alphabetical order, neat, minimal white space; embed fonts (Type 42); no outlined text; avoid red/green and rainbow scales."
+  },
+  "rougier2014": {
+   "cite": "Rougier NP, Droettboom M, Bourne PE (2014) Ten simple rules for better figures. PLoS Comput Biol 10(9): e1003833.",
+   "doi": "10.1371/journal.pcbi.1003833",
+   "read": "2026-10-14",
+   "says": "1 know your audience; 2 identify your message; 3 adapt the figure to the support medium; 4 captions are not optional; 5 do not trust the defaults; 6 use colour effectively; 7 do not mislead the reader; 8 avoid chartjunk; 9 message trumps beauty; 10 get the right tool."
+  },
+  "jambor2021": {
+   "cite": "Jambor H, Antonietti A, Alicea B, et al. (2021) Creating clear and informative image-based figures for scientific publications. PLoS Biol 19(3): e3001161.",
+   "doi": "10.1371/journal.pbio.3001161",
+   "read": "2026-10-14",
+   "says": "Scale bars with dimensions on every image; insets marked at their origin; annotations and colours explained; colour-blind accessible images and labels."
+  },
+  "crameri2020": {
+   "cite": "Crameri F, Shephard GE, Heron PJ (2020) The misuse of colour in science communication. Nat Commun 11: 5444.",
+   "doi": "10.1038/s41467-020-19160-7",
+   "read": "cited; to acquire into Zotero (Science)",
+   "says": "Perceptually uniform maps; no rainbow; diverging maps for data with a meaningful centre; cyclic maps for cyclic data (phase, direction)."
+  },
+  "kovesi2015": {
+   "cite": "Kovesi P (2015) Good colour maps: how to design them. arXiv:1509.03700.",
+   "read": "cited; to acquire",
+   "says": "Uniform perceptual contrast; cyclic maps for phase and orientation."
+  },
+  "moreland2009": {
+   "cite": "Moreland K (2009) Diverging color maps for scientific visualization. ISVC 2009, LNCS 5876: 92-103.",
+   "read": "cited; to acquire",
+   "says": "Diverging maps: neutral centre at the reference value, ends of equal lightness."
+  },
+  "wong2011-colour": {
+   "cite": "Wong B (2011) Points of view: Color blindness. Nat Methods 8: 441.",
+   "read": "cited (named by Nature's guide)",
+   "says": "Colour-blind-safe palettes; do not encode by red vs green; double colour with another channel."
+  },
+  "wong2010-gestalt": {
+   "cite": "Wong B (2010) Points of view: Gestalt principles (part 1). Nat Methods 7: 863.",
+   "read": "cited; to acquire",
+   "says": "Proximity and similarity group elements; spacing, not boxes, shows what belongs together."
+  },
+  "wong2011-space": {
+   "cite": "Wong B (2011) Points of view: Negative space. Nat Methods 8: 5.",
+   "read": "cited; to acquire",
+   "says": "White space separates and groups; avoid borders and dividers."
+  },
+  "wong2011-layout": {
+   "cite": "Wong B (2011) Points of view: Layout. Nat Methods 8: 783.",
+   "read": "cited; to acquire",
+   "says": "Align panels to a grid; consistent alignment of axes and labels; reading order."
+  },
+  "wong2011-arrows": {
+   "cite": "Wong B (2011) Points of view: Arrows. Nat Methods 8: 701.",
+   "read": "cited; to acquire",
+   "says": "One arrow style per meaning; arrows that point at a feature are short and do not cross data."
+  },
+  "krzywinski2013-axes": {
+   "cite": "Krzywinski M (2013) Points of view: Axes, ticks and grids. Nat Methods 10: 183.",
+   "read": "cited; to acquire",
+   "says": "Few major ticks at round values; ticks outward; no gridlines unless values must be read; axis range to the data."
+  },
+  "krzywinski2013-labels": {
+   "cite": "Krzywinski M (2013) Points of view: Labels and callouts. Nat Methods 10: 275.",
+   "read": "cited; to acquire",
+   "says": "Label directly next to the data rather than in a separate legend; callouts with thin leaders; consistent placement."
+  },
+  "krzywinski-wong2013-symbols": {
+   "cite": "Krzywinski M, Wong B (2013) Points of view: Plotting symbols. Nat Methods 10: 451.",
+   "read": "cited; to acquire",
+   "says": "A few distinct shapes (circle, square, triangle; open vs filled); markers large enough to tell apart; overlap shown by open markers or transparency."
+  },
+  "cleveland1984": {
+   "cite": "Cleveland WS, McGill R (1984) Graphical perception: theory, experimentation, and application to the development of graphical methods. J Am Stat Assoc 79: 531-554.",
+   "read": "cited; to acquire",
+   "says": "Position on a common scale is read most accurately; colour (hue, saturation) least; use position for the quantity the reader must compare."
+  },
+  "tufte": {
+   "cite": "Tufte ER (2001) The Visual Display of Quantitative Information, 2nd ed.; (1990) Envisioning Information. Graphics Press.",
+   "read": "cited",
+   "says": "Data-ink; no chartjunk; small multiples share scales and layout so the eye compares content, not frames."
+  },
+  "weissgerber2015": {
+   "cite": "Weissgerber TL, Milic NM, Winham SJ, Garovic VD (2015) Beyond bar and line graphs: time for a new data presentation paradigm. PLoS Biol 13(4): e1002128.",
+   "doi": "10.1371/journal.pbio.1002128",
+   "read": "cited; to acquire",
+   "says": "Show the individual data points (n small) rather than bars of means."
+  },
+  "lab": {
+   "cite": "Lab rules of Diellor Basha: figures 2026-10-10 / 2026-10-12 (mini-abstract panel A; supplementary validation; legends, colourbars with units, scale bars, keys); folded cortex for fields (decision 103d62b7, 2026-10-08); events on the trace (§5c, 2026-10-13).",
+   "says": "workspace CLAUDE.md, style guide §0, §5c; board comments 2026-10-14 (themes, panel A as graphical abstract, keys, Chekhov's gun, colormap names, one map per quantity, view layouts, math, icons, event marking)"
+  },
+  "elsevier-neuroimage-captions": {
+   "cite": "NeuroImage Guide for Authors, Figure captions and Tables (Elsevier; Wayback copy 2022)",
+   "read": "2026-10-14 by Science (request 5356c232); quotes in its rules document and sources/",
+   "says": "'a brief title (not on the figure itself)'; 'Keep text in the illustrations themselves to a minimum'; no duplicated table data; no vertical rules or shading."
+  },
+  "nature-formatting": {
+   "cite": "Nature formatting guide",
+   "read": "2026-10-14 by Science (request 5356c232); quotes in its rules document and sources/",
+   "says": "legend begins with a brief title, then each panel; no methods in legends; < 300 words; error bars and statistics defined in the legend; small tables stated in text."
+  },
+  "nature-neuro-aip": {
+   "cite": "Nature Neuroscience AIP and formatting",
+   "read": "2026-10-14 by Science (request 5356c232); quotes in its rules document and sources/",
+   "says": "panels described in sequence; centre values, error bars, n, test and P; a supplementary figure fits one page with its legend."
+  },
+  "nature-reporting-summary": {
+   "cite": "Nature Portfolio Reporting Summary, Statistics",
+   "read": "2026-10-14 by Science (request 5356c232); quotes in its rules document and sources/",
+   "says": "n as a number and unit; test and sidedness; statistic, CI, effect size, df, exact P."
+  },
+  "plos-cb": {
+   "cite": "PLOS Computational Biology submission guidelines",
+   "read": "2026-10-14 by Science (request 5356c232); quotes in its rules document and sources/",
+   "says": "a concise, descriptive caption title; table title above, notes below."
+  },
+  "sampl": {
+   "cite": "Lang & Altman, SAMPL guidelines (2013; Int J Nurs Stud 2015;52:5-9)",
+   "read": "2026-10-14 by Science (request 5356c232); quotes in its rules document and sources/",
+   "says": "no SE as precision, 95% CI; exact P, no 'NS', P < 0.001 floor; tables for exact values."
+  },
+  "cobidas-meeg": {
+   "cite": "Pernet et al., COBIDAS MEEG (OHBM; Nat Neurosci 2020;23:1473)",
+   "read": "2026-10-14 by Science (request 5356c232); quotes in its rules document and sources/",
+   "says": "n behind each topography; caption names the variability measure; report every effect; show unthresholded maps."
+  },
+  "cumming2007": {
+   "cite": "Cumming, Fidler & Vaux 2007, J Cell Biol 177:7",
+   "read": "2026-10-14 by Science (request 5356c232); quotes in its rules document and sources/",
+   "says": "describe error bars in the legend; n in the legend; plot points when n is small."
+  },
+  "durbin2004": {
+   "cite": "Durbin 2004, Respir Care 49:1233",
+   "read": "2026-10-14 by Science (request 5356c232); quotes in its rules document and sources/",
+   "says": "no identical information in a table and a figure; small data in a sentence."
+  },
+  "thyng2016": {
+   "cite": "Thyng KM, Greene CA, Hetland RD, Zimmerle HM, DiMarco SF. True colors of oceanography. Oceanography 29(3):9-13 (2016).",
+   "says": "Sequential for magnitudes, diverging centred on a meaningful zero for signed data, cyclic for phase. cmocean maps (MIT) are named for the quantity they serve: speed, curl, delta, diff, tempo, dense, turbid, amp."
+  },
+  "chekhov": {
+   "cite": "Chekhov's gun (A. P. Chekhov, letter to A. S. Lazarev-Gruzinsky, 1 Nov 1889): every element shown must be used.",
+   "says": "Applied to figures by Diellor (2026-10-14): everything drawn is explained in a key or in the legend text."
+  },
+  "wickham2010": {
+   "cite": "Wickham H (2010) A layered grammar of graphics. J Comput Graph Stat 19(1): 3-28 (ggplot2 facets).",
+   "says": "Small multiples as a grid of facets: rows and columns by variables, shared scales, strip labels."
+  },
+  "texbook": {
+   "cite": "Knuth DE (1986) The TeXbook, ch. 17-18; ISO 80000-2:2019 (mathematical signs and symbols).",
+   "says": "Variables italic; operators (d, div, exp, log), constants (e, i, π) and units upright; a thin space between number and unit."
+  },
+  "neurath": {
+   "cite": "Neurath O (1936) International Picture Language; ISO 7001:2023 public information symbols (pictograms).",
+   "says": "A pictogram is a simplified picture of an object, readable without words at its size; detail is cut to what is legible at that size."
+  },
+  "editor-time-sequence-2026-10-02": {
+   "cite": "Cortical Flow Editor design spec \"Time in the Editor: the sequence and its clips\" (research/code/nxr-cortical-flow/docs/superpowers/specs/2026-10-02-editor-time-sequence-and-clips-design.md), agreed by Diellor 2026-10-02",
+   "says": "every tool result has tracks: its parameters along the time Line, flat when static, keyed when dynamic; masks are tracks with keyable lanes (centre, radius, level)"
+  }
+ },
+ "type": {
+  "$description": "Type hierarchy at print size (pt), Pergammon theme (journal themes override). One text family; hierarchy by size and weight only, never by colour; maths by a math typesetter (type.math).",
+  "family": {
+   "$value": [
+    "Inter",
+    "Helvetica Neue",
+    "Helvetica",
+    "Arial"
+   ],
+   "why": "Pergammon theme: Inter, the design system's sans (app, document headings), with Greek and tabular figures. Journals that ask for Arial/Helvetica (Elsevier, Nature) set it in their theme.",
+   "source": [
+    "lab",
+    "elsevier-overview",
+    "nature-build"
+   ]
+  },
+  "embed": {
+   "$value": "svg: text stays text; pdf: TrueType embedded (Type 42); never outlined",
+   "source": [
+    "nature-build",
+    "elsevier-overview"
+   ]
+  },
+  "colour": {
+   "$value": "neutral-ink",
+   "why": "Text is never coloured; a colour is explained by a key with ink text.",
+   "source": [
+    "nature-spec"
+   ]
+  },
+  "figureTitle": {
+   "in_artwork": false,
+   "size_pt": null,
+   "rule": "Not drawn in the artwork: the title is the first sentence of the legend (textSide.figure_title, T1). It states the finding in one declarative sentence of at most 20 words (T2), or for a figure without a finding what it shows and why (T3); never a question.",
+   "why": "The legend is set by the journal under the figure; a title inside the artwork duplicates it and costs height.",
+   "source": [
+    "rougier2014",
+    "elsevier-neuroimage-captions",
+    "nature-formatting"
+   ]
+  },
+  "panelLetter": {
+   "size_pt": 10.0,
+   "weight": "bold",
+   "case": "upper",
+   "style": "upright",
+   "place": "top-left corner of the panel cell, on the cell's header line",
+   "why": "Upper case matches the text references ('Fig. 2B'); 10 pt bold is one clear step above 8 pt headings. Nature's 8 pt bold lower case is its theme's override.",
+   "source": [
+    "elsevier-sizing",
+    "nature-spec"
+   ]
+  },
+  "panelTitle": {
+   "size_pt": 8.0,
+   "weight": "bold",
+   "case": "sentence",
+   "place": "after the letter on the header line, left-aligned",
+   "why": "One step above the 7 pt text, by weight first.",
+   "source": [
+    "elsevier-sizing",
+    "nature-formatting",
+    "rougier2014"
+   ],
+   "in_artwork": true,
+   "repeat_in_legend": false,
+   "max_chars": 60,
+   "max_lines": 1,
+   "rule": "One line in the figure, at most 60 characters, sentence case, no full stop: the panel's finding (data) or its content (schematic). No internal references (MS1 §, card or request ids), no units or n (textSide.panel_title, P1-P3)."
+  },
+  "axisTitle": {
+   "size_pt": 7.0,
+   "weight": "regular",
+   "case": "sentence",
+   "format": "quantity (unit)",
+   "example": "speed (m/s)",
+   "source": [
+    "elsevier-sizing",
+    "nature-spec"
+   ]
+  },
+  "tickLabel": {
+   "size_pt": 7.0,
+   "weight": "regular",
+   "minus": "U+2212",
+   "source": [
+    "elsevier-sizing"
+   ]
+  },
+  "annotation": {
+   "size_pt": 7.0,
+   "weight": "regular",
+   "source": [
+    "elsevier-sizing"
+   ]
+  },
+  "legendText": {
+   "size_pt": 7.0,
+   "weight": "regular",
+   "note": "the key inside the artwork; the figure legend (caption) is set by the journal",
+   "source": [
+    "elsevier-sizing"
+   ]
+  },
+  "colorbarLabel": {
+   "size_pt": 7.0,
+   "format": "quantity (unit re reference)",
+   "source": [
+    "elsevier-sizing",
+    "nature-spec"
+   ]
+  },
+  "colorbarTick": {
+   "size_pt": 6.0,
+   "why": "the floor is allowed here because colourbar ticks are short numbers next to a 7 pt label; our extension of Elsevier's sub/superscript allowance",
+   "source": [
+    "elsevier-sizing"
+   ]
+  },
+  "subSuperscript": {
+   "size_pt": 6.0,
+   "source": [
+    "elsevier-sizing"
+   ]
+  },
+  "viewLabel": {
+   "size_pt": 6.0,
+   "colour": "neutral-slate",
+   "note": "L lateral / L medial … under cortical views (the one grey text: a label of the view, not of data)"
+  },
+  "iconUnit": {
+   "size_pt": 6.0,
+   "weight": "bold",
+   "source": [
+    "lab"
+   ]
+  },
+  "lineHeight": {
+   "$value": 1.25,
+   "note": "text blocks (panel A)"
+  },
+  "minPrint": {
+   "size_pt": 6.0,
+   "why": "Pergammon and NeuroImage: 6 pt (Elsevier: 'no smaller than 6 pt'; 5 pt printed text was a past MS1 failure). Nature's theme allows 5 pt.",
+   "source": [
+    "elsevier-sizing",
+    "nature-spec"
+   ]
+  },
+  "math": {
+   "status": "REVISED (Diellor's board comment 9, 2026-10-14)",
+   "engine": "mathtext",
+   "fontset": "cm",
+   "font": "Latin Modern Math: the manuscript's math font (templates/manuscripts set maths with unicode-math's default, Latin Modern Math), so a symbol in a figure looks as it does in the text",
+   "usetex": "optional, for expressions mathtext cannot set: style.apply_figure(usetex=True) uses LaTeX (lmodern, amsmath); MATLAB: Interpreter latex",
+   "rule": "Every symbol, Greek letter, sub- or superscript and unit exponent goes through the math typesetter ($...$ in matplotlib, Interpreter latex in MATLAB); never typed as Unicode glyphs in plain text (φ, s⁻¹, J_t).",
+   "conventions": {
+    "variables": "italic: $J$, $t$, $x$, $\\phi$, $\\psi$, $\\lambda$",
+    "vectors": "bold as in the notation table: $\\mathbf{J}$",
+    "operators": "upright: $\\mathrm{div}$, $\\mathrm{curl}$, $\\nabla$, $\\mathrm{d}$, $\\exp$, $\\log$",
+    "constants": "upright: $\\mathrm{e}$, $\\mathrm{i}$, $\\pi$",
+    "units": "upright, thin space after the number, exponents in maths: $5\\,\\mathrm{mm}$, $\\mathrm{s^{-1}}$, $\\mathrm{m\\,s^{-1}}$ (or m/s)",
+    "subscripts": "upright when they are labels (J_\\mathrm{t}, t_\\mathrm{on}), italic when they are indices (x_i)"
+   },
+   "helpers": "style.qlabel(name, symbol, unit) -> 'divergence $\\mathrm{div}\\,\\mathbf{J}$ ($\\mathrm{s^{-1}}$)'; style.QUANTITY[q][\"label\"]",
+   "check": "style.save warns (M1) on Greek letters or Unicode super/subscripts outside $...$",
+   "source": [
+    "texbook",
+    "lab"
+   ]
+  }
+ },
+ "line": {
+  "$description": "Stroke widths (pt) at print size.",
+  "axis_pt": 0.5,
+  "tick_pt": 0.5,
+  "data_pt": 1.0,
+  "event_pt": 1.5,
+  "bar_pt": 1.0,
+  "outline_pt": 0.5,
+  "leader_pt": 0.5,
+  "arrow_pt": 0.8,
+  "min_pt": 0.25,
+  "why": "Nature's 0.25 pt is the thinnest line that prints reliably; data heavier than the frame (data-ink).",
+  "source": [
+   "nature-spec",
+   "tufte"
+  ]
+ },
+ "colour": {
+  "$description": "SYNCED from the design tokens by tokens/sync_colour.py (workspace.pergammon design_tokens). Edit the design token, not this group.",
+  "synced": "2026-10-14T17:54:41Z",
+  "neutral": {
+   "neutral-ink": {
+    "$value": "#1d232b",
+    "meaning": "Neutral: text and outlines on light backgrounds (encodes nothing)"
+   },
+   "neutral-mist": {
+    "$value": "#c9d0d9",
+    "meaning": "Neutral light grey: empty cells, cortex shading base, fixed-atlas parcels (encodes nothing)"
+   },
+   "neutral-night": {
+    "$value": "#14171c",
+    "meaning": "Neutral: dark background (encodes nothing)"
+   },
+   "neutral-paper": {
+    "$value": "#ffffff",
+    "meaning": "Neutral: light background (encodes nothing)"
+   },
+   "neutral-slate": {
+    "$value": "#8a94a3",
+    "meaning": "Neutral mid-grey: rules, grid lines, secondary text, unlabelled cortex; readable on light and dark (encodes nothing)"
+   },
+   "neutral-snow": {
+    "$value": "#e8ecf1",
+    "meaning": "Neutral: text and outlines on dark backgrounds (encodes nothing)"
+   },
+   "trace-neutral": {
+    "$value": "#8a94a3",
+    "meaning": "Neutral: a time-series trace (sensor or source signal) on light backgrounds, drawn under its detected segments (encodes nothing)"
+   },
+   "trace-neutral-dark": {
+    "$value": "#5f6875",
+    "meaning": "Neutral: a time-series trace on dark backgrounds, drawn under its detected segments (encodes nothing); dark-theme twin of trace-neutral"
+   }
+  },
+  "semantic": {
+   "atlas-event": {
+    "$value": "#d1495b",
+    "meaning": "An event or dynamic scout in the dynamics atlas: the cells it occupies and its trajectory (path) through space–time cells"
+   },
+   "atlas-joint-cell": {
+    "$value": "#8e6cc0",
+    "meaning": "A joint space–time cell of the dynamics atlas (space node s at level ℓ × time tile k at level m)"
+   },
+   "atlas-space": {
+    "$value": "#2f7fc1",
+    "meaning": "Space axis of the dynamics atlas: dyadic surface tiles and space levels ℓ"
+   },
+   "atlas-time": {
+    "$value": "#e69f00",
+    "meaning": "Time axis of the dynamics atlas: dyadic time tiles and time levels m (frequency bands sit at their own time level)"
+   },
+   "flow-source": {
+    "$value": "#1b9e77",
+    "meaning": "Irrotational part of a cortical vector field (Helmholtz): sources and sinks, divergence, scalar potential φ"
+   },
+   "flow-vortex": {
+    "$value": "#c2378a",
+    "meaning": "Solenoidal part of a cortical vector field (Helmholtz): vortices, curl (vorticity), stream function ψ"
+   },
+   "trace-event": {
+    "$value": "#d1495b",
+    "meaning": "A detected event on a time series: the samples of its detected segment [tOn, tOff], drawn over the neutral trace on the same line (light and dark)"
+   }
+  },
+  "colormap": {
+   "atlas-coupling": {
+    "$value": "BrBG_r",
+    "meaning": "Signed edge weight between two units of a connectome (e.g. α co-power, Re cross-spectrum), centred on zero: teal negative, white zero, brown positive",
+    "scale": "diverging",
+    "name": "coupling: teal (negative) – brown (positive), diverging"
+   },
+   "atlas-power": {
+    "$value": "magma",
+    "meaning": "Power (or power density) as a level in a cell of the dynamics atlas or the time–frequency plane, in dB re a stated reference; low dark, high bright. A contrast against a baseline takes atlas-power-contrast",
+    "scale": "sequential",
+    "name": "power level: black – purple – yellow, sequential"
+   },
+   "atlas-power-contrast": {
+    "$value": "RdBu_r",
+    "meaning": "Power contrast against a stated baseline (dB re baseline, signed): blue decrease, white no change, red increase; symmetric limits",
+    "scale": "diverging",
+    "name": "power contrast: blue (decrease) – red (increase), diverging"
+   },
+   "atlas-tile-code": {
+    "$value": "viridis",
+    "meaning": "Position of a tile's code within its level (t / 2^ℓ): sibling tiles and their parent get neighbouring colours, so nesting is visible",
+    "scale": "sequential",
+    "name": "tile code: purple – green – yellow, sequential (position, not a measurement)"
+   },
+   "cortex-curvature": {
+    "$value": "amp",
+    "meaning": "Curvature of the folded (pial) cortex, the anatomical base of every cortex render: pale pink on gyral crowns (curvature < 0), deep red in sulci (> 0); symmetric limits [-m, m], m = max(|p1|, |p99|). In illustrations lifted 45 % toward paper so data overlays stay readable.",
+    "scale": "diverging",
+    "name": "cortex curvature: pale pink (gyri) – red (sulci), anatomy only"
+   },
+   "flow-amplitude": {
+    "$value": "cmo.tempo",
+    "meaning": "Amplitude (envelope) of a band-limited signal or field on the cortex, e.g. a band-limited stream-function amplitude (non-negative, from 0): low near white, high deep teal",
+    "scale": "sequential",
+    "name": "band amplitude: white – teal, sequential"
+   },
+   "flow-anisotropy": {
+    "$value": "cmo.solar",
+    "meaning": "Anisotropy of the tangential current orientation, (l1-l2)/(l1+l2) from 0 (isotropic) to 1 (one axis): low dark brown, high yellow",
+    "scale": "sequential",
+    "name": "anisotropy: dark brown – yellow, sequential"
+   },
+   "flow-curl": {
+    "$value": "cmo.curl",
+    "meaning": "Curl (vorticity) of a cortical vector field: teal negative (clockwise seen from outside), white zero, rose positive (counter-clockwise); symmetric limits",
+    "scale": "diverging",
+    "name": "curl: teal (clockwise) – rose (counter-clockwise), diverging"
+   },
+   "flow-divergence": {
+    "$value": "PuOr_r",
+    "meaning": "Divergence div J of a cortical vector field (spreading): purple negative (sink), white zero, orange positive (source); symmetric limits",
+    "scale": "diverging",
+    "name": "divergence: purple (sink) – orange (source), diverging"
+   },
+   "flow-magnitude": {
+    "$value": "cividis",
+    "meaning": "Current magnitude |J| on the cortex (pA·m, non-negative, from 0): low dark blue-grey, high yellow",
+    "scale": "sequential",
+    "name": "current magnitude: blue-grey – yellow, sequential"
+   },
+   "flow-potential": {
+    "$value": "cmo.diff",
+    "meaning": "Scalar potential φ of the irrotational (Helmholtz) part of a cortical field: navy negative, white zero, olive positive; symmetric limits",
+    "scale": "diverging",
+    "name": "potential φ: navy – olive, diverging"
+   },
+   "flow-power-share": {
+    "$value": "cmo.matter",
+    "meaning": "Share of a band power, a dimensionless fraction of a whole from 0 to 1 (normal share of the source current power; relative band power): low pale yellow, high dark magenta",
+    "scale": "sequential",
+    "name": "power share: pale yellow – dark magenta, sequential"
+   },
+   "flow-speed": {
+    "$value": "cmo.speed",
+    "meaning": "Propagation speed on the folded cortex (m/s, non-negative, from 0): low pale yellow, high dark green",
+    "scale": "sequential",
+    "name": "speed: pale yellow – green, sequential"
+   },
+   "flow-stream": {
+    "$value": "cmo.delta",
+    "meaning": "Stream function ψ of the solenoidal (Helmholtz) part of a cortical field: blue negative, pale yellow zero, green positive; symmetric limits",
+    "scale": "diverging",
+    "name": "stream function ψ: blue – green, diverging"
+   },
+   "pet-suvr-amyloid": {
+    "$value": "cmo.dense",
+    "meaning": "Amyloid-β PET uptake as SUVR (ratio to a stated reference region): low pale, high deep purple",
+    "scale": "sequential",
+    "name": "amyloid SUVR: pale – purple, sequential"
+   },
+   "pet-suvr-tau": {
+    "$value": "cmo.turbid",
+    "meaning": "Tau PET uptake as SUVR (ratio to a stated reference region): low pale yellow, high dark brown",
+    "scale": "sequential",
+    "name": "tau SUVR: pale yellow – brown, sequential"
+   },
+   "flow-phase": {
+    "$value": "twilight_shifted",
+    "scale": "cyclic",
+    "status": "APPROVED (board open point 3, 2026-10-14)",
+    "meaning": "Phase or direction of a cortical quantity, cyclic from -pi to pi",
+    "name": "phase: cyclic, black – blue – white – red – black"
+   }
+  },
+  "brand": {
+   "doc-accent": {
+    "$value": "#524ce3",
+    "meaning": "Brand: the accent of our documents (press manuscripts and slide decks, the Pergammon app): heading rules, links, list markers, the slide edge bar. Never in data figures.",
+    "figures": "documents only (press, slides), never in data figures"
+   },
+   "doc-ink": {
+    "$value": "#1b1d24",
+    "meaning": "Neutral: text and headings of documents (manuscripts, slide decks) on light backgrounds (encodes nothing)",
+    "figures": "documents only (press, slides), never in data figures"
+   },
+   "doc-muted": {
+    "$value": "#6b6f7b",
+    "meaning": "Neutral: secondary text of documents — subtitles, bylines, captions, minor headings (encodes nothing)",
+    "figures": "documents only (press, slides), never in data figures"
+   },
+   "doc-unfinished": {
+    "$value": "#c2410c",
+    "meaning": "An unfinished section or placeholder in a manuscript or slide deck (press marks it): text colour of the mark",
+    "figures": "documents only (press, slides), never in data figures"
+   },
+   "doc-unfinished-wash": {
+    "$value": "#fff1e6",
+    "meaning": "An unfinished section or placeholder in a manuscript or slide deck: background shade behind the doc-unfinished mark",
+    "figures": "documents only (press, slides), never in data figures"
+   },
+   "doc-wash": {
+    "$value": "#f5f5fa",
+    "meaning": "Neutral: tinted background of title slides and panels in documents (encodes nothing)",
+    "figures": "documents only (press, slides), never in data figures"
+   },
+   "nxr-cyan-50": {
+    "$value": "#0088ff",
+    "meaning": "Brand: upstream end of the neurodynamics-xr (org) mark ramp — where a streamline enters the saddle; and the node (downstream end) of the Prognome mark ramp; dark backgrounds",
+    "figures": "never in data figures"
+   },
+   "nxr-cyan-60": {
+    "$value": "#0088bb",
+    "meaning": "Brand: the shared cyan of the neurodynamics-xr family on light backgrounds — org ramp upstream end and Prognome node (light-theme twin of nxr-cyan-50)",
+    "figures": "never in data figures"
+   },
+   "nxr-green-50": {
+    "$value": "#00e05a",
+    "meaning": "Brand: downstream end of the neurodynamics-xr (org) mark ramp and upstream end (the focus) of the Rheome mark ramp; the middle dot of the 'neurodynamics·xr' wordmark; dark backgrounds",
+    "figures": "never in data figures"
+   },
+   "nxr-green-70": {
+    "$value": "#008a36",
+    "meaning": "Brand: the shared green of the neurodynamics-xr family on light backgrounds — org ramp downstream end, Rheome focus, wordmark middle dot (light-theme twin of nxr-green-50)",
+    "figures": "never in data figures"
+   },
+   "nxr-magenta-50": {
+    "$value": "#dd00b0",
+    "meaning": "Brand: the shared magenta of the neurodynamics-xr family — outer end of the Rheome mark ramp (where the spiral leaves the focus) and rim (upstream end) of the Prognome mark ramp; dark backgrounds",
+    "figures": "never in data figures"
+   },
+   "nxr-magenta-60": {
+    "$value": "#b80090",
+    "meaning": "Brand: the shared magenta of the neurodynamics-xr family on light backgrounds — Rheome ramp outer end and Prognome rim (light-theme twin of nxr-magenta-50)",
+    "figures": "never in data figures"
+   }
+  }
+ },
+ "grid": {
+  "$description": "Page grid. A figure is a grid of panel cells at a journal width; every cell has a header line (letter + title) and its content below.",
+  "margin_mm": 1.5,
+  "gutter_mm": 4.0,
+  "header_mm": 4.5,
+  "columns": {
+   "$value": "any number; cells span whole columns; letters in reading order (row-major by top-left corner)",
+   "source": [
+    "nature-build"
+   ]
+  },
+  "panelPad_mm": {
+   "plot": [
+    10.0,
+    8.5,
+    1.0,
+    2.0
+   ],
+   "image": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "text": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "cortex": [
+    0,
+    4.0,
+    0,
+    0
+   ],
+   "$description": "left, bottom, right, top padding inside a cell below its header: room for tick labels and axis titles so axes of neighbouring cells align",
+   "abstract": [
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  "aspect": {
+   "timeSeries": {
+    "width_to_height_min": 2.0,
+    "why": "slopes near 45 degrees are read best; time runs long",
+    "source": [
+     "cleveland1984"
+    ]
+   },
+   "sameUnitScatter": {
+    "$value": "equal (1:1) with the identity line",
+    "why": "x and y in the same unit must share a scale or the slope misleads",
+    "source": [
+     "rougier2014"
+    ]
+   },
+   "image": {
+    "$value": "native; never stretched",
+    "source": [
+     "jambor2021"
+    ]
+   },
+   "matrix": {
+    "$value": "square cells",
+    "source": [
+     "tufte"
+    ]
+   },
+   "cortexView": {
+    "$value": "native render aspect (1000 x 760 px viewer)",
+    "source": [
+     "lab"
+    ]
+   }
+  },
+  "source": [
+   "wong2011-layout",
+   "nature-build"
+  ],
+  "keyBand_mm": "legend.keyBand.row_mm per reserved row (figure(keys=...)), plus legend.keyBand.gap_below_mm"
+ },
+ "alignment": {
+  "rules": [
+   {
+    "rule": "Axes in one row share their top and bottom edges; axes in one column share their left spine.",
+    "why": "the eye compares along a straight edge",
+    "source": [
+     "wong2011-layout"
+    ]
+   },
+   {
+    "rule": "Panel letters of a row sit on one line; headers have one height.",
+    "source": [
+     "wong2011-layout"
+    ]
+   },
+   {
+    "rule": "Panels that show the same quantity share the axis range; tick labels and axis titles only on the outer panels (small multiples).",
+    "source": [
+     "tufte",
+     "krzywinski2013-axes"
+    ]
+   },
+   {
+    "rule": "Panels read A, B, C … left to right, top to bottom.",
+    "source": [
+     "nature-build"
+    ]
+   }
+  ],
+  "check": "style.figure places cells on the grid; figure_check flags letters out of order"
+ },
+ "sizing": {
+  "rules": [
+   {
+    "rule": "Draw at the final print width; never scale an export or paste a reduced crop of another figure.",
+    "why": "text and lines shrink below the floor (MS1 Fig. 1C printed at ~3 pt)",
+    "source": [
+     "rougier2014",
+     "elsevier-sizing"
+    ]
+   },
+   {
+    "rule": "The same object keeps the same size within a figure (icons, cortical views of one kind, markers).",
+    "source": [
+     "elsevier-sizing"
+    ]
+   },
+   {
+    "rule": "The smallest width that keeps every text at >= 7 pt and every mark distinguishable.",
+    "source": [
+     "nature-build"
+    ]
+   }
+  ]
+ },
+ "spacing": {
+  "$description": "Distances (mm unless _pt) at print size. White space groups and separates; no boxes.",
+  "gutter_mm": 4.0,
+  "header_mm": 4.5,
+  "margin_mm": 1.5,
+  "labelPad_pt": 2.0,
+  "tickPad_pt": 1.5,
+  "tickLength_pt": 2.0,
+  "minorTickLength_pt": 1.2,
+  "colorbarGap_mm": 1.5,
+  "colorbarThickness_mm": 1.8,
+  "colorbarLength_frac": 0.6,
+  "keyGap_mm": 1.0,
+  "keyRowGap_pt": 2.0,
+  "iconLabelGap_mm": 1.0,
+  "viewGap_mm": 1.0,
+  "textToMark_mm": 0.8,
+  "source": [
+   "wong2010-gestalt",
+   "wong2011-space"
+  ]
+ },
+ "axis": {
+  "spines": {
+   "$value": [
+    "left",
+    "bottom"
+   ],
+   "why": "the frame carries no data",
+   "source": [
+    "tufte",
+    "nature-spec"
+   ]
+  },
+  "ticks": {
+   "direction": "out",
+   "major_count": [
+    3,
+    6
+   ],
+   "values": "round numbers; both ends of the shown range labelled when the range is not 0-based",
+   "minor": "only on log axes",
+   "why": "outward ticks do not touch data; few round ticks are read fastest",
+   "source": [
+    "krzywinski2013-axes",
+    "nature-spec"
+   ]
+  },
+  "title": {
+   "format": "quantity (unit)",
+   "rule": "every axis has a title with its unit in parentheses; a time axis says ms or s; dimensionless says so ('ratio', 'z')",
+   "source": [
+    "nature-spec"
+   ]
+  },
+  "grid": {
+   "$value": "none",
+   "exception": "a single light reference line (0, chance, identity) in neutral-mist, 0.5 pt, dashed",
+   "source": [
+    "nature-spec",
+    "krzywinski2013-axes"
+   ]
+  },
+  "range": {
+   "rule": "to the data, with a zero baseline wherever a quantity is a magnitude compared by length (bars)",
+   "source": [
+    "rougier2014"
+   ]
+  },
+  "log": {
+   "rule": "ticks at decades labelled 10^k or as values; say 'log scale' in the axis title only if not obvious"
+  },
+  "offset": {
+   "rule": "no scientific offset text ('1e-3' at the axis end): put the power in the unit, e.g. (mA/m) or (×10⁻³ s⁻¹)"
+  },
+  "omit": {
+   "rule": "axes are dropped only for images and cortical views, which then carry a scale bar (space) or time bar (time)",
+   "source": [
+    "jambor2021"
+   ]
+  }
+ },
+ "legend": {
+  "$description": "Keys inside the artwork (the caption is the journal's legend). REVISED (Diellor's board comment 3, 2026-10-14): one place, the key band.",
+  "rule": "ONE place per panel: the KEY BAND, a strip the template reserves at the top of the panel cell, under the header line (letter + heading) and above the plot area. Everything that explains a mark of the panel sits there: its colour scales (horizontal colourbars) first, then glyph keys (lines, markers, arrows, isolines, shading), left-aligned with the plot's left edge, in one row, wrapping to a second row inside the band. The band is part of the cell, so a key can never overlap the axes, their labels or a neighbouring panel.",
+  "exceptions": [
+   "direct labels at the data, when ≤ 4 series and each label has free room (they replace the key entry; never over data or another label)",
+   "a key shared by several panels sits in the key band of the first panel that uses it, and the legend says \"key in B applies to B–D\""
+  ],
+  "never": [
+   "a key inside the axes",
+   "a key over data, axis labels, ticks or a neighbouring panel",
+   "a colourbar under or beside a panel (it goes in the band)",
+   "frames or backgrounds",
+   "coloured text"
+  ],
+  "keyBand": {
+   "row_mm": 3.2,
+   "scaleRow_mm": 5.4,
+   "rows_max": 2,
+   "gap_below_mm": 1.2,
+   "entryGap_mm": 3.0,
+   "swatch_mm": 4.0,
+   "colorbar": {
+    "thickness_mm": 1.6,
+    "length_mm": [
+     18,
+     40
+    ],
+    "label": "right of the bar, on its row",
+    "ticks": "under the bar, 6 pt, inside the row"
+   },
+   "rows": "'g' = a glyph-key row (3.2 mm), 's' = a colour-scale row (5.4 mm: bar, ticks under it); figure(keys={'B': 'sg'})"
+  },
+  "frame": "none",
+  "background": "none",
+  "markerLength_mm": 4.0,
+  "why": "One fixed place: the reader always knows where to look, and the template can reserve the room so nothing overlaps (the v1 board's four fall-back places put keys above, inside and under panels and over labels: MS1 Fig. 1A).",
+  "source": [
+   "krzywinski2013-labels",
+   "nature-spec",
+   "lab"
+  ]
+ },
+ "colorbar": {
+  "placement": {
+   "all": "in the panel's key band (legend.keyBand): horizontal, left-aligned, its label to the right on the same row",
+   "shared": "one bar per quantity per figure when all panels share the scale, in the band of the first panel that uses it"
+  },
+  "label": "quantity (unit) or quantity (unit re reference)",
+  "ticks": "numbers at both ends; 0 on a diverging bar; never only '-, 0, +'",
+  "outline": "0.5 pt neutral-slate",
+  "symmetric": "diverging maps: limits -L, +L",
+  "source": [
+   "nature-spec",
+   "crameri2020",
+   "lab"
+  ],
+  "name": "the legend names the map by its descriptive name (colormapName), never by a software name (PuOr_r, cividis)"
+ },
+ "scalebar": {
+  "space": {
+   "colour": "neutral-ink",
+   "width_pt": 1.0,
+   "label": "above, 7 pt, '20 mm'",
+   "cortex": "geodesic distance on the folded surface; on inflated or sphere displays the legend says 'distances on the folded surface'",
+   "per": "one per row of views of one size",
+   "source": [
+    "jambor2021",
+    "nature-spec",
+    "lab"
+   ]
+  },
+  "time": {
+   "colour": "neutral-ink",
+   "width_pt": 1.0,
+   "label": "below, 7 pt, '100 ms'",
+   "when": "absolute time does not matter; else a time axis"
+  },
+  "amplitude": {
+   "colour": "neutral-ink",
+   "width_pt": 1.0,
+   "label": "beside, 7 pt, with unit (pA·m, fT, µV)"
+  },
+  "rule": "editable vector bar and text, never flattened into an image; never a magnification factor",
+  "source_all": [
+   "nature-spec",
+   "jambor2021"
+  ]
+ },
+ "annotation": {
+  "text": {
+   "size_pt": 7.0,
+   "colour": "neutral-ink",
+   "rule": "never coloured; never over busy data without a paper halo (0.8 pt stroke)",
+   "source": [
+    "nature-spec"
+   ]
+  },
+  "leader": {
+   "width_pt": 0.5,
+   "colour": "neutral-ink",
+   "rule": "straight or one elbow; does not cross data",
+   "source": [
+    "krzywinski2013-labels"
+   ]
+  },
+  "arrow": {
+   "width_pt": 0.8,
+   "head": "filled, 2 mm",
+   "rule": "one arrow style per meaning in a figure: an ink pointer points at a feature; a process arrow joins stages; a data vector is a field glyph, never a pointer",
+   "source": [
+    "wong2011-arrows"
+   ]
+  },
+  "values": {
+   "rule": "a number in the artwork carries its unit and its uncertainty as in the text ('0.093 ± 0.01 m/s')",
+   "see": "textSide.statistics (S1-S8): what goes in the figure, the legend and the text"
+  },
+  "inset": {
+   "status": "REVISION 2 (Diellor's board comment 16, 2026-10-14; request 5539a667)",
+   "rule": "an inset is justified only by showing MORE: a higher-resolution, more informative view of what its origin marks (a finer render, a finer mesh, a finer dyadic level), never a stretched or upsampled crop of the parent",
+   "check": "style.inset refuses an inset whose source has fewer than 2x the parent's pixels per mm of the object (I1)",
+   "shapes": [
+    "rectangle",
+    "circle",
+    "the tile's own outline (any closed path)"
+   ],
+   "outline": "the same shape on the origin and the inset, 0.5 pt ink; a 0.5 pt ink leader joins them when they are not adjacent",
+   "multiscale": "the natural inset of our framework: a whole-brain map at a coarse level with an inset of one tile at a finer level; the inset names its level (\"level 7, 2 mm\")",
+   "source": [
+    "jambor2021",
+    "lab"
+   ]
+  }
+ },
+ "outline": {
+  "$description": "When a line around or between things is drawn.",
+  "panel": "never: cells are separated by the gutter",
+  "groupSeparator": "only between groups of panels that are different analyses inside one figure, and only when the gutter is not enough: one 0.5 pt neutral-mist rule across the full width",
+  "image": "none, except a 0.5 pt neutral-mist frame for an image with a white edge on paper",
+  "inset": "the same shape on origin and inset (rectangle, circle or tile outline), 0.5 pt neutral-ink",
+  "colorbar": "0.5 pt neutral-slate",
+  "glyphOnMap": "every coloured arrow or patch on a colour map has an ink edge (contrast on the pink cortex, §0)",
+  "never": [
+   "drop shadows",
+   "boxes around keys",
+   "background panels",
+   "decorative icons"
+  ],
+  "source": [
+   "wong2011-space",
+   "wong2010-gestalt",
+   "nature-spec",
+   "jambor2021"
+  ]
+ },
+ "dynamics": {
+  "$description": "Time-varying results: which form to choose and how to lay it out.",
+  "choose": [
+   {
+    "if": "a scalar (or a few) changes over time",
+    "use": "time series (position on a common scale)",
+    "source": [
+     "cleveland1984"
+    ]
+   },
+   {
+    "if": "a spatial pattern evolves and its shape matters",
+    "use": "snapshot strip (small multiples)",
+    "source": [
+     "tufte"
+    ]
+   },
+   {
+    "if": "the pattern moves along one path",
+    "use": "space-time plot (distance along the path x time), with the strip optional",
+    "source": [
+     "cleveland1984"
+    ]
+   },
+   {
+    "if": "more than 8 frames are needed",
+    "use": "a supplementary video plus a strip or space-time plot in the figure",
+    "source": [
+     "rougier2014"
+    ]
+   }
+  ],
+  "strip": {
+   "frames": 5,
+   "frames_range": [
+    4,
+    8
+   ],
+   "interval": "equal, stated once ('Δt = 20 ms') and t above each frame ('t = 40 ms')",
+   "scale": "one colour scale and one view for the whole strip",
+   "timeAxis": "thin ink time arrow under the strip",
+   "source": [
+    "tufte",
+    "lab"
+   ]
+  },
+  "traceWithEvent": {
+   "status": "REVISED (Diellor's board comment 12, 2026-10-14)",
+   "default": "labelled",
+   "modes": {
+    "labelled": {
+     "what": "the event's samples drawn over the neutral trace in trace-event, 1.5× heavier, and the event named once by a direct label above its segment (≤ 3 words)",
+     "why": "the cleanest look: the event is part of the signal"
+    },
+    "span": {
+     "what": "a shaded span (atlas-event wash, 15 % opacity, no edge) behind the traces over the event's [tOn, tOff], labelled the same way",
+     "when": "an event defined in time rather than on one trace (several traces share it), or many short events"
+    }
+   },
+   "neutral": "trace-neutral",
+   "event": "trace-event",
+   "explain": "the key band or the label names what red (or the span) is",
+   "no": [
+    "boxes with edges",
+    "a second data colour on the trace"
+   ],
+   "code": "style.event_trace(ax, t, x, mask, label=\"spindle\", mode=\"labelled\" | \"span\")",
+   "source": [
+    "lab"
+   ]
+  },
+  "timeMarker": {
+   "rule": "one instant used elsewhere in the figure (t0 of a map) is a dashed neutral-slate rule, 0.5 pt"
+  },
+  "spaceTime": {
+   "status": "REVISION 2 (Diellor's board comment 15, 2026-10-14; request 5539a667)",
+   "what": "the joint product space of a moving pattern: time on x (ms or s), distance along the path on y (mm, geodesic on the folded surface, from the onset tile), colour = the quantity on its own map (tokens quantity)",
+   "reads": "a travelling pattern is a straight ridge; its slope is the speed; a standing pattern is a vertical band; a reversal bends the ridge",
+   "guides": "speed guides: dashed slate lines through the onset at stated speeds (e.g. 0.05, 0.1, 0.2 m/s), each keyed by its speed",
+   "grid": "optionally the dyadic space-time cells as a mist grid (outlines only, never coloured: levels are the grid)",
+   "with": "a time-track lane under it (shared x) and/or a strip; the path is drawn on a small cortex view at the left (free camera)",
+   "code": "style.spacetime(ax, t, s, values, quantity=…, speeds=(…))",
+   "source": [
+    "cleveland1984",
+    "lab"
+   ]
+  },
+  "timeTrack": {
+   "status": "REVISION 2 (Diellor's board comment 15, 2026-10-14; request 5539a667)",
+   "what": "a component that shows how a parameter of a pattern changes over time: one LANE per parameter on a shared time axis (the Cortical Flow Editor tracks: a tool's parameters along the time Line, flat when static, keyed when dynamic)",
+   "parameters": [
+    "position of the extremum (mm along the path, or the tile)",
+    "scale / diffusion of the heat wavelet (mm, or the level)",
+    "heading (deg)",
+    "rotation and chirality (rad/s, sign)",
+    "divergence (s^-1)",
+    "linked parameters (divergence, rotation and scale tied by one rule) as one lane group, the rule named"
+   ],
+   "drivers": {
+    "flat": "constant: a flat line (a static tool)",
+    "keyed": "keyframes (filled ink diamonds) joined linearly or held",
+    "analytic": "a function drives the parameter: ramp (from, to), oscillation (amplitude, period, phase); named once at the lane end",
+    "measured": "read from data: the detection's track"
+   },
+   "truthVsDetected": "for analytic fields the planted track (ink line) and the detected track (atlas-event dots) share a lane: detection read against truth",
+   "layout": {
+    "lane_mm": [
+     5.0,
+     8.0
+    ],
+    "gap_mm": 1.0,
+    "label": "parameter (unit) left of the lane, 7 pt",
+    "ticks": "time tick labels on the bottom lane only",
+    "playhead": "a frame shown elsewhere in the figure is marked on every lane by a thin slate vertical line at its time"
+   },
+   "code": "style.time_tracks(F, k, t, tracks)",
+   "source": [
+    "lab",
+    "editor-time-sequence-2026-10-02"
+   ]
+  }
+ },
+ "cortex": {
+  "views": {
+   "$value": [
+    "L lateral",
+    "L medial",
+    "R medial",
+    "R lateral"
+   ],
+   "rule": "both hemispheres unless the analysis has one, which the legend says; the four-view order holds in the row and the grid",
+   "source": [
+    "lab"
+   ]
+  },
+  "surface": {
+   "status": "REVISION 2 (Diellor's board comment 20, 2026-10-14; request 5539a667)",
+   "default": "folded (pial): in figures, in panel A, in the viewer and in every exporter",
+   "options": {
+    "inflated": "an option for averages and whole-hemisphere overviews where sulcal data would be hidden; written \"inflated\" on the panel; never mixed with folded in one panel",
+    "sphere": "geometry (tiles, gauge) and planted patterns; the radius given"
+   },
+   "cropped": "a cropped or zoomed view is always folded: an inflated crop is not recognisable as cortex",
+   "data": "folded (pial)",
+   "inflated": "an option, labelled, never the default",
+   "source": [
+    "lab"
+   ]
+  },
+  "arrows": {
+   "status": "REVISION 2 (Diellor's board comment 22, 2026-10-14; request 5539a667)",
+   "rule": "arrows show the FULL field by default: one arrow at every sample of the mesh the field is defined on; no striding and no random subsampling",
+   "reduce_only_if": "arrows would be closer than 1 mm in print: then the field is shown at a declared coarser dyadic level (the field averaged over each tile, one arrow at each tile centre), never by dropping samples; the key says so (\"arrows: J_t averaged per level-6 tile\")",
+   "length": "proportional to the magnitude; the key gives the scale (\"arrow 2 mm = 10 pA·m\")",
+   "pairing": "arrows show the same vector whose magnitude or component the colour shows; otherwise each has its own key",
+   "colour": "paper on dark maps, ink on light maps, with an ink edge when coloured",
+   "source": [
+    "cleveland1984",
+    "lab"
+   ]
+  },
+  "viewer": {
+   "size_px": [
+    1000,
+    760
+   ],
+   "pixelRatio": 2,
+   "background": "transparent",
+   "arrowDensity": 1.0,
+   "arrowDensitySigned": 1.0,
+   "isolines": 6,
+   "criticalPoints": "on div / curl",
+   "scaleBar": true,
+   "arrowDensity_note": "revision 2 (comment 22): 1.0 = every vertex (full field); was 0.12 / 0.08",
+   "surface": "pial (folded) by default (comment 20)"
+  },
+  "layouts": {
+   "status": "NEW (Diellor's board comment 8, 2026-10-14)",
+   "row": {
+    "views": [
+     "L lateral",
+     "L medial",
+     "R medial",
+     "R lateral"
+    ],
+    "use": "group averages, whole-brain events, maps compared across the cortex",
+    "code": "style.cortex_views(F, k, imgs, layout=\"row\")"
+   },
+   "grid": {
+    "views": [
+     [
+      "L lateral",
+      "R lateral"
+     ],
+     [
+      "L medial",
+      "R medial"
+     ]
+    ],
+    "use": "the same, compact: a narrow column or several maps side by side",
+    "code": "layout=\"grid\""
+   },
+   "free": {
+    "views": "any camera that shows the point (e.g. along a trajectory, a posterior-dorsal view of a spindle path); both hemispheres in view unless the point is in one",
+    "use": "illustrations and the graphical abstract (panel A); never for a result compared across the cortex",
+    "label": "the camera is named in the key (\"view: left posterior-dorsal\")",
+    "code": "layout=\"free\", labels=[\"view: …\"]"
+   },
+   "facet": {
+    "what": "small multiples of views: rows and columns by a variable (condition, time, band, group) × views; one colour scale; strip labels on the top row and left column only",
+    "code": "style.facet(F, k, rows, cols, images or draw function) — after ggplot2 facet_grid",
+    "source": [
+     "wickham2010",
+     "tufte"
+    ]
+   }
+  },
+  "marks": {
+   "status": "REVISION 2 (Diellor's board comment 21, 2026-10-14; request 5539a667)",
+   "rule": "Chekhov's gun on the cortex: every line, colour, marker and annotation on a cortical surface has a key entry or a legend phrase. A render declares its overlays (cortex_views(..., marks=…) or the viewer's <render>.marks.json), and E1 fails on any overlay without one.",
+   "overlays": {
+    "tile outlines (shown level)": {
+     "style": "ink 0.35 pt",
+     "key": "tile outlines: level ℓ (n tiles, spacing)"
+    },
+    "selected tile or region": {
+     "style": "ink 1.2 pt, or the concept colour if the key names it",
+     "key": "its name: \"tile 13 (level 4)\""
+    },
+    "mask, scout or wavelet support": {
+     "style": "1.0 pt in its concept colour (atlas-space for a space tile)",
+     "key": "its name (\"support of ψ at tile 13\")"
+    },
+    "tile centre or atom centre": {
+     "style": "paper disc, ink edge, ONE size",
+     "key": "tile centres"
+    },
+    "highlighted centre": {
+     "style": "a larger disc only if the key names it",
+     "key": "\"centre of tile 13\""
+    },
+    "critical points": {
+     "style": "+ source, - sink, ○ vortex (ink edge)",
+     "key": "each type"
+    },
+    "isolines": {
+     "style": "ink 0.3 pt, dashed below zero",
+     "key": "isolines: every <step> <unit>"
+    },
+    "arrows": {
+     "style": "cortex.arrows",
+     "key": "what vector, and its scale"
+    },
+    "path / trajectory": {
+     "style": "ink 1.0 pt with an arrowhead at the end",
+     "key": "path of the <event>"
+    },
+    "coarser-level boundaries": {
+     "style": "ink 0.9 pt (heavier: they are a subset of the shown level's)",
+     "key": "level ℓ−1 boundaries"
+    }
+   },
+   "size": "marker size never varies unless a size key gives its meaning",
+   "source": [
+    "chekhov",
+    "jambor2021",
+    "lab"
+   ]
+  }
+ },
+ "icon": {
+  "status": "REVISION 1 (request 26698ce2, Diellor on the icon board, 2026-10-14): frames dropped; one mark at every size; no units in a mark. The icon board (library/styles/icon-board) is the rule.",
+  "levels": {
+   "icon": {
+    "size_mm": [
+     5.0,
+     8.0
+    ],
+    "standard_mm": 7.0,
+    "detail": "the concept's mark with no extra detail; no text, no units, no frame, no internal hairlines, no shading; stroke 0.6-0.7 pt at 7 mm; one token colour at most",
+    "use": "keys, inline in diagrams, beside labels"
+   },
+   "pictogram": {
+    "size_mm": [
+     12.0,
+     30.0
+    ],
+    "detail": "the SAME mark as the icon, larger; it may add detail or be built from several icons at different sizes, never a different mark; neutral fills and one token colour; no units; stroke 0.5-0.8 pt",
+    "use": "panel A (graphical abstract), posters, slides, overview schematics; the current drawn set (icons.draw) is this level"
+   },
+   "illustration": {
+    "size_mm": [
+     25.0,
+     null
+    ],
+    "detail": "rendered geometry: real surfaces; fields computed (analytic or measured), never hand-drawn; cortical fields rendered by Rheome's viewer",
+    "use": "graphical abstracts, posters, covers"
+   }
+  },
+  "one_per_concept": "one concept, ONE MARK at every size (Diellor, 2026-10-14): icon and pictogram are the same mark at different sizes; the illustration shows the same concept in rendered geometry",
+  "frames": {
+   "status": "DROPPED (Diellor, 2026-10-14: 'I agree. Let's drop them'); replaces decision 50f9eb81 (the framed set)",
+   "was": "frame shape = family (modality rounded square, field circle, operator tag, procedure hexagon; geometry, measurement, pattern none)",
+   "why": "at 7 mm a frame takes a third of the glyph's room; the reader does not need the family (the key names each icon); the code was arbitrary and had to be learned; three families already had no frame",
+   "instead": "when a figure must show family membership, the family is a word in the key, not a shape",
+   "code": "icons.VARIANT = 'plain' (no frame, no family mark); 'framed' / 'borderless' / 'tile' / 'twotone' only to redraw old boards"
+  },
+  "rule": "one mark per concept at every size; same size within a figure; colour only by token; no frames, units or text in a mark; an icon names a concept the key or legend uses, never decoration",
+  "strokeFrac": 0.0357,
+  "source": [
+   "lab",
+   "nature-spec",
+   "neurath"
+  ],
+  "units": "no units inside or under an icon or pictogram (Diellor, 2026-10-14): the unit is in the key, legend or axis (icons.draw unit=False by default)",
+  "marks": {
+   "divergence": "8 arrows leaving a centre point (flow-source)",
+   "curl": "a circulation around its centre point, arrow counter-clockwise (flow-vortex)",
+   "trajectory": "a smooth curve ending in an arrow (atlas-event); its illustration is a geodesic on the folded cortex",
+   "eeg": "the head from above with its nose; icon: 5 electrodes (midline + cardinal), pictogram: + the 4 diagonal"
+  }
+ },
+ "marker": {
+  "size_pt": 3.0,
+  "edge_pt": 0.5,
+  "edgeColour": "neutral-ink",
+  "shapes": {
+   "$value": [
+    "o",
+    "s",
+    "^",
+    "D"
+   ],
+   "rule": "at most 4 shapes in one figure; open vs filled is the second channel"
+  },
+  "meaning": {
+   "groundTruth": {
+    "shape": "*",
+    "fill": "neutral-ink",
+    "edge": "neutral-paper"
+   },
+   "recovered": {
+    "shape": "o",
+    "fill": "atlas-event"
+   }
+  },
+  "points": "show individual values when n <= 30 (jittered strip or paired lines), with the summary over them",
+  "doubleEncode": "colour is never the only difference between two marks: shape or line style doubles it",
+  "source": [
+   "krzywinski-wong2013-symbols",
+   "wong2011-colour",
+   "weissgerber2015"
+  ],
+  "phasor": {
+   "status": "REVISION 2 (Diellor's board comment 18, 2026-10-14; request 5539a667) - PROPOSED, with Methods (request to Methods)",
+   "now": "phase takes the cyclic map flow-phase",
+   "proposal": "a phasor glyph: a small circle with a radius at the phase angle (length = amplitude when keyed); the same glyph in Python, Rheome and the Editor; polar plots for distributions (as in the sleep study)"
+  }
+ },
+ "textSide": {
+  "$description": "Text-side rules from Science (request 5356c232, delivered 2026-10-14; Amendment 1, request 4217bca7, 2026-10-14): figure titles (T), panel headings (P), text in the figure vs the legend (X), legend structure (L), colour-map naming (C6), Chekhov's gun (E1, E2), statistics (S), tables vs figures (B). Each rule id is defined and cited in the board §21 and in Science's rules document (figure-text-rules.md, with request 5356c232). Read by style.figure and nxr_figure (panel_title.max_chars), figure_check.py (P1, P3, E1 from <stem>.marks.json) and legend_check.py (T, L, S, C6, E2).",
+  "owner": "org:study-manager (rules); org:design-lead (implementation in the code and the board)",
+  "source": [
+   "elsevier-neuroimage-captions",
+   "nature-formatting",
+   "nature-neuro-aip",
+   "nature-reporting-summary",
+   "plos-cb",
+   "sampl",
+   "cobidas-meeg",
+   "rougier2014",
+   "cumming2007",
+   "weissgerber2015",
+   "durbin2004"
+  ],
+  "figure_title": {
+   "rule_ids": [
+    "T1",
+    "T2",
+    "T3",
+    "T5"
+   ],
+   "where": "legend_only",
+   "printed_in_figure": false,
+   "form": "the finding stated so that a reader of the introduction understands it AND it is exact: name the measured thing, the comparison or condition and the result, in the words the introduction uses for the gap or question; it may take more than one sentence (theme limit). A figure without a finding (schematic, data, method) states what it shows and why (T3).",
+   "max_words": 45,
+   "max_chars": 300,
+   "ends_with": ".",
+   "allowed_kinds": [
+    "finding",
+    "purpose"
+   ],
+   "forbidden": [
+    "question form ('What …', 'Which …', 'Where …')",
+    "bare topic noun phrase when the figure tests something",
+    "claims stronger than the statistics in the same legend"
+   ],
+   "status": "REVISION 2 (Diellor's board comment 13, 2026-10-14; request 5539a667)",
+   "plain_and_precise": {
+    "plain": "no in-group shorthand (\"operator\", \"plant\", \"exact\") without saying what it is; a reader of the abstract can follow it",
+    "precise": "names the quantity, the condition and the result; never stronger than the statistics; a null stated as a null"
+   },
+   "tie": {
+    "rule_id": "T5",
+    "what": "every title states (part of) a claim or hypothesis of the paper; the figure card records it in `supports:` (claim or hypothesis id); the id is never printed",
+    "source": [
+     "lab"
+    ]
+   },
+   "max_sentences": 3,
+   "limits_are": "theme values: the Pergammon theme keeps the longer limits, journal themes cut them (theme.*.overrides)",
+   "examples": [
+    {
+     "figure": "MS1 Fig. 2",
+     "before": "Every operator is exact where truth is known.",
+     "after": "On a sphere, where the true answer is known in closed form, each measurement (size, direction, speed, path, divergence and rotation) returns the planted value; panels F-L show how far each drifts with noise.",
+     "supports": "gap: no ground truth (positioning); VR1",
+     "commentary": "A measure is only trusted if it returns a known answer; this separates errors of the measurement from those of the instrument, which Fig. 9 tests."
+    },
+    {
+     "figure": "MS1 Fig. 9",
+     "before": "Which reported patterns survive the instrument.",
+     "after": "Large reported cortical waves (80–200 mm wavelength) keep their speed, wavelength, rotation and chirality when measured through MEG; smaller patterns (16–57 mm) do not.",
+     "supports": "CL5",
+     "note": "ranges from the MS1 Fig. 9 legend; Science checks the wording against Results 2.7.2",
+     "commentary": "Whether a reported wave can be measured at all depends on its scale relative to what MEG resolves."
+    }
+   ]
+  },
+  "panel_title": {
+   "rule_ids": [
+    "P1",
+    "P2",
+    "P3"
+   ],
+   "where": "figure",
+   "repeat_in_legend": false,
+   "form": "a short heading: the panel's finding (data panels) or its content (schematic panels), sentence case, no full stop",
+   "max_chars": 60,
+   "max_lines": 1,
+   "font_token": "panel_heading (style guide §3: 8 pt bold)",
+   "letter_in_legend": "bold upper-case letter followed by what is plotted",
+   "forbidden_in_heading": [
+    "internal references (MS1 §, MS1 Table, card or request ids)",
+    "units or n (they go on axes and in the legend)"
+   ]
+  },
+  "in_figure_text": {
+   "rule_ids": [
+    "X1",
+    "X2",
+    "X3",
+    "X4"
+   ],
+   "allowed": [
+    "axis titles with units",
+    "tick labels",
+    "keys (in the key band, legend.keyBand) and direct labels",
+    "colourbar titles with quantity and unit",
+    "scale- and time-bar values",
+    "short annotations naming a marked feature (<= 8 words)",
+    "panel letters and panel headings",
+    "condition and group names",
+    "n per group when the panel compares groups",
+    "panel-A step labels (<= 4 words each, noun phrases)"
+   ],
+   "legend_material": [
+    "full sentences explaining how to read the panel",
+    "data provenance (dataset, cohort, preprocessing)",
+    "methods (thresholds, estimators, parameters)",
+    "statistics beyond n and the marked values",
+    "cross-references to other figures, tables or sections"
+   ],
+   "max_words_per_annotation": 8,
+   "max_sentences_in_figure": 0,
+   "panel_A_text_strip": {
+    "status": "WITHDRAWN 2026-10-14 (Diellor's board comment 2; Science Amendment 1, X4): replaced by panelA",
+    "max_words_total": 30
+   },
+   "panel_A": {
+    "rule_ids": [
+     "X4"
+    ],
+    "form": "a mini graphical abstract (tokens panelA): data -> condition -> approach on example data -> detected, left to right; a step that carries nothing is left out",
+    "labels_max_words": 4,
+    "label_form": "a noun phrase that names (\"EEG, 64 channels\", \"N2 sleep\", \"spindle path, m/s\"); never a sentence or an explanation",
+    "sentences": 0,
+    "marks": "every drawn mark (icon, highlighted event, arrow) explained in the key band or in legend entry A (E1)",
+    "legend_entry_A": "the description in one or two sentences: dataset and n with its unit; the example (participant, duration, channel or hemisphere); the event and the measure; procedures go to Methods (L4)"
+   },
+   "keys": {
+    "rule_ids": [
+     "X2"
+    ],
+    "where": "the panel's key band (legend.keyBand); direct labels replace a key entry for <= 4 series with room",
+    "key_vs_legend": "the key gives the short name of a mark; the legend entry says what it means when the name alone does not (quantity, unit, isoline step); it does not repeat the key word for word"
+   },
+   "status": "REVISION 2 (Diellor's board comment 20, 2026-10-14; request 5539a667)",
+   "X1": "No sentences in figures, as a general rule: the sentences go in the legend. An exception must be informative (e.g. a definition the reader needs at the mark) and is declared in code (style.allow_sentence(reason)); style.save and figure_check report every other sentence (X1)."
+  },
+  "legend": {
+   "rule_ids": [
+    "L1",
+    "L2",
+    "L3",
+    "L4",
+    "L5",
+    "L6",
+    "L7"
+   ],
+   "order": [
+    "label",
+    "title",
+    "commentary",
+    "panel_entries_in_letter_order",
+    "shared_conventions",
+    "n_and_statistics",
+    "pointer_to_methods_and_supplementary"
+   ],
+   "label_format": {
+    "main": "Fig. N.",
+    "supplementary": "Fig. SN.",
+    "table": "Table N."
+   },
+   "panel_entry": "**X** what is plotted: quantity (unit); what each mark, line, colour and shading is; the n behind it; centre and spread (named); the test if a p is shown; colour maps by descriptive name (C6); every mark not explained in the key band (E1)",
+   "max_words_main": 450,
+   "max_words_supplementary": 300,
+   "methods_in_legend": "pointer only (\"Section 4.x\"); parameters needed to read the panel may be named, procedures are not described",
+   "provenance_in_legend": false,
+   "forbidden": [
+    "repo@commit, script names, request or card ids, bracketed editorial notes",
+    "error bars or shading without saying what they are",
+    "n missing for any panel with a group statistic",
+    "a term not in the manuscript's notation table or used with a different name in the figure"
+   ],
+   "status": "REVISION 2 (Diellor's board comment 14, 2026-10-14; request 5539a667)",
+   "commentary": {
+    "rule_id": "L7",
+    "where": "right after the title, before panel entry A",
+    "what": "why the figure is shown: the idea it communicates and the question or gap of the introduction it answers (e.g. \"A measure is only trusted if it returns a known answer; this separates errors of the measurement from those of the instrument, which Fig. 9 tests.\"). No new results, no methods.",
+    "max_words": 70,
+    "source": [
+     "lab"
+    ]
+   },
+   "description_then_why": "the panel entries describe what we see; the commentary says why we show it",
+   "limits_are": "theme values: Pergammon (house) keeps the longer limits; journal themes cut them"
+  },
+  "colormap_naming": {
+   "rule_ids": [
+    "C6"
+   ],
+   "rule": "a colour map is named by what it encodes, never by its software name",
+   "name_source": "colormapName (merged into colour.colormap.<token>.name)",
+   "in_legend": "quantity (unit) and the colours at the ends with their meaning, e.g. 'colour: divergence (s⁻¹), purple sinks to orange sources, centred on 0'; a diverging map states its centre; every scale states whether it is clipped",
+   "in_key": "the colourbar carries quantity, unit and ticks",
+   "forbidden": [
+    "software or package map names in keys and legends (PuOr_r, RdBu_r, viridis, cividis, magma, cmo.*, jet)"
+   ],
+   "software_names_go": "Methods, once, citing the published map collection used (e.g. cmocean); never in a legend (L6)",
+   "check": "legend_check.py C6; a bare cmocean name without 'cmo.' (curl, speed, phase) is also a quantity name and is not flagged: a human checks",
+   "source": [
+    "lab"
+   ]
+  },
+  "explain": {
+   "rule_ids": [
+    "E1",
+    "E2"
+   ],
+   "rule": "Chekhov's gun: every class of mark in a panel is explained in the key band or in the panel's legend entry; nothing is explained that is not shown (L3)",
+   "explained_means": "the reader can say what the mark represents (quantity, event, reference) without Methods; naming its style ('dashed line') is not enough",
+   "self_labelling": "scale and time bars with their value, direct labels, annotations, axis titles",
+   "which_place": {
+    "key_band": "what the eye needs while reading the panel: colours, line and marker styles, arrows",
+    "legend": "what a mark means or how it was obtained: a contour's level, what a shaded span contains"
+   },
+   "unexplainable": "a mark that cannot be explained in a short key entry or a legend clause is removed or given its own panel",
+   "E2": "a mark recorded as style.explain(..., where='legend') has its recorded phrase, word for word, in that figure's legend",
+   "details": "tokens explain (Graphics: marks tracking and <stem>.marks.json)",
+   "source": [
+    "chekhov",
+    "lab"
+   ]
+  },
+  "statistics": {
+   "rule_ids": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8"
+   ],
+   "in_figure": [
+    "individual participants as points when n <= 30 per group (else distribution: violin/box with points or density)",
+    "centre and interval marks",
+    "the reference line of the null or chance",
+    "significance marks only if defined in the legend (prefer exact values in text)",
+    "n per group label when groups are compared"
+   ],
+   "in_legend": [
+    "n per group and the unit of n (participants, hemispheres, plants, recordings)",
+    "centre (median/mean) and the interval named (95% CI percentile bootstrap, IQR, SD …)",
+    "the test, sidedness, paired or independent, multiplicity correction (name only)",
+    "what any threshold, contour or shading means"
+   ],
+   "in_text": [
+    "estimate with 95% CI",
+    "test statistic and df where defined",
+    "exact p",
+    "n",
+    "effect size with its definition"
+   ],
+   "p_format": {
+    "style": "p = 0.03; two significant digits; p < 0.001 below 0.001",
+    "adjusted": "p_Holm / p_FDR named as such",
+    "never": [
+     "NS",
+     "p < 0.05 when the exact value is available",
+     "stars without a legend key"
+    ]
+   },
+   "interval_default": "95% CI",
+   "se_as_error_bar": false,
+   "ci_and_test_must_agree": "if a CI computed without multiplicity adjustment is shown beside an adjusted p, say so in Statistics (Section 4.10) once",
+   "report_null_results": true,
+   "thresholded_maps": "show the unthresholded map as well (main or supplementary) and name the threshold"
+  },
+  "tables_vs_figures": {
+   "rule_ids": [
+    "B1",
+    "B2",
+    "B3",
+    "B4"
+   ],
+   "use_table_when": [
+    "the reader needs exact values to compare or re-use",
+    "many quantities per unit with few units (e.g. <= ~10 rows × <= ~8 columns)",
+    "definitions, notation, parameters, participant counts, rules of use"
+   ],
+   "use_figure_when": [
+    "the message is a pattern, trend, distribution or comparison",
+    "values per participant or per vertex",
+    "space, time or scale structure"
+   ],
+   "use_text_when": [
+    "<= ~4 numbers",
+    "a uniform outcome (every case passes)"
+   ],
+   "never_duplicate": "the same numbers in a table and a figure; keep the table in the supplement if both are needed",
+   "table_format": {
+    "title": "above, one line",
+    "notes": "below the body",
+    "vertical_rules": false,
+    "shading": false,
+    "numbering": "in order of first citation",
+    "editable_text": true
+   }
+  }
+ },
+ "theme": {
+  "$description": "Themes (Diellor's board comment 1, 2026-10-14): a journal's requirements are never the default values. The base token groups are the Pergammon theme, ours; a journal theme overrides only what that journal requires (dotted paths into the token groups) and sets its page. Add a journal by adding a theme; nothing else changes. A manuscript picks its theme from its manuscript template (templates/manuscripts/<journal>).",
+  "default": "pergammon",
+  "pergammon": {
+   "name": "Pergammon (house)",
+   "why": "Our own look: the design system's sans (Inter, as in the Pergammon app and our documents) and a page that fits every journal theme in the library at 1:1 (88 / 136 / 180 mm, ≤ 170 mm tall fit both NeuroImage and Nature), so a default figure never has to be rescaled.",
+   "page": {
+    "width_mm": {
+     "min": 30.0,
+     "single": 88.0,
+     "onehalf": 136.0,
+     "double": 180.0
+    },
+    "max_height_mm": 170.0,
+    "text_pt": 7.0,
+    "min_text_pt": 6.0,
+    "dpi": {
+     "halftone": 300,
+     "combination": 600,
+     "line": 1000
+    }
+   },
+   "overrides": {},
+   "fonts_files": "library/styles/Epilogue,Fraunces,Instrument_Sans,Inter,Petrona/Inter/static (registered by style.py)",
+   "source": [
+    "lab"
+   ],
+   "overrides_list": [],
+   "text_limits": {
+    "title_words": 45,
+    "title_sentences": 3,
+    "commentary_words": 70,
+    "legend_words_main": 450,
+    "legend_words_supplementary": 300
+   }
+  },
+  "neuroimage": {
+   "name": "NeuroImage (Elsevier)",
+   "manuscript_template": "templates/manuscripts/neuroimage",
+   "page": {
+    "width_mm": {
+     "min": 30.0,
+     "single": 90.0,
+     "onehalf": 140.0,
+     "double": 190.0
+    },
+    "max_height_mm": 240.0,
+    "text_pt": 7.0,
+    "min_text_pt": 6.0,
+    "dpi": {
+     "halftone": 300,
+     "combination": 500,
+     "line": 1000
+    }
+   },
+   "overrides": {
+    "type.family.$value": [
+     "Helvetica Neue",
+     "Helvetica",
+     "Arial"
+    ],
+    "textSide.figure_title.max_words": 30,
+    "textSide.figure_title.max_sentences": 2,
+    "textSide.legend.commentary.max_words": 40,
+    "textSide.legend.max_words_main": 300,
+    "textSide.legend.max_words_supplementary": 200
+   },
+   "note": "max height 240 mm is the printed text area minus room for the legend: our rule, to confirm at proof (Elsevier gives no figure height).",
+   "source": [
+    "elsevier-sizing"
+   ],
+   "overrides_list": [
+    {
+     "path": "type.family.$value",
+     "value": [
+      "Helvetica Neue",
+      "Helvetica",
+      "Arial"
+     ]
+    },
+    {
+     "path": "textSide.figure_title.max_words",
+     "value": 30
+    },
+    {
+     "path": "textSide.figure_title.max_sentences",
+     "value": 2
+    },
+    {
+     "path": "textSide.legend.commentary.max_words",
+     "value": 40
+    },
+    {
+     "path": "textSide.legend.max_words_main",
+     "value": 300
+    },
+    {
+     "path": "textSide.legend.max_words_supplementary",
+     "value": 200
+    }
+   ],
+   "text_limits_note": "[our choice] where the journal states no number: Elsevier asks for \"a brief title\" and minimal text; Nature for a brief title and legends of about 300 words (rev. 1 L5). Re-check at submission."
+  },
+  "nature": {
+   "name": "Nature journals",
+   "manuscript_template": null,
+   "page": {
+    "width_mm": {
+     "single": 89.0,
+     "onehalf": 136.0,
+     "double": 183.0
+    },
+    "max_height_mm": 170.0,
+    "text_pt": 7.0,
+    "min_text_pt": 5.0,
+    "dpi": {
+     "halftone": 300,
+     "combination": 450,
+     "line": 1000
+    }
+   },
+   "overrides": {
+    "type.family.$value": [
+     "Helvetica Neue",
+     "Helvetica",
+     "Arial"
+    ],
+    "type.panelLetter.size_pt": 8.0,
+    "type.panelLetter.case": "lower",
+    "type.minPrint.size_pt": 5.0,
+    "textSide.figure_title.max_words": 20,
+    "textSide.figure_title.max_sentences": 1,
+    "textSide.legend.commentary.max_words": 25,
+    "textSide.legend.max_words_main": 300,
+    "textSide.legend.max_words_supplementary": 200
+   },
+   "note": "onehalf 136 mm is not in the fetched guide text; used only for checks. Nature gives two width pairs: 89/183 mm (figure guide, used here) and 90/180 mm (formatting guide); a figure at 89/183 fits both within 1 mm (researcher's shelf, 2026-10-14).",
+   "source": [
+    "nature-build",
+    "nature-spec"
+   ],
+   "overrides_list": [
+    {
+     "path": "type.family.$value",
+     "value": [
+      "Helvetica Neue",
+      "Helvetica",
+      "Arial"
+     ]
+    },
+    {
+     "path": "type.panelLetter.size_pt",
+     "value": 8.0
+    },
+    {
+     "path": "type.panelLetter.case",
+     "value": "lower"
+    },
+    {
+     "path": "type.minPrint.size_pt",
+     "value": 5.0
+    },
+    {
+     "path": "textSide.figure_title.max_words",
+     "value": 20
+    },
+    {
+     "path": "textSide.figure_title.max_sentences",
+     "value": 1
+    },
+    {
+     "path": "textSide.legend.commentary.max_words",
+     "value": 25
+    },
+    {
+     "path": "textSide.legend.max_words_main",
+     "value": 300
+    },
+    {
+     "path": "textSide.legend.max_words_supplementary",
+     "value": 200
+    }
+   ],
+   "text_limits_note": "[our choice] where the journal states no number: Elsevier asks for \"a brief title\" and minimal text; Nature for a brief title and legends of about 300 words (rev. 1 L5). Re-check at submission."
+  },
+  "$note_overrides_list": "overrides_list repeats overrides as {path, value} pairs for MATLAB (jsondecode cannot keep dotted keys); edit overrides and re-run the generator line in tokens/README or keep both equal."
+ },
+ "panelA": {
+  "status": "REVISED (Diellor's board comment 2, 2026-10-14): replaces the ≤ 30-word text strip (open point 5, Science X4)",
+  "role": "The figure's topic sentence, drawn: a mini graphical abstract of the study behind the figure. The figure groups its results under one idea, stated like a study statement (e.g. 'Prefrontal amyloid-β predicts cognitive deficits'); that statement is the figure title (textSide T2) and panel A shows how it was studied.",
+  "steps": [
+   {
+    "step": "data",
+    "shows": "the data collection: the modality (EEG cap, MEG helmet, PET scanner …) and who or what was recorded",
+    "form": "pictogram (icon board: pictogram level) + label"
+   },
+   {
+    "step": "condition",
+    "shows": "the condition or question (sleep, rest, a task, a group contrast)",
+    "form": "pictogram or a strip of example data (a hypnogram, a task timeline) + label"
+   },
+   {
+    "step": "approach",
+    "shows": "the analysis illustrated on example data: e.g. cortical flow on one example recording",
+    "form": "example data with the detection drawn on it (events on the trace, a field on the cortex)"
+   },
+   {
+    "step": "detected",
+    "shows": "what is detected or measured: the event or pattern, named, and the measure with its unit",
+    "form": "example (a pattern on the cortex, free camera) + label with the unit"
+   }
+  ],
+  "order": "left to right in reading order, joined by process arrows (annotation.arrow: process); a step may be omitted when it carries nothing (e.g. no condition)",
+  "text": {
+   "labels_max_words": 4,
+   "sentences": 0,
+   "description": "legend entry A says it in words"
+  },
+  "height_mm": [
+   32,
+   55
+  ],
+  "span": "the full figure width, first row",
+  "uses": "pictograms and illustrations from the media library and example data of this study: composed, never redrawn; every mark explained (explain)",
+  "example": "EEG cap (data) → sleep, N2 on a hypnogram (condition) → EEG with one spindle labelled (approach on example data) → the spindle's path on the cortex, speed (m/s) (detected)",
+  "code": "style.abstract_panel(F, \"A\", steps)",
+  "source": [
+   "lab",
+   "elsevier-neuroimage-captions",
+   "rougier2014"
+  ]
+ },
+ "layout": {
+  "status": "NEW (Diellor's board comment 4, 2026-10-14)",
+  "rule": "Every artist of a panel stays inside its cell (header, key band and plot area); nothing overlaps an artist of another panel; inside a panel no text overlaps other text or a key.",
+  "tolerance_mm": 0.2,
+  "controls": {
+   "keys": "rows reserved per panel: style.figure(keys={\"B\": 2})",
+   "pads": "padding per kind or per panel (grid.panelPad_mm; figure(pads=...))",
+   "text": "annotate() and direct_label() are checked like every other artist",
+   "fix": "more room (widths, heights, pads), fewer or shorter words, or a key entry instead of a direct label"
+  },
+  "check": "style.check_layout(F) runs in style.save (raises on an overlap unless save(..., layout=\"warn\")); figure_check O1 (text boxes overlapping) on PDF and SVG",
+  "codes": {
+   "O1": "text overlaps text",
+   "O2": "an artist leaves its panel cell",
+   "O3": "a key or colourbar overlaps axes, ticks or labels",
+   "O4": "an axes element (tick labels, axis title, offset text, axes text) enters its panel header or key band"
+  },
+  "source": [
+   "nature-spec",
+   "wong2011-layout"
+  ],
+  "revision2": "REVISION 2 (Diellor's board comment 17, 2026-10-14; request 5539a667): O4 added; the plot pad top is 2 mm so the top tick label clears the heading; offset text is checked like other text"
+ },
+ "explain": {
+  "status": "NEW (Diellor's board comment 5, 2026-10-14): Chekhov's gun",
+  "rule": "Everything shown is explained. Every class of mark in a panel (trace, line, marker, arrow or vector glyph, isoline, shading or span, colour map, critical point, outline, reference line, region) is named either in the panel's key band or in the panel's legend entry. Self-labelling marks explain themselves: scale and time bars with their value, direct labels, annotations, axis titles.",
+  "examples": [
+   "a scalar map with coloured arrows: the colourbar explains the colour AND a key entry (or the legend) says what the arrows are",
+   "a colour map with isolines: the colourbar AND a key entry 'isolines: every 0.2 s⁻¹'",
+   "a grey disc on the cortex: 'start region' in the key"
+  ],
+  "code": "style tracks the marks of every panel; style.explain(artist, text, where=\"key\"|\"legend\"); style.save writes <stem>.marks.json and warns on unexplained marks (E1); legend_check --marks checks the legend-explained ones against the legend entry",
+  "source": [
+   "chekhov",
+   "jambor2021",
+   "lab"
+  ]
+ },
+ "colormapName": {
+  "$description": "Descriptive names of the colormap tokens (Diellor's board comment 6, 2026-10-14): what the map encodes, its colours low to high, its type. Used in UIs (viewer, Pergammon), keys and legends instead of software names (PuOr_r). Merged into colour.colormap.<token>.name by sync_colour.py.",
+  "flow-divergence": "divergence: purple (sink) – orange (source), diverging",
+  "flow-curl": "curl: teal (clockwise) – rose (counter-clockwise), diverging",
+  "flow-potential": "potential φ: navy – olive, diverging",
+  "flow-stream": "stream function ψ: blue – green, diverging",
+  "atlas-coupling": "coupling: teal (negative) – brown (positive), diverging",
+  "atlas-power-contrast": "power contrast: blue (decrease) – red (increase), diverging",
+  "atlas-power": "power level: black – purple – yellow, sequential",
+  "flow-magnitude": "current magnitude: blue-grey – yellow, sequential",
+  "flow-amplitude": "band amplitude: white – teal, sequential",
+  "flow-speed": "speed: pale yellow – green, sequential",
+  "pet-suvr-amyloid": "amyloid SUVR: pale – purple, sequential",
+  "pet-suvr-tau": "tau SUVR: pale yellow – brown, sequential",
+  "atlas-tile-code": "tile code: purple – green – yellow, sequential (position, not a measurement)",
+  "flow-phase": "phase: cyclic, black – blue – white – red – black",
+  "cortex-curvature": "cortex curvature: pale pink (gyri) – red (sulci), anatomy only",
+  "flow-power-share": "power share: pale yellow – dark magenta, sequential",
+  "flow-anisotropy": "anisotropy: dark brown – yellow, sequential"
+ },
+ "quantity": {
+  "$description": "ONE COLORMAP PER QUANTITY (Diellor's board comment 7, 2026-10-14): different quantities get different maps even when both are sequential (current magnitude vs PET SUVR) or both diverging (divergence vs curl). Within a scale type the maps differ in at least one end hue. A quantity not listed gets its map from Graphics (a new token) before it is plotted. Keys are what style.colorbar(kind=...) and nxr_colorbar take.",
+  "divergence": {
+   "colormap": "flow-divergence",
+   "symbol": "$\\mathrm{div}\\,\\mathbf{J}$",
+   "unit": "$\\mathrm{s^{-1}}$ (or pA·m/mm)",
+   "limits": "symmetric [−L, L], L = p95 of |x|"
+  },
+  "curl": {
+   "colormap": "flow-curl",
+   "symbol": "$\\mathrm{curl}\\,\\mathbf{J}$",
+   "unit": "$\\mathrm{s^{-1}}$",
+   "limits": "symmetric, p95 of |x|"
+  },
+  "potential": {
+   "colormap": "flow-potential",
+   "symbol": "$\\phi$",
+   "limits": "symmetric, p95 of |x|"
+  },
+  "stream": {
+   "colormap": "flow-stream",
+   "symbol": "$\\psi$",
+   "limits": "symmetric, p95 of |x|"
+  },
+  "coupling": {
+   "colormap": "atlas-coupling",
+   "limits": "symmetric"
+  },
+  "power_contrast": {
+   "colormap": "atlas-power-contrast",
+   "unit": "dB re a stated baseline",
+   "limits": "symmetric"
+  },
+  "power": {
+   "colormap": "atlas-power",
+   "unit": "dB re a stated reference",
+   "limits": "a level"
+  },
+  "magnitude": {
+   "colormap": "flow-magnitude",
+   "symbol": "$|\\mathbf{J}|$",
+   "unit": "pA·m",
+   "limits": "from 0 to p99"
+  },
+  "amplitude": {
+   "colormap": "flow-amplitude",
+   "limits": "from 0 to p99"
+  },
+  "speed": {
+   "colormap": "flow-speed",
+   "unit": "m/s",
+   "limits": "from 0"
+  },
+  "suvr_amyloid": {
+   "colormap": "pet-suvr-amyloid",
+   "unit": "SUVR (ratio re a stated reference region)",
+   "limits": "a level; the threshold, if any, named"
+  },
+  "suvr_tau": {
+   "colormap": "pet-suvr-tau",
+   "unit": "SUVR (ratio re a stated reference region)",
+   "limits": "a level"
+  },
+  "phase": {
+   "colormap": "flow-phase",
+   "unit": "rad",
+   "limits": "−π … π"
+  },
+  "code": {
+   "colormap": "atlas-tile-code",
+   "limits": "position, not a measurement"
+  },
+  "anatomy": {
+   "colormap": "cortex-curvature",
+   "note": "never a data scale"
+  },
+  "aliases": {
+   "signed": "divergence (retired kind: say which signed quantity)"
+  },
+  "never": [
+   "jet",
+   "rainbow",
+   "hsv (except as a cyclic map by token)",
+   "red vs green",
+   "one map for two quantities in a figure",
+   "a software name (PuOr_r) in a legend or UI"
+  ],
+  "source": [
+   "crameri2020",
+   "thyng2016",
+   "moreland2009",
+   "lab"
+  ],
+  "power_share": {
+   "colormap": "flow-power-share",
+   "unit": "fraction (0–1) of a stated whole",
+   "limits": "0 to 1, or a stated range"
+  },
+  "anisotropy": {
+   "colormap": "flow-anisotropy",
+   "unit": "index (0–1)",
+   "limits": "0 to 1, or a stated range"
+  }
+ },
+ "levels": {
+  "status": "ADOPTED 2026-10-14 (revision 2)",
+  "rule": "dyadic levels are the grid, not a field: the increments of the parcellation of space and time over the manifold, like the grid spacing of Euclidean space and the spacing used for the calculations and the differential operators. A level never gets a colormap and a tile is never coloured by its level or code in a data figure.",
+  "draw": {
+   "space": "tile outlines in ink: the shown level 0.35 pt; the boundaries it shares with the next coarser level 0.9 pt, so the nesting is visible (coarser boundaries are a subset of finer ones); a tile is named by its number, never a colour",
+   "time": "tile boundaries as ticks or mist lines on the time axis",
+   "spacing": "a level is stated by its spacing: \"level 4 (16 tiles, about 33 mm)\""
+  },
+  "slice": {
+   "what": "one level is a slice through the constant-Q stack",
+   "indicator": "the level indicator: a z-stack glyph of the levels as stacked bars of halving width, the shown level filled ink, the others mist outlines; numbered at the shown level",
+   "code": "style.level_indicator(ax, levels, shown)"
+  },
+  "volume": {
+   "what": "the volume of the levels: a scalogram over the manifold axis (time, or distance along a path) x level, each cell a tile of halving width; outlines only, or a value per cell on its quantity's map",
+   "code": "style.level_scalogram(ax, n_levels, values=None)",
+   "status": "ADOPTED 2026-10-14"
+  },
+  "tile_code_map": "atlas-tile-code is not used for levels or tiles in data figures; it stays only for the dyadic-code schematic (S6) until Science and Methods review the level visualisation",
+  "source": [
+   "lab"
+  ]
+ }
+}
