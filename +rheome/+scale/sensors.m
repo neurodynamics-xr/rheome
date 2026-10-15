@@ -11,6 +11,12 @@ function S = sensors(name, opts)
 % Returns S with .G .ncm .chT .Loc .iSel .nV .Res (rheome.inverse.mne output) .B (rheome.load.bases) .Sf
 % .Ref ([nSel x nSel] the reference operator applied to the gain; identity for MEG).
 %
+% ⭐ THE MEDIAL WALL IS FILLED (decision 3882c4ce, 2026-10-14). S.Sf.Cortex and S.B.(h).S.Cortex mark cortex
+% (rheome.geom.cortexmask); the kernel's wall rows are replaced by the harmonic extension of its cortical
+% rows (rheome.operators.harmonicfill), so every field made from S.Res.ImagingKernel is filled before any
+% operator touches it. The inverse itself is unchanged: the wall dipoles stay in the leadfield.
+% Wall="keep" gives the pre-2026-10-14 behaviour (no fill, every vertex counted as cortex), for comparisons.
+%
 % ⚠ EEG IS AVERAGE-REFERENCED: .G is Ref*G with Ref = I - 1/n over the good EEG channels, so the kernel
 % expects average-referenced data -- apply S.Ref to the recording's rows S.iSel before the kernel.
 %
@@ -21,6 +27,7 @@ function S = sensors(name, opts)
     arguments
         name (1,:) char
         opts.Modality (1,1) string {mustBeMember(opts.Modality, ["MEG" "EEG"])} = "MEG"
+        opts.Wall (1,1) string {mustBeMember(opts.Wall, ["fill" "keep"])} = "fill"
     end
     S.B  = rheome.load.bases(name);
     S.Sf = rheome.load.surface(name);
@@ -36,6 +43,12 @@ function S = sensors(name, opts)
     S.nV  = S.Sf.nV;
     S.Res = rheome.inverse.mne(S.G, S.ncm, struct('ChannelTypes', {S.chT}, 'InverseMeasure', 'amplitude', ...
                                            'nVert', S.nV, 'SnrFixed', 3));
+    if opts.Wall == "keep"                                 % every vertex counted as cortex, nothing filled
+        S.Sf.Cortex = true(S.nV, 1);
+        for h = intersect(fieldnames(S.B), {'L','R'})', S.B.(h{1}).S.Cortex = true(numel(S.B.(h{1}).gv), 1); end
+    else
+        S.Res.ImagingKernel = rheome.operators.harmonicfill(S.Sf, S.Res.ImagingKernel, rheome.geom.cortexmask(S.Sf));
+    end
 end
 
 % Author: Diellor Basha, 2026

@@ -105,6 +105,15 @@ function S = surface(SurfaceFile)
         end
     end
 
+    S.Cortex = true(nV, 1);                                % medial wall: rheome.geom.cortexmask
+    if isfield(raw, 'Atlas') && ~isempty(raw.Atlas)
+        iDK = find(strcmpi({raw.Atlas.Name}, 'Desikan-Killiany'), 1);
+        if ~isempty(iDK) && ~isempty(raw.Atlas(iDK).Scouts)
+            sc = raw.Atlas(iDK).Scouts;  vv = arrayfun(@(k) double(sc(k).Vertices(:)), 1:numel(sc), 'UniformOutput', false);
+            Mb = sparse(repelem(1:numel(sc), cellfun(@numel, vv)), vertcat(vv{:}), true, numel(sc), nV);
+            S.Cortex = rheome.geom.cortexmask(struct('Label', {{sc.Label}}, 'Membership', Mb), nV);
+        end
+    end
     S.SurfaceFile = SurfaceFile;
 end
 

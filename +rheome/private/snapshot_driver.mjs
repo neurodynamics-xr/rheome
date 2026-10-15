@@ -122,15 +122,21 @@ if (!opened) fail('the viewer did not open the bundle in time\n' + logs.join('\n
 if (opened[0] === 'error') fail(`the viewer: ${opened[1].code}: ${opened[1].message}`)
 
 const done = { ready: opened[1], shots: [] }
+let timer
 for (const shot of job.shots) {
   await evalp(`(async()=>{window.__ev=[];window.viewer.set(${JSON.stringify(shot.settings)})})()`)
   await sleep(shot.wait ?? job.wait ?? 600)
   const errs = await evalp(`window.__ev.filter(e=>e[0]==='error').map(e=>e[1])`)
   if (errs?.length) fail(`${shot.name}: the viewer refused ${JSON.stringify(errs)}`)
-  const shotEv = await evalp(`(async()=>{const p=new Promise(r=>window.addEventListener('viewer:screenshot',e=>r(e.detail),{once:true}));` +
-    `await window.viewer.screenshot(${shot.scale ?? job.scale ?? 2}, true);const d=await p;return {png:d.png,marks:d.marks}})()`)
+  // a screenshot the viewer never answers (e.g. a canvas too large for the GPU) fails the run instead of hanging it
+  const shotEv = await Promise.race([evalp(`(async()=>{const p=new Promise(r=>{window.addEventListener('viewer:screenshot',e=>r({png:e.detail.png,marks:e.detail.marks}),{once:true});` +
+    `window.addEventListener('viewer:error',e=>r({png:'error: '+e.detail.code+': '+e.detail.message}),{once:true})});` +
+    `await window.viewer.screenshot(${shot.scale ?? job.scale ?? 2}, true);return await p})()`),
+    new Promise((r) => { timer = setTimeout(r, 1000 * (job.timeout ?? 60)) })
+      .then(() => fail(`${shot.name}: no screenshot in ${job.timeout ?? 60} s at pixel ratio ${shot.scale ?? job.scale ?? 2}`))])
+  clearTimeout(timer)   // this shot's clock only
   const png = shotEv?.png
-  if (!png?.startsWith('data:image/png;base64,')) fail(`${shot.name}: no screenshot`)
+  if (!png?.startsWith('data:image/png;base64,')) fail(`${shot.name}: no screenshot${png ? ' (' + png + ')' : ''}`)
   fs.writeFileSync(path.join(job.out, shot.name + '.png'), Buffer.from(png.split(',')[1], 'base64'))
   if (shotEv.marks) fs.writeFileSync(path.join(job.out, shot.name + '.marks.json'), JSON.stringify(shotEv.marks, null, 2))   // keyed overlays
   done.shots.push({ name: shot.name, settings: await evalp('window.viewer.settings') })

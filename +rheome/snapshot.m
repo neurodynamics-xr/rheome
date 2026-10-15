@@ -35,11 +35,43 @@ function out = snapshot(surf, result, varargin)
 %   Vector     a vector field drawn as arrows (default none); arrows show the same vector the colour shows
 %   Settings   struct of further viewer settings, applied last (README of the viewer, 'The settings')
 %   Name       the files' name (default "shot<k>")
+%   Inset      a MULTISCALE INSET (default none): a region of one view re-rendered by the viewer at a higher
+%              pixel ratio (and, if given, with a finer field), cut to the region's shape on the cortex and laid
+%              out in its own column right of the views, the region outlined on the view and around the inset and
+%              joined by a leader. Not a stretched crop: it prints at >= the journal's dpi at its magnification.
+%              A struct with
+%                Vertices  the region: indices or a logical [nV x 1] (any shape: a tile, a parcel, a patch) REQUIRED
+%                Label     what the inset shows, under it ("tile 12, level 5")                        REQUIRED
+%                Field     the real field painted in the inset (default the shot's Field), e.g. the field at a
+%                          deeper level; it shares the panel's colourbar (same quantity, unit and limits)
+%                Zoom      the inset's pixel ratio over the views' (default 4, >= 2: rule I1 of the tokens' inset;
+%                          capped at pixel ratio 4, the viewer's largest working screenshot, and refused if the
+%                          cap leaves it under 2: today an inset suits the four-view row, whose ratio is 2)
+%                View      the view the region is taken from (default the first of the shot's views)
+%                Shape     "tile" (default): cut by the region's own mask and outlined by its contour (a dyadic tile,
+%                          a parcel); "disk": the same, for a geodesic disk; "square": a square around the region
+%                          (tokens annotation.inset). With no Vertices, the shot's first Selection is the region
+%                          (and a disk selection makes a disk inset)
+%              A strip takes no inset.
+%   Selection  SELECTED regions (default none), each a state of the surface (tokens cortex.selection): a blended
+%              fill in its axis colour at the tokens' alpha (35 %), outlined as a tile (0.35 pt ink); or, Dashed, an
+%              EXTENT (a support or mask: a dashed 0.8 pt ink line, no fill). A struct (array) with
+%                Vertices  the region: indices or a logical [nV x 1] (a tile, a parcel)          one of these two
+%                Centre, RadiusMM   a GEODESIC DISK: every vertex within RadiusMM of Centre along the folded surface
+%                Label     its name for the key ("tile 13 (level 4), selected")                       REQUIRED
+%                Axis      "space" (default) | "time" | "joint": the colour (atlas-space, atlas-time, atlas-joint-cell)
+%                Dashed    true for an extent (default false)
+%              A Centre (also allowed with Vertices) is drawn as the tokens' centre: one size, filled with the colour.
+%   Paths      GEODESIC paths on the folded surface (default none; tokens cortex.paths): ink at the tokens' width,
+%              an arrowhead at the end, hidden where the surface hides it. A struct (array) with
+%                From, To  vertices: traced by rheome.geom.geodesicpath (steepest descent of the heat distance)
+%                Points    or a path the caller traced, [n x 3] on the shown surface, with How (its method) REQUIRED
+%                Label     what it is ("path of the event")                                            REQUIRED
 %
 % OPTIONS (name/value):
 %   'Out'       folder written (created)                                                     REQUIRED
 %   'Fs'        sampling rate of result's columns, Hz (default 1)
-%   'Width'     the panel's width: "single" | "onehalf" | "double" (the token journal's widths) or mm
+%   'Width'     the panel's width: "single" | "onehalf" | "double" (the token theme's widths) or mm
 %               (default: "double" for four views or a strip, "single" for one view)
 %   'ScaleBar'  the scale bar's length, mm along the folded surface; 0: none (default 20)
 %   'Folded'    the name of the folded surface in surf, on which the bar is measured (default "pial" when surf has
@@ -59,7 +91,15 @@ function out = snapshot(surf, result, varargin)
 %   out : struct array, one per shot: .name .svg .pdf .png .renders (the viewer's PNGs) .clim .colormap .quantity
 %         .colorbar (its label) .views .times (s) .dpi (resolution of the views as printed) .scalebar (.mm, .view,
 %         .length_mm measured along the drawn curve, .vertices) .legend (the sentence the figure legend needs:
-%         views, surface, the bar's distance, the interval) .settings (each render's viewer settings)
+%         views, surface, the bar's distance, the interval, the inset) .settings (each render's viewer settings)
+%         .inset (.label .view .magnification (x, the inset's length per the view's) .dpi .vertices .px (the
+%         region's outline on the view, render pixels) .shape) or []
+%         .selections (.label .kind ("tile" | "disk") .axis .colour .dashed .vertices) .paths (.label .how .length_mm
+%         along the folded surface, .geodesic_mm the heat distance between its ends (From/To), .points)
+%         .cameras, one per render, so a caller can place vector marks on the page: .view .render .R (2 x 3) .s
+%         (px per mesh unit) .off (px) .d (view direction) .crop (render px [c1 c2 r1 r2]) .origin_mm .mm_per_px:
+%             page_mm = origin_mm + mm_per_px * (s * X * R' + off - [crop(1) crop(3)] + 0.5)
+%         (empty where the render's silhouette could not be fitted; the marks need it and refuse)
 %
 % THE SCALE BAR is a curve on the surface, not a line on the image: the shortest path along the mesh edges of the
 % folded surface (rheome.geom.edgegraph, no diagonals, so the curve lies on the mesh), cut at exactly 'ScaleBar' mm
@@ -118,11 +158,11 @@ function out = snapshot(surf, result, varargin)
     if ~isfile(fullfile(vdir, 'viewer.html')), error('rheome:snapshot:noviewer', 'No viewer at %s (Viewer= or RHEOME_VIEWER).', vdir); end
     cmaps = viewerColormaps(vdir);
 
-    shots = normalise(o.Shots, result, surfs, T, o.Fs, tok, cmaps);
-    hemi = hemispheres(surfs.(snames{1}));
     folded = o.Folded;
     if isempty(folded), folded = snames{1}; if any(strcmp(snames, 'pial')), folded = 'pial'; end, end
     folded = pickName(folded, snames, 'Folded');
+    shots = normalise(o.Shots, result, surfs, T, o.Fs, tok, cmaps, surfs.(folded));
+    hemi = hemispheres(surfs.(snames{1}));
 
     % one bundle, one viewer run for every render
     work = tempname;  mkdir(work);  cleanWork = onCleanup(@() rmdir(work, 's'));
@@ -131,16 +171,23 @@ function out = snapshot(surf, result, varargin)
         'Labellings', o.Labellings, 'Points', o.Points);
     if ~isfolder(o.Out), mkdir(o.Out); end
     renders = {};
-    J = tok.journal.(tok.journal.default);
+    J = tok.theme.(tok.theme.default).page;
     for k = 1:numel(shots)
         shots(k).dir = fullfile(o.Out, shots(k).Name);
         if ~isfolder(shots(k).dir), mkdir(shots(k).dir); end
         % the pixel ratio that prints the views at the journal's dpi: a cortex fills about half the render's width
         n = numel(shots(k).renders);  W = panelWidth(o.Width, n, J);
+        if ~isempty(shots(k).Inset), n = n + 1; W = panelWidth(o.Width, n, J); end   % the inset takes a column
         need = ((W - (n - 1) * tok.spacing.viewGap_mm) / n) / 25.4 * J.dpi.combination / (0.5 * tok.cortex.viewer.size_px(1));
         scale = max(o.Scale, ceil(10 * need) / 10);
         for r = 1:numel(shots(k).renders)
             renders{end+1} = struct('name', shots(k).renders(r).file, 'settings', shots(k).renders(r).settings, 'scale', scale); %#ok<AGROW>
+        end
+        if ~isempty(shots(k).Inset)
+            % shortcut: the viewer has no camera zoom, so the inset is the whole view at a higher pixel ratio, capped
+            % at pixel ratio 4; a viewer zoom-to-region setting would lift the cap (asked of Product)
+            si = min(scale * shots(k).Inset.Zoom, 4);   % measured 2026-10-14: 4 and 4.2 render; 6 and 8.1 give no screenshot in 300 s
+            renders{end+1} = struct('name', shots(k).Inset.render.file, 'settings', shots(k).Inset.render.settings, 'scale', si); %#ok<AGROW>
         end
     end
     job = struct('viewer', vdir, 'bundle', fullfile(work, 'bundle'), 'out', work, 'chrome', chromePath(o.Chrome), ...
@@ -156,6 +203,7 @@ function out = snapshot(surf, result, varargin)
             mk = fullfile(work, [s.renders(r).file '.marks.json']);   % the render's overlays and keys (rheome.viz.marks)
             if isfile(mk), movefile(mk, fullfile(s.dir, [s.renders(r).label '.marks.json']), 'f'); end
         end
+        if ~isempty(s.Inset), movefile(fullfile(work, [s.Inset.render.file '.png']), fullfile(s.dir, [s.Inset.render.label '.png']), 'f'); end
         [o1, graphCache, pj] = compose(s, surfs, F, hemi, folded, graphCache, tok, cmaps, o);
         out = [out o1]; %#ok<AGROW>
         if ~isempty(pj.pdf) || ~isempty(pj.png), prints{end+1} = pj; end %#ok<AGROW>
@@ -167,13 +215,13 @@ end
 
 %% ---------------------------------------------------------------- the shots
 
-function shots = normalise(in, result, surfs, T, fs, tok, cmaps)
+function shots = normalise(in, result, surfs, T, fs, tok, cmaps, Sf)
 % each shot checked, its defaults from the tokens, and its renders (one per view or frame) with full viewer settings
     if isempty(in), in = {struct()}; end
     if isstruct(in), in = num2cell(in); end
     if ~iscell(in), error('rheome:snapshot:input', 'Shots: a struct array or a cell array of structs is expected.'); end
     known = {'Field', 'Unit', 'Label', 'Reference', 'Quantity', 'CLim', 'Colormap', 'Time', 'Frames', 'View', ...
-        'Hemisphere', 'Surface', 'Vector', 'Settings', 'Name'};
+        'Hemisphere', 'Surface', 'Vector', 'Settings', 'Name', 'Inset', 'Selection', 'Paths'};
     fields = fieldnames(result);
     nV = size(surfs.(firstOf(fieldnames(surfs))).Vertices, 1);
     real = fields(cellfun(@(f) size(result.(f), 1) == nV, fields));
@@ -228,7 +276,8 @@ function shots = normalise(in, result, surfs, T, fs, tok, cmaps)
         q = char(g('Quantity', ''));
         if isempty(q), if any(xs < 0) && any(xs > 0), q = 'signed'; else, q = 'magnitude'; end, end
         s.Quantity = pickName(q, {'signed', 'magnitude', 'power', 'phase', 'coupling', 'code'}, 'Quantity');
-        bq = tok.colour.byQuantity.(s.Quantity);
+        qn = s.Quantity;  if strcmp(qn, 'signed'), qn = 'divergence'; end   % the tokens name each signed quantity; one map
+        bq = tok.quantity.(qn);
         tokenName = regexp(bq.colormap, '^[\w\-]+', 'match', 'once');
         s.Colormap = char(g('Colormap', tok.colour.colormap.(strrep(tokenName, '-', '_')).x_value));
         if ~isKey(cmaps, s.Colormap)
@@ -278,8 +327,124 @@ function shots = normalise(in, result, surfs, T, fs, tok, cmaps)
             end
         end
         s.renders = rs;  s.dir = '';
+        s.Selection = selections(g('Selection', []), s.Name, nV, Sf, tok);
+        s.Paths = paths(g('Paths', []), s.Name, nV, Sf);
+        s.Inset = inset(g('Inset', []), s, k, real, nV);
         shots(k) = s;
     end
+end
+
+function in = inset(a, s, k, real, nV)
+% a shot's inset, checked; its render: the view's settings with the inset's field
+    in = [];
+    if isempty(a), return; end
+    if ~isstruct(a) || ~isscalar(a), error('rheome:snapshot:inset', '%s: Inset is a struct.', s.Name); end
+    bad = setdiff(fieldnames(a), {'Vertices', 'Label', 'Field', 'Zoom', 'View', 'Shape'});
+    if ~isempty(bad), error('rheome:snapshot:inset', '%s: %s is not an inset field.', s.Name, strjoin(bad, ', ')); end
+    if numel(s.frames) > 1, error('rheome:snapshot:inset', '%s: a strip takes no inset.', s.Name); end
+    v = get(a, 'Vertices', []);  shape = 'tile';
+    if isempty(v) && ~isempty(s.Selection), m = s.Selection(1).mask;  shape = s.Selection(1).kind;
+    else, m = vertexMask(v, nV, sprintf('%s: Inset.Vertices', s.Name), 'rheome:snapshot:inset');
+    end
+    shape = pickName(get(a, 'Shape', shape), {'tile', 'disk', 'square'}, 'Inset.Shape');
+    if nnz(m) < 3, error('rheome:snapshot:inset', '%s: Inset.Vertices: a region of 3 vertices or more.', s.Name); end
+    lab = char(get(a, 'Label', ''));
+    if isempty(lab), error('rheome:snapshot:inset', '%s: Inset.Label: say what the inset shows (it is drawn under it).', s.Name); end
+    z = double(get(a, 'Zoom', 4));
+    if ~(isscalar(z) && z >= 2), error('rheome:snapshot:inset', '%s: Inset.Zoom >= 2 (an inset shows more: tokens annotation.inset, I1).', s.Name); end
+    vi = find(strcmpi(char(get(a, 'View', s.views{1, 1})), s.views(:, 1)), 1);
+    if isempty(vi), error('rheome:snapshot:inset', '%s: Inset.View: one of %s.', s.Name, strjoin(s.views(:, 1), ', ')); end
+    f = pickName(get(a, 'Field', s.Field), real, 'Inset.Field');
+    r = s.renders(vi);  r.settings.scalar = f;
+    r.file = sprintf('s%d_inset', k);  r.label = [r.label '_inset'];
+    in = struct('mask', m, 'Label', lab, 'Zoom', z, 'view', vi, 'Field', f, 'render', r, 'Shape', shape);
+end
+
+function m = vertexMask(v, nV, what, id)
+    if islogical(v) && numel(v) == nV, m = v(:);
+    elseif isnumeric(v) && ~isempty(v) && all(v(:) >= 1 & v(:) <= nV & v(:) == round(v(:))), m = false(nV, 1);  m(v) = true;
+    else, error(id, '%s: indices in 1..%d or a logical [nV x 1].', what, nV);
+    end
+end
+
+function sel = selections(a, name, nV, Sf, tok)
+% the shot's selections, checked: masks (a disk measured along the folded surface) and their colours by axis
+    sel = struct('mask', {}, 'label', {}, 'kind', {}, 'axis', {}, 'colour', {}, 'dashed', {}, 'centre', {});
+    if isempty(a), return; end
+    if ~isstruct(a), error('rheome:snapshot:selection', '%s: Selection is a struct (array).', name); end
+    for j = 1:numel(a)
+        b = a(j);  id = 'rheome:snapshot:selection';
+        bad = setdiff(fieldnames(b), {'Vertices', 'Centre', 'RadiusMM', 'Label', 'Axis', 'Dashed'});
+        if ~isempty(bad), error(id, '%s: %s is not a selection field.', name, strjoin(bad, ', ')); end
+        c = get(b, 'Centre', []);
+        if ~isempty(c) && ~(isscalar(c) && c >= 1 && c <= nV && c == round(c)), error(id, '%s: Selection.Centre: a vertex in 1..%d.', name, nV); end
+        if isfield(b, 'Vertices') && ~isempty(b.Vertices)
+            m = vertexMask(b.Vertices, nV, sprintf('%s: Selection.Vertices', name), id);  kind = 'tile';
+        elseif ~isempty(c) && isfield(b, 'RadiusMM') && isscalar(b.RadiusMM) && b.RadiusMM > 0
+            m = rheome.geom.geodesic(Sf, c) * 1e3 <= b.RadiusMM;  kind = 'disk';   % mesh in metres, as the scale bar
+        else
+            error(id, '%s: Selection: Vertices, or Centre with RadiusMM (a geodesic disk).', name);
+        end
+        lab = char(get(b, 'Label', ''));
+        if isempty(lab), error(id, '%s: Selection.Label: its name for the key.', name); end
+        ax = pickName(get(b, 'Axis', 'space'), {'space', 'time', 'joint'}, 'Selection.Axis');
+        tokName = struct('space', 'atlas_space', 'time', 'atlas_time', 'joint', 'atlas_joint_cell').(ax);
+        sel(end+1) = struct('mask', m, 'label', lab, 'kind', kind, 'axis', ax, ...
+            'colour', tok.colour.semantic.(tokName).x_value, 'dashed', logical(get(b, 'Dashed', false)), 'centre', c); %#ok<AGROW>
+    end
+end
+
+function P = paths(a, name, nV, Sf)
+% the shot's paths: traced on the folded surface (From/To) or given (Points, with How); each point kept as a face and
+% barycentric coordinates, so it is drawn on whichever surface the shot shows
+    P = struct('label', {}, 'how', {}, 'points', {}, 'faces', {}, 'bary', {}, 'length_mm', {}, 'geodesic_mm', {});
+    if isempty(a), return; end
+    if ~isstruct(a), error('rheome:snapshot:path', '%s: Paths is a struct (array).', name); end
+    solver = [];
+    for j = 1:numel(a)
+        b = a(j);  id = 'rheome:snapshot:path';
+        bad = setdiff(fieldnames(b), {'From', 'To', 'Points', 'How', 'Label'});
+        if ~isempty(bad), error(id, '%s: %s is not a path field.', name, strjoin(bad, ', ')); end
+        lab = char(get(b, 'Label', ''));
+        if isempty(lab), error(id, '%s: Paths.Label: what the path is, for the key.', name); end
+        if isfield(b, 'Points') && ~isempty(b.Points)
+            how = char(get(b, 'How', ''));
+            if isempty(how), error(id, '%s: Paths.How: a given path states how it was traced on the surface (tokens cortex.paths).', name); end
+            X = double(b.Points);
+            if size(X, 2) ~= 3 || size(X, 1) < 2, error(id, '%s: Paths.Points: [n x 3], n >= 2.', name); end
+            [fc, bc] = onMesh(X, Sf);  geo = NaN;
+        else
+            fr = get(b, 'From', []);  to = get(b, 'To', []);
+            if ~(isscalar(fr) && isscalar(to) && all([fr to] >= 1 & [fr to] <= nV & [fr to] == round([fr to])))
+                error(id, '%s: Paths: From and To (vertices in 1..%d), or Points with How.', name, nV);
+            end
+            [X, info] = rheome.geom.geodesicpath(Sf, fr, to, solver);  solver = info.solver;
+            fc = info.faces([1:end end]);  bc = bary(X, Sf, fc);  geo = 1e3 * info.distance;
+            how = 'steepest descent of the heat-method distance on the folded surface (rheome.geom.geodesicpath)';
+        end
+        P(end+1) = struct('label', lab, 'how', how, 'points', X, 'faces', fc, 'bary', bc, ...
+            'length_mm', 1e3 * sum(vecnorm(diff(X), 2, 2)), 'geodesic_mm', geo); %#ok<AGROW>
+    end
+end
+
+function [fc, bc] = onMesh(X, S)
+% each point's nearest face (by its centroid among the nearest vertex's faces) and barycentric coordinates there
+    V = double(S.Vertices);  F = double(S.Faces);
+    nv = dsearchn(V, X);  fc = zeros(size(X, 1), 1);
+    for i = 1:size(X, 1)
+        cand = find(any(F == nv(i), 2));
+        [~, j] = min(vecnorm((V(F(cand,1),:) + V(F(cand,2),:) + V(F(cand,3),:))/3 - X(i,:), 2, 2));
+        fc(i) = cand(j);
+    end
+    bc = bary(X, S, fc);
+end
+
+function bc = bary(X, S, fc)
+    V = double(S.Vertices);  F = double(S.Faces);
+    A = V(F(fc,1),:);  e1 = V(F(fc,2),:) - A;  e2 = V(F(fc,3),:) - A;  q = X - A;
+    d11 = sum(e1.*e1, 2);  d12 = sum(e1.*e2, 2);  d22 = sum(e2.*e2, 2);  q1 = sum(q.*e1, 2);  q2 = sum(q.*e2, 2);
+    den = d11.*d22 - d12.^2;  u = (d22.*q1 - d12.*q2)./den;  w = (d11.*q2 - d12.*q1)./den;
+    bc = [1 - u - w, u, w];
 end
 
 function v = get(a, n, d)
@@ -471,7 +636,7 @@ end
 function [r, G, job] = compose(s, surfs, F, hemi, folded, G, tok, cmaps, o)
 % the panel as an SVG in mm at print size (views embedded as PNG at their rendered resolution; text, bars and colourbar
 % vector, editable), and the print job that turns it into PDF and PNG
-    J = tok.journal.(tok.journal.default);
+    J = tok.theme.(tok.theme.default).page;
     ink = tok.colour.neutral.neutral_ink.x_value;  slate = tok.colour.neutral.neutral_slate.x_value;
     paper = tok.colour.neutral.neutral_paper.x_value;
     fam = strjoin(strcat('''', tok.type.family.x_value, ''''), ', ');
@@ -483,13 +648,16 @@ function [r, G, job] = compose(s, surfs, F, hemi, folded, G, tok, cmaps, o)
     for i = 1:nview
         [img{i}, ~, al{i}] = imread(fullfile(s.dir, [s.renders(i).label '.png']));
         if isempty(al{i}), error('rheome:snapshot:alpha', 'The render has no alpha (background must be transparent).'); end
+        al{i} = cortexOnly(al{i});
         [rr, cc] = find(al{i} > 0);
         pad = round(0.02 * size(al{i}, 2));
         crop(i, :) = [max(1, min(cc) - pad), min(size(al{i}, 2), max(cc) + pad), max(1, min(rr) - pad), min(size(al{i}, 1), max(rr) + pad)];
     end
     if strip, crop = repmat([min(crop(:, 1)) max(crop(:, 2)) min(crop(:, 3)) max(crop(:, 4))], nview, 1); end   % one box for every frame
     gap = tok.spacing.viewGap_mm;
-    cw = (W - (nview - 1) * gap) / nview;
+    ncol = nview + ~isempty(s.Inset);                             % the inset: a column of its own, right of the views
+    if ~isempty(s.Inset), W = panelWidth(o.Width, ncol, J); end
+    cw = (W - (ncol - 1) * gap) / ncol;
     k = min(cw ./ (crop(:, 2) - crop(:, 1) + 1));                 % mm per pixel
     rowH = k * max(crop(:, 4) - crop(:, 3) + 1);
     dpi = 25.4 / k;
@@ -512,13 +680,32 @@ function [r, G, job] = compose(s, surfs, F, hemi, folded, G, tok, cmaps, o)
 
     r = struct('name', s.Name, 'svg', '', 'pdf', '', 'png', '', 'renders', {fullfile(s.dir, strcat({s.renders.label}, '.png'))}, ...
         'clim', s.CLim, 'colormap', s.Colormap, 'quantity', s.Quantity, 'colorbar', '', 'views', {unique({s.renders.view}, 'stable')}, ...
-        'times', s.times, 'dpi', dpi, 'scalebar', [], 'legend', '', 'settings', {{s.renders.settings}});
+        'times', s.times, 'dpi', dpi, 'scalebar', [], 'legend', '', 'settings', {{s.renders.settings}}, 'inset', [], ...
+        'selections', rmfield(s.Selection, {'mask', 'centre'}), 'paths', rmfield(s.Paths, {'faces', 'bary'}), 'cameras', []);
+    for j = 1:numel(s.Selection), r.selections(j).vertices = find(s.Selection(j).mask); end
     Vd = surfs.(s.Surface).Vertices;
+    E = double(F);  el = median(vecnorm(Vd(E(:, 1), :) - Vd(E(:, 2), :), 2, 2));   % the shown mesh's edge
+    marks = ~isempty(s.Selection) || ~isempty(s.Paths);
+    cams = struct('view', {}, 'render', {}, 'R', {}, 's', {}, 'off', {}, 'd', {}, 'crop', {}, 'origin_mm', {}, 'mm_per_px', {});
     for i = 1:nview
         c = crop(i, :);  wpx = c(2) - c(1) + 1;  hpx = c(4) - c(3) + 1;
         x = (i - 1) * (cw + gap) + (cw - k * wpx) / 2;  y = y0 + (rowH - k * hpx) / 2;
         svg{end+1} = sprintf('<image x="%.3f" y="%.3f" width="%.3f" height="%.3f" preserveAspectRatio="none" xlink:href="data:image/png;base64,%s"/>', ...
             x, y, k * wpx, k * hpx, png64(img{i}(c(3):c(4), c(1):c(2), :), al{i}(c(3):c(4), c(1):c(2)))); %#ok<AGROW>
+        % the render's camera (read from its silhouette), for the marks and for callers placing their own
+        h = s.renders(i).hemisphere;  shown = hemi > 0;
+        if ~strcmp(h, 'both'), shown = hemi == find(strcmp({'left', 'right'}, h)); end
+        try
+            cam = fitCamera(al{i}, Vd(shown, :), s.renders(i).camera);
+            cams(i) = struct('view', s.renders(i).view, 'render', r.renders{i}, 'R', cam.R, 's', cam.s, 'off', cam.off, ...
+                'd', cam.d, 'crop', c, 'origin_mm', [x y], 'mm_per_px', k);
+        catch err
+            if marks, rethrow(err); end
+            cam = [];  cams(i).view = s.renders(i).view;  cams(i).render = r.renders{i};
+        end
+        if marks
+            [svg, r] = drawMarks(svg, r, s, cam, al{i}, Vd, F, shown, el, [x y], k, c, tok, pt, i);
+        end
         cx = x + k * wpx / 2;
         if strip
             svg{end+1} = T(cx, y0 - 0.25 * fa * pt, sprintf('t = %s', timeText(s.times(i))), fa, ink, 'middle', ''); %#ok<AGROW>
@@ -526,10 +713,8 @@ function [r, G, job] = compose(s, surfs, F, hemi, folded, G, tok, cmaps, o)
             svg{end+1} = T(cx, y1 + 1.1 * fv * pt, s.renders(i).view, fv, slate, 'middle', ''); %#ok<AGROW>
         end
         % one geodesic scale bar per row: on the first view where a visible stretch is found
-        if o.ScaleBar > 0 && isempty(r.scalebar)
-            h = s.renders(i).hemisphere;  shown = hemi > 0;
-            if ~strcmp(h, 'both'), shown = hemi == find(strcmp({'left', 'right'}, h)); end
-            cam = fitCamera(al{i}, Vd(shown, :), s.renders(i).camera);
+        if o.ScaleBar > 0 && isempty(r.scalebar) && ~(~isempty(s.Inset) && i == s.Inset.view && nview > 1)   % not on the inset's region
+            if isempty(cam), cam = fitCamera(al{i}, Vd(shown, :), s.renders(i).camera); end   % says why it fails
             [bar, G] = scaleBar(o.ScaleBar, surfs.(folded), Vd, F, shown, cam, al{i}, G);
             if ~isempty(bar)
                 q = [x y] + k * (bar.px - [c(1) c(3)] + 0.5);          % pixel centres -> mm on the page
@@ -547,6 +732,10 @@ function [r, G, job] = compose(s, surfs, F, hemi, folded, G, tok, cmaps, o)
                 r.scalebar = bar;
             end
         end
+    end
+    r.cameras = cams;
+    if ~isempty(s.Inset)
+        [svg, r.inset] = drawInset(svg, s, Vd, F, hemi, img, al, crop, k, cw, gap, y0, rowH, nview, tok, J, T, pt);
     end
     if o.ScaleBar > 0 && isempty(r.scalebar), warning('rheome:snapshot:scalebar', '%s: no visible stretch of %g mm for the scale bar; none drawn.', s.Name, o.ScaleBar); end
     if strip
@@ -588,6 +777,19 @@ function [r, G, job] = compose(s, surfs, F, hemi, folded, G, tok, cmaps, o)
         else, lg = sprintf('%s; scale bar %g mm, distances on the folded surface', lg, o.ScaleBar);
         end
     end
+    if ~isempty(r.inset)
+        lg = sprintf('%s; inset: %s, the region outlined on the %s view re-rendered at %s%.3g (%.0f dpi)', lg, s.Inset.Label, ...
+            r.inset.view, char(215), r.inset.magnification, r.inset.dpi);
+    end
+    for j = 1:numel(s.Selection)
+        q = s.Selection(j);  what = struct('tile', 'region', 'disk', 'geodesic disk').(q.kind);
+        if q.dashed, lg = sprintf('%s; dashed: %s (%s, extent)', lg, q.label, what);
+        else, lg = sprintf('%s; filled: %s (%s, selected, %s-axis colour)', lg, q.label, what, q.axis);
+        end
+    end
+    for j = 1:numel(r.paths)
+        lg = sprintf('%s; line: %s, a geodesic of %.0f mm along the folded surface', lg, r.paths(j).label, r.paths(j).length_mm);
+    end
     if strip, lg = sprintf('%s; %d frames, %st = %s', lg, numel(s.frames), char(916), timeText(s.times(2) - s.times(1))); end
     r.legend = [lg '.'];
 
@@ -599,6 +801,177 @@ function [r, G, job] = compose(s, surfs, F, hemi, folded, G, tok, cmaps, o)
     if any(o.Format == "pdf"), r.pdf = [base '.pdf']; end
     if any(o.Format == "png"), r.png = [base '.png']; end
     job = struct('svg', r.svg, 'pdf', r.pdf, 'png', r.png, 'width_mm', W, 'height_mm', H, 'dpi', J.dpi.combination);
+end
+
+function [svg, info] = drawInset(svg, s, Vd, F, hemi, img, al, crop, k, cw, gap, y0, rowH, nview, tok, J, T, pt)
+% the inset: the region cut from its own render, in the last column; outlined there and on its view, a leader between
+    In = s.Inset;  vi = In.view;  rv = s.renders(vi);
+    ink = tok.colour.neutral.neutral_ink.x_value;  slate = tok.colour.neutral.neutral_slate.x_value;
+    paper = tok.colour.neutral.neutral_paper.x_value;
+    shown = hemi > 0;
+    if ~strcmp(rv.hemisphere, 'both'), shown = hemi == find(strcmp({'left', 'right'}, rv.hemisphere)); end
+    [im, ~, ai] = imread(fullfile(s.dir, [In.render.label '.png']));  ai = cortexOnly(ai);
+    camI = fitCamera(ai, Vd(shown, :), rv.camera);
+    camV = fitCamera(al{vi}, Vd(shown, :), rv.camera);
+    E = double(F);  el = median(vecnorm(Vd(E(:, 1), :) - Vd(E(:, 2), :), 2, 2));   % the mesh's edge, m
+    mI = regionMask(ai, Vd, shown, In.mask, camI, el);
+    mV = regionMask(al{vi}, Vd, shown, In.mask, camV, el);
+    if strcmp(In.Shape, 'square'), mI = squareOf(mI);  mV = squareOf(mV); end   % a square around the region, not cut
+    if camI.s / camV.s < 2 - 1e-9   % tokens annotation.inset, rule I1: >= 2x the view's pixels per mm of cortex
+        error('rheome:snapshot:inset', '%s: the inset has %.2fx the view''s pixels per mm (< 2, rule I1); the viewer''s canvas caps it: a smaller Scale or Width.', s.Name, camI.s / camV.s);
+    end
+    if ~any(mI(:)) || ~any(mV(:)), error('rheome:snapshot:inset', '%s: the inset''s region is not visible on the %s view.', s.Name, rv.view); end
+    [rr, cc] = find(mI);  pad = 2;
+    b = [max(1, min(cc) - pad), min(size(mI, 2), max(cc) + pad), max(1, min(rr) - pad), min(size(mI, 1), max(rr) + pad)];
+    wpx = b(2) - b(1) + 1;  hpx = b(4) - b(3) + 1;
+    lab = 0;   % the inset's label sits in the row of view labels, under the leader
+    kI = min([cw / wpx, (rowH - lab) / hpx, 25.4 / J.dpi.combination]);   % mm per inset pixel: fill the column, never
+    % below the print dpi (an inset enlarged past its pixels would be the stretched crop rule I1 forbids)
+    xI = nview * (cw + gap) + (cw - kI * wpx) / 2;  yI = y0 + (rowH - lab - kI * hpx) / 2;
+    a = ai(b(3):b(4), b(1):b(2));  a(~mI(b(3):b(4), b(1):b(2))) = 0;   % cut by the region's own mask (or its square)
+    svg{end+1} = sprintf('<image x="%.3f" y="%.3f" width="%.3f" height="%.3f" preserveAspectRatio="none" xlink:href="data:image/png;base64,%s"/>', ...
+        xI, yI, kI * wpx, kI * hpx, png64(im(b(3):b(4), b(1):b(2), :), a));
+    % the outlines: ink over a paper halo, the same on the view and on the inset
+    c = crop(vi, :);  xV = (vi - 1) * (cw + gap) + (cw - k * (c(2) - c(1) + 1)) / 2;  yV = y0 + (rowH - k * (c(4) - c(3) + 1)) / 2;
+    lines = [outline(mV, [xV yV], k, c(1), c(3)), outline(mI, [xI yI], kI, b(1), b(3))];
+    wl = tok.line.outline_pt * pt;                                  % tokens annotation.inset: 0.5 pt ink, the same on both
+    for L = lines
+        pts = strjoin(ptsText(L{1}), ' ');
+        svg{end+1} = sprintf(['<polyline points="%s" fill="none" stroke="%s" stroke-width="%.4f" stroke-linejoin="round"/>' ...
+            '<polyline points="%s" fill="none" stroke="%s" stroke-width="%.4f" stroke-linejoin="round"/>'], pts, paper, wl + 1.2 * pt, pts, ink, wl); %#ok<AGROW>
+    end
+    % the leader: from the region's lowest point down under the row, along it, and up to the inset (never across a view)
+    [rv2, cv2] = find(mV);  [~, j] = max(rv2);
+    p0 = [xV yV] + k * ([cv2(j) rv2(j)] - [c(1) c(3)] + 0.5);
+    [rI, cI] = find(mI);  [~, j] = max(rI);
+    p1 = [xI yI] + kI * ([cI(j) rI(j)] - [b(1) b(3)] + 0.5);
+    yl = y0 + rowH + 0.25;                                         % just under the views, above their labels
+    svg{end+1} = sprintf('<polyline points="%.3f,%.3f %.3f,%.3f %.3f,%.3f %.3f,%.3f" fill="none" stroke="%s" stroke-width="%.4f"/>', ...
+        p0, p0(1), yl, p1(1), yl, p1, ink, tok.line.leader_pt * pt);
+    mag = (kI * camI.s) / (k * camV.s);                           % the inset's mm per mm of cortex, over the view's
+    svg{end+1} = T(nview * (cw + gap) + cw / 2, y0 + rowH + 1.1 * tok.type.viewLabel.size_pt * pt, sprintf('%s, %s%.3g', In.Label, char(215), mag), tok.type.viewLabel.size_pt, slate, 'middle', '');
+    dpiI = 25.4 / kI;
+    if dpiI < J.dpi.combination, warning('rheome:snapshot:dpi', '%s: the inset prints at %.0f dpi (< %d); a smaller Zoom or region.', s.Name, dpiI, J.dpi.combination); end
+    [rv3, cv3] = find(mV);
+    info = struct('label', In.Label, 'view', rv.view, 'magnification', mag, 'dpi', dpiI, 'vertices', find(In.mask), ...
+        'px', [cv3 rv3], 'shape', In.Shape);
+end
+
+function q = squareOf(m)
+% the square (on the image) around a mask's pixels, clipped to the image
+    q = false(size(m));  [rr, cc] = find(m);
+    if isempty(rr), return; end
+    h = ceil(max(max(rr) - min(rr), max(cc) - min(cc)) / 2) + 2;  mc = round([mean([min(rr) max(rr)]) mean([min(cc) max(cc)])]);
+    q(max(1, mc(1) - h):min(end, mc(1) + h), max(1, mc(2) - h):min(end, mc(2) + h)) = true;
+end
+
+function [svg, r] = drawMarks(svg, r, s, cam, alpha, Vd, F, shown, el, xy, k, c, tok, pt, i)
+% the selections (a blended fill in the axis colour, or a dashed extent) and the paths (geodesics, ink, an arrowhead)
+% on one view, placed by the render's own camera and hidden where the surface hides them
+    ink = tok.colour.neutral.neutral_ink.x_value;  paper = tok.colour.neutral.neutral_paper.x_value;
+    toPage = @(px) xy + k * (px - [c(1) c(3)] + 0.5);
+    Fs = F(all(shown(F), 2), :);
+    for j = 1:numel(s.Selection)
+        q = s.Selection(j);
+        m = regionMask(alpha, Vd, shown, q.mask, cam, el);
+        if ~any(m(:)), continue; end
+        if ~q.dashed     % the fill: the colour at the tokens' alpha inside, as a state of the surface
+            mc = m(c(3):c(4), c(1):c(2));  rgb = uint8(reshape(sscanf(q.colour(2:end), '%2x'), 1, 1, 3));
+            svg{end+1} = sprintf('<image x="%.3f" y="%.3f" width="%.3f" height="%.3f" preserveAspectRatio="none" xlink:href="data:image/png;base64,%s"/>', ...
+                xy, k * size(mc, 2), k * size(mc, 1), png64(repmat(rgb, size(mc)), uint8(255 * tok.cortex.selection.fill_alpha * mc))); %#ok<AGROW>
+            sty = sprintf('stroke="%s" stroke-width="%.4f"', ink, 0.35 * pt);                    % as the tile outlines
+        else             % an extent: dashed ink, never a fill (tokens cortex.selection.vs_support)
+            sty = sprintf('stroke="%s" stroke-width="%.4f" stroke-dasharray="%.4f %.4f"', ink, 0.8 * pt, 2 * pt, 1.5 * pt);
+        end
+        for L = outline(m, xy, k, c(1), c(3))
+            svg{end+1} = sprintf('<polyline points="%s" fill="none" %s stroke-linejoin="round"/>', strjoin(ptsText(L{1}), ' '), sty); %#ok<AGROW>
+        end
+        if ~isempty(q.centre) && shown(q.centre) && visible(Vd(q.centre, :), cam.d, Vd, Fs)                % one size for every centre
+            p0 = toPage(project(cam, Vd(q.centre, :)));
+            svg{end+1} = sprintf('<circle cx="%.3f" cy="%.3f" r="%.4f" fill="%s" stroke="%s" stroke-width="%.4f"/>', ...
+                p0, tok.marker.size_pt / 2 * pt, q.colour, ink, tok.marker.edge_pt * pt); %#ok<AGROW>
+        end
+    end
+    wl = tok.cortex.paths.width_pt * pt;
+    for j = 1:numel(s.Paths)
+        q = s.Paths(j);
+        X = q.bary(:, 1) .* Vd(F(q.faces, 1), :) + q.bary(:, 2) .* Vd(F(q.faces, 2), :) + q.bary(:, 3) .* Vd(F(q.faces, 3), :);
+        vis = all(shown(F(q.faces, :)), 2) & visible(X, cam.d, Vd, Fs);   % on the shown hemisphere, in front
+        P = toPage(project(cam, X));
+        r.paths(j).px{i} = project(cam, X);  r.paths(j).visible{i} = vis;
+        run = diff([0; vis(:); 0]);  a = find(run == 1);  b = find(run == -1) - 1;
+        for u = 1:numel(a)
+            if b(u) <= a(u), continue; end
+            pts = strjoin(ptsText(P(a(u):b(u), :)), ' ');
+            svg{end+1} = sprintf(['<polyline points="%s" fill="none" stroke="%s" stroke-width="%.4f" stroke-linejoin="round" stroke-linecap="round"/>' ...
+                '<polyline points="%s" fill="none" stroke="%s" stroke-width="%.4f" stroke-linejoin="round" stroke-linecap="round"/>'], ...
+                pts, paper, wl + 2 * 0.6 * pt, pts, ink, wl); %#ok<AGROW>   % ink over a paper halo, as the scale bar
+        end
+        if vis(end)          % the arrowhead at the end, along the last visible millimetre
+            e = P(end, :);  back = find(vecnorm(P - e, 2, 2) > 0.5, 1, 'last');
+            if ~isempty(back)
+                u = (e - P(back, :)) / norm(e - P(back, :));  nn = [-u(2) u(1)];  hl = 4 * wl;
+                svg{end+1} = sprintf('<polygon points="%.3f,%.3f %.3f,%.3f %.3f,%.3f" fill="%s"/>', e + u * 0.2 * hl, ...
+                    e - u * hl + nn * 0.45 * hl, e - u * hl - nn * 0.45 * hl, ink); %#ok<AGROW>
+            end
+        end
+    end
+end
+
+function a = cortexOnly(a)
+% the render's alpha with the viewer's chrome removed: the viewer paints its own colourbar (lower left) into every
+% PNG and has no setting to leave it out; the cortex is the large connected pieces of the alpha (each >= 5 % of the
+% largest), the colourbar's ramp and glyphs are small ones. Labelled on a 4x max-pooled mask (base MATLAB).
+    f = 4;  m = a > 0;  [H, W] = size(m);
+    p = false(ceil(H / f), ceil(W / f));
+    for di = 1:f, for dj = 1:f, q = m(di:f:end, dj:f:end);  p(1:size(q, 1), 1:size(q, 2)) = p(1:size(q, 1), 1:size(q, 2)) | q; end, end
+    idx = zeros(size(p));  on = find(p);  idx(on) = 1:numel(on);
+    [r, c] = find(p);
+    e = [];
+    right = c < size(p, 2);  rr = r(right);  cr = c(right);  k = p(sub2ind(size(p), rr, cr + 1));
+    e = [e; idx(sub2ind(size(p), rr(k), cr(k))), idx(sub2ind(size(p), rr(k), cr(k) + 1))];
+    down = r < size(p, 1);  rd = r(down);  cd = c(down);  k = p(sub2ind(size(p), rd + 1, cd));
+    e = [e; idx(sub2ind(size(p), rd(k), cd(k))), idx(sub2ind(size(p), rd(k) + 1, cd(k)))];
+    if isempty(on), return; end
+    comp = conncomp(graph(e(:, 1), e(:, 2), [], numel(on)))';
+    n = accumarray(comp, 1);
+    keep = false(size(p));  keep(on) = n(comp) >= 0.05 * max(n);
+    keep = keep(ceil((1:H)' / f), ceil((1:W) / f));
+    a(~keep) = 0;
+end
+
+function m = regionMask(alpha, V, shown, region, cam, edgeLength)
+% the region's pixels on a render: each drawn pixel takes the nearest FRONT vertex (the nearest to the camera in its
+% cell, as for the scale bar); it is the region's when that vertex is
+    px = project(cam, V);  depth = V * cam.d';
+    idx = find(shown);
+    % cells two mesh edges wide: one vertex per cell would let a hidden vertex (the far side of a sulcus or the medial
+    % wall) pass as front-most and claim pixels (as for the scale bar)
+    csz = max(4, 2 * cam.s * edgeLength);
+    key = floor(px(idx, :) / csz);  [~, ~, ci] = unique(key, 'rows');
+    front = accumarray(ci, depth(idx), [], @max);
+    fr = idx(depth(idx) >= front(ci) - 1.5e-3);
+    m = false(size(alpha));
+    inR = fr(region(fr));
+    if isempty(inR), return; end
+    lo = floor(min(px(inR, :), [], 1) - csz);  hi = ceil(max(px(inR, :), [], 1) + csz);    % a vertex's pixels reach half an edge out
+    near = fr(all(px(fr, :) >= lo - 2 * csz & px(fr, :) <= hi + 2 * csz, 2));
+    [cc, rr] = meshgrid(max(1, lo(1)):min(size(alpha, 2), hi(1)), max(1, lo(2)):min(size(alpha, 1), hi(2)));
+    q = [cc(:) rr(:)];  q = q(alpha(sub2ind(size(alpha), q(:, 2), q(:, 1))) > 0, :);
+    if isempty(q), return; end
+    nn = dsearchn(px(near, :), q);
+    hit = region(near(nn));
+    m(sub2ind(size(alpha), q(hit, 2), q(hit, 1))) = true;
+end
+
+function L = outline(m, xy, kk, c0, r0)
+% the mask's boundary as page polylines (mm): contour at 1/2 of the mask, pixel centres to the page
+    C = contourc(double(m), [0.5 0.5]);
+    L = {};  i = 1;
+    while i < size(C, 2)
+        n = C(2, i);  P = C(:, i+1:i+n)';  i = i + n + 1;
+        if n > 8, L{end+1} = xy + kk * (P - [c0 r0] + 0.5); end %#ok<AGROW>
+    end
 end
 
 function W = panelWidth(W, nview, J)

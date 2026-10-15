@@ -282,7 +282,7 @@ function C = i_plantregion(C, name, o)
     sel = contains(lower(string(A.Label)), lower(o.PlantRegion));
     assert(any(sel), 'rheome:slowosc:plantregion', 'no %s parcel matches %s', o.PlantAtlas, strjoin(o.PlantRegion, ', '));
     for k = 1:numel(C)
-        C(k).plantMask = full(any(A.Membership(sel, C(k).gv), 1))';
+        C(k).plantMask = full(any(A.Membership(sel, C(k).gv), 1))' .* C(k).plantMask;   % and on cortex
         assert(any(C(k).plantMask), 'rheome:slowosc:plantregion', 'the plant region is empty in hemisphere %s', C(k).h);
     end
 end
@@ -467,7 +467,7 @@ function c = i_hemi(S, h, post, o)
     lam = H.lbo.Lambda(:);  c.Phi = H.lbo.Phi;  c.M = H.lbo.Mass;  c.av = full(sum(c.M, 2));
     hk = exp(-lam * (o.NormalSigmaMM * 1e-3)^2 / 2);  Nl = unit(Sh.VertNormals);
     Ns = unit(c.Phi * (hk .* (c.Phi' * (c.M * Nl))));
-    gv = double(H.gv(:));  K = S.Res.ImagingKernel;  c.gv = gv;  c.plantMask = ones(c.nV, 1);
+    gv = double(H.gv(:));  K = S.Res.ImagingKernel;  c.gv = gv;  c.plantMask = double(rheome.geom.cortexmask(H.S));   % plants on cortex only
     c.Kn = Ns(:,1) .* K(3*gv-2, :) + Ns(:,2) .* K(3*gv-1, :) + Ns(:,3) .* K(3*gv, :);
     c.K3 = K(reshape((3*gv' - 3) + (1:3)', [], 1), :);
     gfb = rheome.graphfilterbank(lam, 'Wavelet', 'logitersine', 'VoicesPerOctave', 2);

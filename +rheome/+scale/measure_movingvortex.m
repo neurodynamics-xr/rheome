@@ -65,7 +65,7 @@ function [T, X] = measure_movingvortex(name, S, opts)
             Fc = double(Sh.Faces(g.singular, :));
             fc = (P(Fc(:,1),:) + P(Fc(:,2),:) + P(Fc(:,3),:)) / 3;  ok = min(pdist2(P, fc), [], 2) >= 0.02;
         end
-        okv = find(ok);
+        okv = find(ok(:) & rheome.geom.cortexmask(Sh));                        % placements on cortex
         for p = 1:opts.Placements
             v0 = okv(randi(numel(okv)));
             mv = rheome.flow.movingvortex(name, SpeedMS=opts.SpeedMS, Duration=opts.DurationS, SampleRate=fs, ...

@@ -78,8 +78,8 @@ function [T, X, Ex] = measure_plantfloors(name, S, opts)
         bs = repelem(1:nL, ppc);  hfs = 1 + (mod(0:numel(bs)-1, ppc) >= ppc/2);  bv = bs;
         for q = 1:2, k = find(hfs == q);  bv(k) = bs(k(randperm(numel(k)))); end   % vortex cells balanced per half too
         for n = 1:numel(bs)
-            v1 = randi(nV);  d1 = distances(ge, v1)';  cand = find(d1 > 0.06 & d1 < 0.12);
-            if isempty(cand), [~, o] = sort(abs(d1 - 0.09));  cand = o(1:10); end
+            cvx = rheome.geom.cortexmask(Sh);  v1 = find(cvx);  v1 = v1(randi(numel(v1)));  d1 = distances(ge, v1)';  cand = find(d1 > 0.06 & d1 < 0.12 & cvx);   % both on cortex
+            if isempty(cand), [~, o] = sort(abs(d1 - 0.09) + 1e9 * ~cvx);  cand = o(1:10); end
             v2 = cand(randi(numel(cand)));  d2 = distances(ge, v2)';
             ms = mb(bs(n));  mv = mb(bv(n));
             gs = i_tgrad(atom(v1, G(:, ms)), fg, nrm);  gw = i_tgrad(atom(v2, G(:, mv)), fg, nrm);

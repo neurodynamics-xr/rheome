@@ -271,6 +271,7 @@ function G = i_geom(tl, A)
     G.u = [tl.u1 tl.u2 tl.u3];  G.u = G.u ./ vecnorm(G.u, 2, 2);  G.hemi = tl.hemi;
     gk = tl.hemi;  if ismember('depth', tl.Properties.VariableNames), gk = gk + "_" + tl.depth; end
     [~, ~, gi] = unique(gk);  G.groups = accumarray(gi, (1:numel(gi))', [], @(x) {x});   % spin within hemisphere x depth
+    G.groups = cellfun(@(x) x(G.area(x) > 0), G.groups, 'UniformOutput', false);         % medial-wall tiles (no cortex) out of the spin
     [i, j] = find(triu(A));  G.e = [i j];  G.d = vecnorm(G.x(i, :) - G.x(j, :), 2, 2);
     ax = [0 0 1];  e1 = ax - (G.u * ax') .* G.u;  G.e1 = e1 ./ vecnorm(e1, 2, 2);  G.e2 = cross(G.u, G.e1, 2);
     tri = zeros(0, 3);
@@ -333,12 +334,13 @@ end
 function [ro, rm, p] = i_spin(m, c, G, n, rs)
 % Alexander-Bloch spin on the template sphere, the right hemisphere mirrored (x -> -x); within each hemisphere
 % (x depth, for joint atoms) group, one rotation per spin for all groups
-    nr = @(a, b) abs(a' * b) / (norm(a) * norm(b));  ro = nr(c, m);  r = zeros(n, 1);  Fx = diag([-1 1 1]);
+    k = vertcat(G.groups{:});                                % cortex tiles only (rheome.geom.cortexmask)
+    nr = @(a, b) abs(a(k)' * b(k)) / (norm(a(k)) * norm(b(k)));  ro = nr(c, m);  r = zeros(n, 1);  Fx = diag([-1 1 1]);
     for s = 1:n
         [Q, Rq] = qr(randn(rs, 3));  Q = Q * diag(sign(diag(Rq)));  if det(Q) < 0, Q(:, 1) = -Q(:, 1); end
         ms = m;
         for g = 1:numel(G.groups)
-            ix = G.groups{g};  Qg = Q;  if G.hemi(ix(1)) == "R", Qg = Fx * Q * Fx; end
+            ix = G.groups{g};  if isempty(ix), continue; end;  Qg = Q;  if G.hemi(ix(1)) == "R", Qg = Fx * Q * Fx; end
             ms(ix) = m(ix(knnsearch(G.u(ix, :), G.u(ix, :) * Qg)));
         end
         r(s) = nr(c, ms);

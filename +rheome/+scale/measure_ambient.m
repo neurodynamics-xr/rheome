@@ -69,7 +69,7 @@ function [T, X, Ex] = measure_ambient(name, opts)
         if s.surface == "sphere"                                       % H = 1/R, signed as n is (the winding)
             Hk = sign(median(H)) * ones(nV, 1) / R;  Hrel = sqrt(a' * (H - Hk).^2 / sum(a)) * R;
         else, Hk = H;  Hrel = NaN; end
-        v0 = randi(nV);  d = distances(rheome.geom.edgegraph(Sx), v0)';
+        cvx = find(rheome.geom.cortexmask(s.S));  v0 = cvx(randi(numel(cvx)));  d = distances(rheome.geom.edgegraph(Sx), v0)';   % plant on cortex
         f = exp(-d.^2 / (2 * (opts.SigmaMM/1e3)^2));
         e = cross(n(v0,:), [0 0 1]);  if norm(e) < 0.3, e = cross(n(v0,:), [1 0 0]); end
         e = e / norm(e);  t = e - (n * e') .* n;                       % tangential, |t| <= 1, smooth

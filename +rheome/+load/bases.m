@@ -42,6 +42,9 @@ function [B, info] = bases(name, tau, K, Klbo)
             name, i_tern(isempty(Klbo), '', sprintf(', %d', Klbo)));
     end
     B = getfield(builtin('load', f, 'bases'), 'bases');
+    hl = intersect(fieldnames(B), {'L','R'}, 'stable');        % each hemisphere surface carries its cortex mask
+    c = rheome.geom.cortexmask(name, sum(cellfun(@(l) numel(B.(l).gv), hl)));
+    for l = hl', if ~isfield(B.(l{1}).S, 'Cortex'), B.(l{1}).S.Cortex = c(B.(l{1}).gv(:)); end, end
 
     % ---- verify we got the basis that was asked for ----
     gotK = NaN;

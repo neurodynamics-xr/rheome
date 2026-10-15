@@ -11,18 +11,12 @@ function g = edgegraph(S, opts)
 % between their two opposite vertices -- measured in the UNFOLDED pair, so intrinsic, and only where
 % that segment stays inside the pair -- straightens the path. See the measured table below.
 %
-% ⭐⭐ WHY THIS EXISTS WHEN rheome.geom.geodesic DOES. The heat method is the better ruler at short range and
-% the worse one at long range, and on this cortex long range starts sooner than you would think.
-% Measured 2026-09-29 (scratch diag_geo.m, 40 random pairs each):
-%   icosphere-5, R = 70 mm, edge 2.64 mm: heat error -0.5..-2.7% out to 130 mm, then it SATURATES --
-%     every pair beyond reads 128.4 mm (truth 151-203 mm, error -15..-37%). That is ~49 edges, where
-%     the backward-Euler heat kernel (t = h^2, decay ~exp(-d/h)) falls below 1e-16 of its peak and
-%     the gradient direction is roundoff.
-%   reference left hemisphere, edge 3.85 mm: d(a->b) and d(b->a) DISAGREE -- by 2-11% typically and by
-%     67% at 98 mm (87.6 vs 43.7 mm) and 75% at 153 mm (121.1 vs 55.0 mm). An irregular mesh has
-%     obtuse cotan weights, the heat solution goes negative, and the direction field flips.
-% So a SPEED, which divides a distance of 50-150 mm by a time, must not be read off rheome.geom.geodesic on
-% this cortex. rheome.inverse.resolution already uses Dijkstra for r50 and is unaffected.
+% ⭐⭐ WHY THIS EXISTS WHEN rheome.geom.geodesic DOES. Until 2026-10-14 the heat method saturated (every
+% pair beyond ~49 edges read the same distance) and was asymmetric on irregular meshes, so speeds were
+% read off this graph instead. rheome.geom.geodesic now follows geometry-central's robust heat method
+% (intrinsic Delaunay, lumped mass) and agrees with it to <0.3 % at 5-40 mm and <=1.1 mm everywhere on
+% fsaverage5/6/fsaverage pial; both are 1-6 % above the exact geodesic. This graph remains the ruler
+% that gives PATHS (shortest paths), and rheome.inverse.resolution uses it for r50.
 %
 % ⚠ Diagonals can still UNDER-estimate on a sharply folded pair: the unfolded segment is intrinsic,
 % but the check that it crosses the shared edge uses the two triangles alone, so across a crease it

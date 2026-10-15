@@ -75,6 +75,8 @@ function out = resolution(K, Gain, basis, opts)
 %     GlobalIdx         [1 x nH] this hemisphere's rows in the whole-cortex vertex numbering
 %                       (B.L.gv). ⚠ REQUIRED when the kernel covers both hemispheres.
 %     NumSeeds          point sources for the localisation family (300); 0 skips it
+%     Cortex            [V x 1] logical over the whole source space (rheome.geom.cortexmask): seeds are drawn on
+%                       cortex and every PSF sum runs over cortex only, the medial wall excluded (default: all)
 %     Modes             mode indices for the MTF ([] = all of them); 0 skips it
 %     Calibrate         measure the r50 -> wavelength conversion (true)
 %     Apertures         planted wavelengths for that calibration, metres
@@ -111,6 +113,7 @@ function out = resolution(K, Gain, basis, opts)
         opts.Calibrate  (1,1) logical = true
         opts.Apertures  double = [40 60 90 120 180 250 350]*1e-3
         opts.Seed       (1,1) double = 7
+        opts.Cortex     logical = logical.empty
     end
     Phi = basis.Phi;  Lam = basis.Lambda(:);  Mss = basis.Mass;
     nH  = size(Phi, 1);
@@ -141,7 +144,9 @@ function out = resolution(K, Gain, basis, opts)
         Gg = simplify(graph(E(:,1), E(:,2), w, nH));
         rs = rng(opts.Seed);  cleanupRng = onCleanup(@() rng(rs));
         ns = min(opts.NumSeeds, nH);
-        seeds = sort(randperm(nH, ns))';
+        cx = true(V, 1);  if ~isempty(opts.Cortex), cx = opts.Cortex(:); end
+        cL = cx(gv);  cand = find(cL);  ns = min(ns, numel(cand));
+        seeds = sort(cand(randperm(numel(cand), ns)));            % seeds on cortex
         D = distances(Gg, seeds);                   % [ns x nH]
 
         r50 = nan(ns,1); sd = nan(ns,1); ple = nan(ns,1); offh = nan(ns,1);
@@ -149,7 +154,7 @@ function out = resolution(K, Gain, basis, opts)
             v  = gv(seeds(j));
             Eb = K * Gain(:, (v-1)*3 + (1:3));      % [3V x 3] column block of R
             p  = sum(reshape(sum(Eb.^2, 2), 3, []), 1)';   % orientation-free PSF power
-            pL = p(gv);
+            p  = p .* cx;  pL = p(gv);                     % PSF power on cortex only
             offh(j) = 1 - sum(pL)/sum(p);
             [r50(j), sd(j), ple(j)] = i_spread(pL, D(j,:)');
         end
@@ -167,7 +172,7 @@ function out = resolution(K, Gain, basis, opts)
                 for j = 1:ns
                     d0 = zeros(nH,1);  d0(seeds(j)) = 1;
                     x  = Phi * (gk .* (Phi' * (Mss * d0)));
-                    rr(j) = i_spread(x.^2, D(j,:)');
+                    rr(j) = i_spread(x.^2 .* cL, D(j,:)');   % cortex only, as the PSF
                 end
                 rp(i) = median(rr);
             end

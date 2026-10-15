@@ -36,6 +36,7 @@ function [T, ev] = measure_eventsensors(name, S, Best, opts)
     st = rheome.load.study(name);  fs = st.rec.sfreq;  F = double(st.rec.F(S.iSel, :));
     lab = {st.chan.Channel(S.iSel).Name};  clear st
     Res = rheome.inverse.mne(S.G, S.ncm, struct('ChannelTypes', {S.chT}, 'InverseMeasure', 'amplitude', 'nVert', S.nV));
+    Res.ImagingKernel = rheome.operators.harmonicfill(S.Sf, Res.ImagingKernel, rheome.geom.cortexmask(S.Sf));   % as rheome.scale.sensors
     bp = designfilt('bandpassiir', 'FilterOrder', 8, 'HalfPowerFrequency1', opts.Band(1), ...
                     'HalfPowerFrequency2', opts.Band(2), 'SampleRate', fs);
     Fb = filtfilt(bp, F.').';  Fa = hilbert(Fb.').';

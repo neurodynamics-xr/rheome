@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Changed behaviour (check results computed before this)
+
+- **`rheome.geom.geodesic` measures surface distance correctly.** It was wrong on cortical meshes. On fsaverage6
+  pial it saturated near 46 mm (true max ~240 mm) and was 20-30 % off within 40 mm. On an MS1 cortex
+  (omega_sub0002, left) it was ±35 % (p5/p95) at 5-40 mm and 20-28 % short beyond 100 mm. On fsaverage, which has
+  zero-area triangles, its Cholesky failed. It now follows geometry-central's robust heat method: intrinsic
+  edge lengths, mollified, flipped to the intrinsic Delaunay triangulation, lumped mass, and a scale-invariant
+  Poisson pin. On fsaverage5/6/fsaverage pial it agrees with geometry-central to <0.3 % at 5-40 mm and to
+  <=1.1 mm everywhere. Both are 1-6 % above the exact edge-flip geodesic. Vertices on another connected
+  component are `Inf`. Results that planted along it change: `flow.seedvortex` / `vortexatom` envelopes
+  (MS1 G2 composition, rotation, diracangles) and `flow.movingvortex` paths (MS1 G11). In one placement the old
+  path had a nominal 126 mm, but its ends were truly 178 mm apart, so it planted 0.141 m/s instead of 0.100.
+  `tests/tGeodesic`; `tMovingVortex` no longer encodes the saturated 161 mm hemisphere.
+
 ### Added
 
 - **Rheome's visualization package is the Cortical Flow viewer (`rheome.viz`; Diellor, 2026-10-14).** Every cortical
@@ -14,6 +28,22 @@
   takes `Labellings=`, `Points=` and keeps each render's marks sidecar. `rheome.show`'s cortex renders are the
   fallback (no WebGPU), tests and quick looks; the figures guide now draws with the viewer. The rasteriser-to-viewer
   capability table and the viewer's gaps are in `rheome.viz` (`help rheome.viz`).
+- **`rheome.snapshot` draws selections, geodesic paths and shaped insets, and returns each render's camera**
+  (figure system revision 3, Diellor's board comments 24-26).
+  - `Selection`: a tile (`Vertices`) or a geodesic disk (`Centre`, `RadiusMM` along the folded surface). It is
+    drawn as a blended fill in its axis colour at the tokens' alpha, or with `Dashed` as an extent. Its centre is
+    the tokens' marker, one size for every centre.
+  - `Paths`: geodesics. `From`/`To` are traced by `rheome.geom.geodesicpath`; `Points` with `How` are a path the
+    caller traced. Each is ink at `cortex.paths` width with an arrowhead, and is hidden behind the surface and
+    off the shown hemisphere.
+  - `Inset.Shape`: `tile`, `disk` (cut by the region's mask) or `square`. With no `Vertices`, the inset takes the
+    shot's first selection.
+  - `out.cameras`: per render `R`, `s`, `off`, `crop`, `origin_mm` and `mm_per_px`, so a caller can place vector
+    marks on the page.
+- **`rheome.geom.geodesicpath`**: a geodesic between two vertices, traced across the faces by steepest descent of
+  the heat distance. On fsaverage6 its median length is within 0.5 % of the exact geodesic, and the board's
+  r3 pair comes out at 216.5 mm (exact 215.9; the old trace was 290.5).
+
 - **`rheome.show` follows figure-system revision 1 (figure tokens v2.0.0).** One colormap per quantity: every
   colourbar names a token quantity (divergence, curl, potential, stream, magnitude, amplitude, speed, power, phase,
   code ...) and takes its map; the retired `flow-signed-field` / `'signed'` kind is gone. `surface`, `gif` and

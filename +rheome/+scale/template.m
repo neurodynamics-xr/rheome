@@ -50,7 +50,7 @@ end
 
 function lab = i_labels(A, nV)
 % one label per vertex; unknown / medial wall / corpus callosum left empty (as rheome.scale.measure_atlas)
-    keep = ~contains(lower(string(A.Label(:))), ["unknown" "medial" "corpus"]);
+    keep = ~startsWith(lower(strtrim(string(A.Label(:)))), ["unknown" "corpuscallosum" "corpus callosum" "medial_wall" "medial wall"]);   % prefix: medialorbitofrontal is cortex
     L = string(A.Label(:));  L = L(keep);  [mx, k] = max(double(A.Membership(keep, :)), [], 1);
     lab = strings(nV, 1);  lab(mx > 0) = L(k(mx > 0));
 end
