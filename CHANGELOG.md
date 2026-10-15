@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **`rheome.snapshot` reads the lab's figure tokens from the library.** Order: `Tokens=`, `$NXR_FIGURE_TOKENS`, `$HOME/workspace/library/styles/tokens/figure-tokens.json` if present, else the viewer's vendored copy; the viewer is served the file used, and its sha256 and path are written to every `*.marks.json` as `tokens_sha256` and `tokens_path` (new `rheome.viz.tokenspath`).
+
 ### Changed behaviour (check results computed before this)
 
 - **`rheome.geom.geodesic` measures surface distance correctly.** It was wrong on cortical meshes. On fsaverage6

@@ -2,7 +2,7 @@
 // each shot's settings, save the viewer's own screenshot (PNG, alpha kept) per shot. Graphics' F1-board shoot.mjs, made a tool.
 // Usage: node snapshot_driver.mjs <job.json>
 // job: { viewer: <dist-viewer folder>, bundle: <bundle folder>, out: <folder>, chrome: <path>, size: [w,h], scale: 2, wait: 600,
-//        timeout: 60, shots: [{ name, settings, scale? }] }    -> <out>/<name>.png each, and the events in <out>/driver.json
+//        timeout: 60, tokens: <figure-tokens.json to serve as figure/figure-tokens.json>, tokens_sha256, shots: [{ name, settings, scale? }] }    -> <out>/<name>.png each, and the events in <out>/driver.json
 //   or { chrome, print: [{ svg, pdf, png, width_mm, height_mm, dpi }] }: each composed panel (an SVG, views embedded at their
 //        resolution) printed to PDF (vector text, exact page size) and PNG (at dpi). MATLAB's own PDF export resamples images
 //        to screen pixels, which is why the panel is printed here.
@@ -99,6 +99,7 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
   '.wasm': 'application/wasm', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2' }
 server = http.createServer((req, res) => {
   const u = decodeURIComponent(new URL(req.url, 'http://x').pathname)
+  if (job.tokens && u === '/figure/figure-tokens.json') { res.writeHead(200, { 'content-type': 'application/json' }); res.end(fs.readFileSync(job.tokens)); return }   // the tokens used, not the viewer's copy
   const [root, rel] = u.startsWith('/b/') ? [job.bundle, u.slice(3)] : [job.viewer, u.slice(1) || 'viewer.html']
   const f = path.resolve(root, rel)
   if (!f.startsWith(path.resolve(root) + path.sep) || !fs.existsSync(f) || !fs.statSync(f).isFile()) { res.writeHead(404); res.end(); return }
@@ -138,7 +139,7 @@ for (const shot of job.shots) {
   const png = shotEv?.png
   if (!png?.startsWith('data:image/png;base64,')) fail(`${shot.name}: no screenshot${png ? ' (' + png + ')' : ''}`)
   fs.writeFileSync(path.join(job.out, shot.name + '.png'), Buffer.from(png.split(',')[1], 'base64'))
-  if (shotEv.marks) fs.writeFileSync(path.join(job.out, shot.name + '.marks.json'), JSON.stringify(shotEv.marks, null, 2))   // keyed overlays
+  if (shotEv.marks) fs.writeFileSync(path.join(job.out, shot.name + '.marks.json'), JSON.stringify(job.tokens ? { ...shotEv.marks, tokens_sha256: job.tokens_sha256, tokens_path: job.tokens } : shotEv.marks, null, 2))   // keyed overlays
   done.shots.push({ name: shot.name, settings: await evalp('window.viewer.settings') })
 }
 fs.writeFileSync(path.join(job.out, 'driver.json'), JSON.stringify(done))
