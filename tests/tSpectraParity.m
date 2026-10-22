@@ -16,7 +16,7 @@ classdef tSpectraParity < matlab.unittest.TestCase
             H = rheome.operators.hodge_dirac(V, F);
             mu = eigs(H.K, spdiags(H.M, 0, H.N, H.N), 128, 1.0);
             ref = i_npy(fullfile(tc.Res, 'hodge_mu.npy'));
-            tc.verifyLessThan(max(abs(sort(mu) - ref) ./ abs(ref)), 1e-8);
+            tc.verifyLessThan(max(abs(sort(mu) - ref)) / max(abs(ref)), 1e-8);  % absolute: kernel eigenvalues are ~0
         end
         function intrinsicDiracSpectrum(tc)
             [V, F] = i_mesh(tc);
