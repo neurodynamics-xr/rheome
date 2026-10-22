@@ -22,6 +22,16 @@ classdef tSpectraParity < matlab.unittest.TestCase
             [V, F] = i_mesh(tc);
             tc.verifyLessThan(i_sq(tc, rheome.operators.dirac_intrinsic(V, F), V, F, 'diracIntrinsicD_mu.npy'), 1e-6);
         end
+        function spinSpectrum(tc)
+            % the quotient solve, 128 eigenvalues nearest 0, against spin_<op>_mu.npy (solve-spin-diracs.py)
+            [V, F] = i_mesh(tc);
+            for op = ["intrinsicYe" "intrinsicHY" "extrinsic"]
+                mu = rheome.eigen.spin_dirac(V, F, op, 128);
+                ref = i_npy(fullfile(tc.Res, "spin_" + op + "_mu.npy"));
+                tc.verifyEqual(numel(mu), numel(ref), op);
+                tc.verifyLessThan(max(abs(mu - ref)) / max(abs(ref)), 1e-5, op);
+            end
+        end
     end
 end
 
