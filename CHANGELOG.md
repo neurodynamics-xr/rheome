@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Cortical-flow differential operators and eigen-solves ported** (for the nsp eigenmode pipeline): `rheome.operators.spin_dirac` (extrinsic, Hoffmann-Ye, Ye), `vertex_to_face`, `intrinsic_delaunay` (flip queue, mixed-Voronoi mass, signposts), `hodge_dirac` (d+delta on 0/1/2-forms), `connection_laplacian_idt` (vector Laplacian on the intrinsic Delaunay triangulation) and `rheome.eigen.spin_dirac` (Ye quotient solve). Parity with the nxr-cortical-flow exports: matrices to 1e-9 or better on bunny-closed and on a 39 380-face cortex with 10 678 flips; spectra (128 Hodge-Dirac, intrinsic D, three spin Diracs) match the Python reference. Tests: `tSpinDirac`, `tDiracExportParity`, `tHodgeDirac`, `tSpectraParity`, `tConnectionLaplacianIdt`. Not ported: mollification, tufted cover, `intrinsicGauge` (Rheome's `operators.gauge` is a different method).
 - **`rheome.snapshot` reads the lab's figure tokens from the library.** Order: `Tokens=`, `$NXR_FIGURE_TOKENS`, `$HOME/workspace/library/styles/tokens/figure-tokens.json` if present, else the viewer's vendored `viewer/figure/figure-tokens.json` (the fallback when neither is set); a named file that is missing is an error with the id `rheome:viz:tokens` (was `rheome:snapshot:tokens`); the viewer is served the file used, and its sha256 and path are written to every `*.marks.json` as `tokens_sha256` and `tokens_path` (new `rheome.viz.tokenspath`).
 
 ### Changed behaviour (check results computed before this)

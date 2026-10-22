@@ -18,7 +18,7 @@ function S = intrinsic_delaunay(V, F, opt)
 % boundary (a boundary edge is never flipped). Signposts / tufted cover are not ported.
 %
 % Author: Diellor Basha, 2026
-arguments, V (:,3) double, F (:,3) double, opt.eps (1,1) double = 1e-6, end
+arguments, V (:,3) double, F (:,3) double, opt.eps (1,1) double = 1e-6, opt.signposts (1,1) logical = false, end
 nV = size(V,1); nF = size(F,1); H = 3*nF; epsw = opt.eps;
 Fh = reshape(F', [], 1);                                     % halfedge h = 3(f-1)+k tails
 nxt = @(h) h - mod(h-1,3) + mod(mod(h-1,3)+1,3);
@@ -32,6 +32,7 @@ edgeOf(primary) = eid(primary); t = twin > 0 & ~primary; edgeOf(t) = edgeOf(twin
 edgeHe = find(primary); nE = numel(edgeHe);
 len = vecnorm(V(Fn(edgeHe),:) - V(Fh(edgeHe),:), 2, 2);
 mass = i_mass(len, edgeOf, nF, Fh, nV);
+if opt.signposts, [ang, angSum, ref, bnd] = i_signposts(); end
 queue = (1:nE)'; inq = true(nE,1); head = 1; flips = 0;
 while head <= numel(queue)
     e = queue(head); head = head + 1; inq(e) = false;
@@ -48,7 +49,8 @@ Fn = Fh(nxt(hs)); i = Fh(edgeHe); j = Fn(edgeHe); keep = i ~= j;
 w = ew(keep); i = i(keep); j = j(keep);
 S.L = sparse([i;j;i;j], [j;i;i;j], [-w;-w;w;w], nV, nV);
 S.F = Fh; S.twin = twin; S.edgeOf = edgeOf; S.edgeHe = edgeHe; S.len = len; S.mass = mass;
-S.nV = nV; S.nF = nF; S.nE = nE; S.flips = flips; S.nonDelaunay = nnz(ew < -epsw);
+if opt.signposts, S.angle = ang; S.angleSum = angSum; S.ref = ref; S.boundary = bnd; end
+S.star1 = ew; S.nV = nV; S.nF = nF; S.nE = nE; S.flips = flips; S.nonDelaunay = nnz(ew < -epsw);
 
     function w = wgt(e)
         hh = edgeHe(e); tt = twin(hh); w = hcot(hh);
@@ -58,6 +60,28 @@ S.nV = nV; S.nF = nF; S.nE = nE; S.flips = flips; S.nonDelaunay = nnz(ew < -epsw
         a1 = nxt(hh); a2 = nxt(a1);
         lij = len(edgeOf(hh)); ljk = len(edgeOf(a1)); lki = len(edgeOf(a2));
         c = (-lij^2 + ljk^2 + lki^2) / (4*tri(lij,ljk,lki)) / 2;
+    end
+    function a = corner(hh)
+        a1 = nxt(hh); a2 = nxt(a1);
+        x = len(edgeOf(hh)); y = len(edgeOf(a2)); o = len(edgeOf(a1));
+        a = acos(max(-1, min(1, (x^2 + y^2 - o^2)/(2*x*y))));
+    end
+    function [an, asum, rf, bd] = i_signposts()
+        % each halfedge's angle at its tail, counter-clockwise from the vertex's reference halfedge
+        an = zeros(H,1); asum = zeros(nV,1); rf = zeros(nV,1); out = zeros(nV,1); bd = false(nV,1);
+        for q = 1:H, if out(Fh(q)) == 0, out(Fh(q)) = q; end, end
+        for q = find(twin == 0)', out(Fh(q)) = q; bd(Fh(q)) = true; bd(Fh(nxt(q))) = true; end
+        for v = 1:nV
+            h0 = out(v); if h0 == 0, continue, end
+            rf(v) = Fh(nxt(h0)); hh = h0; phi = 0; g = 0;
+            while true
+                an(hh) = phi; phi = phi + corner(hh);
+                hh = twin(nxt(nxt(hh)));
+                g = g + 1; if g > 65536, error('intrinsic_delaunay: the fan of vertex %d does not close', v); end
+                if hh == h0 || hh == 0, break, end
+            end
+            asum(v) = phi;
+        end
     end
     function ok = flip(e)
         ok = false; hh = edgeHe(e); tt = twin(hh);
@@ -72,6 +96,9 @@ S.nV = nV; S.nF = nF; S.nE = nE; S.flips = flips; S.nonDelaunay = nnz(ew < -epsw
         old = [b2 a1 a2 b1];
         outer = [edgeOf(old) twin(old)];
         if any(outer(:,2) == hh | outer(:,2) == tt), return, end
+        if opt.signposts
+            car = [ang(b2) ang(a1) ang(a2) ang(b1)];
+        end
         Fh(f1) = vd; Fh(f1+1) = vb; Fh(f1+2) = vc;
         Fh(f2) = vc; Fh(f2+1) = va; Fh(f2+2) = vd;
         slots = [f1 f1+1 f2 f2+1];
@@ -83,6 +110,11 @@ S.nV = nV; S.nF = nF; S.nE = nE; S.flips = flips; S.nonDelaunay = nnz(ew < -epsw
         end
         edgeOf(f1+2) = e; edgeOf(f2+2) = e; twin(f1+2) = f2+2; twin(f2+2) = f1+2; edgeHe(e) = f1+2;
         len(e) = nl; ok = true;
+        if opt.signposts
+            ang(f1) = car(1); ang(f1+1) = car(2); ang(f2) = car(3); ang(f2+1) = car(4);
+            ang(f1+2) = mod(ang(f2) + corner(f2), angSum(vc));
+            ang(f2+2) = mod(ang(f1) + corner(f1), angSum(vd));
+        end
     end
 end
 
