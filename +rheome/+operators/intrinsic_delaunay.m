@@ -7,7 +7,7 @@ function S = intrinsic_delaunay(V, F, opt)
 %       S.edgeOf [3nF x 1]  edge of each halfedge;  S.edgeHe [nE x 1] one halfedge of each edge
 %       S.len    [nE x 1]   intrinsic edge lengths;  S.mass [nV x 1] mixed-Voronoi lumped mass of the INPUT mesh
 %       S.L      [nV x nV]  cotangent Laplacian of the intrinsic triangulation (PSD, weights >= 0)
-%       S.flips, S.nonDelaunay
+%       S.flips, S.nonDelaunay, S.mollifyEps (m added to every edge length; 0 when no triangle is degenerate; opt.mollify = 0 turns it off)
 %
 % Same vertices and metric as the input; edges are flipped intrinsically (flipped length laid out
 % from the two triangles) until every cotangent weight is >= -eps. Port of nxr-cortical-flow
@@ -18,7 +18,7 @@ function S = intrinsic_delaunay(V, F, opt)
 % boundary (a boundary edge is never flipped). Signposts / tufted cover are not ported.
 %
 % Author: Diellor Basha, 2026
-arguments, V (:,3) double, F (:,3) double, opt.eps (1,1) double = 1e-6, opt.signposts (1,1) logical = false, end
+arguments, V (:,3) double, F (:,3) double, opt.eps (1,1) double = 1e-6, opt.signposts (1,1) logical = false, opt.mollify (1,1) double = 1e-6, end
 nV = size(V,1); nF = size(F,1); H = 3*nF; epsw = opt.eps;
 Fh = reshape(F', [], 1);                                     % halfedge h = 3(f-1)+k tails
 nxt = @(h) h - mod(h-1,3) + mod(mod(h-1,3)+1,3);
@@ -31,6 +31,10 @@ eid = cumsum(primary); edgeOf = zeros(H,1);
 edgeOf(primary) = eid(primary); t = twin > 0 & ~primary; edgeOf(t) = edgeOf(twin(t));
 edgeHe = find(primary); nE = numel(edgeHe);
 len = vecnorm(V(Fn(edgeHe),:) - V(Fh(edgeHe),:), 2, 2);
+mollifyEps = 0;
+if opt.mollify > 0                                           % cortical-flow mollify (Sharp & Crane 2020), before the mass and the flips
+    [len, mollifyEps] = i_mollify(len, edgeOf, nF, opt.mollify);
+end
 mass = i_mass(len, edgeOf, nF, Fh, nV);
 if opt.signposts, [ang, angSum, ref, bnd] = i_signposts(); end
 queue = (1:nE)'; inq = true(nE,1); head = 1; flips = 0;
@@ -50,7 +54,7 @@ w = ew(keep); i = i(keep); j = j(keep);
 S.L = sparse([i;j;i;j], [j;i;i;j], [-w;-w;w;w], nV, nV);
 S.F = Fh; S.twin = twin; S.edgeOf = edgeOf; S.edgeHe = edgeHe; S.len = len; S.mass = mass;
 if opt.signposts, S.angle = ang; S.angleSum = angSum; S.ref = ref; S.boundary = bnd; end
-S.star1 = ew; S.nV = nV; S.nF = nF; S.nE = nE; S.flips = flips; S.nonDelaunay = nnz(ew < -epsw);
+S.mollifyEps = mollifyEps; S.star1 = ew; S.nV = nV; S.nF = nF; S.nE = nE; S.flips = flips; S.nonDelaunay = nnz(ew < -epsw);
 
     function w = wgt(e)
         hh = edgeHe(e); tt = twin(hh); w = hcot(hh);
@@ -116,6 +120,15 @@ S.star1 = ew; S.nV = nV; S.nF = nF; S.nE = nE; S.flips = flips; S.nonDelaunay = 
             ang(f2+2) = mod(ang(f1) + corner(f1), angSum(vd));
         end
     end
+end
+
+function [len, eps0] = i_mollify(len, edgeOf, nF, rel)
+% MOLLIFY (intrinsicDelaunay.ts mollify): every length gets the smallest eps >= 0 that makes every triangle strictly valid by
+% delta = rel * mean edge length: eps = max(0, max over corners (l_C - l_A - l_B + delta)). 0 on a valid mesh: nothing changes.
+h = reshape(1:3*nF, 3, [])';  l = len(edgeOf(h));
+delta = rel * mean(len);
+eps0 = max(0, max([l(:,1) - l(:,2) - l(:,3); l(:,2) - l(:,1) - l(:,3); l(:,3) - l(:,1) - l(:,2)]) + delta);
+if eps0 > 0, len = len + eps0; end
 end
 
 function a = tri(x, y, z)
