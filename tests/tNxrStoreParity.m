@@ -1,0 +1,78 @@
+classdef tNxrStoreParity < matlab.unittest.TestCase
+% rheome.io.read.nxrsurface -> rheome.geom.glue -> rheome.operators.hodge_dirac -> rheome.eigen.hodge_dirac against nxr-convert's
+% own chain (tests/nxr_convert_chain.py: modes_input, glue_mesh, prepared, solve_hodge) on every subject of a real nxr store:
+% the same surface and wall read, the same glued mesh (bit for bit) and key, the same flips, the same band of modes.
+%
+% The store is named by $RHEOME_NXR_STORE (a dataset folder holding dataset.sqlite) and never written: nxr-convert reads it through
+% a read-only sqlite URI. Nothing from it is kept: no subject, value or array of a store lives in this repository (it is public).
+% Skipped when the variable is unset, the store is absent, or nxr-convert / uv are not found.
+%
+% Author: Diellor Basha, 2026
+
+    properties
+        store, nxr, subjects
+    end
+
+    methods (TestClassSetup)
+        function find(tc)
+            tc.store = string(getenv('RHEOME_NXR_STORE'));
+            tc.assumeTrue(tc.store ~= "" && isfile(fullfile(tc.store, 'dataset.sqlite')), 'RHEOME_NXR_STORE is unset or holds no nxr store');
+            tc.nxr = fullfile(getenv('HOME'), 'workspace/research/code/nxr-cortical-flow/backend/convert/nxr-convert');
+            tc.assumeTrue(isfile(fullfile(tc.nxr, 'pyproject.toml')) && system('command -v uv >/dev/null') == 0, 'nxr-convert or uv not found');
+            [st, out] = system(sprintf('sqlite3 -readonly "%s" "SELECT name FROM subject WHERE kind = ''subject'' AND status = ''complete'' ORDER BY name"', ...
+                fullfile(tc.store, 'dataset.sqlite')));
+            tc.assertEqual(st, 0, out);
+            tc.subjects = splitlines(strtrim(string(out)));
+            tc.assumeNotEmpty(tc.subjects(tc.subjects ~= ""), 'the store has no complete subject');
+        end
+    end
+
+    methods (Test)
+        function chainIsNxrConverts(tc)
+            for k = 1:numel(tc.subjects)
+                s = tc.subjects(k); at = sprintf('subject %d', k);           % by number: the diagnostics name no participant
+                o = tempname; c = onCleanup(@() rmdir(o, 's'));
+                cmd = sprintf('uv run --frozen --project "%s" python -I "%s" "%s" "%s" 200 "%s" 2>&1', tc.nxr, ...
+                    fullfile(fileparts(mfilename('fullpath')), 'nxr_convert_chain.py'), tc.store, s, o);
+                [st, out] = system(cmd);
+                tc.assertEqual(st, 0, sprintf('%s: nxr-convert failed: %s', at, out));
+                py = @(n, w) reshape(i_read(fullfile(o, n + ".f64")), w, [])';
+
+                S = rheome.io.read.nxrsurface(tc.store, s);
+                P = double(single(S.Vertices));                              % as the editor receives them, as modes_input does
+                tc.verifyEqual(P, py("P", 3), [at ': positions']);
+                tc.verifyEqual(S.Faces, py("F", 3) + 1, [at ': faces']);
+                tc.verifyEqual(S.Wall, i_read(fullfile(o, 'wall.f64')) ~= 0, [at ': medial wall']);
+
+                [X, G, keep] = rheome.geom.glue(P, S.Faces, S.Wall);
+                tc.verifyEqual(G, py("G", 3) + 1, [at ': glued faces']);
+                tc.verifyEqual(keep - 1, i_read(fullfile(o, 'keep.f64')), [at ': kept vertices']);
+                tc.verifyEqual(X, py("V", 3), [at ': glued positions, bit for bit']);
+                tc.verifyEqual(string(rheome.geom.meshkey(G)), string(strtrim(fileread(fullfile(o, 'key.txt')))), [at ': mesh key']);
+
+                H = rheome.operators.hodge_dirac(X, G);
+                tc.verifyEqual(H.mesh.F - 1, i_read(fullfile(o, 'iF.f64')), [at ': flips']);
+                tc.verifyEqual(H.star1Clamped, 0, [at ': no edge weight floored (the editor floors none)']);
+
+                sol = rheome.eigen.hodge_dirac(H, 200);
+                el = i_read(fullfile(o, 'el.f64')); cl = i_read(fullfile(o, 'cl.f64'));
+                tc.assertEqual([numel(sol.exactLambda) numel(sol.coexactLambda)], [numel(el) numel(cl)], [at ': the same band']);
+                tc.verifyEqual(sol.exactLambda, el, 'RelTol', 1e-9, [at ': exact lambda']);
+                tc.verifyEqual(sol.coexactLambda, cl, 'RelTol', 1e-9, [at ': coexact lambda']);
+                tc.verifyLessThan(i_modegap(sol.exactModes, py("em", H.mesh.nV)', H.star0), 1e-6, [at ': exact modes']);
+                tc.verifyLessThan(i_modegap(sol.coexactModes, py("cm", H.mesh.nF)', H.star2), 1e-6, [at ': coexact modes']);
+                clear c
+            end
+        end
+    end
+end
+
+function g = i_modegap(A, B, w)
+% the largest mass-norm difference between two sets of unit modes, each sign aligned
+s = sign(sum(A .* w .* B, 1)); D = A - B .* s;
+g = max(sqrt(sum(D .* w .* D, 1)));
+end
+
+function x = i_read(p)
+fid = fopen(p); x = fread(fid, inf, 'double=>double'); fclose(fid);
+end
