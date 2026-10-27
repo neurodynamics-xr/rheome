@@ -64,7 +64,47 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
                 clear c
             end
         end
+
+        function chainInputsAreTheEditors(tc)
+            % the spectral chain's inputs as the editor reads them: each kernel that carries fused weights, its recording, one 2^15-sample
+            % chunk of it; every array against zarr-python's read; and the weights' basis rebuilt here (glue, flips, solve) against the
+            % eigenvalues and glued mesh the weights record
+            here = fileparts(mfilename('fullpath'));
+            for k = 1:numel(tc.subjects)
+                s = tc.subjects(k); at = sprintf('subject %d', k);
+                [~, out] = system(sprintf('sqlite3 -readonly "%s" "SELECT DISTINCT o.name FROM operator o JOIN subject u ON u.id = o.subject_id JOIN operator w ON json_extract(w.params_json, ''$.kernel'') = o.id WHERE u.name = ''%s'' AND o.kind = ''inverse kernel'' AND w.kind = ''hodge-dirac weights'' ORDER BY o.name"', ...
+                    fullfile(tc.store, 'dataset.sqlite'), s));
+                kernels = splitlines(strtrim(string(out))); kernels = kernels(kernels ~= "");
+                if isempty(kernels), continue, end
+                K = rheome.io.read.nxrkernel(tc.store, s, kernels(1));
+                tc.assertNotEmpty(K.Recording, [at ': the kernel''s recording']);
+                R = rheome.io.read.nxrrecording(tc.store, s, K.Recording);                  % its length first
+                R = rheome.io.read.nxrrecording(tc.store, s, K.Recording, Samples=[1 min(2^15, R.nSamples)]);
+                tc.verifyTrue(all(K.Channels >= 1 & K.Channels <= numel(R.Channels)) && numel(K.Channels) == size(K.W, 2), [at ': kernel columns are recording channels']);
+                tc.verifyGreaterThan(R.Fs, 0);
+                tc.verifyEqual(double(R.Data), i_zarr(tc, here, R.Path, size(R.Data), [1 size(R.Data,1) R.Samples]), [at ': a recording chunk']);
+                tc.verifyEqual(double(K.W), i_zarr(tc, here, K.Path, size(K.W), []), [at ': the kernel']);
+                S = rheome.io.read.nxrsurface(tc.store, s);
+                [X, G] = rheome.geom.glue(double(single(S.Vertices)), S.Faces, S.Wall);
+                own = K.Weights(strcmp({K.Weights.mesh}, rheome.geom.meshkey(G)));          % the weights fused on this subject's glued mesh
+                tc.assertNotEmpty(own, [at ': fused weights on the glued mesh rheome builds']);
+                tc.verifyEqual(double(own(1).B), i_zarr(tc, here, own(1).Path, size(own(1).B), []), [at ': the fused weights']);
+                sol = rheome.eigen.hodge_dirac(rheome.operators.hodge_dirac(X, G), own(1).K + 100);
+                mu = sort(sqrt([sol.exactLambda; sol.coexactLambda]));
+                tc.assertGreaterThanOrEqual(numel(mu), own(1).K, [at ': the band covers the weights'' modes']);
+                tc.verifyEqual(mu(1:own(1).K), own(1).mu, 'RelTol', 1e-9, [at ': the weights'' eigenvalues, rebuilt']);
+            end
+        end
     end
+end
+
+function x = i_zarr(tc, here, folder, sz, rng)
+% zarr-python's read of the same part
+o = [tempname '.f64'];
+[st, out] = system(sprintf('uv run --frozen --project "%s" python -I "%s" "%s" "%s" %s 2>&1', tc.nxr, fullfile(here, 'zarr_slice.py'), folder, o, num2str(rng)));
+tc.assertEqual(st, 0, out);
+fid = fopen(o); x = fread(fid, inf, 'double=>double'); fclose(fid); delete(o);
+x = reshape(x, fliplr(sz))';
 end
 
 function g = i_modegap(A, B, w)
