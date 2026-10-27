@@ -13,6 +13,7 @@
 %   rheome.inverse.hodge_weights   - a kernel fused into the Hodge-Dirac modes: B [2K x C], sensors straight to each mode's
 %                        synthesis weights (the editor's fused matrix; the kernel carried onto the glued bridge)
 %   rheome.inverse.hodge_synthesis - the current those weights make: flow -grad A - n x grad S, and the normal current
+%   rheome.inverse.hodge_register  - fused weights carried onto a template: [T a; muT^-1 T muS b] (flow as flow fields)
 %   rheome.inverse.resolution - the resolution matrix R = K*Gain reduced to MILLIMETRES: PSF spread
 %                        by geodesic distance, and the gain per cortical wavelength
 %

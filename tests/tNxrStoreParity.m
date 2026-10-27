@@ -69,7 +69,7 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
             % the spectral chain's inputs as the editor reads them: each kernel that carries fused weights, its recording, one 2^15-sample
             % chunk of it; every array against zarr-python's read; and the weights' basis rebuilt here (glue, flips, solve) against the
             % eigenvalues and glued mesh the weights record
-            here = fileparts(mfilename('fullpath'));
+            here = fileparts(mfilename('fullpath')); tmpl = [];
             for k = 1:numel(tc.subjects)
                 s = tc.subjects(k); at = sprintf('subject %d', k);
                 [~, out] = system(sprintf('sqlite3 -readonly "%s" "SELECT DISTINCT o.name FROM operator o JOIN subject u ON u.id = o.subject_id JOIN operator w ON json_extract(w.params_json, ''$.kernel'') = o.id WHERE u.name = ''%s'' AND o.kind = ''inverse kernel'' AND w.kind = ''hodge-dirac weights'' ORDER BY o.name"', ...
@@ -108,13 +108,44 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
                 pkg.mu = pkg.mu(1:Kk); pkg.kind = pkg.kind(1:Kk); pkg.P = pkg.P(:, 1:Kk);
                 B = rheome.inverse.hodge_weights(K.W, pkg, X, G, keep, double(single(S.Vertices)));
                 Bs = double(own(1).B); a = 1:Kk; b = Kk + a;
-                sg = sign(sum(B(a, :) .* Bs(a, :), 2) + sum(B(b, :) .* Bs(b, :), 2)); B = B .* [sg; sg];
-                rel = vecnorm(B - Bs, 2, 2) ./ max(vecnorm(Bs, 2, 2), eps);
-                tc.verifyLessThan(norm(B - Bs, 'fro') / norm(Bs, 'fro'), 1e-4, [at ': the fused weights, rebuilt']);
+                sg = sign(sum(B(a, :) .* Bs(a, :), 2) + sum(B(b, :) .* Bs(b, :), 2)); Ba = B .* [sg; sg];      % B keeps this basis' signs (T is built in them)
+                rel = vecnorm(Ba - Bs, 2, 2) ./ max(vecnorm(Bs, 2, 2), eps);
+                tc.verifyLessThan(norm(Ba - Bs, 'fro') / norm(Bs, 'fro'), 1e-4, [at ': the fused weights, rebuilt']);
                 tc.verifyLessThan(median(rel(b)), 1e-6, [at ': a typical flow row, rebuilt (float32 storage)']);
+                % THE REGISTRATION: the kernel registered onto its template (nxr-convert registerkernel), its weights rebuilt here — the
+                % template's basis (glue, solve), the transfer T through the spheres, [T a; muT^-1 T muS b] — against the stored ones.
+                % The subject's mode signs cancel in T*B; the template's are aligned per mode
+                g = i_registered(tc, K.Id);
+                if isempty(g), continue, end
+                Kr = rheome.io.read.nxrkernel(tc.store, s, g.name); Wr = Kr.Weights(1);
+                if isempty(tmpl) || ~strcmp(tmpl.mesh, Wr.mesh) || numel(tmpl.full.mu) < Wr.K          % the template solved once, cut per subject
+                    Tm = rheome.io.read.nxrsurface(tc.store, g.template, Surface=g.template_surface); TPin = double(single(Tm.Vertices));
+                    [TX, TG, Tkeep] = rheome.geom.glue(TPin, Tm.Faces, Tm.Wall);
+                    tc.assertEqual(rheome.geom.meshkey(TG), Wr.mesh, [at ': the template''s glued mesh']);
+                    TH = rheome.operators.hodge_dirac(TX, TG);
+                    tmpl = struct('full', rheome.eigen.hodge_package(rheome.eigen.hodge_dirac(TH, Wr.K + 200), TH), 'keep', Tkeep, 'X', TX, 'Pin', TPin, ...
+                        'Fin', Tm.Faces, 'Sphere', Tm.Sphere, 'Left', "-x", 'mesh', Wr.mesh, 'pkg', []);
+                end
+                Tp = tmpl.full; Tp.mu = Tp.mu(1:Wr.K); Tp.kind = Tp.kind(1:Wr.K); Tp.P = Tp.P(:, 1:Wr.K); tmpl.pkg = Tp;
+                tc.verifyEqual(tmpl.pkg.mu, Wr.mu, 'RelTol', 1e-9, [at ': the template''s eigenvalues, rebuilt']);
+                subj = struct('pkg', pkg, 'keep', keep, 'X', X, 'Pin', double(single(S.Vertices)), 'Fin', S.Faces, 'Sphere', S.Sphere, 'Left', "+y");
+                [T, Rg] = rheome.eigen.transfer(subj, tmpl, Sampling=g.sampling);
+                Ck = rheome.eigen.transfercheck(T, Rg, subj, tmpl);
+                tc.verifyTrue(all(Ck.target), [at ': the transfer on smooth fields (errT < 0.15, corrT > 0.95)']);
+                if g.flow == "fields", Bt = rheome.inverse.hodge_register(B, T, pkg.mu, tmpl.pkg.mu); else, Bt = rheome.inverse.hodge_register(B, T); end
+                Bs = double(Wr.B); a = 1:Wr.K; b = Wr.K + a;
+                sg = sign(sum(Bt(a, :) .* Bs(a, :), 2) + sum(Bt(b, :) .* Bs(b, :), 2)); sg(sg == 0) = 1; Bt = Bt .* [sg; sg];
+                tc.verifyLessThan(norm(Bt - Bs, 'fro') / norm(Bs, 'fro'), 1e-5, [at ': the registered weights, rebuilt']);
             end
         end
     end
+end
+
+function g = i_registered(tc, kernelId)
+% the kernel registered from this one (its params' registered.of_kernel), with how: template, its surface, sampling, flow; [] when none
+[~, out] = system(sprintf('sqlite3 -readonly -json "%s" "SELECT name, json_extract(params_json, ''$.registered.template'') AS template, json_extract(params_json, ''$.registered.template_surface'') AS template_surface, json_extract(params_json, ''$.registered.sampling'') AS sampling, json_extract(params_json, ''$.registered.flow'') AS flow FROM operator WHERE kind = ''inverse kernel'' AND json_extract(params_json, ''$.registered.of_kernel'') = ''%s'' LIMIT 1"', ...
+    fullfile(tc.store, 'dataset.sqlite'), kernelId));
+g = []; if strtrim(out) ~= "", g = jsondecode(out); g.flow = string(g.flow); g.sampling = string(g.sampling); end
 end
 
 function r = nxrsql300(tc, s, rec)
