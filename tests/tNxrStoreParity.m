@@ -84,6 +84,15 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
                 tc.verifyGreaterThan(R.Fs, 0);
                 tc.verifyEqual(double(R.Data), i_zarr(tc, here, R.Path, size(R.Data), [1 size(R.Data,1) R.Samples]), [at ': a recording chunk']);
                 tc.verifyEqual(double(K.W), i_zarr(tc, here, K.Path, size(K.W), []), [at ': the kernel']);
+                % THE RESAMPLED COPY (nxr-convert resample: scipy resample_poly of the whole recording): the recording's first samples,
+                % 8 channels, resampled here; the copy's ends match from the recording's start, so only this chunk's far end is left out
+                r3 = nxrsql300(tc, s, K.Recording);
+                if r3 ~= ""
+                    R3 = rheome.io.read.nxrrecording(tc.store, s, r3); q = round(R.Fs / R3.Fs);
+                    x = rheome.io.read.zarr(R.Path, {[1 8], [1 q * 4096]}); y3 = double(rheome.io.read.zarr(R3.Path, {[1 8], [1 4096]}));
+                    y = rheome.filters.resample(double(x), R.Fs, R3.Fs);
+                    tc.verifyLessThan(max(abs(y(:, 1:4000) - y3(:, 1:4000)), [], 'all') / max(abs(y3(:, 1:4000)), [], 'all'), 1e-6, [at ': the resampled copy']);
+                end
                 S = rheome.io.read.nxrsurface(tc.store, s);
                 [X, G, keep] = rheome.geom.glue(double(single(S.Vertices)), S.Faces, S.Wall);
                 own = K.Weights(strcmp({K.Weights.mesh}, rheome.geom.meshkey(G)));          % the weights fused on this subject's glued mesh
@@ -106,6 +115,13 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
             end
         end
     end
+end
+
+function r = nxrsql300(tc, s, rec)
+% the recording resampled from `rec` (its producer names it), '' when none
+[~, out] = system(sprintf('sqlite3 -readonly "%s" "SELECT f.name FROM field f JOIN subject u ON u.id = f.subject_id WHERE u.name = ''%s'' AND f.kind = ''recording'' AND json_extract(f.producer_json, ''$.resampled_from.name'') = ''%s'' LIMIT 1"', ...
+    fullfile(tc.store, 'dataset.sqlite'), s, rec));
+r = string(strtrim(out));
 end
 
 function x = i_zarr(tc, here, folder, sz, rng)
