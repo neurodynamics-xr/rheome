@@ -11,6 +11,9 @@
 %   rheome.geom.edgegraph     - the mesh as a Dijkstra graph, edges + intrinsic diagonals: +1.4% against the
 %                        analytic great circle at any range, symmetric. The ruler for a speed.
 %   rheome.geom.karcher_mean  - intrinsic (geodesic Fréchet) mean of points on the surface
+%   rheome.geom.glue          - the two hemispheres made one closed surface by anatomy (medial walls cut, a bridge
+%                        grown): the editor's glueMesh, bit-identical to nxr-convert eigen/glue.py
+%   rheome.geom.meshkey       - the editor's mesh fingerprint '<nF>:<fnv1a>' a stored basis or kernel records
 %
 % THE SPATIAL PYRAMID (2026-09-25):
 %   rheome.geom.tree   - recursive spectral bisection of a surface: a NESTED, DISJOINT partition,
