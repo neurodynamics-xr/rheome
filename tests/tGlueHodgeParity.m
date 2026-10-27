@@ -66,6 +66,23 @@ classdef tGlueHodgeParity < matlab.unittest.TestCase
             tc.verifyLessThan(i_modegap(sol.coexactModes, reshape(i_read(fullfile(S, 'coexact_modes.f64'), 'double'), [], meta.coexact), H.star2), 1e-6);
         end
 
+        function fusedWeightsReadBackTheirSynthesis(tc)
+            % a kernel fused into the modes (carried onto the bridge), its weights synthesised into a current, the current read back:
+            % the same weights (rheome.inverse.hodge_weights is the left inverse of rheome.inverse.hodge_synthesis)
+            [X, Gf, keep] = rheome.geom.glue(tc.P, tc.F, tc.wall);
+            H = rheome.operators.hodge_dirac(X, Gf);
+            pkg = rheome.eigen.hodge_package(rheome.eigen.hodge_dirac(H, 60), H);
+            tc.verifyTrue(issorted(pkg.mu) && isa(pkg.P, 'single') && all(ismember(pkg.kind, [0 2])));
+            W = randn(RandStream('mt19937ar', 'Seed', 3), 3 * size(tc.P, 1), 4);
+            B = rheome.inverse.hodge_weights(W, pkg, X, Gf, keep, tc.P);
+            K = numel(pkg.mu);
+            tc.verifyEqual(B(pkg.kind == 0, :), zeros(nnz(pkg.kind == 0), 4), 'an exact mode carries no normal current');
+            J = rheome.inverse.hodge_synthesis(B, pkg, X, Gf);
+            back = rheome.inverse.hodge_weights(reshape(permute(J, [2 1 3]), [], 4), pkg, X, Gf);
+            tc.verifyLessThan(norm(back - B, 'fro') / norm(B, 'fro'), 1e-10);
+            tc.verifyEqual(size(B), [2 * K 4]);
+        end
+
         function everyModeIsAnEigenpairOfThePencil(tc)
             [X, Gf] = rheome.geom.glue(tc.P, tc.F, tc.wall);
             H = rheome.operators.hodge_dirac(X, Gf);

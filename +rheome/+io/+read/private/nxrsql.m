@@ -1,9 +1,19 @@
 function r = nxrsql(store, sql)
 % NXRSQL  Rows of an nxr store's catalogue (dataset.sqlite), read-only, as a struct array ([] when none).
-% Through the sqlite3 command-line tool: MATLAB's sqlite needs the Database Toolbox.
+% In-process through MATLAB's Python (its standard sqlite3 module, a read-only URI): MATLAB's own sqlite needs the Database Toolbox.
 db = fullfile(store, "dataset.sqlite");
 if ~isfile(db), error('io:read:nxr:notFound', 'No nxr store at %s (dataset.sqlite missing)', store); end
-[st, out] = system(sprintf('sqlite3 -readonly -json "%s" "%s"', db, replace(sql, '"', '\"')));
-if st ~= 0, error('io:read:nxr:sqlite', 'sqlite3 failed on %s: %s', db, strtrim(out)); end
-if isempty(strtrim(out)), r = []; else, r = jsondecode(out); end
+code = ["import sqlite3, json, urllib.parse"
+        "cx = sqlite3.connect('file:' + urllib.parse.quote(db) + '?mode=ro', uri=True)"
+        "cur = cx.execute(sql)"
+        "cols = [d[0] for d in cur.description]"
+        "out = json.dumps([dict(zip(cols, row)) for row in cur.fetchall()])"
+        "cx.close()"];
+try
+    out = pyrun(code, "out", db=char(db), sql=char(sql));
+catch e
+    error('io:read:nxr:sqlite', 'reading %s through MATLAB''s Python (pyenv) failed: %s', db, e.message);
+end
+r = jsondecode(char(out));
+if isempty(r), r = []; end
 end

@@ -85,14 +85,24 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
                 tc.verifyEqual(double(R.Data), i_zarr(tc, here, R.Path, size(R.Data), [1 size(R.Data,1) R.Samples]), [at ': a recording chunk']);
                 tc.verifyEqual(double(K.W), i_zarr(tc, here, K.Path, size(K.W), []), [at ': the kernel']);
                 S = rheome.io.read.nxrsurface(tc.store, s);
-                [X, G] = rheome.geom.glue(double(single(S.Vertices)), S.Faces, S.Wall);
+                [X, G, keep] = rheome.geom.glue(double(single(S.Vertices)), S.Faces, S.Wall);
                 own = K.Weights(strcmp({K.Weights.mesh}, rheome.geom.meshkey(G)));          % the weights fused on this subject's glued mesh
                 tc.assertNotEmpty(own, [at ': fused weights on the glued mesh rheome builds']);
                 tc.verifyEqual(double(own(1).B), i_zarr(tc, here, own(1).Path, size(own(1).B), []), [at ': the fused weights']);
-                sol = rheome.eigen.hodge_dirac(rheome.operators.hodge_dirac(X, G), own(1).K + 100);
+                Hd = rheome.operators.hodge_dirac(X, G); sol = rheome.eigen.hodge_dirac(Hd, own(1).K + 100);
                 mu = sort(sqrt([sol.exactLambda; sol.coexactLambda]));
                 tc.assertGreaterThanOrEqual(numel(mu), own(1).K, [at ': the band covers the weights'' modes']);
                 tc.verifyEqual(mu(1:own(1).K), own(1).mu, 'RelTol', 1e-9, [at ': the weights'' eigenvalues, rebuilt']);
+                % THE FUSION: B rebuilt from the kernel and this basis, against the stored B. A mode's sign is arbitrary (its a and b flip
+                % together) and modes whose eigenvalues nearly coincide may mix: the whole matrix, and the typical row, are held
+                pkg = rheome.eigen.hodge_package(sol, Hd); Kk = own(1).K;
+                pkg.mu = pkg.mu(1:Kk); pkg.kind = pkg.kind(1:Kk); pkg.P = pkg.P(:, 1:Kk);
+                B = rheome.inverse.hodge_weights(K.W, pkg, X, G, keep, double(single(S.Vertices)));
+                Bs = double(own(1).B); a = 1:Kk; b = Kk + a;
+                sg = sign(sum(B(a, :) .* Bs(a, :), 2) + sum(B(b, :) .* Bs(b, :), 2)); B = B .* [sg; sg];
+                rel = vecnorm(B - Bs, 2, 2) ./ max(vecnorm(Bs, 2, 2), eps);
+                tc.verifyLessThan(norm(B - Bs, 'fro') / norm(Bs, 'fro'), 1e-4, [at ': the fused weights, rebuilt']);
+                tc.verifyLessThan(median(rel(b)), 1e-6, [at ': a typical flow row, rebuilt (float32 storage)']);
             end
         end
     end
