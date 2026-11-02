@@ -53,7 +53,7 @@ classdef tScaleCleanspan < matlab.unittest.TestCase
             % periodicflow's power_ratio divides the data-derived scale by fs*nT/2: for a one-sided
             % Welch PSD and an unwindowed FFT that is the expected |X_k|^2 / P(f_k).
             rng(4);  fs = 600;  F = randn(30, 120*fs);
-            nf = 2^nextpow2(8*fs);  [P, f] = pwelch(F.', hann(nf), nf/2, nf, fs);
+            nf = 2^nextpow2(8*fs);  [P, f] = pwelch(F.', hann(nf, 'periodic'), nf/2, nf, fs);
             nT = 6*fs;  W = fft(F(:, 1:nT), [], 2);  fw = (0:nT-1)*fs/nT;  pos = 2:nT/2;
             Pi = interp1(f, P, fw(pos)')';  in = fw(pos) >= 1 & fw(pos) <= 45;
             sc = mean(abs(W(:, pos(in))).^2, 'all') / mean(Pi(:, in), 'all');
