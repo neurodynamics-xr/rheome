@@ -7,6 +7,9 @@
 % Burst stages, band frames and the lag-free envelope-matched null (commit 30b9622, goldens tests/goldens/vortex-signal) are
 % the vortex pipeline's own; rheome.detect.spindle and rheome.detect.risefall (sleep spindles) are unchanged.
 %
+% Tiles (commit 0db82e4, goldens tests/goldens/vortex-tiles): the surface ladder, tile crossings, path consistency R, repeat, tile dot, tile p/q, BH and
+% the place-based direction consistency. Permutations are inputs (numpy's generator cannot be reproduced) or MATLAB draws.
+%
 % Functions:
 %   rheome.cores.adjacency   - Symmetric vertex adjacency of a mesh (nxr support_adjacency).
 %   rheome.cores.bandframes  - A band's analytic signal at fps frames a second, complex single (nxr band_at_frames).
@@ -25,5 +28,15 @@
 %   rheome.cores.patches     - Cores of a curl movie: frame, sense, centre, area (nxr _core_patches).
 %   rheome.cores.stats       - Core tracks and track measures of a curl movie (nxr core_stats).
 %   rheome.cores.threshold   - The 98th-percentile |curl| threshold from a log histogram (nxr _core_threshold).
+%   rheome.cores.bh          - Benjamini-Hochberg q values (nxr bh).
+%   rheome.cores.crossings   - Per tile-sense summed crossing directions of core steps at one ladder level (nxr Tiles.crossings).
+%   rheome.cores.ladder      - Two-piece surface ladder, codes 2^level*h + t, one piece per tile (nxr surface_ladder).
+%   rheome.cores.pathR       - Path consistency R, count-weighted mean resultant length (nxr mean_R).
+%   rheome.cores.pathchance  - Chance R with the crossing directions shuffled among crossings (nxr stage_measures).
+%   rheome.cores.placeconsistency - Direction consistency at places, no per-track averaging (nxr direction_consistency).
+%   rheome.cores.repeat      - Count-weighted mean cosine of tile directions between two runs (nxr repeat).
+%   rheome.cores.senses      - Pool the two senses of each tile (nxr senses).
+%   rheome.cores.tiledot     - Per-tile dot of two runs' mean resultant vectors (nxr tile_dot).
+%   rheome.cores.tilepq      - Tile permutation p and BH q against a null of runs (nxr vortex.py:203-204).
 %
 % Author: Diellor Basha, 2026
