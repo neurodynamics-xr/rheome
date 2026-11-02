@@ -1,0 +1,880 @@
+{
+ "arrays": {
+  "V_mm": {
+   "file": "V_mm.bin",
+   "dtype": "float64",
+   "shape": [
+    1284,
+    3
+   ],
+   "unit": "mm",
+   "note": "two separated jittered icospheres: vertices 0..641 centre y=+90 (left, 'L'), 642..1283 centre y=-90 (right, 'R')",
+   "source": "script (icosphere of tests/goldens/vortex_goldens.py + jitter)"
+  },
+  "F": {
+   "file": "F.bin",
+   "dtype": "int32",
+   "shape": [
+    2560,
+    3
+   ],
+   "unit": "1",
+   "note": "triangles, 0-based, counter-clockwise from outside; second piece offset by 642",
+   "source": "script"
+  },
+  "hemi": {
+   "file": "hemi.bin",
+   "dtype": "int32",
+   "shape": [
+    1284
+   ],
+   "unit": "1",
+   "note": "0 = 'L', 1 = 'R' (the two connected components; L is the one with larger mean y)",
+   "source": "hemispheres _port/sphere.py:11"
+  },
+  "labels": {
+   "file": "labels.bin",
+   "dtype": "int32",
+   "shape": [
+    9,
+    1284
+   ],
+   "unit": "1",
+   "note": "[level x V] tile codes 2^level*h + tile (h=0 L, 1 R); levels 0..8; children of t are 2t, 2t+1 inside the hemisphere",
+   "source": "surface_ladder tile_connectome.py:68"
+  },
+  "support": {
+   "file": "support.bin",
+   "dtype": "int32",
+   "shape": [
+    1167
+   ],
+   "unit": "1",
+   "note": "vertices that cores may snap to (every vertex but index%11==5)",
+   "source": "script (stand-in for Cortex.support)"
+  },
+  "normals": {
+   "file": "normals.bin",
+   "dtype": "float64",
+   "shape": [
+    1284,
+    3
+   ],
+   "unit": "1",
+   "note": "outward unit normals (radial from each sphere's unjittered centre); stand-in for Cortex.normals",
+   "source": "script"
+  },
+  "tile_count_per_level": {
+   "file": "tile_count_per_level.bin",
+   "dtype": "int32",
+   "shape": [
+    9
+   ],
+   "unit": "1",
+   "note": "distinct tile codes per level (2^(level+1))",
+   "source": "surface_ladder tile_connectome.py:68"
+  },
+  "steps_A": {
+   "file": "steps_A.bin",
+   "dtype": "float64",
+   "shape": [
+    6030,
+    9
+   ],
+   "unit": "mm",
+   "note": "[S x 9] run A: sense, from xyz (mm), displacement xyz (mm), track id, frame (float32-exact). Planted: eastward on local z>0, random elsewhere",
+   "source": "core_stats(steps=) vortex.py:361 (planted)"
+  },
+  "steps_B": {
+   "file": "steps_B.bin",
+   "dtype": "float64",
+   "shape": [
+    6030,
+    9
+   ],
+   "unit": "mm",
+   "note": "run B: as A with other draws (consistent with A on the upper halves)",
+   "source": "idem"
+  },
+  "frames_burst": {
+   "file": "frames_burst.bin",
+   "dtype": "int32",
+   "shape": [
+    41
+   ],
+   "unit": "1",
+   "note": "frames of the stage",
+   "source": "script"
+  },
+  "frames_onset": {
+   "file": "frames_onset.bin",
+   "dtype": "int32",
+   "shape": [
+    10
+   ],
+   "unit": "1",
+   "note": "frames of the stage",
+   "source": "script"
+  },
+  "frames_within": {
+   "file": "frames_within.bin",
+   "dtype": "int32",
+   "shape": [
+    20
+   ],
+   "unit": "1",
+   "note": "frames of the stage",
+   "source": "script"
+  },
+  "frames_offset": {
+   "file": "frames_offset.bin",
+   "dtype": "int32",
+   "shape": [
+    11
+   ],
+   "unit": "1",
+   "note": "frames of the stage",
+   "source": "script"
+  },
+  "nearest_support_A": {
+   "file": "nearest_support_A.bin",
+   "dtype": "int32",
+   "shape": [
+    6030
+   ],
+   "unit": "1",
+   "note": "REPLICATED: index INTO `support` of the support vertex nearest each A step's origin (cKDTree, Euclid, float32 query points)",
+   "source": "Tiles.crossings vortex_cores.py:65"
+  },
+  "cross_sums_A_l6": {
+   "file": "cross_sums_A_l6.bin",
+   "dtype": "float64",
+   "shape": [
+    256,
+    3
+   ],
+   "unit": "1",
+   "note": "[256 x 3] summed unit crossing vectors per tile-sense (row = 2*tile_code + (sense>0))",
+   "source": "Tiles.crossings vortex_cores.py:65"
+  },
+  "cross_n_A_l6": {
+   "file": "cross_n_A_l6.bin",
+   "dtype": "int32",
+   "shape": [
+    256
+   ],
+   "unit": "1",
+   "note": "[256] crossings per tile-sense",
+   "source": "Tiles.crossings vortex_cores.py:65"
+  },
+  "cross_key_A_l6": {
+   "file": "cross_key_A_l6.bin",
+   "dtype": "int32",
+   "shape": [
+    3689
+   ],
+   "unit": "1",
+   "note": "tile-sense row of each crossing, ordered by (key, track id)",
+   "source": "Tiles.crossings vortex_cores.py:65"
+  },
+  "cross_vec_A_l6": {
+   "file": "cross_vec_A_l6.bin",
+   "dtype": "float64",
+   "shape": [
+    3689,
+    3
+   ],
+   "unit": "1",
+   "note": "unit mean tangent vector (3-D, in the surface's tangent plane) of each crossing, same order",
+   "source": "Tiles.crossings vortex_cores.py:65"
+  },
+  "cross_sums_A_l7": {
+   "file": "cross_sums_A_l7.bin",
+   "dtype": "float64",
+   "shape": [
+    512,
+    3
+   ],
+   "unit": "1",
+   "note": "[512 x 3] summed unit crossing vectors per tile-sense (row = 2*tile_code + (sense>0))",
+   "source": "Tiles.crossings vortex_cores.py:65"
+  },
+  "cross_n_A_l7": {
+   "file": "cross_n_A_l7.bin",
+   "dtype": "int32",
+   "shape": [
+    512
+   ],
+   "unit": "1",
+   "note": "[512] crossings per tile-sense",
+   "source": "Tiles.crossings vortex_cores.py:65"
+  },
+  "cross_sums_A_l8": {
+   "file": "cross_sums_A_l8.bin",
+   "dtype": "float64",
+   "shape": [
+    1024,
+    3
+   ],
+   "unit": "1",
+   "note": "[1024 x 3] summed unit crossing vectors per tile-sense (row = 2*tile_code + (sense>0))",
+   "source": "Tiles.crossings vortex_cores.py:65"
+  },
+  "cross_n_A_l8": {
+   "file": "cross_n_A_l8.bin",
+   "dtype": "int32",
+   "shape": [
+    1024
+   ],
+   "unit": "1",
+   "note": "[1024] crossings per tile-sense",
+   "source": "Tiles.crossings vortex_cores.py:65"
+  },
+  "cross_key_A_l8": {
+   "file": "cross_key_A_l8.bin",
+   "dtype": "int32",
+   "shape": [
+    4187
+   ],
+   "unit": "1",
+   "note": "tile-sense row of each crossing, ordered by (key, track id)",
+   "source": "Tiles.crossings vortex_cores.py:65"
+  },
+  "cross_vec_A_l8": {
+   "file": "cross_vec_A_l8.bin",
+   "dtype": "float64",
+   "shape": [
+    4187,
+    3
+   ],
+   "unit": "1",
+   "note": "unit mean tangent vector (3-D, in the surface's tangent plane) of each crossing, same order",
+   "source": "Tiles.crossings vortex_cores.py:65"
+  },
+  "stage_R_A": {
+   "file": "stage_R_A.bin",
+   "dtype": "float64",
+   "shape": [
+    3,
+    4
+   ],
+   "unit": "1",
+   "note": "[level 6,7,8 x stage burst,onset,within,offset] path consistency R",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "stage_shuf_A": {
+   "file": "stage_shuf_A.bin",
+   "dtype": "float64",
+   "shape": [
+    3,
+    4
+   ],
+   "unit": "1",
+   "note": "[level 6,7,8 x stage burst,onset,within,offset] mean of NSHUF=5 shuffled R",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "stage_crossings_A": {
+   "file": "stage_crossings_A.bin",
+   "dtype": "int32",
+   "shape": [
+    3,
+    4
+   ],
+   "unit": "1",
+   "note": "[level 6,7,8 x stage burst,onset,within,offset] crossings",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "burst_R_A": {
+   "file": "burst_R_A.bin",
+   "dtype": "float64",
+   "shape": [
+    3
+   ],
+   "unit": "1",
+   "note": "[3 levels] R of the burst stage, run A",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "sums_A_l6": {
+   "file": "sums_A_l6.bin",
+   "dtype": "float64",
+   "shape": [
+    256,
+    3
+   ],
+   "unit": "1",
+   "note": "[256 x 3] burst-stage sums of run A (float32 in nxr, exactly representable)",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "n_A_l6": {
+   "file": "n_A_l6.bin",
+   "dtype": "int32",
+   "shape": [
+    256
+   ],
+   "unit": "1",
+   "note": "[256] burst-stage crossings of run A",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "sums_A_l7": {
+   "file": "sums_A_l7.bin",
+   "dtype": "float64",
+   "shape": [
+    512,
+    3
+   ],
+   "unit": "1",
+   "note": "[512 x 3] burst-stage sums of run A (float32 in nxr, exactly representable)",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "n_A_l7": {
+   "file": "n_A_l7.bin",
+   "dtype": "int32",
+   "shape": [
+    512
+   ],
+   "unit": "1",
+   "note": "[512] burst-stage crossings of run A",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "sums_A_l8": {
+   "file": "sums_A_l8.bin",
+   "dtype": "float64",
+   "shape": [
+    1024,
+    3
+   ],
+   "unit": "1",
+   "note": "[1024 x 3] burst-stage sums of run A (float32 in nxr, exactly representable)",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "n_A_l8": {
+   "file": "n_A_l8.bin",
+   "dtype": "int32",
+   "shape": [
+    1024
+   ],
+   "unit": "1",
+   "note": "[1024] burst-stage crossings of run A",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "burst_R_B": {
+   "file": "burst_R_B.bin",
+   "dtype": "float64",
+   "shape": [
+    3
+   ],
+   "unit": "1",
+   "note": "[3 levels] R of the burst stage, run B",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "sums_B_l6": {
+   "file": "sums_B_l6.bin",
+   "dtype": "float64",
+   "shape": [
+    256,
+    3
+   ],
+   "unit": "1",
+   "note": "[256 x 3] burst-stage sums of run B (float32 in nxr, exactly representable)",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "n_B_l6": {
+   "file": "n_B_l6.bin",
+   "dtype": "int32",
+   "shape": [
+    256
+   ],
+   "unit": "1",
+   "note": "[256] burst-stage crossings of run B",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "sums_B_l7": {
+   "file": "sums_B_l7.bin",
+   "dtype": "float64",
+   "shape": [
+    512,
+    3
+   ],
+   "unit": "1",
+   "note": "[512 x 3] burst-stage sums of run B (float32 in nxr, exactly representable)",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "n_B_l7": {
+   "file": "n_B_l7.bin",
+   "dtype": "int32",
+   "shape": [
+    512
+   ],
+   "unit": "1",
+   "note": "[512] burst-stage crossings of run B",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "sums_B_l8": {
+   "file": "sums_B_l8.bin",
+   "dtype": "float64",
+   "shape": [
+    1024,
+    3
+   ],
+   "unit": "1",
+   "note": "[1024 x 3] burst-stage sums of run B (float32 in nxr, exactly representable)",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "n_B_l8": {
+   "file": "n_B_l8.bin",
+   "dtype": "int32",
+   "shape": [
+    1024
+   ],
+   "unit": "1",
+   "note": "[1024] burst-stage crossings of run B",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "burst_R_C": {
+   "file": "burst_R_C.bin",
+   "dtype": "float64",
+   "shape": [
+    3
+   ],
+   "unit": "1",
+   "note": "[3 levels] R of the burst stage, run C",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "sums_C_l6": {
+   "file": "sums_C_l6.bin",
+   "dtype": "float64",
+   "shape": [
+    256,
+    3
+   ],
+   "unit": "1",
+   "note": "[256 x 3] burst-stage sums of run C (float32 in nxr, exactly representable)",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "n_C_l6": {
+   "file": "n_C_l6.bin",
+   "dtype": "int32",
+   "shape": [
+    256
+   ],
+   "unit": "1",
+   "note": "[256] burst-stage crossings of run C",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "sums_C_l7": {
+   "file": "sums_C_l7.bin",
+   "dtype": "float64",
+   "shape": [
+    512,
+    3
+   ],
+   "unit": "1",
+   "note": "[512 x 3] burst-stage sums of run C (float32 in nxr, exactly representable)",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "n_C_l7": {
+   "file": "n_C_l7.bin",
+   "dtype": "int32",
+   "shape": [
+    512
+   ],
+   "unit": "1",
+   "note": "[512] burst-stage crossings of run C",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "sums_C_l8": {
+   "file": "sums_C_l8.bin",
+   "dtype": "float64",
+   "shape": [
+    1024,
+    3
+   ],
+   "unit": "1",
+   "note": "[1024 x 3] burst-stage sums of run C (float32 in nxr, exactly representable)",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "n_C_l8": {
+   "file": "n_C_l8.bin",
+   "dtype": "int32",
+   "shape": [
+    1024
+   ],
+   "unit": "1",
+   "note": "[1024] burst-stage crossings of run C",
+   "source": "stage_measures vortex_cores.py:101"
+  },
+  "stage_perms": {
+   "file": "stage_perms.bin",
+   "dtype": "int32",
+   "shape": [
+    119525
+   ],
+   "unit": "1",
+   "note": "every rng.permutation(n) stage_measures consumed, concatenated in call order (level, stage, shuffle 0..4)",
+   "source": "stage_measures vortex_cores.py:107"
+  },
+  "stage_perm_lengths": {
+   "file": "stage_perm_lengths.bin",
+   "dtype": "int32",
+   "shape": [
+    60
+   ],
+   "unit": "1",
+   "note": "length of each permutation (the crossings of that level and stage)",
+   "source": "stage_measures vortex_cores.py:107"
+  },
+  "dc_places": {
+   "file": "dc_places.bin",
+   "dtype": "int32",
+   "shape": [
+    143
+   ],
+   "unit": "1",
+   "note": "place vertex indices (into V_mm / normals, not into support)",
+   "source": "direction_consistency vortex.py:760"
+  },
+  "dc_result": {
+   "file": "dc_result.bin",
+   "dtype": "float64",
+   "shape": [
+    3
+   ],
+   "unit": "1",
+   "note": "R, shuffled-chance R, number of steps with non-zero tangent displacement",
+   "source": "direction_consistency vortex.py:760"
+  },
+  "dc_perms": {
+   "file": "dc_perms.bin",
+   "dtype": "int32",
+   "shape": [
+    32000
+   ],
+   "unit": "1",
+   "note": "the 8 permutations of the usable steps, in call order",
+   "source": "direction_consistency vortex.py:773"
+  },
+  "dc_perm_lengths": {
+   "file": "dc_perm_lengths.bin",
+   "dtype": "int32",
+   "shape": [
+    8
+   ],
+   "unit": "1",
+   "note": "lengths",
+   "source": "direction_consistency vortex.py:773"
+  },
+  "repeat_AB_l6": {
+   "file": "repeat_AB_l6.bin",
+   "dtype": "float64",
+   "shape": [
+    1
+   ],
+   "unit": "1",
+   "note": "count-weighted mean cosine of tile directions between runs A and B",
+   "source": "repeat vortex_cores.py:83"
+  },
+  "repeat_AC_l6": {
+   "file": "repeat_AC_l6.bin",
+   "dtype": "float64",
+   "shape": [
+    1
+   ],
+   "unit": "1",
+   "note": "same, A against the random run C",
+   "source": "repeat vortex_cores.py:83"
+  },
+  "tile_dot_AB_l6": {
+   "file": "tile_dot_AB_l6.bin",
+   "dtype": "float64",
+   "shape": [
+    128
+   ],
+   "unit": "1",
+   "note": "[128] per tile (senses pooled) dot of mean resultant vectors; NaN where either run has < 10 crossings",
+   "source": "tile_dot vortex_cores.py:90"
+  },
+  "tile_dot_AC_l6": {
+   "file": "tile_dot_AC_l6.bin",
+   "dtype": "float64",
+   "shape": [
+    128
+   ],
+   "unit": "1",
+   "note": "same, A against C",
+   "source": "tile_dot vortex_cores.py:90"
+  },
+  "tile_dot_null_l6": {
+   "file": "tile_dot_null_l6.bin",
+   "dtype": "float64",
+   "shape": [
+    59,
+    128
+   ],
+   "unit": "1",
+   "note": "[59 x 128] tile dots of 59 pairs of independent random runs (the null; generated by the script, a port reads it)",
+   "source": "tile_dot vortex_cores.py:90"
+  },
+  "tile_p_AB_l6": {
+   "file": "tile_p_AB_l6.bin",
+   "dtype": "float64",
+   "shape": [
+    128
+   ],
+   "unit": "1",
+   "note": "REPLICATED permutation p: (#null dots >= data dot + 1) / (#finite null dots + 1), NaN where the data dot is NaN",
+   "source": "driver vortex_cores.py:203"
+  },
+  "tile_q_AB_l6": {
+   "file": "tile_q_AB_l6.bin",
+   "dtype": "float64",
+   "shape": [
+    128
+   ],
+   "unit": "1",
+   "note": "bh(p) over the finite tiles of the level, NaN elsewhere",
+   "source": "bh vortex_cores.py:96, driver :204"
+  },
+  "repeat_AB_l7": {
+   "file": "repeat_AB_l7.bin",
+   "dtype": "float64",
+   "shape": [
+    1
+   ],
+   "unit": "1",
+   "note": "count-weighted mean cosine of tile directions between runs A and B",
+   "source": "repeat vortex_cores.py:83"
+  },
+  "repeat_AC_l7": {
+   "file": "repeat_AC_l7.bin",
+   "dtype": "float64",
+   "shape": [
+    1
+   ],
+   "unit": "1",
+   "note": "same, A against the random run C",
+   "source": "repeat vortex_cores.py:83"
+  },
+  "tile_dot_AB_l7": {
+   "file": "tile_dot_AB_l7.bin",
+   "dtype": "float64",
+   "shape": [
+    256
+   ],
+   "unit": "1",
+   "note": "[256] per tile (senses pooled) dot of mean resultant vectors; NaN where either run has < 10 crossings",
+   "source": "tile_dot vortex_cores.py:90"
+  },
+  "tile_dot_AC_l7": {
+   "file": "tile_dot_AC_l7.bin",
+   "dtype": "float64",
+   "shape": [
+    256
+   ],
+   "unit": "1",
+   "note": "same, A against C",
+   "source": "tile_dot vortex_cores.py:90"
+  },
+  "tile_dot_null_l7": {
+   "file": "tile_dot_null_l7.bin",
+   "dtype": "float64",
+   "shape": [
+    59,
+    256
+   ],
+   "unit": "1",
+   "note": "[59 x 256] tile dots of 59 pairs of independent random runs (the null; generated by the script, a port reads it)",
+   "source": "tile_dot vortex_cores.py:90"
+  },
+  "tile_p_AB_l7": {
+   "file": "tile_p_AB_l7.bin",
+   "dtype": "float64",
+   "shape": [
+    256
+   ],
+   "unit": "1",
+   "note": "REPLICATED permutation p: (#null dots >= data dot + 1) / (#finite null dots + 1), NaN where the data dot is NaN",
+   "source": "driver vortex_cores.py:203"
+  },
+  "tile_q_AB_l7": {
+   "file": "tile_q_AB_l7.bin",
+   "dtype": "float64",
+   "shape": [
+    256
+   ],
+   "unit": "1",
+   "note": "bh(p) over the finite tiles of the level, NaN elsewhere",
+   "source": "bh vortex_cores.py:96, driver :204"
+  },
+  "repeat_AB_l8": {
+   "file": "repeat_AB_l8.bin",
+   "dtype": "float64",
+   "shape": [
+    1
+   ],
+   "unit": "1",
+   "note": "count-weighted mean cosine of tile directions between runs A and B",
+   "source": "repeat vortex_cores.py:83"
+  },
+  "repeat_AC_l8": {
+   "file": "repeat_AC_l8.bin",
+   "dtype": "float64",
+   "shape": [
+    1
+   ],
+   "unit": "1",
+   "note": "same, A against the random run C",
+   "source": "repeat vortex_cores.py:83"
+  },
+  "tile_dot_AB_l8": {
+   "file": "tile_dot_AB_l8.bin",
+   "dtype": "float64",
+   "shape": [
+    512
+   ],
+   "unit": "1",
+   "note": "[512] per tile (senses pooled) dot of mean resultant vectors; NaN where either run has < 10 crossings",
+   "source": "tile_dot vortex_cores.py:90"
+  },
+  "tile_dot_AC_l8": {
+   "file": "tile_dot_AC_l8.bin",
+   "dtype": "float64",
+   "shape": [
+    512
+   ],
+   "unit": "1",
+   "note": "same, A against C",
+   "source": "tile_dot vortex_cores.py:90"
+  },
+  "tile_dot_null_l8": {
+   "file": "tile_dot_null_l8.bin",
+   "dtype": "float64",
+   "shape": [
+    59,
+    512
+   ],
+   "unit": "1",
+   "note": "[59 x 512] tile dots of 59 pairs of independent random runs (the null; generated by the script, a port reads it)",
+   "source": "tile_dot vortex_cores.py:90"
+  },
+  "tile_p_AB_l8": {
+   "file": "tile_p_AB_l8.bin",
+   "dtype": "float64",
+   "shape": [
+    512
+   ],
+   "unit": "1",
+   "note": "REPLICATED permutation p: (#null dots >= data dot + 1) / (#finite null dots + 1), NaN where the data dot is NaN",
+   "source": "driver vortex_cores.py:203"
+  },
+  "tile_q_AB_l8": {
+   "file": "tile_q_AB_l8.bin",
+   "dtype": "float64",
+   "shape": [
+    512
+   ],
+   "unit": "1",
+   "note": "bh(p) over the finite tiles of the level, NaN elsewhere",
+   "source": "bh vortex_cores.py:96, driver :204"
+  },
+  "bh_p": {
+   "file": "bh_p.bin",
+   "dtype": "float64",
+   "shape": [
+    10
+   ],
+   "unit": "1",
+   "note": "p values with ties, unsorted",
+   "source": "script"
+  },
+  "bh_q": {
+   "file": "bh_q.bin",
+   "dtype": "float64",
+   "shape": [
+    10
+   ],
+   "unit": "1",
+   "note": "BH q values",
+   "source": "bh vortex_cores.py:96"
+  }
+ },
+ "scalars": {
+  "nt": {
+   "6": 256,
+   "7": 512,
+   "8": 1024
+  },
+  "stage_shuffle_seed": 4242,
+  "nshuf": 5,
+  "dc_rows": 4000,
+  "dc": {
+   "n_min": 10,
+   "nshuf": 8,
+   "place_every": 9,
+   "seed": 5252
+  },
+  "n_q_lt_0.05_l6": 69,
+  "n_tiles_l6": 128,
+  "n_q_lt_0.05_l7": 111,
+  "n_tiles_l7": 211,
+  "n_q_lt_0.05_l8": 0,
+  "n_tiles_l8": 89,
+  "q_threshold": 0.05,
+  "levels": [
+   6,
+   7,
+   8
+  ]
+ },
+ "layout": "little-endian, row-major (C order); float64 or int32 .bin, no header; NaN = missing",
+ "parameters": {
+  "subdiv": 3,
+  "radius_mm": 60.0,
+  "offset_y_mm": 90.0,
+  "jitter_mm": 0.6,
+  "mesh_seed": 11,
+  "off_support_mod": 11,
+  "ntracks": 3000,
+  "ntracks_dc": 2000,
+  "n_zero_steps": 30,
+  "step_mm": 4.0,
+  "radial_mm": 0.7,
+  "angle_sd_rad": 0.35,
+  "run_seeds": {
+   "A": 101,
+   "B": 202,
+   "C": 303
+  },
+  "null_seed": 909,
+  "ndraw": 59,
+  "shuffle_seed": 4242,
+  "generator": "numpy.random.default_rng (PCG64)",
+  "frames": {
+   "burst": [
+    0,
+    40
+   ],
+   "onset": [
+    0,
+    9
+   ],
+   "within": [
+    10,
+    29
+   ],
+   "offset": [
+    30,
+    40
+   ]
+  },
+  "nmin": 5,
+  "nmin_tile": 10,
+  "nshuf": 5,
+  "levels": [
+   6,
+   7,
+   8
+  ],
+  "q": 0.05
+ },
+ "nxr_commit": "5b076f3817966bab159ec2998e7f6a7373ddfcce"
+}
