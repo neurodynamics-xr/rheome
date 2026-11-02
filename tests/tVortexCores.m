@@ -105,19 +105,16 @@ classdef tVortexCores < matlab.unittest.TestCase
         end
 
         function faceCurlVsNxr(t)
-            % rheome.differential.curl on the golden flow against nxr's curl_vertex. nxr's curl is per metre (the golden
-            % mesh is stored in mm), so the mesh goes in as metres; nxr first projects the flow onto the tangent plane
-            % (vertex normals) and casts positions to float32. Rheome's curl has no projection: reported both ways.
+            % rheome.differential.curl on the golden flow against nxr's curl_vertex, raw flow in (the call projects onto
+            % the tangent plane itself, as nxr and the Editor do). nxr's curl is per metre (the golden mesh is stored in
+            % mm), so the mesh goes in as metres.
             S = struct('Vertices', t.G.V_mm / 1000, 'Faces', t.G.F + 1);
-            nV = size(t.G.V_mm, 1); nT = size(t.G.flow, 3); nrm = t.G.normals;
-            Jt = permute(t.G.flow, [1 2 3]); Jp = Jt - sum(Jt .* nrm, 2) .* nrm;
+            nV = size(t.G.V_mm, 1); nT = size(t.G.flow, 3);
             sc = max(abs(t.G.curl_vertex), [], 'all');
-            c0 = rheome.differential.curl(reshape(permute(Jt, [2 1 3]), 3*nV, nT), S);
-            c1 = rheome.differential.curl(reshape(permute(Jp, [2 1 3]), 3*nV, nT), S);
-            r0 = max(abs(c0 - t.G.curl_vertex), [], 'all') / sc; r1 = max(abs(c1 - t.G.curl_vertex), [], 'all') / sc;
-            fprintf('face curl vs nxr curl_vertex (max diff / max |curl|): raw flow %.3g, tangent-projected flow %.3g\n', r0, r1);
-            t.verifyLessThan(r1, 1e-6);
-            t.verifyLessThan(r0, 1e-3);
+            c0 = rheome.differential.curl(reshape(permute(t.G.flow, [2 1 3]), 3*nV, nT), S);
+            r0 = max(abs(c0 - t.G.curl_vertex), [], 'all') / sc;
+            fprintf('face curl vs nxr curl_vertex (max diff / max |curl|), raw flow: %.3g\n', r0);
+            t.verifyLessThan(r0, 1e-6);
         end
     end
 end

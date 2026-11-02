@@ -13,7 +13,7 @@ classdef tDiracParts < matlab.unittest.TestCase
                 S = struct('Vertices', V, 'Faces', FF{1});
                 J = randn(3*size(V,1), 2);
                 P = rheome.differential.diracparts(J, S);
-                tc.verifyEqual(P.curl, rheome.differential.curl(J, S), 'AbsTol', 1e-12 * max(abs(P.curl), [], 'all'));
+                tc.verifyEqual(P.curl, rheome.differential.curl(J, S, [], false), 'AbsTol', 1e-12 * max(abs(P.curl), [], 'all'));
                 tc.verifyEqual(P.div, rheome.differential.divergence(J, S), 'AbsTol', 1e-12 * max(abs(P.div), [], 'all'));
                 G = i_gradnormal(J(:,1), V, FF{1});
                 tc.verifyEqual(reshape(P.gradNF(:,1), 3, [])', G, 'AbsTol', 1e-12 * max(abs(G), [], 'all'));

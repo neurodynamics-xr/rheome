@@ -11,8 +11,9 @@ function P = diracparts(J, S, D)
 %   P.curlF   [nF x nT]    -Re (D J)                  = curl J . n_f    (vorticity, CCW +)
 %   P.divF    [nF x nT]    -Im (D J) . n_f            = div J           (source +)
 %   P.gradNF  [3nF x nT]   Im (D J) tangential        = grad (J . n_f)  (rows x1,y1,z1 per face)
-%   P.curl P.div           [nV x nT] area-weighted to vertices, exactly as rheome.differential.curl /
-%                          rheome.differential.divergence do, so they are interchangeable with them
+%   P.curl P.div           [nV x nT] area-weighted to vertices, as rheome.differential.curl(J,S,[],false) /
+%                          rheome.differential.divergence do (the RAW ambient field; curl's default now
+%                          projects onto the tangent plane first, as the Editor and nxr do)
 %   P.energy  struct: face-area integrals of curlF^2, divF^2, |gradNF|^2 (each [1 x nT]) and
 %             .total = ||D J||^2 in the face mass, which is their sum
 %
@@ -29,7 +30,7 @@ function P = diracparts(J, S, D)
 % ⚠⚠ ON REAL CORTEX, READ CURL AND DIV AT A SCALE, NEVER PER VERTEX. Neighbouring vertex normals differ
 % by ~30 deg on a reference subject's mesh, and pointwise curl and div leak into each other at mesh scale: a
 % pure source reads curl/div energy 0.13-0.30; low-passed to > 60 mm it reads 0.002-0.017
-% (measured on a reference subject). This is the same number rheome.differential.curl gives -- not a Dirac property.
+% (measured on a reference subject). This is the same number rheome.differential.curl(J,S,[],false) gives -- not a Dirac property.
 % rheome.differential.helmholtz separates at every scale (91% / 0.7%).
 % ⚠ With a quaternion input, a real part w enters gradNF as a rotated gradient of w (not a vector part).
 %

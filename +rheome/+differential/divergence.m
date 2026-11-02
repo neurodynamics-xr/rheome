@@ -1,8 +1,9 @@
-function div = divergence(J, S, fg)
+function div = divergence(J, S, fg, tangential)
 % DIFFERENTIAL.DIVERGENCE  Surface divergence of an ambient source vector field.
 %
 %   div = rheome.differential.divergence(J, S)
 %   div = rheome.differential.divergence(J, S, fg)   % reuse a precomputed rheome.operators.face_gradient(S)
+%   div = rheome.differential.divergence(J, S, fg, true)   % tangent-projected field (see TANGENTIAL)
 %
 % Divergence of an UNCONSTRAINED (ambient R^3) per-vertex vector field on the cortical
 % surface -- e.g. the reconstructed Dirac / MNE source current. Positive = a source (current
@@ -17,6 +18,8 @@ function div = divergence(J, S, fg)
 %   S  surface struct (rheome.io.read.surface / rheome.utils.hemisphere): needs .Vertices, .Faces
 %   fg (optional) a precomputed rheome.operators.face_gradient(S.Vertices,S.Faces); pass it to avoid
 %      rebuilding the operator per call (e.g. per-frame loops / rheome.detect.operator). S may be [].
+%   tangential (optional, default false) project J onto the tangent plane first (div J_tan = div J + 2H J.n); the Editor's
+%      flowFieldCpu(tangential) and nxr's div_curl do. Default stays the ambient divergence, as the Editor's default.
 %
 % OUTPUT:
 %   div  [nV x nT] per-vertex scalar divergence (sources +, sinks -)
@@ -35,6 +38,11 @@ function div = divergence(J, S, fg)
         error('differential:divergence:size', 'J has %d rows but expects 3*nV = %d.', size(J,1), 3*fg.nV);
     end
     Jx = J(1:3:end, :);  Jy = J(2:3:end, :);  Jz = J(3:3:end, :);
+    if nargin >= 4 && ~isempty(tangential) && tangential
+        vn = fg.W * fg.FaceNormal;  vn = vn ./ max(sqrt(sum(vn.^2, 2)), eps);   % area-weighted vertex normals
+        dn = vn(:,1).*Jx + vn(:,2).*Jy + vn(:,3).*Jz;
+        Jx = Jx - dn.*vn(:,1);  Jy = Jy - dn.*vn(:,2);  Jz = Jz - dn.*vn(:,3);
+    end
     divF = fg.Gx * Jx + fg.Gy * Jy + fg.Gz * Jz;    % [nF x nT] per-face divergence
     div  = fg.W * divF;                             % [nV x nT] area-weighted to vertices
 end
