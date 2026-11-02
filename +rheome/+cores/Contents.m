@@ -39,4 +39,15 @@
 %   rheome.cores.tiledot     - Per-tile dot of two runs' mean resultant vectors (nxr tile_dot).
 %   rheome.cores.tilepq      - Tile permutation p and BH q against a null of runs (nxr vortex.py:203-204).
 %
+% Lagged pair (commit 3da1320, goldens tests/goldens/vortex-pair): the pair of a reading under a cross-spectrum, its share, S3 and the Wishart null.
+%   rheome.cores.analytic    - Decimated Morlet analytic signal, complex double (nxr analytic).
+%   rheome.cores.pair        - Lagged pair fa, fb, u of an operator under Sx (nxr pair); phase free, see pairgauge.
+%   rheome.cores.paircov     - Masked cross-spectrum, no mean removal (nxr cov).
+%   rheome.cores.pairdof     - Effective independent samples per sample (nxr dof_fraction).
+%   rheome.cores.pairgauge   - Canonical gauge of a pair, for comparing ports (not in nxr).
+%   rheome.cores.pairnull    - Lag-free Wishart null covariance; the draws are an input (nxr wishart).
+%   rheome.cores.pairs3      - Poincare S3 of a pair (nxr s3).
+%   rheome.cores.pairshare   - Lagged share ||L Im(Sx) L'||/||L Sx L'|| (nxr share).
+%   rheome.cores.pairsqrt    - Symmetric PSD square root (nxr sqrt_psd).
+%
 % Author: Diellor Basha, 2026

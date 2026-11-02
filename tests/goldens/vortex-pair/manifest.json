@@ -1,0 +1,1904 @@
+{
+ "arrays": {
+  "planted_phase_rad": {
+   "file": "planted_phase_rad.bin",
+   "dtype": "float64",
+   "shape": [
+    6000
+   ],
+   "unit": "rad",
+   "note": "",
+   "source": "golden script (planted)"
+  },
+  "planted_amp_factor": {
+   "file": "planted_amp_factor.bin",
+   "dtype": "float64",
+   "shape": [
+    6000
+   ],
+   "unit": "1",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "planted_p": {
+   "file": "planted_p.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "unit norm (sensor pattern)",
+   "note": "",
+   "source": "golden script (planted)"
+  },
+  "planted_q": {
+   "file": "planted_q.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "unit norm",
+   "note": "",
+   "source": "golden script (planted)"
+  },
+  "operator_L": {
+   "file": "operator_L.bin",
+   "dtype": "float64",
+   "shape": [
+    6,
+    8
+   ],
+   "unit": "arbitrary",
+   "note": "",
+   "source": "golden script (planted)"
+  },
+  "operator_I": {
+   "file": "operator_I.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "1",
+   "note": "",
+   "source": "golden script (planted)"
+  },
+  "rot_analytic_real": {
+   "file": "rot_analytic_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    2000
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "analytic vortex.py:204"
+  },
+  "rot_analytic_imag": {
+   "file": "rot_analytic_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    2000
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "analytic vortex.py:204"
+  },
+  "rot_ok": {
+   "file": "rot_ok.bin",
+   "dtype": "int32",
+   "shape": [
+    2000
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "band_run vortex.py:432"
+  },
+  "rot_even": {
+   "file": "rot_even.bin",
+   "dtype": "int32",
+   "shape": [
+    2000
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "band_run vortex.py:432"
+  },
+  "rot_odd": {
+   "file": "rot_odd.bin",
+   "dtype": "int32",
+   "shape": [
+    2000
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "band_run vortex.py:432"
+  },
+  "rot_S_all_real": {
+   "file": "rot_S_all_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "rot_S_all_imag": {
+   "file": "rot_S_all_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "rot_S_even_real": {
+   "file": "rot_S_even_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "rot_S_even_imag": {
+   "file": "rot_S_even_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "rot_S_odd_real": {
+   "file": "rot_S_odd_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "rot_S_odd_imag": {
+   "file": "rot_S_odd_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "rot_dof_fraction": {
+   "file": "rot_dof_fraction.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "dof_fraction vortex.py:160"
+  },
+  "rot_dof": {
+   "file": "rot_dof.bin",
+   "dtype": "float64",
+   "shape": [
+    2
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "band_run vortex.py:437"
+  },
+  "rot_sqrt_ReS": {
+   "file": "rot_sqrt_ReS.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "rot_draws_all": {
+   "file": "rot_draws_all.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    2,
+    8,
+    10
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "[null, re/im, C, k] the exact rng.standard_normal((C, k)) draws, call order: null i: all-real, all-imag, odd-real, odd-imag; k = max(round(dof), 2)",
+   "source": "wishart vortex.py:170 (draws consumed)"
+  },
+  "rot_draws_odd": {
+   "file": "rot_draws_odd.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    2,
+    8,
+    5
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "[null, re/im, C, k] the exact rng.standard_normal((C, k)) draws, call order: null i: all-real, all-imag, odd-real, odd-imag; k = max(round(dof), 2)",
+   "source": "wishart vortex.py:170 (draws consumed)"
+  },
+  "rot_null_S_all_real": {
+   "file": "rot_null_S_all_real.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "rot_null_S_all_imag": {
+   "file": "rot_null_S_all_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "rot_null_S_odd_real": {
+   "file": "rot_null_S_odd_real.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "rot_null_S_odd_imag": {
+   "file": "rot_null_S_odd_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "rot_I_fa_raw": {
+   "file": "rot_I_fa_raw.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "NUMPY'S GAUGE (arbitrary rotation of the pair in its plane): compare only through the *_proj/_form/share/s3 invariants or the canonical *_fa/_fb/_u",
+   "source": "pair vortex.py:135"
+  },
+  "rot_I_fb_raw": {
+   "file": "rot_I_fb_raw.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "NUMPY'S GAUGE (arbitrary rotation of the pair in its plane): compare only through the *_proj/_form/share/s3 invariants or the canonical *_fa/_fb/_u",
+   "source": "pair vortex.py:135"
+  },
+  "rot_I_u_raw_real": {
+   "file": "rot_I_u_raw_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "rot_I_u_raw_imag": {
+   "file": "rot_I_u_raw_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "rot_I_fa": {
+   "file": "rot_I_fa.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "canonical gauge: rotated in the (fa, fb) plane so that fb = 0, fa > 0 on the sensor of largest |fa|^2+|fb|^2 (argmax, first maximum); orientation (q after p) kept",
+   "source": "pair vortex.py:135"
+  },
+  "rot_I_fb": {
+   "file": "rot_I_fb.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "canonical gauge: rotated in the (fa, fb) plane so that fb = 0, fa > 0 on the sensor of largest |fa|^2+|fb|^2 (argmax, first maximum); orientation (q after p) kept",
+   "source": "pair vortex.py:135"
+  },
+  "rot_I_u_real": {
+   "file": "rot_I_u_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "rot_I_u_imag": {
+   "file": "rot_I_u_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "rot_I_proj": {
+   "file": "rot_I_proj.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135 (gauge-free)"
+  },
+  "rot_I_form": {
+   "file": "rot_I_form.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135 (gauge-free)"
+  },
+  "rot_I_share": {
+   "file": "rot_I_share.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "rot_I_s3": {
+   "file": "rot_I_s3.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "rot_I_share_even": {
+   "file": "rot_I_share_even.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "rot_I_s3_even": {
+   "file": "rot_I_s3_even.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "rot_I_share_null": {
+   "file": "rot_I_share_null.bin",
+   "dtype": "float64",
+   "shape": [
+    99
+   ],
+   "unit": "1",
+   "note": "[99] share(L, Wishart-all draw i)",
+   "source": "pair vortex.py:135"
+  },
+  "rot_I_s3_null": {
+   "file": "rot_I_s3_null.bin",
+   "dtype": "float64",
+   "shape": [
+    99
+   ],
+   "unit": "1",
+   "note": "[99] s3(fa, fb, Wishart-odd draw i) with the data-fitted filters",
+   "source": "pair vortex.py:135"
+  },
+  "rot_I_p_share": {
+   "file": "rot_I_p_share.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "rot_I_p_s3": {
+   "file": "rot_I_p_s3.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "rot_L_fa_raw": {
+   "file": "rot_L_fa_raw.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "NUMPY'S GAUGE (arbitrary rotation of the pair in its plane): compare only through the *_proj/_form/share/s3 invariants or the canonical *_fa/_fb/_u",
+   "source": "pair vortex.py:135"
+  },
+  "rot_L_fb_raw": {
+   "file": "rot_L_fb_raw.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "NUMPY'S GAUGE (arbitrary rotation of the pair in its plane): compare only through the *_proj/_form/share/s3 invariants or the canonical *_fa/_fb/_u",
+   "source": "pair vortex.py:135"
+  },
+  "rot_L_u_raw_real": {
+   "file": "rot_L_u_raw_real.bin",
+   "dtype": "float64",
+   "shape": [
+    6
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "rot_L_u_raw_imag": {
+   "file": "rot_L_u_raw_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    6
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "rot_L_fa": {
+   "file": "rot_L_fa.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "canonical gauge: rotated in the (fa, fb) plane so that fb = 0, fa > 0 on the sensor of largest |fa|^2+|fb|^2 (argmax, first maximum); orientation (q after p) kept",
+   "source": "pair vortex.py:135"
+  },
+  "rot_L_fb": {
+   "file": "rot_L_fb.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "canonical gauge: rotated in the (fa, fb) plane so that fb = 0, fa > 0 on the sensor of largest |fa|^2+|fb|^2 (argmax, first maximum); orientation (q after p) kept",
+   "source": "pair vortex.py:135"
+  },
+  "rot_L_u_real": {
+   "file": "rot_L_u_real.bin",
+   "dtype": "float64",
+   "shape": [
+    6
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "rot_L_u_imag": {
+   "file": "rot_L_u_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    6
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "rot_L_proj": {
+   "file": "rot_L_proj.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135 (gauge-free)"
+  },
+  "rot_L_form": {
+   "file": "rot_L_form.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135 (gauge-free)"
+  },
+  "rot_L_share": {
+   "file": "rot_L_share.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "rot_L_s3": {
+   "file": "rot_L_s3.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "rot_L_share_even": {
+   "file": "rot_L_share_even.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "rot_L_s3_even": {
+   "file": "rot_L_s3_even.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "rot_L_share_null": {
+   "file": "rot_L_share_null.bin",
+   "dtype": "float64",
+   "shape": [
+    99
+   ],
+   "unit": "1",
+   "note": "[99] share(L, Wishart-all draw i)",
+   "source": "pair vortex.py:135"
+  },
+  "rot_L_s3_null": {
+   "file": "rot_L_s3_null.bin",
+   "dtype": "float64",
+   "shape": [
+    99
+   ],
+   "unit": "1",
+   "note": "[99] s3(fa, fb, Wishart-odd draw i) with the data-fitted filters",
+   "source": "pair vortex.py:135"
+  },
+  "rot_L_p_share": {
+   "file": "rot_L_p_share.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "rot_L_p_s3": {
+   "file": "rot_L_p_s3.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "ctl_analytic_real": {
+   "file": "ctl_analytic_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    2000
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "analytic vortex.py:204"
+  },
+  "ctl_analytic_imag": {
+   "file": "ctl_analytic_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    2000
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "analytic vortex.py:204"
+  },
+  "ctl_ok": {
+   "file": "ctl_ok.bin",
+   "dtype": "int32",
+   "shape": [
+    2000
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "band_run vortex.py:432"
+  },
+  "ctl_even": {
+   "file": "ctl_even.bin",
+   "dtype": "int32",
+   "shape": [
+    2000
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "band_run vortex.py:432"
+  },
+  "ctl_odd": {
+   "file": "ctl_odd.bin",
+   "dtype": "int32",
+   "shape": [
+    2000
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "band_run vortex.py:432"
+  },
+  "ctl_S_all_real": {
+   "file": "ctl_S_all_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "ctl_S_all_imag": {
+   "file": "ctl_S_all_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "ctl_S_even_real": {
+   "file": "ctl_S_even_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "ctl_S_even_imag": {
+   "file": "ctl_S_even_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "ctl_S_odd_real": {
+   "file": "ctl_S_odd_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "ctl_S_odd_imag": {
+   "file": "ctl_S_odd_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "ctl_dof_fraction": {
+   "file": "ctl_dof_fraction.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "dof_fraction vortex.py:160"
+  },
+  "ctl_dof": {
+   "file": "ctl_dof.bin",
+   "dtype": "float64",
+   "shape": [
+    2
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "band_run vortex.py:437"
+  },
+  "ctl_sqrt_ReS": {
+   "file": "ctl_sqrt_ReS.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "ctl_draws_all": {
+   "file": "ctl_draws_all.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    2,
+    8,
+    9
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "[null, re/im, C, k] the exact rng.standard_normal((C, k)) draws, call order: null i: all-real, all-imag, odd-real, odd-imag; k = max(round(dof), 2)",
+   "source": "wishart vortex.py:170 (draws consumed)"
+  },
+  "ctl_draws_odd": {
+   "file": "ctl_draws_odd.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    2,
+    8,
+    4
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "[null, re/im, C, k] the exact rng.standard_normal((C, k)) draws, call order: null i: all-real, all-imag, odd-real, odd-imag; k = max(round(dof), 2)",
+   "source": "wishart vortex.py:170 (draws consumed)"
+  },
+  "ctl_null_S_all_real": {
+   "file": "ctl_null_S_all_real.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "ctl_null_S_all_imag": {
+   "file": "ctl_null_S_all_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "ctl_null_S_odd_real": {
+   "file": "ctl_null_S_odd_real.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "ctl_null_S_odd_imag": {
+   "file": "ctl_null_S_odd_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "ctl_I_fa_raw": {
+   "file": "ctl_I_fa_raw.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "NUMPY'S GAUGE (arbitrary rotation of the pair in its plane): compare only through the *_proj/_form/share/s3 invariants or the canonical *_fa/_fb/_u",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_I_fb_raw": {
+   "file": "ctl_I_fb_raw.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "NUMPY'S GAUGE (arbitrary rotation of the pair in its plane): compare only through the *_proj/_form/share/s3 invariants or the canonical *_fa/_fb/_u",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_I_u_raw_real": {
+   "file": "ctl_I_u_raw_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_I_u_raw_imag": {
+   "file": "ctl_I_u_raw_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_I_fa": {
+   "file": "ctl_I_fa.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "canonical gauge: rotated in the (fa, fb) plane so that fb = 0, fa > 0 on the sensor of largest |fa|^2+|fb|^2 (argmax, first maximum); orientation (q after p) kept",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_I_fb": {
+   "file": "ctl_I_fb.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "canonical gauge: rotated in the (fa, fb) plane so that fb = 0, fa > 0 on the sensor of largest |fa|^2+|fb|^2 (argmax, first maximum); orientation (q after p) kept",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_I_u_real": {
+   "file": "ctl_I_u_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_I_u_imag": {
+   "file": "ctl_I_u_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_I_proj": {
+   "file": "ctl_I_proj.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135 (gauge-free)"
+  },
+  "ctl_I_form": {
+   "file": "ctl_I_form.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135 (gauge-free)"
+  },
+  "ctl_I_share": {
+   "file": "ctl_I_share.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "ctl_I_s3": {
+   "file": "ctl_I_s3.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "ctl_I_share_even": {
+   "file": "ctl_I_share_even.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "ctl_I_s3_even": {
+   "file": "ctl_I_s3_even.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "ctl_I_share_null": {
+   "file": "ctl_I_share_null.bin",
+   "dtype": "float64",
+   "shape": [
+    99
+   ],
+   "unit": "1",
+   "note": "[99] share(L, Wishart-all draw i)",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_I_s3_null": {
+   "file": "ctl_I_s3_null.bin",
+   "dtype": "float64",
+   "shape": [
+    99
+   ],
+   "unit": "1",
+   "note": "[99] s3(fa, fb, Wishart-odd draw i) with the data-fitted filters",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_I_p_share": {
+   "file": "ctl_I_p_share.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "ctl_I_p_s3": {
+   "file": "ctl_I_p_s3.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "ctl_L_fa_raw": {
+   "file": "ctl_L_fa_raw.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "NUMPY'S GAUGE (arbitrary rotation of the pair in its plane): compare only through the *_proj/_form/share/s3 invariants or the canonical *_fa/_fb/_u",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_L_fb_raw": {
+   "file": "ctl_L_fb_raw.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "NUMPY'S GAUGE (arbitrary rotation of the pair in its plane): compare only through the *_proj/_form/share/s3 invariants or the canonical *_fa/_fb/_u",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_L_u_raw_real": {
+   "file": "ctl_L_u_raw_real.bin",
+   "dtype": "float64",
+   "shape": [
+    6
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_L_u_raw_imag": {
+   "file": "ctl_L_u_raw_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    6
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_L_fa": {
+   "file": "ctl_L_fa.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "canonical gauge: rotated in the (fa, fb) plane so that fb = 0, fa > 0 on the sensor of largest |fa|^2+|fb|^2 (argmax, first maximum); orientation (q after p) kept",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_L_fb": {
+   "file": "ctl_L_fb.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "canonical gauge: rotated in the (fa, fb) plane so that fb = 0, fa > 0 on the sensor of largest |fa|^2+|fb|^2 (argmax, first maximum); orientation (q after p) kept",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_L_u_real": {
+   "file": "ctl_L_u_real.bin",
+   "dtype": "float64",
+   "shape": [
+    6
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_L_u_imag": {
+   "file": "ctl_L_u_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    6
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_L_proj": {
+   "file": "ctl_L_proj.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135 (gauge-free)"
+  },
+  "ctl_L_form": {
+   "file": "ctl_L_form.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135 (gauge-free)"
+  },
+  "ctl_L_share": {
+   "file": "ctl_L_share.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "ctl_L_s3": {
+   "file": "ctl_L_s3.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "ctl_L_share_even": {
+   "file": "ctl_L_share_even.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "ctl_L_s3_even": {
+   "file": "ctl_L_s3_even.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "ctl_L_share_null": {
+   "file": "ctl_L_share_null.bin",
+   "dtype": "float64",
+   "shape": [
+    99
+   ],
+   "unit": "1",
+   "note": "[99] share(L, Wishart-all draw i)",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_L_s3_null": {
+   "file": "ctl_L_s3_null.bin",
+   "dtype": "float64",
+   "shape": [
+    99
+   ],
+   "unit": "1",
+   "note": "[99] s3(fa, fb, Wishart-odd draw i) with the data-fitted filters",
+   "source": "pair vortex.py:135"
+  },
+  "ctl_L_p_share": {
+   "file": "ctl_L_p_share.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "ctl_L_p_s3": {
+   "file": "ctl_L_p_s3.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "cw_analytic_real": {
+   "file": "cw_analytic_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    2000
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "analytic vortex.py:204"
+  },
+  "cw_analytic_imag": {
+   "file": "cw_analytic_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    2000
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "analytic vortex.py:204"
+  },
+  "cw_ok": {
+   "file": "cw_ok.bin",
+   "dtype": "int32",
+   "shape": [
+    2000
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "band_run vortex.py:432"
+  },
+  "cw_even": {
+   "file": "cw_even.bin",
+   "dtype": "int32",
+   "shape": [
+    2000
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "band_run vortex.py:432"
+  },
+  "cw_odd": {
+   "file": "cw_odd.bin",
+   "dtype": "int32",
+   "shape": [
+    2000
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "band_run vortex.py:432"
+  },
+  "cw_S_all_real": {
+   "file": "cw_S_all_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "cw_S_all_imag": {
+   "file": "cw_S_all_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "cw_S_even_real": {
+   "file": "cw_S_even_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "cw_S_even_imag": {
+   "file": "cw_S_even_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "cw_S_odd_real": {
+   "file": "cw_S_odd_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "cw_S_odd_imag": {
+   "file": "cw_S_odd_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "cw_dof_fraction": {
+   "file": "cw_dof_fraction.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "dof_fraction vortex.py:160"
+  },
+  "cw_dof": {
+   "file": "cw_dof.bin",
+   "dtype": "float64",
+   "shape": [
+    2
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "band_run vortex.py:437"
+  },
+  "cw_sqrt_ReS": {
+   "file": "cw_sqrt_ReS.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "cw_draws_all": {
+   "file": "cw_draws_all.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    2,
+    8,
+    10
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "[null, re/im, C, k] the exact rng.standard_normal((C, k)) draws, call order: null i: all-real, all-imag, odd-real, odd-imag; k = max(round(dof), 2)",
+   "source": "wishart vortex.py:170 (draws consumed)"
+  },
+  "cw_draws_odd": {
+   "file": "cw_draws_odd.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    2,
+    8,
+    5
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "[null, re/im, C, k] the exact rng.standard_normal((C, k)) draws, call order: null i: all-real, all-imag, odd-real, odd-imag; k = max(round(dof), 2)",
+   "source": "wishart vortex.py:170 (draws consumed)"
+  },
+  "cw_null_S_all_real": {
+   "file": "cw_null_S_all_real.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "cw_null_S_all_imag": {
+   "file": "cw_null_S_all_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "cw_null_S_odd_real": {
+   "file": "cw_null_S_odd_real.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "cw_null_S_odd_imag": {
+   "file": "cw_null_S_odd_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    99,
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "cw_I_fa_raw": {
+   "file": "cw_I_fa_raw.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "NUMPY'S GAUGE (arbitrary rotation of the pair in its plane): compare only through the *_proj/_form/share/s3 invariants or the canonical *_fa/_fb/_u",
+   "source": "pair vortex.py:135"
+  },
+  "cw_I_fb_raw": {
+   "file": "cw_I_fb_raw.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "NUMPY'S GAUGE (arbitrary rotation of the pair in its plane): compare only through the *_proj/_form/share/s3 invariants or the canonical *_fa/_fb/_u",
+   "source": "pair vortex.py:135"
+  },
+  "cw_I_u_raw_real": {
+   "file": "cw_I_u_raw_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "cw_I_u_raw_imag": {
+   "file": "cw_I_u_raw_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "cw_I_fa": {
+   "file": "cw_I_fa.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "canonical gauge: rotated in the (fa, fb) plane so that fb = 0, fa > 0 on the sensor of largest |fa|^2+|fb|^2 (argmax, first maximum); orientation (q after p) kept",
+   "source": "pair vortex.py:135"
+  },
+  "cw_I_fb": {
+   "file": "cw_I_fb.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "canonical gauge: rotated in the (fa, fb) plane so that fb = 0, fa > 0 on the sensor of largest |fa|^2+|fb|^2 (argmax, first maximum); orientation (q after p) kept",
+   "source": "pair vortex.py:135"
+  },
+  "cw_I_u_real": {
+   "file": "cw_I_u_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "cw_I_u_imag": {
+   "file": "cw_I_u_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "cw_I_proj": {
+   "file": "cw_I_proj.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135 (gauge-free)"
+  },
+  "cw_I_form": {
+   "file": "cw_I_form.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135 (gauge-free)"
+  },
+  "cw_I_share": {
+   "file": "cw_I_share.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "cw_I_s3": {
+   "file": "cw_I_s3.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "cw_I_share_even": {
+   "file": "cw_I_share_even.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "cw_I_s3_even": {
+   "file": "cw_I_s3_even.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "cw_I_share_null": {
+   "file": "cw_I_share_null.bin",
+   "dtype": "float64",
+   "shape": [
+    99
+   ],
+   "unit": "1",
+   "note": "[99] share(L, Wishart-all draw i)",
+   "source": "pair vortex.py:135"
+  },
+  "cw_I_s3_null": {
+   "file": "cw_I_s3_null.bin",
+   "dtype": "float64",
+   "shape": [
+    99
+   ],
+   "unit": "1",
+   "note": "[99] s3(fa, fb, Wishart-odd draw i) with the data-fitted filters",
+   "source": "pair vortex.py:135"
+  },
+  "cw_I_p_share": {
+   "file": "cw_I_p_share.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "cw_I_p_s3": {
+   "file": "cw_I_p_s3.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "cw_L_fa_raw": {
+   "file": "cw_L_fa_raw.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "NUMPY'S GAUGE (arbitrary rotation of the pair in its plane): compare only through the *_proj/_form/share/s3 invariants or the canonical *_fa/_fb/_u",
+   "source": "pair vortex.py:135"
+  },
+  "cw_L_fb_raw": {
+   "file": "cw_L_fb_raw.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "NUMPY'S GAUGE (arbitrary rotation of the pair in its plane): compare only through the *_proj/_form/share/s3 invariants or the canonical *_fa/_fb/_u",
+   "source": "pair vortex.py:135"
+  },
+  "cw_L_u_raw_real": {
+   "file": "cw_L_u_raw_real.bin",
+   "dtype": "float64",
+   "shape": [
+    6
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "cw_L_u_raw_imag": {
+   "file": "cw_L_u_raw_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    6
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "cw_L_fa": {
+   "file": "cw_L_fa.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "canonical gauge: rotated in the (fa, fb) plane so that fb = 0, fa > 0 on the sensor of largest |fa|^2+|fb|^2 (argmax, first maximum); orientation (q after p) kept",
+   "source": "pair vortex.py:135"
+  },
+  "cw_L_fb": {
+   "file": "cw_L_fb.bin",
+   "dtype": "float64",
+   "shape": [
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "canonical gauge: rotated in the (fa, fb) plane so that fb = 0, fa > 0 on the sensor of largest |fa|^2+|fb|^2 (argmax, first maximum); orientation (q after p) kept",
+   "source": "pair vortex.py:135"
+  },
+  "cw_L_u_real": {
+   "file": "cw_L_u_real.bin",
+   "dtype": "float64",
+   "shape": [
+    6
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "cw_L_u_imag": {
+   "file": "cw_L_u_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    6
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135"
+  },
+  "cw_L_proj": {
+   "file": "cw_L_proj.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135 (gauge-free)"
+  },
+  "cw_L_form": {
+   "file": "cw_L_form.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "pair vortex.py:135 (gauge-free)"
+  },
+  "cw_L_share": {
+   "file": "cw_L_share.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "cw_L_s3": {
+   "file": "cw_L_s3.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "cw_L_share_even": {
+   "file": "cw_L_share_even.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "cw_L_s3_even": {
+   "file": "cw_L_s3_even.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "cw_L_share_null": {
+   "file": "cw_L_share_null.bin",
+   "dtype": "float64",
+   "shape": [
+    99
+   ],
+   "unit": "1",
+   "note": "[99] share(L, Wishart-all draw i)",
+   "source": "pair vortex.py:135"
+  },
+  "cw_L_s3_null": {
+   "file": "cw_L_s3_null.bin",
+   "dtype": "float64",
+   "shape": [
+    99
+   ],
+   "unit": "1",
+   "note": "[99] s3(fa, fb, Wishart-odd draw i) with the data-fitted filters",
+   "source": "pair vortex.py:135"
+  },
+  "cw_L_p_share": {
+   "file": "cw_L_p_share.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "cw_L_p_s3": {
+   "file": "cw_L_p_s3.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "s3 vortex.py:148"
+  },
+  "rot_S_pop_real": {
+   "file": "rot_S_pop_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "1",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "rot_S_pop_imag": {
+   "file": "rot_S_pop_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "1",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "rot_I_share_pop": {
+   "file": "rot_I_share_pop.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "rot_L_share_pop": {
+   "file": "rot_L_share_pop.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "cw_S_pop_real": {
+   "file": "cw_S_pop_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "1",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "cw_S_pop_imag": {
+   "file": "cw_S_pop_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "1",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "cw_I_share_pop": {
+   "file": "cw_I_share_pop.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "cw_L_share_pop": {
+   "file": "cw_L_share_pop.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "ctl_S_pop_real": {
+   "file": "ctl_S_pop_real.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "1",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "ctl_S_pop_imag": {
+   "file": "ctl_S_pop_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    8,
+    8
+   ],
+   "unit": "1",
+   "note": "",
+   "source": "cov vortex.py:152"
+  },
+  "ctl_I_share_pop": {
+   "file": "ctl_I_share_pop.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "ctl_L_share_pop": {
+   "file": "ctl_L_share_pop.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "1",
+   "note": "",
+   "source": "share vortex.py:143"
+  },
+  "noise_variance_analytic": {
+   "file": "noise_variance_analytic.bin",
+   "dtype": "float64",
+   "shape": [],
+   "unit": "arbitrary amplitude units (sensors); covariances amplitude^2",
+   "note": "",
+   "source": "analytic vortex.py:204"
+  }
+ },
+ "scalars": {
+  "nnull": 99,
+  "k_all": 10,
+  "k_odd": 5,
+  "frames_100hz": 2000
+ },
+ "layout": "little-endian, row-major (C order); float64 or int32 .bin, no header; complex = separate _real / _imag arrays",
+ "parameters": {
+  "fs_hz": 300.0,
+  "analytic_hz": 100.0,
+  "samples": 6000,
+  "channels": 8,
+  "f0_hz": 10.0,
+  "fwhm_hz": 4.0,
+  "rhythm_amplitude": 2.0,
+  "noise_sd": 3.0,
+  "seed": 20261103,
+  "null_seed": 4242,
+  "null_generator": "numpy.random.default_rng (PCG64), seed NULL_SEED + scenario index; one stream of 4 x nnull draws",
+  "nnull": 99,
+  "operator_L_rows": 6,
+  "bad_s": [
+   6.0,
+   7.0
+  ],
+  "block_s": 5.0,
+  "scenarios": {
+   "rot": "x = A a(t) (p cos(2 pi f0 t + phi(t)) + q sin(2 pi f0 t + phi(t))) + noise",
+   "cw": "same with -q sin",
+   "ctl": "x = A sqrt2 a(t) (0.6 p + 0.8 q) cos(2 pi f0 t + phi(t)) + noise (standing, zero lag)"
+  }
+ },
+ "nxr_commit": "f7e564f39c28619f6167bcb6e4b5e998bf942a06"
+}
