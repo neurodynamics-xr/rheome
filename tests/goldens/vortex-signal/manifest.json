@@ -1,0 +1,425 @@
+{
+ "arrays": {
+  "sensors": {
+   "file": "sensors.bin",
+   "dtype": "float64",
+   "shape": [
+    6,
+    4800
+   ],
+   "unit": "arbitrary amplitude units",
+   "note": "[C\u00d7N] float64: planted bursts x channel gain x cos(2 pi 10 t + phase) + white noise (sd 2), seeded numpy default_rng(20261102): gain, phase, then noise (standard_normal((C,N)))",
+   "source": ""
+  },
+  "planted_envelope": {
+   "file": "planted_envelope.bin",
+   "dtype": "float64",
+   "shape": [
+    4800
+   ],
+   "unit": "same",
+   "note": "",
+   "source": ""
+  },
+  "planted_gain": {
+   "file": "planted_gain.bin",
+   "dtype": "float64",
+   "shape": [
+    6
+   ],
+   "unit": "1",
+   "note": "",
+   "source": ""
+  },
+  "planted_phase": {
+   "file": "planted_phase.bin",
+   "dtype": "float64",
+   "shape": [
+    6
+   ],
+   "unit": "1",
+   "note": "",
+   "source": ""
+  },
+  "planted_bursts": {
+   "file": "planted_bursts.bin",
+   "dtype": "float64",
+   "shape": [
+    4,
+    4
+   ],
+   "unit": "s",
+   "note": "[4\u00d74] tOn, tOff (half-rise, half-fall), tauR, tauF; the 4th is a 0.15 s transient that nxr's gate lets through (candidate 4)",
+   "source": ""
+  },
+  "good_frames": {
+   "file": "good_frames.bin",
+   "dtype": "int32",
+   "shape": [
+    5760
+   ],
+   "unit": "1",
+   "note": "[m] 1 = good; frames 3060..3239 (8.5-9.0 s) are bad",
+   "source": ""
+  },
+  "fft_freq_hz": {
+   "file": "fft_freq_hz.bin",
+   "dtype": "float64",
+   "shape": [
+    4800
+   ],
+   "unit": "Hz",
+   "note": "",
+   "source": ""
+  },
+  "morlet_gain": {
+   "file": "morlet_gain.bin",
+   "dtype": "float64",
+   "shape": [
+    4800
+   ],
+   "unit": "1 (gain per FFT bin)",
+   "note": "V.morlet_gain(fftfreq(N,1/FS), 10, 4) = 2 exp(-0.5((f-f0)/(f0/cycles))^2) (f>0), cycles = f0 2 sqrt(2 ln2)/fwhm",
+   "source": "morlet_gain vortex.py:156"
+  },
+  "frames_real": {
+   "file": "frames_real.bin",
+   "dtype": "float64",
+   "shape": [
+    6,
+    5760
+   ],
+   "unit": "same as sensors",
+   "note": "[C\u00d7m] band_at_frames(...).real: complex64 in nxr, saved as float64 (compare at rtol 1e-5 of the peak)",
+   "source": "band_at_frames vortex.py:776"
+  },
+  "frames_imag": {
+   "file": "frames_imag.bin",
+   "dtype": "float64",
+   "shape": [
+    6,
+    5760
+   ],
+   "unit": "same as sensors",
+   "note": "",
+   "source": "band_at_frames vortex.py:776"
+  },
+  "amp_mean": {
+   "file": "amp_mean.bin",
+   "dtype": "float64",
+   "shape": [
+    5760
+   ],
+   "unit": "same",
+   "note": "[m] sqrt(mean_c |z|^2) (float32 in nxr)",
+   "source": "burst_stages vortex.py:845"
+  },
+  "amp_smooth1": {
+   "file": "amp_smooth1.bin",
+   "dtype": "float64",
+   "shape": [
+    5760
+   ],
+   "unit": "same",
+   "note": "[m] np.convolve(amp, ones(36)/36, 'same') (zero-padded edges; even-kernel window [i-18, i+17])",
+   "source": "burst_stages vortex.py:845"
+  },
+  "amp_smooth_env": {
+   "file": "amp_smooth_env.bin",
+   "dtype": "float64",
+   "shape": [
+    5760
+   ],
+   "unit": "same",
+   "note": "[m] the 2-cycle smoothing inside spindle_envelope (kernel 72, window [i-36, i+35]); thresholds are median/robust SD of it over the good frames",
+   "source": "spindle_envelope vortex.py:829"
+  },
+  "envelope_thresholds": {
+   "file": "envelope_thresholds.bin",
+   "dtype": "float64",
+   "shape": [
+    4
+   ],
+   "unit": "same (median, robust SD, hi, lo)",
+   "note": "",
+   "source": "spindle_envelope vortex.py:829"
+  },
+  "candidates": {
+   "file": "candidates.bin",
+   "dtype": "int32",
+   "shape": [
+    4,
+    2
+   ],
+   "unit": "frame index (start, stop exclusive) at 360 frames/s",
+   "note": "spindle_envelope(amp_smooth1, good, 36): [start, stop) frames",
+   "source": "spindle_envelope vortex.py:829"
+  },
+  "risefall_fits": {
+   "file": "risefall_fits.bin",
+   "dtype": "float64",
+   "shape": [
+    4,
+    9
+   ],
+   "unit": "s, s, s, s, amplitude, amplitude, 1, 0/1, 0/1",
+   "note": "[ncand\u00d79] tOn, tOff, tauR, tauF, b, h, r2, ok, at_bound, one row per candidate (kept or not)",
+   "source": "risefall vortex.py:801"
+  },
+  "risefall_intervals_s": {
+   "file": "risefall_intervals_s.bin",
+   "dtype": "float64",
+   "shape": [
+    4,
+    6
+   ],
+   "unit": "s",
+   "note": "[ncand\u00d76] build-up, plateau, decay [start, end] s; NaN when none",
+   "source": "risefall vortex.py:801"
+  },
+  "burst_fits": {
+   "file": "burst_fits.bin",
+   "dtype": "float64",
+   "shape": [
+    4,
+    5
+   ],
+   "unit": "s, s, s, s, 1",
+   "note": "[nkept\u00d75] burst_stages' fits: tOn, tOff, tauR, tauF, r2 (ok, not at bound, r2 >= 0.7)",
+   "source": "burst_stages vortex.py:845"
+  },
+  "mask_onset": {
+   "file": "mask_onset.bin",
+   "dtype": "int32",
+   "shape": [
+    5760
+   ],
+   "unit": "1",
+   "note": "",
+   "source": "burst_stages vortex.py:845"
+  },
+  "mask_within": {
+   "file": "mask_within.bin",
+   "dtype": "int32",
+   "shape": [
+    5760
+   ],
+   "unit": "1",
+   "note": "",
+   "source": "burst_stages vortex.py:845"
+  },
+  "mask_offset": {
+   "file": "mask_offset.bin",
+   "dtype": "int32",
+   "shape": [
+    5760
+   ],
+   "unit": "1",
+   "note": "",
+   "source": "burst_stages vortex.py:845"
+  },
+  "old_burst_mask": {
+   "file": "old_burst_mask.bin",
+   "dtype": "int32",
+   "shape": [
+    5760
+   ],
+   "unit": "1",
+   "note": "[m] burst_mask: amp_smooth1 >= 75th percentile over good frames for >= 3 cycles",
+   "source": "burst_mask vortex.py:784"
+  },
+  "null_white": {
+   "file": "null_white.bin",
+   "dtype": "float64",
+   "shape": [
+    6,
+    5760
+   ],
+   "unit": "unit variance",
+   "note": "[C\u00d7m] THE random draw: default_rng(777).standard_normal((C, m)), C order; lagfree_real consumes exactly this one call",
+   "source": "lagfree_real vortex.py:418"
+  },
+  "null_amp_spectrum": {
+   "file": "null_amp_spectrum.bin",
+   "dtype": "float64",
+   "shape": [
+    2881
+   ],
+   "unit": "same (per rfft bin)",
+   "note": "[m/2+1] sqrt(mean_c |rfft(xr)|^2), xr = frames_real",
+   "source": "lagfree_real vortex.py:418"
+  },
+  "null_cov": {
+   "file": "null_cov.bin",
+   "dtype": "float64",
+   "shape": [
+    6,
+    6
+   ],
+   "unit": "same^2",
+   "note": "[C\u00d7C] np.cov(xr[:, good]) (rows = variables, ddof 1)",
+   "source": "lagfree_real vortex.py:418"
+  },
+  "null_sqrt_cov": {
+   "file": "null_sqrt_cov.bin",
+   "dtype": "float64",
+   "shape": [
+    6,
+    6
+   ],
+   "unit": "same",
+   "note": "[C\u00d7C] symmetric PSD square root of null_cov (eigh, negatives clipped to 0)",
+   "source": "sqrt_psd vortex.py:166 via lagfree_real"
+  },
+  "null_filtered_white": {
+   "file": "null_filtered_white.bin",
+   "dtype": "float64",
+   "shape": [
+    6,
+    5760
+   ],
+   "unit": "1",
+   "note": "[C\u00d7m] irfft(rfft(white) * amp_spectrum, n=m)",
+   "source": "lagfree_real vortex.py:418"
+  },
+  "null_row_sd": {
+   "file": "null_row_sd.bin",
+   "dtype": "float64",
+   "shape": [
+    6
+   ],
+   "unit": "1",
+   "note": "[C] std (ddof 0) of null_filtered_white over good frames; rows are divided by it",
+   "source": "lagfree_real vortex.py:418"
+  },
+  "null_lagfree": {
+   "file": "null_lagfree.bin",
+   "dtype": "float64",
+   "shape": [
+    6,
+    5760
+   ],
+   "unit": "same",
+   "note": "lagfree_real(xr, good, rng) = float32(null_sqrt_cov @ (filtered / row_sd))",
+   "source": "lagfree_real vortex.py:418"
+  },
+  "null_env_data": {
+   "file": "null_env_data.bin",
+   "dtype": "float64",
+   "shape": [
+    5760
+   ],
+   "unit": "same",
+   "note": "[m] sqrt(np.convolve(mean_c xr^2, ones(36)/36,'same'))",
+   "source": "envelope_matched_null vortex.py:794"
+  },
+  "null_env_lagfree": {
+   "file": "null_env_lagfree.bin",
+   "dtype": "float64",
+   "shape": [
+    5760
+   ],
+   "unit": "same",
+   "note": "",
+   "source": "envelope_matched_null vortex.py:794"
+  },
+  "null_env_ratio": {
+   "file": "null_env_ratio.bin",
+   "dtype": "float64",
+   "shape": [
+    5760
+   ],
+   "unit": "1",
+   "note": "",
+   "source": "envelope_matched_null vortex.py:794"
+  },
+  "null_envelope_matched": {
+   "file": "null_envelope_matched.bin",
+   "dtype": "float64",
+   "shape": [
+    6,
+    5760
+   ],
+   "unit": "same",
+   "note": "envelope_matched_null: lagfree x (env_data / max(env_lagfree, 1e-30)), float32",
+   "source": "envelope_matched_null vortex.py:794"
+  }
+ },
+ "scalars": {
+  "n_candidates": 4,
+  "n_kept": 4,
+  "old_burst_mask": {
+   "n_bursts": 3,
+   "burst_cycles": 12.666666666666666,
+   "burst_share": 0.23870967741935484
+  },
+  "frames": 5760,
+  "null_calls": [
+   [
+    6,
+    5760
+   ]
+  ]
+ },
+ "layout": "little-endian, row-major (C order); float64 or int32 .bin, no header",
+ "parameters": {
+  "fs_hz": 300.0,
+  "samples": 4800,
+  "channels": 6,
+  "f0_hz": 10.0,
+  "fwhm_hz": 4.0,
+  "frames_per_s": 360.0,
+  "frames_per_cycle": 36,
+  "seed": 20261102,
+  "noise_sd": 2.0,
+  "burst_h": 2.0,
+  "bursts": [
+   [
+    2.5,
+    4.0,
+    0.12,
+    0.15
+   ],
+   [
+    6.5,
+    7.7,
+    0.15,
+    0.2
+   ],
+   [
+    10.0,
+    12.0,
+    0.2,
+    0.25
+   ]
+  ],
+  "transient": [
+   13.8,
+   13.95,
+   0.02,
+   0.02
+  ],
+  "bad_s": [
+   8.5,
+   9.0
+  ],
+  "null_generator": "numpy.random.default_rng (PCG64)",
+  "null_seed": 777,
+  "spindle": {
+   "hi_sd": 1.5,
+   "lo_sd": 1.0,
+   "min_cycles": 3.0,
+   "merge_cycles": 1.0,
+   "smooth_cycles": 2.0
+  },
+  "risefall": {
+   "margin_cycles": 10,
+   "smooth_cycles": 1,
+   "tau_max_cycles": 10,
+   "min_r2": 0.7
+  },
+  "burst_pct": 75.0,
+  "burst_cycles": 3.0
+ },
+ "nxr_commit": "30b9622bf182b9a93313d78370f1cc8390a8ba49"
+}
