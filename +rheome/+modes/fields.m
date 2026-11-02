@@ -144,7 +144,7 @@ function X = i_sources(C1, F, fs, rs)
 % independent normal sources (variance ~ vertex area) through the gain, coloured by the mean sensor spectrum
     [U, D] = eig(C1, 'vector');  D = max(D, 0);
     N = size(F, 2);  X = (U .* sqrt(D)') * randn(rs, size(F, 1), N);
-    nf = 2^nextpow2(8 * fs);  [P, f] = pwelch(F.', hann(nf), nf/2, nf, fs);  p = mean(P, 2);
+    nf = 2^nextpow2(8 * fs);  [P, f] = pwelch(F.', hann(nf, 'periodic'), nf/2, nf, fs);  p = mean(P, 2);   % periodic Hann (Diellor, 2026-11-02)
     fk = (0:N-1)' * fs / N;  fk = min(fk, fs - fk);
     X = real(ifft(fft(X, [], 2) .* sqrt(interp1(f, p, fk, 'linear', 0)).', [], 2));
     X = X * sqrt(sum(F.^2, 'all') / sum(X.^2, 'all'));
