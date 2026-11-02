@@ -4,9 +4,11 @@ function [P, f, info] = cleanwelch(F, fs, span, mask, nf)
 %   [P, f] = rheome.scale.cleanwelch(F, fs, first:last, mask, nf)
 %   [P, f, info] = rheome.scale.cleanwelch(...)      % info.nSeg, info.nUsed, info.used
 %
-% pwelch(F(:, span).', hann(nf), nf/2, nf, fs) with the segments that overlap a true sample of
+% pwelch(F(:, span).', hann(nf, 'periodic'), nf/2, nf, fs) with the segments that overlap a true sample of
 % mask left out of the average. The segments are pwelch's own: start 1 + (k-1)*nf/2 within the
-% span, k = 1 .. fix((L - nf/2) / (nf/2)).
+% span, k = 1 .. fix((L - nf/2) / (nf/2)). The window is the PERIODIC Hann,
+% w(i) = 1/2 - 1/2 cos(2 pi i/nf) (Diellor, 2026-11-02; as nxr-analysis and the Cortical Flow Editor), not MATLAB's
+% default symmetric hann(nf).
 %
 % ⭐ WHEN NO SEGMENT TOUCHES THE MASK THIS IS THE pwelch CALL ITSELF, bit for bit -- the masked
 % path is only taken when it has something to exclude.
@@ -42,13 +44,13 @@ function [P, f, info] = cleanwelch(F, fs, span, mask, nf)
     for k = 1:nSeg, used(k) = ~any(m(st(k) : st(k) + nf - 1)); end
     info = struct('nSeg', nSeg, 'nUsed', sum(used), 'used', used);
     if all(used)
-        [P, f] = pwelch(F(:, span).', hann(nf), hop, nf, fs);
+        [P, f] = pwelch(F(:, span).', hann(nf, 'periodic'), hop, nf, fs);
         return
     end
     if ~any(used)
         error('scale:cleanwelch:nosegments', 'every one of the %d Welch segments touches an artefact block', nSeg);
     end
-    P = 0;  w = hann(nf);
+    P = 0;  w = hann(nf, 'periodic');
     for k = find(used)
         [Pk, f] = pwelch(F(:, span(st(k) : st(k) + nf - 1)).', w, 0, nf, fs);
         P = P + Pk;

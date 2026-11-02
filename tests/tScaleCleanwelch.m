@@ -14,7 +14,7 @@ classdef tScaleCleanwelch < matlab.unittest.TestCase
             cs = 301:size(F,2) - 150;  mask = false(1, size(F,2));
             mask([1:300, end-149:end]) = true;               % trimmed edges lie outside the span
             [P, f, I] = rheome.scale.cleanwelch(F, fs, cs, mask, nf);
-            [P0, f0] = pwelch(F(:, cs).', hann(nf), nf/2, nf, fs);
+            [P0, f0] = pwelch(F(:, cs).', hann(nf, 'periodic'), nf/2, nf, fs);
             tc.verifyEqual(P, P0);  tc.verifyEqual(f, f0);
             tc.verifyEqual(I.nUsed, I.nSeg);
         end
@@ -30,7 +30,7 @@ classdef tScaleCleanwelch < matlab.unittest.TestCase
             tc.verifyEqual(I1.nUsed, I.nSeg);  tc.verifyEqual(P1, P0);
             hop = nf/2;  P = 0;
             for k = 1:I.nSeg
-                P = P + pwelch(F(:, (k-1)*hop + (1:nf)).', hann(nf), 0, nf, fs);
+                P = P + pwelch(F(:, (k-1)*hop + (1:nf)).', hann(nf, 'periodic'), 0, nf, fs);
             end
             tc.verifyEqual(P / I.nSeg, P0, 'RelTol', 1e-10);
         end
@@ -44,7 +44,7 @@ classdef tScaleCleanwelch < matlab.unittest.TestCase
             tc.assertTrue(all(C.mask(t)));
             tc.assertEqual([C.first C.last], [1 N]);          % interior, so masked and not trimmed
             nf = 2^nextpow2(8*fs);  cs = C.first:C.last;
-            [P0, f] = pwelch(F(:, cs).', hann(nf), nf/2, nf, fs);
+            [P0, f] = pwelch(F(:, cs).', hann(nf, 'periodic'), nf/2, nf, fs);
             [P, ~, I] = rheome.scale.cleanwelch(F, fs, cs, C.mask, nf);
             tc.verifyLessThan(I.nUsed, I.nSeg);
             tc.verifyGreaterThan(I.nUsed, 0.75 * I.nSeg);
