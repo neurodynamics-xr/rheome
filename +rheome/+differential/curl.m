@@ -4,6 +4,7 @@ function vort = curl(J, S, fg, tangent)
 %   vort = rheome.differential.curl(J, S)
 %   vort = rheome.differential.curl(J, S, fg)   % reuse a precomputed rheome.operators.face_gradient(S)
 %   vort = rheome.differential.curl(J, S, fg, false)   % raw ambient field, no tangent projection (see below)
+%   vort = rheome.differential.curl(J, S, fg, "curv")  % curl of the normal part J_n n alone (see below)
 %
 % On a 2-D surface there is no vector curl: the curl of a field is the SCALAR vorticity
 % (the out-of-plane component). For an ambient R^3 per-vertex field it is (grad x J).n per
@@ -20,8 +21,13 @@ function vort = curl(J, S, fg, tangent)
 %   S  surface struct (rheome.io.read.surface / rheome.utils.hemisphere): needs .Vertices, .Faces
 %   fg (optional) a precomputed rheome.operators.face_gradient(S.Vertices,S.Faces); pass it to avoid
 %      rebuilding the operator per call (e.g. per-frame loops / rheome.detect.operator). S may be [].
-%   tangent (optional, default true) project J onto the tangent plane first. false = the raw ambient curl, which
-%      is what rheome.differential.diracparts reads off the Dirac (kept for that identity); not the Editor's / nxr's.
+%   tangent (optional, default true) which field the curl is taken of; true/false or one of three names (nxr
+%      FaceOperators.div_curl(curl=...), Editor flowFieldCpu tangential):
+%        true  | "tan"   the tangent flow J - J_n n (what is happening in the surface; the default)
+%        false | "3d"    the raw ambient curl, no projection; what rheome.differential.diracparts reads off the Dirac
+%                        (kept for that identity); not the Editor's / nxr's default
+%        "curv"          the curl of J_n n alone (J_n = J.n, n the area-weighted vertex normal): zero in the continuum, so
+%                        what is left is mesh error. Exactly (linearity)  curl3d = curl_tan + curl_curv.
 %
 % OUTPUT:
 %   vort  [nV x nT] per-vertex scalar vorticity (CCW +, CW -)
@@ -44,10 +50,7 @@ function vort = curl(J, S, fg, tangent)
     vn  = fg.W * Nf;  vn = vn ./ max(sqrt(sum(vn.^2, 2)), eps);          % area-weighted vertex normals
     if nargin < 4 || isempty(tangent), tangent = true; end
     Jx = J(1:3:end, :);  Jy = J(2:3:end, :);  Jz = J(3:3:end, :);
-    if tangent
-        dn = vn(:,1).*Jx + vn(:,2).*Jy + vn(:,3).*Jz;                        % normal component, tangent projection
-        Jx = Jx - dn.*vn(:,1);  Jy = Jy - dn.*vn(:,2);  Jz = Jz - dn.*vn(:,3);
-    end
+    [Jx, Jy, Jz] = dif_part(Jx, Jy, Jz, vn, tangent, 'curl');
     % per-face curl vector  (grad x J):  component d of grad of field Jc is  G_d * Jc
     cvx = fg.Gy * Jz - fg.Gz * Jy;      % (grad x J)_x = dJz/dy - dJy/dz
     cvy = fg.Gz * Jx - fg.Gx * Jz;      % (grad x J)_y = dJx/dz - dJz/dx

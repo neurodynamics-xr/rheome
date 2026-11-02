@@ -1,0 +1,165 @@
+{
+ "arrays": {
+  "V_mm": {
+   "file": "V_mm.bin",
+   "dtype": "float64",
+   "shape": [
+    2562,
+    3
+   ],
+   "unit": "mm",
+   "note": "ellipsoid vertices; nxr runs on V_mm/1000 (metres)"
+  },
+  "F": {
+   "file": "F.bin",
+   "dtype": "int32",
+   "shape": [
+    5120,
+    3
+   ],
+   "unit": "1",
+   "note": "triangles, 0-based, counter-clockwise seen from outside"
+  },
+  "normals": {
+   "file": "normals.bin",
+   "dtype": "float64",
+   "shape": [
+    2562,
+    3
+   ],
+   "unit": "1",
+   "note": "area-weighted vertex normals (FaceOperators.normals _port/faces.py:35)"
+  },
+  "H": {
+   "file": "H.bin",
+   "dtype": "float64",
+   "shape": [
+    2562
+   ],
+   "unit": "1/m",
+   "note": "signed mean curvature, +1/R on a sphere with outward normals; H = -1/2 (DX . n), DX the barycentric-area cotangent Laplacian of the positions (FaceOperators.mean_curvature)"
+  },
+  "J": {
+   "file": "J.bin",
+   "dtype": "float64",
+   "shape": [
+    2562,
+    3
+   ],
+   "unit": "flow units",
+   "note": "the mixed current, [V x 3]: swirl + source + normal part"
+  },
+  "J_n": {
+   "file": "J_n.bin",
+   "dtype": "float64",
+   "shape": [
+    2562
+   ],
+   "unit": "flow units",
+   "note": "J . normals"
+  },
+  "J_normal": {
+   "file": "J_normal.bin",
+   "dtype": "float64",
+   "shape": [
+    2562,
+    3
+   ],
+   "unit": "flow units",
+   "note": "J_n * normals"
+  },
+  "J_tangent": {
+   "file": "J_tangent.bin",
+   "dtype": "float64",
+   "shape": [
+    2562,
+    3
+   ],
+   "unit": "flow units",
+   "note": "J - J_normal"
+  },
+  "div_tan": {
+   "file": "div_tan.bin",
+   "dtype": "float64",
+   "shape": [
+    2562
+   ],
+   "unit": "flow units / m",
+   "note": "divergence of the tangent flow (the default; Editor flowFieldCpu tangential=true, Rheome 4th argument 'tan'): div_curl(J, 'tan', .)"
+  },
+  "div3d": {
+   "file": "div3d.bin",
+   "dtype": "float64",
+   "shape": [
+    2562
+   ],
+   "unit": "flow units / m",
+   "note": "divergence of the full 3-D vector, no projection: div_curl(J, '3d', .)"
+  },
+  "div_curv": {
+   "file": "div_curv.bin",
+   "dtype": "float64",
+   "shape": [
+    2562
+   ],
+   "unit": "flow units / m",
+   "note": "divergence of J_n n alone: div_curl(J, 'curv', .); div3d = div_tan + div_curv"
+  },
+  "div_curv_2H": {
+   "file": "div_curv_2H.bin",
+   "dtype": "float64",
+   "shape": [
+    2562
+   ],
+   "unit": "flow units / m",
+   "note": "continuum estimate 2 H J_n (FaceOperators.div_curv_2h)"
+  },
+  "curl_tan": {
+   "file": "curl_tan.bin",
+   "dtype": "float64",
+   "shape": [
+    2562
+   ],
+   "unit": "flow units / m",
+   "note": "curl of the tangent flow (default)"
+  },
+  "curl3d": {
+   "file": "curl3d.bin",
+   "dtype": "float64",
+   "shape": [
+    2562
+   ],
+   "unit": "flow units / m",
+   "note": "curl of the full 3-D vector"
+  },
+  "curl_curv": {
+   "file": "curl_curv.bin",
+   "dtype": "float64",
+   "shape": [
+    2562
+   ],
+   "unit": "flow units / m",
+   "note": "curl of J_n n alone (0 in the continuum: mesh error); curl3d = curl_tan + curl_curv"
+  }
+ },
+ "layout": "little-endian, row-major (C order); float64 or int32 .bin, no header",
+ "sources": {
+  "div_curl": "src/nxr/_port/faces.py:57",
+  "mean_curvature": "src/nxr/_port/faces.py:87",
+  "div_curv_2h": "src/nxr/_port/faces.py:103",
+  "normals": "src/nxr/_port/faces.py:39",
+  "identity": "div3d = div_tan + div_curv, curl3d = curl_tan + curl_curv (to float rounding)"
+ },
+ "parameters": {
+  "subdiv": 4,
+  "semi_axes_mm": [
+   70.0,
+   55.0,
+   45.0
+  ],
+  "native_positions_unit": "m (nxr); V_mm here is x1000, curl / div / H are per metre and need V_mm/1000",
+  "positions_cast": "float32 then float64 (FaceOperators.__init__), as the Editor",
+  "current": "tangent swirl about z + tangent source from the +x pole + normal part 1 + 0.5x + 0.3 sin(2 pi y) z, (x,y,z) unit-sphere coordinates"
+ },
+ "nxr_commit": "f9de14e5d4121df11030a05e6c7a8e09c5e436e8"
+}
