@@ -10,7 +10,7 @@ classdef tSpectralSynth < matlab.unittest.TestCase
 
     methods (Static)
         function [chiHat, r2] = i_fit(x, fs, knee)
-            [P,f] = pwelch(x(:), hann(round(4*fs)), [], [], fs);
+            [P,f] = pwelch(x(:), hann(round(4*fs),'periodic'), [], [], fs);
             keep  = f > 1 & f < 45;
             ap    = rheome.spectral.aperiodic(P(keep), f(keep), struct('knee', knee));
             chiHat = ap.exponent;  r2 = ap.r2;
@@ -93,7 +93,7 @@ classdef tSpectralSynth < matlab.unittest.TestCase
             rng(8);
             want = 10;
             x = rheome.spectral.synthesise(tc.nT, tc.fs, 2.0, struct('power', want, 'band', [1 45]));
-            [P,f] = pwelch(x(:), hann(round(4*tc.fs)), [], [], tc.fs);
+            [P,f] = pwelch(x(:), hann(round(4*tc.fs),'periodic'), [], [], tc.fs);
             got = sum(P(f > 1 & f < 45)) * mean(diff(f));
             tc.verifyEqual(got / want, 1, 'RelTol', 0.5, ...
                 sprintf('welch in-band power %.3f against requested %.3f.', got, want));
@@ -114,7 +114,7 @@ classdef tSpectralSynth < matlab.unittest.TestCase
             Pt = 1./(1000 + f.^2.7);
             X  = rheome.spectral.synthesise(tc.nT, tc.fs, NaN, ...
                      struct('nS', 40, 'shape', Pt, 'shapeF', f));
-            [P, ff] = pwelch(X.', hann(round(4*tc.fs)), [], [], tc.fs);
+            [P, ff] = pwelch(X.', hann(round(4*tc.fs),'periodic'), [], [], tc.fs);
             P = mean(P, 2);  k = ff > 1 & ff < 45;
             Pi = 10.^interp1(log10(f), log10(Pt), log10(ff(k)), 'linear', 'extrap');
             tc.verifyGreaterThan(corr(log(P(k)), log(Pi)), 0.99);

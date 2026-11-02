@@ -39,7 +39,7 @@ function [T, X] = measure_patterns(name, S, item, opts)
 %                               coefficients of the normal current, NumWindows strongest WindowS alpha windows;
 %                               median over windows. Single-subject reference: 1.32 (planted travelling 3.98, standing 2.07).
 %                 dispersion    top / bottom |lambda| quintile ratio of each Dirac mode's periodic peak
-%                               frequency (Welch 8 s, aperiodic knee fit 1-45 Hz, peak in 6-16 Hz), the
+%                               frequency (Welch 8 s periodic Hann, aperiodic knee fit 1-45 Hz, peak in 6-16 Hz), the
 %                               hemisphere's Dirac modes applied to the MNE current. Single-subject reference: 1.01, a wave needs 3.1.
 %                 rotation_r    corr of |curl v| (rheome.flow.apparent of the 8-16 Hz envelope, 300 Hz) with
 %                               |curl J| over vertices, per 2 s tile, NumTiles tiles; median. Single-subject reference: r = -0.11.
@@ -218,7 +218,7 @@ end
 
 function iaf = i_iaf(F, fs)
 % individual alpha frequency: the periodic peak (aperiodic fit 2-40 Hz) of the mean sensor PSD in 7-14 Hz
-    nf = 2^nextpow2(4*fs);  [P, f] = pwelch(F.', hann(nf), nf/2, nf, fs);  P = mean(P, 2);
+    nf = 2^nextpow2(4*fs);  [P, f] = pwelch(F.', hann(nf,'periodic'), nf/2, nf, fs);  P = mean(P, 2);
     m = f >= 2 & f <= 40;  ap = rheome.spectral.aperiodic(P(m), f(m));
     per = P(m) - ap.Pap;  fm = f(m);  k = fm >= 7 & fm <= 14;
     [pk, i] = max(per(k));  fk = fm(k);  iaf = NaN;  if pk > 0, iaf = fk(i); end
@@ -278,7 +278,7 @@ function X = i_dispersion(C, d, S, h, F, fs, o)
     nf = 2^nextpow2(8*fs);
     for half = 0:2
         span = 1:N;  if half, span = (1:floor(N/2)) + (half - 1)*floor(N/2); end
-        [P, f] = pwelch((Dk * F(:, span)).', hann(nf), nf/2, nf, fs);
+        [P, f] = pwelch((Dk * F(:, span)).', hann(nf,'periodic'), nf/2, nf, fs);
         m = f >= 1 & f <= 45;  for hz = [60 120], m = m & ~(f > hz-2 & f < hz+2); end
         ap = rheome.spectral.aperiodic(P(m, :), f(m), struct('knee', true));
         per = P(m, :) - ap.Pap;  fm = f(m);  ka = fm >= 6 & fm <= 16;  fa = fm(ka);

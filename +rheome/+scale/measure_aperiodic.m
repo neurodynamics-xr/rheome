@@ -61,7 +61,7 @@ function [T, X, Ex] = measure_aperiodic(name, S, opts)
 %   so this is the record's Welch PSD up to the segments straddling the window's edges.
 % Ex (third output, figure data): the first offset plant at the largest OffsetX of the first arm, rep 1, first sigma,
 % first speed > 0 (else the first): the hemisphere's cortex, the path, the patch gain at the window's centre and the
-% patch centre per envelope frame, and at the sensors the channel-mean Welch PSDs (2 s Hann) of the background, the
+% patch centre per envelope frame, and at the sensors the channel-mean Welch PSDs (2 s periodic Hann) of the background, the
 % forwarded plant, their sum (total) and the sum's periodic split per fit window (aperiodic = total - periodic).
 %
 % See also: rheome.spectral.decompose, rheome.detect.tilepath, rheome.differential.helmholtzbands,
@@ -125,7 +125,7 @@ function [T, X, Ex] = measure_aperiodic(name, S, opts)
     Kr = Res.ImagingKernel;  Kn = Ns(:,1).*Kr(3*gv-2,:) + Ns(:,2).*Kr(3*gv-1,:) + Ns(:,3).*Kr(3*gv,:);  clear Res Kr
     Gs = S.G(iC, :);  Gn = Gs(:,3*gv-2).*Nl(:,1).' + Gs(:,3*gv-1).*Nl(:,2).' + Gs(:,3*gv).*Nl(:,3).';  clear Gs
     nT = round((W + 2*opts.MarginS)*fs);  keep = round(opts.MarginS*fs) + (1:round(W*fs));  Lw = nT/fs;
-    nseg = round(2*fs);  wfun = hann(nseg);
+    nseg = round(2*fs);  wfun = hann(nseg,'periodic');
     [Pr, fw] = pwelch(REST.', wfun, nseg/2, nseg, fs);
     m = fw >= 2 & fw <= 40;  apr = rheome.spectral.aperiodic(Pr(m,:), fw(m));  chi0 = median(apr.exponent);
     mb = fw >= FITR(1) & fw <= FITR(2);  apk = rheome.spectral.aperiodic(Pr(mb,:), fw(mb), struct('knee', true));

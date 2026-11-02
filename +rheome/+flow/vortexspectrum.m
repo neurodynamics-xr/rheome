@@ -47,7 +47,7 @@ function out = vortexspectrum(name, varargin)
 %
 % OUTPUT (struct out)
 %   .B        [nCh x nT] the synthesised sensor record       .Breal the real one, same window
-%   .f .Psim .Preal   channel-averaged Welch spectra
+%   .f .Psim .Preal   channel-averaged Welch spectra (4 s periodic Hann, Diellor 2026-11-02)
 %   .bands    table: band, fLo, fHi, fc, periodicFrac, momentNAm, nAtoms, supportSec, used
 %   .chi .knee  the fitted aperiodic parameters of the REAL data
 %   .check    logCorr, medianAbsLogRatio, chiReal, chiSim, bandPowerRatio
@@ -99,7 +99,7 @@ function out = vortexspectrum(name, varargin)
     Breal = Fr(:, 1:nT);
 
     %% 1. fit the REAL sensor background
-    win = hann(round(4*fs));
+    win = hann(round(4*fs),'periodic');
     [Pr, f] = pwelch(Breal.', win, [], [], fs);
     Pr = mean(Pr, 2);                                    % channel-averaged
     kf = f > o.FitRange(1) & f < o.FitRange(2);

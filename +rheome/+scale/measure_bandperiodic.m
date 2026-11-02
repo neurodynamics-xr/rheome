@@ -7,7 +7,7 @@ function [T, X] = measure_bandperiodic(name, S, opts)
 %
 % The band-SNR analysis of MS1 Table 5 with the figures removed, on the clean span periodicflow uses, and
 % repeated on each half of that span for split-half reliability (MS1 group plan G4, VP1 V5). Per channel:
-% Welch PSD (8 s Hann, 50%; rheome.scale.cleanwelch), aperiodic fit with a knee on [1 45] Hz minus
+% Welch PSD (8 s periodic Hann, 50%; rheome.scale.cleanwelch), aperiodic fit with a knee on [1 45] Hz minus
 % LineHz and 2*LineHz +-2 Hz (rheome.spectral.aperiodic); the residual max(P - Pap, 0) IS the periodic part.
 % The empty room is the subject's own noise run, Welch at the same segment length, channels matched by name.
 % Per band (1-2, 2-4, 4-8, 8-16, 16-32, 32-45 Hz), each a MEDIAN OVER CHANNELS of the band-mean power:
@@ -68,7 +68,7 @@ function [T, X] = measure_bandperiodic(name, S, opts)
     nfe = 2^nextpow2(opts.SegS * nz.sfreq);
     Fe = double(nz.F(jn, :));
     if size(Fe, 2) < nfe, error('scale:bandperiodic:noise', 'noise run of %.1f s is shorter than one %g s segment', size(Fe,2)/nz.sfreq, opts.SegS); end
-    [Pe, fe] = pwelch(Fe.', hann(nfe), nfe/2, nfe, nz.sfreq);  clear Fe
+    [Pe, fe] = pwelch(Fe.', hann(nfe,'periodic'), nfe/2, nfe, nz.sfreq);  clear Fe
 
     CS = rheome.scale.cleanspan(F, fs, EdgeS=opts.EdgeS);
     spans = {CS.first:CS.last};  an = "bandperiodic";

@@ -14,7 +14,7 @@ classdef tSpectralSplit < matlab.unittest.TestCase
         function [Fw, f, Pfit, ff] = i_window(X, fs)
             % the window's positive-frequency FFT and a Welch PSD in |FFT bin|^2 units (decompose's contract)
             nT = size(X, 2);  Fw = fft(X, [], 2);  f = (0:nT-1)*fs/nT;  pos = 2:floor(nT/2)+1;
-            [P, ff] = pwelch(X.', hann(2*fs), fs, 2*fs, fs);  m = ff >= 1 & ff <= 45;
+            [P, ff] = pwelch(X.', hann(2*fs,'periodic'), fs, 2*fs, fs);  m = ff >= 1 & ff <= 45;
             Fw = Fw(:, pos);  f = f(pos)';  Pfit = (P(m, :) * fs*nT/2)';  ff = ff(m);
         end
     end

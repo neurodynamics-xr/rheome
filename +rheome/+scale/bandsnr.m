@@ -44,9 +44,9 @@ function T = bandsnr(name, noise)
 end
 
 function [P, f] = i_psd(X, fs)
-% Welch, 64 s Hann windows so the 0.125-0.25 Hz octave holds 8 bins; 50 % overlap
+% Welch, 64 s periodic Hann windows so the 0.125-0.25 Hz octave holds 8 bins; 50 % overlap
     w = min(size(X,2), round(64*fs));
-    [P, f] = pwelch(double(X)', hann(w), floor(w/2), w, fs);
+    [P, f] = pwelch(double(X)', hann(w,'periodic'), floor(w/2), w, fs);
 end
 
 % Author: Diellor Basha, 2026
