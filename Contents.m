@@ -25,6 +25,7 @@
 %   rheome.differential      - Divergence, rotation, Helmholtz-Hodge and Poisson on the cortex.
 %   rheome.dynamics          - DMD, dispersion, PDE fits and optical flow of activity maps.
 %   rheome.spectral          - Periodic / aperiodic decomposition of spectra and of flow fields.
+%   rheome.cores             - Threshold-on-curl vortex core detector and tracker (port of nxr vortex.py).
 %   rheome.detect            - Feature detection on source vector fields.
 %   rheome.flow              - Fused flow imaging kernels (sensors -> cortical flow maps).
 %   rheome.forward           - Forward-model spectral transforms.

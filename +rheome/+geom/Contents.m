@@ -1,16 +1,33 @@
-% GEOM  Mesh generation and geometry utilities.
+% GEOM  Mesh generation, surface geometry, and the surface's bookkeeping.
 %
-% Reference geometries for validation (built, not read from disk) and intrinsic-geometry
-% primitives ported from geometry-central (via nxr-compute) for measuring/averaging on the sheet.
+% Reference geometries for validation (built, not read from disk), the tile and ladder bookkeeping of a surface, and
+% intrinsic-geometry primitives ported from geometry-central (via nxr-compute).
+%
+% BY JOB (2026-11-10): a function that MEASURES, SELECTS or DRAWS lives in a sub-package named for its job, with the
+% same names as nxr and the Cortical Flow Editor; mesh structure and bookkeeping stay here in rheome.geom.
+%   rheome.geom.measure  returns numbers               (distances, tile means, the intrinsic mean)
+%   rheome.geom.select   returns a set of vertices     (the cortex)
+%   rheome.geom.draw     returns a curve on the surface (the FlipOut geodesic)
+% The old names (geodesic, heatdistance, tilemean, karcher_mean, cortexmask, flipOut, geodesicpath) forward and warn once
+% (rheome:deprecated).
+%
+% Sub-packages:
+%   rheome.geom.measure.heatDistance      - heat-method geodesic distance on a surface (+ reusable solver)
+%   rheome.geom.measure.heatDistanceEigen - the heat method in the LBO eigenbasis (no solve)
+%   rheome.geom.measure.karcherMean       - intrinsic (geodesic Fréchet) mean of points on the surface
+%   rheome.geom.measure.tileMean          - pool a vertex map over tiles (area-weighted mean, or median). Linear,
+%                        so it rolls up the tree. ⚠ a tile mean keeps a band-pass peak only up to the peak's core
+%                        radius: sigma-25 mm tracked on 23-33 mm tiles, lost at 47 mm and coarser.
+%   rheome.geom.select.cortex             - which vertices are cortex (the medial wall excluded)
+%   rheome.geom.draw.flipOut              - the FlipOut geodesic between two vertices (Sharp & Crane 2020): a port
+%                        of geometry-central's, the line the viewer, nxr and the Editor draw (to 1e-9 m)
+%   rheome.geom.draw.line                 - a geodesic between two vertices on the faces (calls draw.flipOut)
+%   rheome.geom.draw.flipMesh             - the mesh FlipOut works on, built once (pass it to line / flipOut)
 %
 % Functions:
 %   rheome.geom.icosphere     - geodesic sphere by icosahedron subdivision (FreeSurfer-style ico)
-%   rheome.geom.geodesic      - heat-method geodesic distance on a surface (+ reusable solver)
-%                        ⚠ short range only: asymmetric on the reference cortex (87.6 vs 43.7 mm on one
-%                        pair) and saturating at ~49 edges on a sphere. Read speeds with edgegraph.
 %   rheome.geom.edgegraph     - the mesh as a Dijkstra graph, edges + intrinsic diagonals: +1.4% against the
 %                        analytic great circle at any range, symmetric. The ruler for a speed.
-%   rheome.geom.karcher_mean  - intrinsic (geodesic Fréchet) mean of points on the surface
 %   rheome.geom.glue          - the two hemispheres made one closed surface by anatomy (medial walls cut, a bridge
 %                        grown): the editor's glueMesh, bit-identical to nxr-convert eigen/glue.py
 %   rheome.geom.meshkey       - the editor's mesh fingerprint '<nF>:<fnv1a>' a stored basis or kernel records
@@ -39,9 +56,7 @@
 %                 tile adjacency P'*A*P (cut-edge counts). .heap says whether node k's children
 %                 are 2k and 2k+1 -- true only if no branch stopped early.
 %
-%   rheome.geom.tilemean - pool a vertex map over tiles (area-weighted mean, or median). Linear, so it
-%                 rolls up the tree. ⚠ a tile mean keeps a band-pass peak only up to the peak's
-%                 core radius: sigma-25 mm tracked on 23-33 mm tiles, lost at 47 mm and coarser.
+%   rheome.geom.measure.tileMean - pools a vertex map over these tiles (above).
 %
 % THE JOINT BOOKKEEPING LADDER (2026-09-29):
 %   rheome.geom.jointladder - one row per observation window of the eigenmode-frequency plane, written in

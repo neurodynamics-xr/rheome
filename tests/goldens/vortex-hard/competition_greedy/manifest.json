@@ -1,0 +1,138 @@
+{
+ "arrays": {
+  "curl_heat10": {
+   "file": "curl_heat10.bin",
+   "dtype": "float64",
+   "shape": [
+    642,
+    6
+   ],
+   "unit": "flow units / m",
+   "note": "[V x T] the INPUT movie (float32 values saved as float64), built directly on the mesh; core_stats(Hc, eye(T), frames_used, ...)"
+  },
+  "frames_used": {
+   "file": "frames_used.bin",
+   "dtype": "int32",
+   "shape": [
+    6
+   ],
+   "unit": "1",
+   "note": "the frame columns handed to core_stats (a missing frame is a column left out)"
+  },
+  "patch_frame": {
+   "file": "patch_frame.bin",
+   "dtype": "int32",
+   "shape": [
+    12
+   ],
+   "unit": "1",
+   "note": "_core_patches rows (frame, sense, centre, area), ordered by frame then sense (+1 first)"
+  },
+  "patch_sense": {
+   "file": "patch_sense.bin",
+   "dtype": "int32",
+   "shape": [
+    12
+   ],
+   "unit": "1",
+   "note": ""
+  },
+  "patch_centre_mm": {
+   "file": "patch_centre_mm.bin",
+   "dtype": "float64",
+   "shape": [
+    12,
+    3
+   ],
+   "unit": "mm",
+   "note": ""
+  },
+  "patch_area_mm2": {
+   "file": "patch_area_mm2.bin",
+   "dtype": "float64",
+   "shape": [
+    12
+   ],
+   "unit": "mm^2",
+   "note": ""
+  },
+  "steps": {
+   "file": "steps.bin",
+   "dtype": "float64",
+   "shape": [
+    10,
+    9
+   ],
+   "unit": "mm",
+   "note": "[S x 9] core_stats(steps=): sense, from-centre xyz (mm), displacement xyz (mm), track id, frame"
+  },
+  "dens_ccw": {
+   "file": "dens_ccw.bin",
+   "dtype": "float64",
+   "shape": [
+    642
+   ],
+   "unit": "fraction of frames",
+   "note": ""
+  },
+  "dens_cw": {
+   "file": "dens_cw.bin",
+   "dtype": "float64",
+   "shape": [
+    642
+   ],
+   "unit": "fraction of frames",
+   "note": ""
+  },
+  "life_hist": {
+   "file": "life_hist.bin",
+   "dtype": "int32",
+   "shape": [
+    100
+   ],
+   "unit": "1",
+   "note": ""
+  },
+  "speed_hist": {
+   "file": "speed_hist.bin",
+   "dtype": "int32",
+   "shape": [
+    100
+   ],
+   "unit": "1",
+   "note": ""
+  }
+ },
+ "scalars": {
+  "threshold": 4e-06,
+  "cores_per_frame": 2.0,
+  "area_mm2": 67.26036141456909,
+  "n_tracks": 2,
+  "life_ms": 500.0,
+  "life_cycles": 1.0,
+  "speed_mm_s": 21.99125478364045,
+  "net_speed_mm_s": 21.99125478364045,
+  "disp_mm": 9.163022826516855,
+  "straightness": 1.0,
+  "reversal": 0.0,
+  "persist_half": 1.0,
+  "recur_cycle": null,
+  "jaccard_cycle": null,
+  "jaccard_half": 0.6666666666666666,
+  "frames": 6
+ },
+ "scenario": "Frame 0: +1 cores A, B (11-14.5 mm apart). Frames 1-5: two +1 cores c1 < c2 (vertex index; c1 is listed first), both nearer B than A, c2 nearer B than c1 (and within 15 mm of A). Greedy, in patch order: c1 takes B's track although c2 is nearer; c2 then gets A's track. Distance-optimal assignment would give B to c2.",
+ "scenario_parameters": {
+  "A": 165,
+  "B": 42,
+  "c1": 163,
+  "c2": 167
+ },
+ "mesh_ref": "../../vortex",
+ "layout": "little-endian, row-major (C order); float64 or int32 .bin, no header",
+ "scalar_units": {
+  "threshold": "flow units / m",
+  "area_mm2": "mm^2"
+ },
+ "nxr_commit": "903fdc286712d0a41269f4a7b0b6bce1b6c01bc3"
+}

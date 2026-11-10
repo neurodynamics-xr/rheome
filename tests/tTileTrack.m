@@ -1,5 +1,5 @@
 classdef tTileTrack < matlab.unittest.TestCase
-% Tracking at tile resolution: rheome.flow.movingpeak (the plant), rheome.geom.tilemean (the observation),
+% Tracking at tile resolution: rheome.flow.movingpeak (the plant), rheome.geom.measure.tileMean (the observation),
 % rheome.detect.tilepeaks (the peak as a tile) and rheome.detect.tiletrack (the trajectory as a walk on the tile
 % graph). What is asserted: the plant moves at the speed asked; the tile mean is exact and rolls up
 % the tree; a tile peak is a tile beating its neighbours; a clean mover is followed as ONE track whose
@@ -43,10 +43,10 @@ classdef tTileTrack < matlab.unittest.TestCase
 
         function tilemeanIsTheAreaWeightedMeanAndRollsUp(tc)
             X = randn(tc.S.nV, 3);
-            Y = rheome.geom.tilemean(tc.G, X, tc.a);
+            Y = rheome.geom.measure.tileMean(tc.G, X, tc.a);
             k = 5;  m = tc.G.tileOf == k;
             tc.verifyEqual(Y(k,:), sum(tc.a(m) .* X(m,:)) / sum(tc.a(m)), 'AbsTol', 1e-12);
-            G5 = rheome.geom.tiles(tc.T, tc.S, 5);  Y5 = rheome.geom.tilemean(G5, X, tc.a);
+            G5 = rheome.geom.tiles(tc.T, tc.S, 5);  Y5 = rheome.geom.measure.tileMean(G5, X, tc.a);
             % a parent is the area-weighted mean of its two children
             aT = full(double(tc.G.P)' * tc.a);
             for i = 1:3
@@ -72,7 +72,7 @@ classdef tTileTrack < matlab.unittest.TestCase
         function aCleanMoverIsOneTrackOfAdjacentSteps(tc)
             [pv, cu] = tc.path(7, 0.09);
             P = rheome.flow.movingpeak(tc.atoms(pv, 0.012), cu, SpeedMS=0.1, SampleRate=100);
-            Y = rheome.geom.tilemean(tc.G, P.X, tc.a);
+            Y = rheome.geom.measure.tileMean(tc.G, P.X, tc.a);
             Pk = rheome.detect.tilepeaks(Y, tc.G, MinHeight=0.5, Relative=true);
             out = rheome.detect.tiletrack(Pk, tc.G, Y, LostFrames=10, SampleRate=100);
             tc.verifyEqual(out.nTracks, 1);

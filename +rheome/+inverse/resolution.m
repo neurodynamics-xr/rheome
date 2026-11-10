@@ -75,7 +75,7 @@ function out = resolution(K, Gain, basis, opts)
 %     GlobalIdx         [1 x nH] this hemisphere's rows in the whole-cortex vertex numbering
 %                       (B.L.gv). ⚠ REQUIRED when the kernel covers both hemispheres.
 %     NumSeeds          point sources for the localisation family (300); 0 skips it
-%     Cortex            [V x 1] logical over the whole source space (rheome.geom.cortexmask): seeds are drawn on
+%     Cortex            [V x 1] logical over the whole source space (rheome.geom.select.cortex): seeds are drawn on
 %                       cortex and every PSF sum runs over cortex only, the medial wall excluded (default: all)
 %     Modes             mode indices for the MTF ([] = all of them); 0 skips it
 %     Calibrate         measure the r50 -> wavelength conversion (true)

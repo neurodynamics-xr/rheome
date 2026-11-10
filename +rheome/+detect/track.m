@@ -6,7 +6,7 @@ function out = track(J, S, opts)
 % Per frame, rheome.detect.criticalPoints finds the classified critical points (vortex/source/sink/
 % saddle) of the ambient current; this links them across frames into trajectories and measures
 % each trajectory's velocity, lifetime, straightness and intrinsic home location
-% (rheome.geom.karcher_mean). The Lagrangian complement to the Eulerian velocity field: it follows the
+% (rheome.geom.measure.karcherMean). The Lagrangian complement to the Eulerian velocity field: it follows the
 % FEATURES of the flow, not the field.
 %
 % ASSOCIATION — ByteTrack-style two-stage lifecycle. Ported from the sibling repo
@@ -38,7 +38,7 @@ function out = track(J, S, opts)
 %            Sorted by lifetime*mean(strength) descending.
 %   .summary counts per type + per state + lifetime/speed vectors + nSplit/nMerge/nRecovered
 %
-% See also: rheome.detect.criticalPoints, rheome.geom.geodesic, rheome.geom.karcher_mean
+% See also: rheome.detect.criticalPoints, rheome.geom.measure.heatDistance, rheome.geom.measure.karcherMean
 %
 % Author: Diellor Basha, 2026
 
@@ -129,7 +129,7 @@ function out = track(J, S, opts)
     keep = arrayfun(@(tr) numel(tr.frames) >= opts.minLifetimeFrames, tracks);
     tracks = tracks(keep);
     if ~isempty(tracks)
-        [~, geodesicSolver] = rheome.geom.geodesic(S, 1, geodesicSolver);   % factor ONCE for all karcher means
+        [~, geodesicSolver] = rheome.geom.measure.heatDistance(S, 1, geodesicSolver);   % factor ONCE for all karcher means
     end
     descriptor = i_empty_descriptor();
     for k = 1:numel(tracks)
@@ -153,7 +153,7 @@ function out = track(J, S, opts)
         tr.speedNet = tr.netDisplacement / max(tr.lifetime, eps);
         tr.birthFrame = tr.frames(1);  tr.deathFrame = tr.frames(end);
         tr.missedFrames = sum(frameGaps - 1);
-        [tr.centerVertex, tr.centerPos, ~] = rheome.geom.karcher_mean(S, tr.pos, struct('solver',geodesicSolver));
+        [tr.centerVertex, tr.centerPos, ~] = rheome.geom.measure.karcherMean(S, tr.pos, struct('solver',geodesicSolver));
         descriptor(end+1) = i_public_track(tr); %#ok<AGROW>
     end
 
@@ -287,7 +287,7 @@ end
 function d = i_dist(posA, posB, S, metric, solver)
     if strcmp(metric,'geodesic')
         [~, vA] = min(sum((S.Vertices - posA).^2, 2));
-        distField = rheome.geom.geodesic(S, vA, solver);
+        distField = rheome.geom.measure.heatDistance(S, vA, solver);
         [~, vB] = min(sum((S.Vertices - posB).^2, 2));
         d = distField(vB);
     else

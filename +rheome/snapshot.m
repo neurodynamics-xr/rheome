@@ -4,49 +4,86 @@ function out = snapshot(surf, result, varargin)
 %   out = rheome.snapshot(surf, result, Shots=shots, Out=folder)
 %   out = rheome.snapshot(surf, result, Shots=struct('Field', "div", 'Unit', "1/s", 'Label', "divergence"), Out="figs")
 %
-% Every cortical panel of a figure the same way: the viewer (nxr-cortical-flow editor/dist-viewer, the renderer of
-% rheome.view) draws each view in headless Chrome at print resolution, and MATLAB lays the views out with the
-% figure tokens (library/styles/tokens/figure-tokens.json): the colormap and limits by quantity, the colourbar with
-% quantity, unit and reference, view labels, a geodesic scale bar on the folded surface, and for a time series one
-% strip with the interval stated once. Each shot is written as <Out>/<Name>.svg (text, bars and colourbar editable;
-% the views embedded at their rendered resolution), printed by Chrome to <Out>/<Name>.pdf (fonts embedded, the views
-% at full resolution: MATLAB's own PDF export resamples images to screen pixels) and .png (at the journal's
-% combination dpi), and the viewer's raw renders are kept as <Out>/<Name>/*.png (for boards composed elsewhere), each with
-% its marks sidecar <render>.marks.json (every overlay drawn and its key: figure_check.py E1, rheome.viz.marks).
+% Every cortical panel of a figure the same way: the Cortical Flow viewer (nxr-cortical-flow editor/dist-viewer, the
+% renderer of rheome.view) draws AND COMPOSES each panel in headless Chrome, by the figure tokens
+% (library/styles/tokens/figure-tokens.json): the colormap and limits by quantity, the colourbar with quantity, unit
+% and reference, view labels, a geodesic scale bar on the folded surface, selections, paths, an inset, and for a time
+% series one strip with the interval stated once. The panel is the viewer's print figure (decision D4 of nxr's
+% docs/specs/2026-11-09-nxr-viewer-twin-design.md): THE KEY BAND ON TOP (the colourbar, then a key of every mark: the
+% path, its onset, its ticks, its hidden stretches, the selections, the bar), then the views. rheome.snapshot only
+% checks the shots, writes the bundle and the job, runs the viewer's own driver (<viewer>/driver/snapshot-driver.mjs,
+% job format nxr-snapshot-job@1) and reads back its report; nxr.snapshot (Python) sends the same job byte for byte.
+% Each shot is written as <Out>/<Name>.svg (text, bars and colourbar editable; the views embedded at their rendered
+% resolution), printed by Chrome to <Out>/<Name>.pdf (fonts embedded, the views at full resolution) and .png (at the
+% journal's combination dpi), with <Out>/<Name>.marks.json (every overlay drawn and its key: figure_check.py E1,
+% rheome.viz.marks) and <Out>/<Name>.report.json (the viewer's report, 0-based); the viewer's raw renders are kept as
+% <Out>/<Name>/<view>.png (a strip's frames <view>_f<frame>.png, the frame 0-based; an inset's render
+% <view>_inset.png), for boards composed elsewhere. <Out>/job.json is the job sent to the viewer.
+% RAW PICTURES (a shot with StagePx): each render exactly StagePx pixels, kept as <Out>/<Name>/<label>.png with its own
+% marks <Out>/<Name>/<label>.marks.json (that render's overlays, pixels in its raster: paths, selection edges, ticks,
+% critical points, the bar; every vector mark left out of the PNG for the host to draw), for a host that composes them
+% itself; the panel (<Name>.svg, .pdf, .png) only when 'Width' is given. <Name>.marks.json and .report.json always.
 % THE PRIMARY API for printed cortex, with rheome.view (interactive); see rheome.viz.
 %
 % THE SHOT LIST -- Shots is a struct array or a cell array of structs, one panel each, with the fields:
-%   Field      the real field painted (a field of result)                                  (default: the first real)
-%   Unit       its unit, as printed on the colourbar ("a.u." only when it has none)        REQUIRED
+%   Field      the real field painted (a field of result) (default: the first real; none when the shot paints a
+%              Labelling or result has no real field). "" (or []): NO FIELD -- a labelling, arrows or the bare
+%              cortex: no colour layer, no colourbar (out's clim, colormap, quantity, colorbar empty); Unit, Label,
+%              Reference, Quantity, CLim and Colormap are then refused
+%   Unit       its unit, as printed on the colourbar ("a.u." only when it has none)        REQUIRED with a Field
 %   Label      the quantity's name on the colourbar                                         (default: Field)
 %   Reference  what a level is relative to ("4-min median"): "quantity (unit re reference)" (default: none)
 %   Quantity   "signed" | "magnitude" | "power" | "phase" | "coupling" | "code": the token's colormap and limits
 %              (default: "signed" when the field has both signs, else "magnitude")
 %   CLim       [lo hi] in the field's units (default by quantity: signed/coupling +-p95 of |x|, magnitude [0 p99],
 %              power [p1 p99], phase [-pi pi], code [min max], over the frames and hemispheres shown)
-%   Colormap   a viewer colormap name, in place of the quantity's token
+%   Colormap   a viewer colormap name (or a figure-token colormap), in place of the quantity's token
 %   Time       s from the first sample; a vector of equally spaced times is a strip (default 0)
 %   Frames     1-based frames, in place of Time
 %   View       "standard" (L lateral, L medial, R medial, R lateral: the figure system's four), one of those four,
-%              or a viewer camera "left" | "right" | "top" | "bottom" | "front" | "back" with Hemisphere
-%              (default "standard"; a strip takes one view)
-%   Hemisphere "both" | "left" | "right", with a viewer camera (default "both")
+%              a viewer camera "left" | "right" | "top" | "bottom" | "front" | "back" with Hemisphere, or a CAMERA
+%              DIRECTION [x y z] with Hemisphere (from the brain toward the camera, as the viewer's setting view; up the
+%              viewer's +z; its label "<hemisphere>, [x, y, z]", its render <hemisphere>-from-<x>_<y>_<z>, the numbers
+%              as given with - written m and . written p); or a
+%              list of these (a cell or string array: the views in that order, each once) (default "standard"). A
+%              strip of several views is a row a view
+%   Hemisphere "both" | "left" | "right", with a viewer camera (default "both"; one for every camera of the list)
 %   Surface    the surface shown, a name of surf's struct (default: the first)
 %   Vector     a vector field drawn as arrows (default none); arrows show the same vector the colour shows
+%   Cortex     the cortex surface itself: true (default), false (not drawn: the arrows, outlines and marks alone) or
+%              an opacity 0-1
+%   Labelling  a labelling of 'Labellings' (its name) painted in its own colours, in place of a field (default none;
+%              a Field and a Labelling are refused together)
+%   Outlines   TILE OUTLINES drawn by the viewer, keyed in the marks and the panel (default none). A struct with
+%                Labelling     the labelling (of 'Labellings') whose tile boundaries are drawn in ink     REQUIRED
+%                Coarser       a coarser level's boundaries, thicker: another labelling's name, or n >= 1 (the
+%                              same labelling's codes shifted right by n: a dyadic tile's parent is its code halved)
+%                Width, CoarserWidth   the lines' widths in pt, 0.05-20 (default 0.35, 0.9)
+%                Select        tile codes of the labelling (codes, not indices) marked as selections "tile <code>"
+%                SelectStyle   "fill" (default: the selection fill) | "extent" (a dashed outline)
+%   StagePx    RAW PICTURES: [w h] integer pixels (16-8192): each render exactly this stage, reported one by one
+%              (out.raw) with its marks, for a host that composes them; no inset (default none: the panel)
+%   Fit        raw pictures: the camera fitted to the surface shown, a struct with Margin (a fraction of the
+%              half-size to spare, 0 to 0.5, default 0.04) and Shared (true: every view fitted first, all take the
+%              smallest zoom: one scale), or true for the defaults (default none: the viewer's own framing)
+%   Dpi        raw pictures: the dpi they print at (72-1200), which sizes the drawn lines (outlines, isolines) in pt
+%              (default the screen's, 96)
+%   MarksInRaster  raw pictures: true draws the bundle's paths (BundlePaths), the selections' edges and the points'
+%              badges IN each render too (still reported in its marks); default false: left out, for the host to draw
 %   Settings   struct of further viewer settings, applied last (README of the viewer, 'The settings')
 %   Name       the files' name (default "shot<k>")
-%   Inset      a MULTISCALE INSET (default none): a region of one view re-rendered by the viewer at a higher
-%              pixel ratio (and, if given, with a finer field), cut to the region's shape on the cortex and laid
-%              out in its own column right of the views, the region outlined on the view and around the inset and
-%              joined by a leader. Not a stretched crop: it prints at >= the journal's dpi at its magnification.
+%   Inset      a MULTISCALE INSET (default none): a region of one view re-rendered by the viewer with its camera on
+%              the region (and, if given, with a finer field), cut to the region's shape on the cortex and laid out
+%              in its own column right of the views, the region outlined on the view and around the inset and
+%              joined by a leader, "xm" under it. Not a stretched crop: it prints at >= the journal's dpi.
 %              A struct with
-%                Vertices  the region: indices or a logical [nV x 1] (any shape: a tile, a parcel, a patch) REQUIRED
+%                Vertices  the region: indices or a logical [nV x 1] (any shape: a tile, a parcel, a patch)
+%                          (default: the shot's first Selection)
 %                Label     what the inset shows, under it ("tile 12, level 5")                        REQUIRED
 %                Field     the real field painted in the inset (default the shot's Field), e.g. the field at a
 %                          deeper level; it shares the panel's colourbar (same quantity, unit and limits)
 %                Zoom      the inset's pixel ratio over the views' (default 4, >= 2: rule I1 of the tokens' inset;
-%                          capped at pixel ratio 4, the viewer's largest working screenshot, and refused if the
-%                          cap leaves it under 2: today an inset suits the four-view row, whose ratio is 2)
+%                          the viewer refuses an inset under 2x the view's pixels per mm)
 %                View      the view the region is taken from (default the first of the shot's views)
 %                Shape     "tile" (default): cut by the region's own mask and outlined by its contour (a dyadic tile,
 %                          a parcel); "disk": the same, for a geodesic disk; "square": a square around the region
@@ -54,61 +91,86 @@ function out = snapshot(surf, result, varargin)
 %                          (and a disk selection makes a disk inset)
 %              A strip takes no inset.
 %   Selection  SELECTED regions (default none), each a state of the surface (tokens cortex.selection): a blended
-%              fill in its axis colour at the tokens' alpha (35 %), outlined as a tile (0.35 pt ink); or, Dashed, an
-%              EXTENT (a support or mask: a dashed 0.8 pt ink line, no fill). A struct (array) with
+%              fill in its axis colour at the tokens' alpha, outlined as a tile; or, Dashed, an EXTENT (a support
+%              or mask: a dashed ink line, no fill). A struct (array) with
 %                Vertices  the region: indices or a logical [nV x 1] (a tile, a parcel)          one of these two
 %                Centre, RadiusMM   a GEODESIC DISK: every vertex within RadiusMM of Centre along the folded surface
 %                Label     its name for the key ("tile 13 (level 4), selected")                       REQUIRED
 %                Axis      "space" (default) | "time" | "joint": the colour (atlas-space, atlas-time, atlas-joint-cell)
 %                Dashed    true for an extent (default false)
 %              A Centre (also allowed with Vertices) is drawn as the tokens' centre: one size, filled with the colour.
-%   Paths      GEODESIC paths on the folded surface (default none; tokens cortex.paths): ink at the tokens' width,
-%              an arrowhead at the end, hidden where the surface hides it. A struct (array) with
-%                From, To  vertices: traced by rheome.geom.geodesicpath (steepest descent of the heat distance)
-%                Points    or a path the caller traced, [n x 3] on the shown surface, with How (its method) REQUIRED
+%   Paths      GEODESIC paths on the folded surface (default none; tokens cortex.paths): ink over a paper halo, an
+%              arrowhead at the end, its stretches hidden by the surface thin and dotted. A struct (array) with
+%                From, To  vertices: the viewer's geodesic between them on the folded surface (geometry-central's FlipOut:
+%                          locally shortest; out.paths reports its length and the exact distance between them)
 %                Label     what it is ("path of the event")                                            REQUIRED
+%              (Points with How, a path the caller traced, is refused for now: the viewer draws only the geodesics
+%              between From and To.)
 %
 % OPTIONS (name/value):
 %   'Out'       folder written (created)                                                     REQUIRED
 %   'Fs'        sampling rate of result's columns, Hz (default 1)
-%   'Width'     the panel's width: "single" | "onehalf" | "double" (the token theme's widths) or mm
-%               (default: "double" for four views or a strip, "single" for one view)
-%   'ScaleBar'  the scale bar's length, mm along the folded surface; 0: none (default 20)
-%   'Folded'    the name of the folded surface in surf, on which the bar is measured (default "pial" when surf has
+%   'Width'     the panel's width: "single" | "onehalf" | "double" (the token theme's widths) or mm, from the theme
+%               page's least width to its double column (default: "double" for several views, a strip or an inset,
+%               "single" for one view; raw pictures (StagePx): no panel unless given)
+%   'ScaleBar'  the scale bar's length, mm along the folded surface; 0: none; "auto": the 1-2-5 round length nearest
+%               96 px of the stage (the viewer's on-screen bar), fixed on the render that carries it (default 20)
+%   'ScaleBarKind' "geodesic" (default: a path of that length along the folded surface) | "plane": a straight bar of
+%               that length in the picture plane (the camera is orthographic: exact at every depth), lower left of
+%               its view; out.scalebar.kind is then "plane" and .vertices empty
+%   'ScaleBarTile' the render that carries the bar, 1-based in each shot's renders (out.renders) (default: the first
+%               where it fits); every shot of the call must have that many renders
+%   'Folded'    the name of the folded surface in surf, on which distances are measured (default "pial" when surf has
 %               it, else the first); on another surface shown, the legend says the distance is on the folded one
 %   'Format'    printed from the SVG (always written): "pdf", "png", both (default) or [] (the SVG only)
 %   'Tokens'    the figure tokens' JSON (default $NXR_FIGURE_TOKENS, else $HOME/workspace/library/styles/tokens/
 %               figure-tokens.json if it exists, else the viewer's vendored viewer/figure/figure-tokens.json). The viewer
-%               reads the file used, and its sha256 and path go into every <render>.marks.json (tokens_sha256, tokens_path).
-%   'Viewer'    the viewer folder (default as rheome.view: $RHEOME_VIEWER, else prefdir/rheome-viewer)
+%               is served the file used, and its sha256 and path go into every <Name>.marks.json (tokens_sha256, tokens_path).
+%   'Viewer'    the viewer folder (default as rheome.view: $RHEOME_VIEWER, else prefdir/rheome-viewer); it must ship
+%               driver/snapshot-driver.mjs (a viewer build of nxr-cortical-flow 3899e5947, 2026-11-10, or later)
 %   'Chrome'    Chrome or Chromium (default $RHEOME_CHROME, else the usual install)
 %   'Node'      Node.js 22+ (default $RHEOME_NODE, else the usual install)
-%   'Labellings' partitions for the viewer (rheome.viz.tiles), shown by a shot's Settings.labelling
+%   'Labellings' partitions for the viewer (rheome.viz.tiles), named by a shot's Labelling and Outlines (or Settings)
 %   'Points'    point sets for the viewer (rheome.viz.points: critical points), shown by Settings.points (default all)
-%   'Scale'     the viewer's least pixel ratio (default: the tokens' cortex.viewer.pixelRatio); raised per shot so the
-%               views print at the journal's combination dpi
+%   'Selections' the bundle's own VERTEX SETS (rheome.io.write.bundle's 'Selections': name, vertices, style fill |
+%               outline | extent, color, width), shown by a shot's Settings.selections (names; default all). Not a shot's
+%               Selection (a key entry the viewer measures): these are drawn as the viewer draws a bundle's sets
+%   'BundlePaths' the bundle's own PATHS (rheome.io.write.bundle's 'Paths': name, vertices or faces + weights, color,
+%               width, geodesic, arrow, ticks), shown by a shot's Settings.paths (names; default all). Not a shot's Paths
+%               (From/To geodesics the report measures). In a raw render (StagePx) each set's edge and each path is an
+%               overlay of <Out>/<Name>/<view>.marks.json ('selection: <name>', 'path: <name>') with its pixels and its
+%               ink (colour, widthPt, dash, arrow); a fill style's fill stays in the PNG
+%   'Wait'      ms after the viewer opens the bundle (default 600); 'Timeout' s per shot (default 60)
+%   'Scale'     ignored (kept so older calls run): the viewer raises its pixel ratio itself so the views print at the
+%               journal's combination dpi
 %
 % OUTPUT:
-%   out : struct array, one per shot: .name .svg .pdf .png .renders (the viewer's PNGs) .clim .colormap .quantity
-%         .colorbar (its label) .views .times (s) .dpi (resolution of the views as printed) .scalebar (.mm, .view,
-%         .length_mm measured along the drawn curve, .vertices) .legend (the sentence the figure legend needs:
-%         views, surface, the bar's distance, the interval, the inset) .settings (each render's viewer settings)
-%         .inset (.label .view .magnification (x, the inset's length per the view's) .dpi .vertices .px (the
-%         region's outline on the view, render pixels) .shape) or []
-%         .selections (.label .kind ("tile" | "disk") .axis .colour .dashed .vertices) .paths (.label .how .length_mm
-%         along the folded surface, .geodesic_mm the heat distance between its ends (From/To), .points)
-%         .cameras, one per render, so a caller can place vector marks on the page: .view .render .R (2 x 3) .s
-%         (px per mesh unit) .off (px) .d (view direction) .crop (render px [c1 c2 r1 r2]) .origin_mm .mm_per_px:
-%             page_mm = origin_mm + mm_per_px * (s * X * R' + off - [crop(1) crop(3)] + 0.5)
-%         (empty where the render's silhouette could not be fitted; the marks need it and refuse)
+%   out : struct array, one per shot: .name .svg .pdf .png .renders (the viewer's raw PNGs of the views, without the
+%         inset's) and the viewer's report, its indices made 1-based: .clim .colormap .quantity .colorbar (its label)
+%         .views .times (s) .dpi (resolution of the views as printed) .scalebar (.mm, .length_mm measured along the
+%         drawn curve, .vertices, .px, .view) or [] .legend (the sentence the figure legend needs: views, surface, the
+%         bar's distance, the interval, the inset, the marks) .inset (.label .view .magnification (x, the inset's
+%         length per the view's) .dpi .vertices .shape) or [] .selections (.label .kind ("tile" | "disk") .axis .colour
+%         .dashed .vertices) .paths (.label .how .points [n x 3] m .length_mm the drawn path's length along the folded
+%         surface (geometry-central's FlipOut geodesic, locally shortest), .geodesic_mm the EXACT geodesic distance
+%         between its ends (MMP, the shortest path over the faces), so .geodesic_mm <= .length_mm (equal when the drawn
+%         path is the shortest; on fsaverage5 pial up to ~8 % apart), .px and .visible: one cell per render) .build
+%         (the viewer's build)
+%         ONLY WHEN A SHOT OF THE CALL ASKS (else absent; [] in a shot that did not ask): .labelling (the labelling
+%         painted) .outlines (.labelling .coarser ([] none) .width .coarserWidth, pt) and, for raw pictures, .stops (the
+%         colourbar's stops: an n x 2 cell {offset 0-1, colour}, [] with no field) .fit (.margin .shared .zoom (the
+%         shared zoom, [] unless Shared)) or [] .raw (struct array, one per render in order: .label .view .hemisphere
+%         .camera .frame (1-based) .time (s) .size_px [w h] (= StagePx) .mmPerPx (in the picture plane: orthographic,
+%         exact at every depth) .fit (.zoom .aspect) or [] .colorbar (.lo .hi .name .unit .quantity .colormap .stops)
+%         or [] .png .marks (the files in <Out>/<Name>/)). .svg, .pdf, .png are '' for raw pictures without a Width.
+%   PIXELS (.scalebar.px, .paths.px, each raw render's marks) are in the raw render's pixels (<Out>/<Name>/<view>.png): x right, y down, the
+%   origin at the render's top-left CORNER (pixel (r, c) of imread covers [c-1, c] x [r-1, r]).
 %
-% THE SCALE BAR is a curve on the surface, not a line on the image: the shortest path along the mesh edges of the
-% folded surface (rheome.geom.edgegraph, no diagonals, so the curve lies on the mesh), cut at exactly 'ScaleBar' mm
-% of that path's length, and drawn where it lies on the view, a visible stretch near the view's lower edge. Its
-% length is the drawn curve's length on the folded surface; a mesh-edge path is 3-13 % longer than the geodesic
-% between its ends (rheome.geom.edgegraph), so its ends are a little closer than the label says, never farther.
-% The camera is read from each render (the viewer's stage is orthographic): the silhouette of the shown vertices is
-% fitted to the PNG's alpha and checked (rheome:snapshot:camera when it does not fit).
+% THE SCALE BAR is a curve on the surface, not a line on the image: the viewer's exact geodesic on the folded surface,
+% cut at exactly 'ScaleBar' mm of its length, placed by Rheome's rule (an anchor among the front-most vertices near
+% the lower right of the silhouette, ends 1-1.2 L away, flat to the view, horizontal and leftward first) where every
+% point of it is seen; one bar a row. Limits, visibility (a ray cast toward the camera) and the bar are the viewer's
+% (nxr-cortical-flow editor/src/viewer/print/limits.ts, visible.ts, scalebar.ts), by the rules Rheome used.
 %
 % Needs the viewer (WebGPU), Chrome and Node; nothing else in Rheome does.
 %
@@ -118,7 +180,7 @@ function out = snapshot(surf, result, varargin)
 %       Shots=struct('Field', "x", 'Label', "anterior position", 'Unit', "mm"));
 %   open(out.pdf)
 %
-% See also: rheome.view, rheome.io.write.bundle, rheome.geom.edgegraph
+% See also: rheome.view, rheome.io.write.bundle, rheome.viz.marks
 %
 % Author: Diellor Basha, 2026
 
@@ -127,7 +189,9 @@ function out = snapshot(surf, result, varargin)
     p.addParameter('Out', '');
     p.addParameter('Fs', 1, @(x) isscalar(x) && x > 0);
     p.addParameter('Width', []);
-    p.addParameter('ScaleBar', 20, @(x) isscalar(x) && x >= 0);
+    p.addParameter('ScaleBar', 20);
+    p.addParameter('ScaleBarKind', '');
+    p.addParameter('ScaleBarTile', []);
     p.addParameter('Folded', '');
     p.addParameter('Format', ["pdf" "png"]);
     p.addParameter('Tokens', '');
@@ -138,93 +202,111 @@ function out = snapshot(surf, result, varargin)
     p.addParameter('Wait', 600);
     p.addParameter('Labellings', []);
     p.addParameter('Points', []);
+    p.addParameter('Selections', []);
+    p.addParameter('BundlePaths', []);
     p.addParameter('Timeout', 60);
     p.parse(varargin{:});
     o = p.Results;
     if isempty(o.Out), error('rheome:snapshot:input', 'Out: the folder written is expected.'); end
     o.Out = char(o.Out);  o.Format = lower(string(o.Format));
+    sb = o.ScaleBar;
+    if (ischar(sb) || (isstring(sb) && isscalar(sb))) && strcmpi(sb, 'auto'), o.ScaleBar = 'auto';
+    elseif isnumeric(sb) && isscalar(sb) && isreal(sb) && sb >= 0, o.ScaleBar = double(sb);
+    else, error('rheome:snapshot:input', 'ScaleBar: mm >= 0, or "auto", is expected.');
+    end
+    if ~isempty(o.ScaleBarKind), o.ScaleBarKind = pickName(o.ScaleBarKind, {'geodesic', 'plane'}, 'ScaleBarKind'); else, o.ScaleBarKind = ''; end
+    t = o.ScaleBarTile;
+    if ~isempty(t) && ~(isnumeric(t) && isscalar(t) && t >= 1 && t == round(t))
+        error('rheome:snapshot:input', 'ScaleBarTile: a render''s index, 1-based.');
+    end
 
     % the inputs, as rheome.view takes them
     if ischar(surf) || isstring(surf), surf = rheome.io.read.surface(surf); end
     if isnumeric(result), result = struct('result', result); end
     if isfield(surf, 'Vertices'), surfs = struct('default', surf); else, surfs = surf; end
     snames = fieldnames(surfs);
-    F = surfs.(snames{1}).Faces;
     T = size(result.(firstOf(fieldnames(result))), 2);
 
     work = tempname;  mkdir(work);  cleanWork = onCleanup(@() rmdir(work, 's'));
     [tok, tokFile, tokSha, tokShown] = tokens(o.Tokens, work);
-    if isempty(o.Scale), o.Scale = tok.cortex.viewer.pixelRatio; end
     vdir = char(o.Viewer);
     if isempty(vdir), vdir = viewerFolder(); end
     if ~isfile(fullfile(vdir, 'viewer.html')), error('rheome:snapshot:noviewer', 'No viewer at %s (Viewer= or RHEOME_VIEWER).', vdir); end
+    drv = fullfile(vdir, 'driver', 'snapshot-driver.mjs');
+    if ~isfile(drv)
+        error('rheome:snapshot:driver', ['The viewer at %s has no snapshot driver (driver/snapshot-driver.mjs): rheome.snapshot needs ' ...
+            'a Cortical Flow viewer build of nxr-cortical-flow 3899e5947 (2026-11-10) or later.'], vdir);
+    end
     cmaps = viewerColormaps(vdir);
 
     folded = o.Folded;
     if isempty(folded), folded = snames{1}; if any(strcmp(snames, 'pial')), folded = 'pial'; end, end
     folded = pickName(folded, snames, 'Folded');
-    shots = normalise(o.Shots, result, surfs, T, o.Fs, tok, cmaps, surfs.(folded));
-    hemi = hemispheres(surfs.(snames{1}));
+    J = tok.theme.(tok.theme.default).page;
+    shots = normalise(o.Shots, result, surfs, T, o.Fs, tok, cmaps, labellingNames(o.Labellings), o.ScaleBarTile);
 
-    % one bundle, one viewer run for every render
+    % one bundle, one job, one viewer run for every shot
     if isfield(surf, 'Vertices'), bs = surf; else, bs = surfs; end
     rheome.io.write.bundle(fullfile(work, 'bundle'), bs, result, 'Fs', o.Fs, 'Name', 'rheome.snapshot', ...
-        'Labellings', o.Labellings, 'Points', o.Points);
+        'Labellings', o.Labellings, 'Points', o.Points, 'Paths', o.BundlePaths, 'Selections', o.Selections);
+    list = cell(1, numel(shots));
+    for k = 1:numel(shots), list{k} = struct('name', shots(k).Name, 'shot', viewerShot(shots(k), folded, o, J)); end
+    job = struct();
+    job.format = 'nxr-snapshot-job@1';  job.viewer = vdir;  job.bundle = 'bundle';  job.out = 'out';
+    job.chrome = chromePath(o.Chrome);  job.tokens = tokFile;  job.tokens_sha256 = tokSha;  job.tokens_path = tokShown;
+    job.size = windowSize(double(tok.cortex.viewer.size_px(:)'), shots);  job.wait = o.Wait;  job.timeout = o.Timeout;  job.shots = list;
+    node = nodePath(o.Node);
+    jf = runDriver(job, 'job.json', node, drv, work);
     if ~isfolder(o.Out), mkdir(o.Out); end
-    renders = {};
-    J = tok.theme.(tok.theme.default).page;
-    for k = 1:numel(shots)
-        shots(k).dir = fullfile(o.Out, shots(k).Name);
-        if ~isfolder(shots(k).dir), mkdir(shots(k).dir); end
-        % the pixel ratio that prints the views at the journal's dpi: a cortex fills about half the render's width
-        n = numel(shots(k).renders);  W = panelWidth(o.Width, n, J);
-        if ~isempty(shots(k).Inset), n = n + 1; W = panelWidth(o.Width, n, J); end   % the inset takes a column
-        need = ((W - (n - 1) * tok.spacing.viewGap_mm) / n) / 25.4 * J.dpi.combination / (0.5 * tok.cortex.viewer.size_px(1));
-        scale = max(o.Scale, ceil(10 * need) / 10);
-        for r = 1:numel(shots(k).renders)
-            renders{end+1} = struct('name', shots(k).renders(r).file, 'settings', shots(k).renders(r).settings, 'scale', scale); %#ok<AGROW>
-        end
-        if ~isempty(shots(k).Inset)
-            % shortcut: the viewer has no camera zoom, so the inset is the whole view at a higher pixel ratio, capped
-            % at pixel ratio 4; a viewer zoom-to-region setting would lift the cap (asked of Product)
-            si = min(scale * shots(k).Inset.Zoom, 4);   % measured 2026-10-14: 4 and 4.2 render; 6 and 8.1 give no screenshot in 300 s
-            renders{end+1} = struct('name', shots(k).Inset.render.file, 'settings', shots(k).Inset.render.settings, 'scale', si); %#ok<AGROW>
-        end
-    end
-    job = struct('viewer', vdir, 'bundle', fullfile(work, 'bundle'), 'out', work, 'chrome', chromePath(o.Chrome), ...
-        'tokens', tokFile, 'tokens_sha256', tokSha, 'tokens_path', tokShown, 'size', tok.cortex.viewer.size_px(:)', 'scale', o.Scale, 'wait', o.Wait, 'timeout', o.Timeout, 'shots', {renders});
-    runDriver(job, nodePath(o.Node), work);
+    copyfile(jf, fullfile(o.Out, 'job.json'));
 
-    graphCache = [];
+    % the files into Out, and out from each shot's report
+    done = jsondecode(fileread(fullfile(work, 'out', 'driver.json')));
+    ds = done.shots;  if isstruct(ds), ds = num2cell(ds); end
     out = struct([]);  prints = {};
     for k = 1:numel(shots)
-        s = shots(k);
-        for r = 1:numel(s.renders)
-            movefile(fullfile(work, [s.renders(r).file '.png']), fullfile(s.dir, [s.renders(r).label '.png']), 'f');
-            mk = fullfile(work, [s.renders(r).file '.marks.json']);   % the render's overlays and keys (rheome.viz.marks)
-            if isfile(mk), movefile(mk, fullfile(s.dir, [s.renders(r).label '.marks.json']), 'f'); end
+        s = shots(k);  d = ds{k};  from = fullfile(work, 'out');
+        labels = cellstr(d.renders);  labels = labels(:)';
+        if ~isempty(d.warnings)
+            for w = cellstr(d.warnings)', warnOf(s.Name, w{1}); end
         end
-        if ~isempty(s.Inset), movefile(fullfile(work, [s.Inset.render.file '.png']), fullfile(s.dir, [s.Inset.render.label '.png']), 'f'); end
-        [o1, graphCache, pj] = compose(s, surfs, F, hemi, folded, graphCache, tok, cmaps, o);
-        out = [out o1]; %#ok<AGROW>
-        if ~isempty(pj.pdf) || ~isempty(pj.png), prints{end+1} = pj; end %#ok<AGROW>
+        rdir = fullfile(o.Out, s.Name);
+        if ~isfolder(rdir), mkdir(rdir); end
+        for j = 1:numel(labels)
+            movefile(fullfile(from, s.Name, [labels{j} '.png']), fullfile(rdir, [labels{j} '.png']), 'f');
+            mk = fullfile(from, s.Name, [labels{j} '.marks.json']);      % raw pictures: each render's own marks
+            if isfile(mk), movefile(mk, fullfile(rdir, [labels{j} '.marks.json']), 'f'); end
+        end
+        base = fullfile(o.Out, s.Name);
+        composed = isfile(fullfile(from, [s.Name '.svg']));                % raw pictures without a Width: no panel
+        exts = {'.marks.json', '.report.json'};  if composed, exts = [{'.svg'} exts]; end %#ok<AGROW>
+        for ext = exts, movefile(fullfile(from, [s.Name ext{1}]), [base ext{1}], 'f'); end
+        r = fromReport(jsondecode(fileread([base '.report.json'])), s, base, fullfile(rdir, strcat(labels(1:s.ntiles), '.png')), o.Format, composed, rdir);
+        out = joinOut(out, r);
+        if ~isempty(r.pdf) || ~isempty(r.png)
+            [wmm, hmm] = svgSize(r.svg);
+            prints{end+1} = struct('svg', r.svg, 'pdf', r.pdf, 'png', r.png, 'width_mm', wmm, 'height_mm', hmm, 'dpi', J.dpi.combination); %#ok<AGROW>
+        end
     end
     if ~isempty(prints)   % the SVGs printed by Chrome: MATLAB's PDF export resamples images to screen pixels
-        runDriver(struct('chrome', job.chrome, 'print', {prints}), nodePath(o.Node), work);
+        runDriver(struct('chrome', job.chrome, 'print', {prints}), 'print.json', node, drv, work);
     end
 end
 
 %% ---------------------------------------------------------------- the shots
 
-function shots = normalise(in, result, surfs, T, fs, tok, cmaps, Sf)
-% each shot checked, its defaults from the tokens, and its renders (one per view or frame) with full viewer settings
+function shots = normalise(in, result, surfs, T, fs, tok, cmaps, labs, barTile)
+% each shot checked, as the viewer will draw it (it is refused here, by name, rather than by the viewer); labs: the names
+% of the Labellings given; barTile: the ScaleBarTile option (1-based) or []
     if isempty(in), in = {struct()}; end
     if isstruct(in), in = num2cell(in); end
     if ~iscell(in), error('rheome:snapshot:input', 'Shots: a struct array or a cell array of structs is expected.'); end
     known = {'Field', 'Unit', 'Label', 'Reference', 'Quantity', 'CLim', 'Colormap', 'Time', 'Frames', 'View', ...
-        'Hemisphere', 'Surface', 'Vector', 'Settings', 'Name', 'Inset', 'Selection', 'Paths'};
+        'Hemisphere', 'Surface', 'Vector', 'Settings', 'Name', 'Inset', 'Selection', 'Paths', 'Cortex', 'Labelling', 'Outlines', ...
+        'StagePx', 'Fit', 'Dpi', 'MarksInRaster'};
     fields = fieldnames(result);
-    nV = size(surfs.(firstOf(fieldnames(surfs))).Vertices, 1);
+    S1 = surfs.(firstOf(fieldnames(surfs)));
+    nV = size(S1.Vertices, 1);
     real = fields(cellfun(@(f) size(result.(f), 1) == nV, fields));
     vec = fields(cellfun(@(f) size(result.(f), 1) == 3*nV, fields));
     hemi = [];
@@ -234,15 +316,28 @@ function shots = normalise(in, result, surfs, T, fs, tok, cmaps, Sf)
         bad = setdiff(fieldnames(a), known);
         if ~isempty(bad), error('rheome:snapshot:shot', 'Shots{%d}: %s is not a shot field (%s).', k, strjoin(bad, ', '), strjoin(known, ', ')); end
         g = @(n, d) get(a, n, d);
+        s = struct();
         s.Name = char(g('Name', sprintf('shot%d', k)));
         if isempty(regexp(s.Name, '^[\w\-\.]+$', 'once')), error('rheome:snapshot:shot', 'Name: letters, digits, - _ . only (%s).', s.Name); end
-        if isempty(real), error('rheome:snapshot:shot', 'The result has no real ([nV x T]) field to paint.'); end
-        s.Field = pickName(g('Field', real{1}), real, 'Field');
-        s.Unit = char(g('Unit', ''));
-        if isempty(s.Unit), error('rheome:snapshot:unit', '%s: a colourbar needs a unit (Unit="a.u." only when there is none; say why in the legend).', s.Name); end
-        s.Label = char(g('Label', s.Field));
-        s.Reference = char(g('Reference', ''));
-        x = result.(s.Field);
+        % the field painted, or none (a labelling, arrows or the bare cortex): none when Field is given empty, or when it is
+        % not given and the shot paints a Labelling or the result has no real field
+        s.Labelling = '';
+        if isfield(a, 'Labelling') && ~isempty(a.Labelling), s.Labelling = pickLabelling(a.Labelling, labs, 'Labelling', s.Name); end
+        if isfield(a, 'Field'), noField = isempty(a.Field); else, noField = ~isempty(s.Labelling) || isempty(real); end
+        if noField
+            for f = {'Unit', 'Label', 'Reference', 'Quantity', 'CLim', 'Colormap'}
+                if isfield(a, f{1}) && ~isempty(a.(f{1})), error('rheome:snapshot:shot', '%s: %s is for a field''s colours; this shot paints no Field.', s.Name, f{1}); end
+            end
+            s.Field = '';  s.Unit = '';  s.Label = '';  s.Reference = '';
+        else
+            if isempty(real), error('rheome:snapshot:shot', 'The result has no real ([nV x T]) field to paint.'); end
+            if ~isempty(s.Labelling), error('rheome:snapshot:shot', '%s: a Labelling is painted in place of a field''s colours: give a Field or a Labelling.', s.Name); end
+            s.Field = pickName(g('Field', real{1}), real, 'Field');
+            s.Unit = char(g('Unit', ''));
+            if isempty(s.Unit), error('rheome:snapshot:unit', '%s: a colourbar needs a unit (Unit="a.u." only when there is none; say why in the legend).', s.Name); end
+            s.Label = char(g('Label', s.Field));
+            s.Reference = char(g('Reference', ''));
+        end
 
         % frames: 1-based columns; a strip is equally spaced
         if isfield(a, 'Frames') && isfield(a, 'Time'), error('rheome:snapshot:shot', '%s: Time or Frames, not both.', s.Name); end
@@ -255,110 +350,231 @@ function shots = normalise(in, result, surfs, T, fs, tok, cmaps, Sf)
         if numel(fr) > tok.dynamics.strip.frames_range(2)
             warning('rheome:snapshot:frames', '%s: %d frames; the tokens ask for %d-%d in a strip, and a video beyond.', s.Name, numel(fr), tok.dynamics.strip.frames_range);
         end
-        s.frames = fr;  s.times = (fr - 1) / fs;
+        s.frames = fr;
 
-        % views: the figure system's four, one of them, or a viewer camera with a hemisphere
-        v = char(g('View', 'standard'));
+        % views: the figure system's four, one of them, or a viewer camera with a hemisphere; or a list of these (a strip
+        % of several views is a row a view)
+        v = g('View', 'standard');
+        if isnumeric(v), v = {v};
+        elseif iscell(v) || (isstring(v) && numel(v) > 1), if ~iscell(v), v = cellstr(v); end, v = v(:)'; else, v = {char(v)}; end
         views4 = {'L lateral', 'left', 'left'; 'L medial', 'left', 'right'; 'R medial', 'right', 'left'; 'R lateral', 'right', 'right'};
-        if strcmpi(v, 'standard'), s.views = views4;
-        elseif any(strcmpi(v, views4(:, 1))), s.views = views4(strcmpi(v, views4(:, 1)), :);
-        else
-            cam = pickName(v, {'left', 'right', 'top', 'bottom', 'front', 'back'}, 'View');
-            h = pickName(g('Hemisphere', 'both'), {'both', 'left', 'right'}, 'Hemisphere');
-            s.views = {sprintf('%s, %s', h, cam), h, cam};
+        s.Hemisphere = '';  s.views = cell(0, 3);  s.view = {};
+        for j = 1:numel(v)
+            vj = v{j};
+            if isnumeric(vj)                                  % a camera direction [x y z] (from the brain toward the camera)
+                if ~(numel(vj) == 3 && isreal(vj) && all(isfinite(vj(:))) && any(vj(:) ~= 0))
+                    error('rheome:snapshot:shot', '%s: View: a camera direction is [x y z], three finite numbers not all 0.', s.Name);
+                end
+                if isempty(s.Hemisphere), s.Hemisphere = pickName(g('Hemisphere', 'both'), {'both', 'left', 'right'}, 'Hemisphere'); end
+                h = s.Hemisphere;  d = double(vj(:)');
+                s.views = [s.views; {sprintf('%s, [%s]', h, strjoin(arrayfun(@jsonencode, d, 'UniformOutput', false), ', ')), h, d}];  s.view{end+1} = d; %#ok<AGROW>
+                continue
+            end
+            vj = char(vj);
+            if strcmpi(vj, 'standard'), s.views = [s.views; views4];  s.view{end+1} = 'standard'; %#ok<AGROW>
+            elseif any(strcmpi(vj, views4(:, 1))), w = views4(strcmpi(vj, views4(:, 1)), :);  s.views = [s.views; w];  s.view{end+1} = w{1}; %#ok<AGROW>
+            else
+                cam = pickName(vj, {'left', 'right', 'top', 'bottom', 'front', 'back'}, 'View');
+                if isempty(s.Hemisphere), s.Hemisphere = pickName(g('Hemisphere', 'both'), {'both', 'left', 'right'}, 'Hemisphere'); end
+                h = s.Hemisphere;
+                s.views = [s.views; {sprintf('%s, %s', h, cam), h, cam}];  s.view{end+1} = cam; %#ok<AGROW>
+            end
         end
-        if numel(fr) > 1 && size(s.views, 1) > 1, error('rheome:snapshot:shot', '%s: a strip takes one view (one view and one scale for the whole strip).', s.Name); end
+        if numel(unique(lower(s.views(:, 1)))) < size(s.views, 1), error('rheome:snapshot:shot', '%s: View: each view once (%s).', s.Name, strjoin(s.views(:, 1), ', ')); end
         s.Surface = pickName(g('Surface', firstOf(fieldnames(surfs))), fieldnames(surfs), 'Surface');
 
-        % quantity -> colormap and limits, by the tokens
-        if isempty(hemi), hemi = hemispheres(surfs.(firstOf(fieldnames(surfs)))); end
-        shown = ismember(hemi, find(ismember({'left', 'right'}, s.views(:, 2)))) | any(strcmp(s.views(:, 2), 'both'));
-        xs = x(shown, fr);  xs = xs(isfinite(xs));
+        % the colour scale checked: the quantity's colormap is the viewer's, a diverging CLim symmetric. The class when
+        % none is given is the viewer's rule (both signs over the frames and hemispheres shown: signed), for the checks
+        % only: the viewer is sent what was given.
         q = char(g('Quantity', ''));
-        if isempty(q), if any(xs < 0) && any(xs > 0), q = 'signed'; else, q = 'magnitude'; end, end
-        s.Quantity = pickName(q, {'signed', 'magnitude', 'power', 'phase', 'coupling', 'code'}, 'Quantity');
-        qn = s.Quantity;  if strcmp(qn, 'signed'), qn = 'divergence'; end   % the tokens name each signed quantity; one map
-        bq = tok.quantity.(qn);
-        tokenName = regexp(bq.colormap, '^[\w\-]+', 'match', 'once');
-        s.Colormap = char(g('Colormap', tok.colour.colormap.(strrep(tokenName, '-', '_')).x_value));
-        if ~isKey(cmaps, s.Colormap)
-            error('rheome:snapshot:colormap', '%s: the viewer has no colormap ''%s'' (%s quantity); give Colormap= or add it to the viewer.', s.Name, s.Colormap, s.Quantity);
-        end
-        diverging = any(strcmp(s.Quantity, {'signed', 'coupling'}));
-        c = g('CLim', []);
-        if isempty(c)
-            switch s.Quantity
-                case {'signed', 'coupling'}, L = prctile(abs(xs), 95); c = [-L L];
-                case 'magnitude', c = [0 prctile(xs, 99)];
-                case 'power', c = prctile(xs, [1 99]);
-                case 'phase', c = [-pi pi];
-                case 'code', c = [min(xs) max(xs)];
+        classes = {'signed', 'magnitude', 'power', 'phase', 'coupling', 'code'};
+        s.Quantity = '';  s.Colormap = '';  s.CLim = [];
+        if ~noField
+            if isempty(q)
+                if isempty(hemi), hemi = hemispheres(S1); end
+                shown = ismember(hemi, find(ismember({'left', 'right'}, s.views(:, 2)))) | any(strcmp(s.views(:, 2), 'both'));
+                x = result.(s.Field);  xs = x(shown, fr);  xs = xs(isfinite(xs));
+                if any(xs < 0) && any(xs > 0), cls = 'signed'; else, cls = 'magnitude'; end
+                s.Quantity = '';
+            else
+                cls = pickName(q, classes, 'Quantity');  s.Quantity = cls;
             end
-            if ~(c(2) > c(1)), c = c(1) + [-1 1] * max(1, abs(c(1))) * eps(1e6); end   % a constant field: any non-empty range
+            qn = cls;  if strcmp(qn, 'signed'), qn = 'divergence'; end   % the tokens name each signed quantity; one map
+            s.Colormap = char(g('Colormap', ''));
+            cm = s.Colormap;
+            if isempty(cm), cm = regexp(tok.quantity.(qn).colormap, '^[\w\-]+', 'match', 'once'); end
+            tk = strrep(cm, '-', '_');   % a figure-token name stands for its colormap, as the viewer reads it: $value, 'cmo.' dropped
+            if isfield(tok.colour.colormap, tk), cm = regexprep(char(tok.colour.colormap.(tk).x_value), '^cmo\.', ''); end
+            if ~isKey(cmaps, cm)
+                error('rheome:snapshot:colormap', '%s: the viewer has no colormap ''%s'' (%s quantity); give Colormap= or add it to the viewer.', s.Name, cm, cls);
+            end
+            c = g('CLim', []);
+            if ~isempty(c)
+                c = double(c(:)');
+                if numel(c) ~= 2 || ~all(isfinite(c)) || c(1) >= c(2), error('rheome:snapshot:shot', '%s: CLim [lo hi], lo < hi.', s.Name); end
+                if any(strcmp(cls, {'signed', 'coupling'})) && abs(c(1) + c(2)) > 1e-9 * max(abs(c))
+                    error('rheome:snapshot:clim', '%s: a diverging scale is symmetric around 0 (got [%g %g]).', s.Name, c(1), c(2));
+                end
+            end
+            s.CLim = c;
         end
-        c = double(c(:)');
-        if numel(c) ~= 2 || ~all(isfinite(c)) || c(1) >= c(2), error('rheome:snapshot:shot', '%s: CLim [lo hi], lo < hi.', s.Name); end
-        if diverging && abs(c(1) + c(2)) > 1e-9 * max(abs(c)), error('rheome:snapshot:clim', '%s: a diverging scale is symmetric around 0 (got [%g %g]).', s.Name, c(1), c(2)); end
-        s.CLim = c;  s.diverging = diverging;
         s.Vector = char(g('Vector', ''));
         if ~isempty(s.Vector), s.Vector = pickName(s.Vector, vec, 'Vector'); end
-        extra = g('Settings', struct());
-        if ~isstruct(extra), error('rheome:snapshot:shot', '%s: Settings is a struct of viewer settings.', s.Name); end
-
-        % the viewer's settings, every one that a render depends on (each render is set whole)
-        base = struct('controls', false, 'background', 'transparent', 'scaleBar', false, 'opacity', 1, 'threshold', NaN, ...   % NaN: JSON null, everywhere
-            'labelling', '', 'points', {{}}, 'scalar', s.Field, 'vector', s.Vector, 'colormap', s.Colormap, 'clim', c, ...
-            'surface', s.Surface, 'isolines', 0, 'halfMax', false, 'playing', false);
-        if strcmp(s.Quantity, 'signed'), base.isolines = tok.cortex.viewer.isolines; end
-        if ~isempty(s.Vector)
-            base.arrowDensity = tok.cortex.viewer.arrowDensity;
-            if diverging, base.arrowDensity = tok.cortex.viewer.arrowDensitySigned; end
-            base.arrowColor = 'ink';
-            if any(strcmp(s.Quantity, {'magnitude', 'power'})), base.arrowColor = 'paper'; end   % paper on a dark map
-        end
-        for f = fieldnames(extra)', base.(f{1}) = extra.(f{1}); end
-        rs = struct('file', {}, 'label', {}, 'view', {}, 'hemisphere', {}, 'camera', {}, 'frame', {}, 'settings', {});
-        for vi = 1:size(s.views, 1)
-            for fi = 1:numel(fr)
-                st = base;  st.hemisphere = s.views{vi, 2};  st.view = s.views{vi, 3};  st.frame = fr(fi) - 1;
-                lab = regexprep(lower(s.views{vi, 1}), '[^a-z0-9]+', '-');
-                if numel(fr) > 1, lab = sprintf('%s_f%d', lab, fr(fi)); end
-                rs(end+1) = struct('file', sprintf('s%d_%d_%d', k, vi, fi), 'label', lab, 'view', s.views{vi, 1}, ...
-                    'hemisphere', s.views{vi, 2}, 'camera', s.views{vi, 3}, 'frame', fr(fi), 'settings', st); %#ok<AGROW>
+        s.Settings = g('Settings', struct());
+        if ~isstruct(s.Settings), error('rheome:snapshot:shot', '%s: Settings is a struct of viewer settings.', s.Name); end
+        s.Selection = selections(g('Selection', []), s.Name, nV);
+        s.Paths = paths(g('Paths', []), s.Name, nV);
+        s.Inset = inset(g('Inset', []), s, real, nV);
+        s.Cortex = [];
+        if isfield(a, 'Cortex') && ~isempty(a.Cortex)
+            c = a.Cortex;
+            if islogical(c) && isscalar(c), s.Cortex = c;
+            elseif isnumeric(c) && isscalar(c) && isreal(c) && c >= 0 && c <= 1, s.Cortex = double(c);
+            else, error('rheome:snapshot:shot', '%s: Cortex: true, false or an opacity 0-1.', s.Name);
             end
         end
-        s.renders = rs;  s.dir = '';
-        s.Selection = selections(g('Selection', []), s.Name, nV, Sf, tok);
-        s.Paths = paths(g('Paths', []), s.Name, nV, Sf);
-        s.Inset = inset(g('Inset', []), s, k, real, nV);
+        s.Outlines = outlines(g('Outlines', []), s.Name, labs);
+        [s.StagePx, s.Fit, s.Dpi, s.MarksInRaster] = raw(a, s);
+        s.ntiles = size(s.views, 1) * numel(fr);
+        if ~isempty(barTile) && barTile > s.ntiles
+            error('rheome:snapshot:shot', '%s: ScaleBarTile %d: there are %d renders.', s.Name, barTile, s.ntiles);
+        end
         shots(k) = s;
     end
 end
 
-function in = inset(a, s, k, real, nV)
-% a shot's inset, checked; its render: the view's settings with the inset's field
+function in = inset(a, s, real, nV)
+% a shot's inset, checked, as the viewer's Shot.inset (0-based vertices; what is not given is left to the viewer)
     in = [];
     if isempty(a), return; end
-    if ~isstruct(a) || ~isscalar(a), error('rheome:snapshot:inset', '%s: Inset is a struct.', s.Name); end
+    id = 'rheome:snapshot:inset';
+    if ~isstruct(a) || ~isscalar(a), error(id, '%s: Inset is a struct.', s.Name); end
     bad = setdiff(fieldnames(a), {'Vertices', 'Label', 'Field', 'Zoom', 'View', 'Shape'});
-    if ~isempty(bad), error('rheome:snapshot:inset', '%s: %s is not an inset field.', s.Name, strjoin(bad, ', ')); end
-    if numel(s.frames) > 1, error('rheome:snapshot:inset', '%s: a strip takes no inset.', s.Name); end
-    v = get(a, 'Vertices', []);  shape = 'tile';
-    if isempty(v) && ~isempty(s.Selection), m = s.Selection(1).mask;  shape = s.Selection(1).kind;
-    else, m = vertexMask(v, nV, sprintf('%s: Inset.Vertices', s.Name), 'rheome:snapshot:inset');
+    if ~isempty(bad), error(id, '%s: %s is not an inset field.', s.Name, strjoin(bad, ', ')); end
+    if numel(s.frames) > 1, error(id, '%s: a strip takes no inset.', s.Name); end
+    in = struct();
+    v = get(a, 'Vertices', []);
+    if ~isempty(v)
+        m = vertexMask(v, nV, sprintf('%s: Inset.Vertices', s.Name), id);
+        if nnz(m) < 3, error(id, '%s: Inset.Vertices: a region of 3 vertices or more.', s.Name); end
+        in.vertices = num2cell(find(m)' - 1);
+    elseif isempty(s.Selection)
+        error(id, '%s: Inset.Vertices: the region (indices in 1..%d or a logical [nV x 1]), or a Selection (the first is the region).', s.Name, nV);
     end
-    shape = pickName(get(a, 'Shape', shape), {'tile', 'disk', 'square'}, 'Inset.Shape');
-    if nnz(m) < 3, error('rheome:snapshot:inset', '%s: Inset.Vertices: a region of 3 vertices or more.', s.Name); end
+    shape = get(a, 'Shape', '');
+    if ~isempty(shape), shape = pickName(shape, {'tile', 'disk', 'square'}, 'Inset.Shape'); end
     lab = char(get(a, 'Label', ''));
-    if isempty(lab), error('rheome:snapshot:inset', '%s: Inset.Label: say what the inset shows (it is drawn under it).', s.Name); end
-    z = double(get(a, 'Zoom', 4));
-    if ~(isscalar(z) && z >= 2), error('rheome:snapshot:inset', '%s: Inset.Zoom >= 2 (an inset shows more: tokens annotation.inset, I1).', s.Name); end
-    vi = find(strcmpi(char(get(a, 'View', s.views{1, 1})), s.views(:, 1)), 1);
-    if isempty(vi), error('rheome:snapshot:inset', '%s: Inset.View: one of %s.', s.Name, strjoin(s.views(:, 1), ', ')); end
-    f = pickName(get(a, 'Field', s.Field), real, 'Inset.Field');
-    r = s.renders(vi);  r.settings.scalar = f;
-    r.file = sprintf('s%d_inset', k);  r.label = [r.label '_inset'];
-    in = struct('mask', m, 'Label', lab, 'Zoom', z, 'view', vi, 'Field', f, 'render', r, 'Shape', shape);
+    if isempty(lab), error(id, '%s: Inset.Label: say what the inset shows (it is drawn under it).', s.Name); end
+    in.label = lab;
+    if isfield(a, 'Zoom') && ~isempty(a.Zoom)
+        z = double(a.Zoom);
+        if ~(isscalar(z) && z >= 2), error(id, '%s: Inset.Zoom >= 2 (an inset shows more: tokens annotation.inset, I1).', s.Name); end
+        in.zoom = z;
+    end
+    if isfield(a, 'View') && ~isempty(a.View)
+        vi = find(strcmpi(char(a.View), s.views(:, 1)), 1);
+        if isempty(vi), error(id, '%s: Inset.View: one of %s.', s.Name, strjoin(s.views(:, 1), ', ')); end
+        in.view = s.views{vi, 1};
+    end
+    if isfield(a, 'Field') && ~isempty(a.Field), in.field = pickName(a.Field, real, 'Inset.Field'); end
+    if ~isempty(shape), in.shape = shape; end
+end
+
+function o = outlines(a, name, labs)
+% a shot's tile outlines, checked, as the viewer's Shot.outlines (codes are the labelling's own: no index to convert)
+    o = [];
+    if isempty(a), return; end
+    id = 'rheome:snapshot:outlines';
+    if ~isstruct(a) || ~isscalar(a), error(id, '%s: Outlines is a struct.', name); end
+    bad = setdiff(fieldnames(a), {'Labelling', 'Coarser', 'Width', 'CoarserWidth', 'Select', 'SelectStyle'});
+    if ~isempty(bad), error(id, '%s: %s is not an outlines field.', name, strjoin(bad, ', ')); end
+    lab = get(a, 'Labelling', '');
+    if isempty(lab), error(id, '%s: Outlines.Labelling: the labelling whose tiles are outlined.', name); end
+    o = struct();
+    o.labelling = pickLabelling(lab, labs, 'Outlines.Labelling', name);
+    c = get(a, 'Coarser', []);
+    if ~isempty(c)
+        if isnumeric(c) && isscalar(c) && c >= 1 && c == round(c), o.coarser = double(c);
+        elseif ischar(c) || (isstring(c) && isscalar(c)), o.coarser = pickLabelling(c, labs, 'Outlines.Coarser', name);
+        else, error(id, '%s: Outlines.Coarser: a labelling''s name, or n >= 1 (the codes shifted right by n).', name);
+        end
+    end
+    for f = {'Width', 'width'; 'CoarserWidth', 'coarserWidth'}'
+        w = get(a, f{1}, []);
+        if isempty(w), continue; end
+        if ~(isnumeric(w) && isscalar(w) && w >= 0.05 && w <= 20), error(id, '%s: Outlines.%s: a line width in pt, 0.05-20.', name, f{1}); end
+        o.(f{2}) = double(w);
+    end
+    sel = get(a, 'Select', []);
+    if ~isempty(sel)
+        if ~(isnumeric(sel) && all(sel(:) == round(sel(:)))), error(id, '%s: Outlines.Select: tile codes (integers) of Outlines.Labelling.', name); end
+        o.select = num2cell(double(sel(:)'));
+    end
+    st = get(a, 'SelectStyle', '');
+    if ~isempty(st), o.selectStyle = pickName(st, {'fill', 'extent'}, 'Outlines.SelectStyle'); end
+end
+
+function [px, fit, dpi, mir] = raw(a, s)
+% RAW PICTURES: StagePx [w h] (each render exactly that), Fit (Margin, Shared), Dpi, MarksInRaster; as the viewer's Shot fields
+    id = 'rheome:snapshot:raw';
+    px = get(a, 'StagePx', []);  fit = [];  dpi = [];  mir = [];
+    if ~isempty(px)
+        if ~(isnumeric(px) && numel(px) == 2 && all(px(:) == round(px(:)) & px(:) >= 16 & px(:) <= 8192))
+            error(id, '%s: StagePx: [width height], integer pixels 16-8192.', s.Name);
+        end
+        px = double(px(:)');
+        if ~isempty(s.Inset), error(id, '%s: raw pictures (StagePx) take no inset (the host composes them).', s.Name); end
+    end
+    if isfield(a, 'Fit') && ~isempty(a.Fit) && ~(islogical(a.Fit) && isscalar(a.Fit) && ~a.Fit)
+        if isempty(px), error(id, '%s: Fit is for raw pictures: give StagePx.', s.Name); end
+        f = a.Fit;  fit = struct();
+        if islogical(f) && isscalar(f), f = struct(); end
+        if ~isstruct(f) || ~isscalar(f), error(id, '%s: Fit is a struct (Margin, Shared) or true.', s.Name); end
+        bad = setdiff(fieldnames(f), {'Margin', 'Shared'});
+        if ~isempty(bad), error(id, '%s: %s is not a fit field.', s.Name, strjoin(bad, ', ')); end
+        m = get(f, 'Margin', []);
+        if ~isempty(m)
+            if ~(isnumeric(m) && isscalar(m) && m >= 0 && m < 0.5), error(id, '%s: Fit.Margin: 0 to 0.5 (a fraction of the half-size).', s.Name); end
+            fit.margin = double(m);
+        end
+        if isfield(f, 'Shared') && ~isempty(f.Shared)
+            if ~(isscalar(f.Shared) && (islogical(f.Shared) || (isnumeric(f.Shared) && any(f.Shared == [0 1])))), error(id, '%s: Fit.Shared: true or false.', s.Name); end
+            fit.shared = logical(f.Shared);
+        end
+    end
+    d = get(a, 'Dpi', []);
+    if ~isempty(d)
+        if isempty(px) || ~(isnumeric(d) && isscalar(d) && d >= 72 && d <= 1200), error(id, '%s: Dpi (72-1200) is for raw pictures (StagePx).', s.Name); end
+        dpi = double(d);
+    end
+    m = get(a, 'MarksInRaster', []);
+    if ~isempty(m)
+        if isempty(px) || ~(isscalar(m) && (islogical(m) || (isnumeric(m) && any(m == [0 1]))))
+            error(id, '%s: MarksInRaster (true or false) is for raw pictures (StagePx).', s.Name);
+        end
+        mir = logical(m);
+    end
+end
+
+function x = pickLabelling(x, labs, what, name)
+% a labelling's name among the Labellings given
+    if isempty(labs)
+        error('rheome:snapshot:option', '%s: %s: ''%s'': no labelling was given (Labellings=).', name, what, char(x));
+    end
+    x = pickName(x, labs, what);
+end
+
+function n = labellingNames(L)
+% the names of the Labellings option (struct array or cell of structs)
+    n = {};
+    if isempty(L), return; end
+    if isstruct(L), L = num2cell(L); end
+    for k = 1:numel(L), if isstruct(L{k}) && isfield(L{k}, 'name'), n{end+1} = char(L{k}.name); end, end %#ok<AGROW>
+end
+
+function sz = windowSize(sz, shots)
+% the window: the tokens' stage, or larger to hold the largest raw stage (StagePx) asked
+    for k = 1:numel(shots), if ~isempty(shots(k).StagePx), sz = max(sz, shots(k).StagePx); end, end
 end
 
 function m = vertexMask(v, nV, what, id)
@@ -368,84 +584,182 @@ function m = vertexMask(v, nV, what, id)
     end
 end
 
-function sel = selections(a, name, nV, Sf, tok)
-% the shot's selections, checked: masks (a disk measured along the folded surface) and their colours by axis
-    sel = struct('mask', {}, 'label', {}, 'kind', {}, 'axis', {}, 'colour', {}, 'dashed', {}, 'centre', {});
+function sel = selections(a, name, nV)
+% the shot's selections, checked, as the viewer's Shot.selections (0-based); the disk is measured by the viewer
+    sel = {};
     if isempty(a), return; end
-    if ~isstruct(a), error('rheome:snapshot:selection', '%s: Selection is a struct (array).', name); end
+    id = 'rheome:snapshot:selection';
+    if ~isstruct(a), error(id, '%s: Selection is a struct (array).', name); end
     for j = 1:numel(a)
-        b = a(j);  id = 'rheome:snapshot:selection';
+        b = a(j);
         bad = setdiff(fieldnames(b), {'Vertices', 'Centre', 'RadiusMM', 'Label', 'Axis', 'Dashed'});
         if ~isempty(bad), error(id, '%s: %s is not a selection field.', name, strjoin(bad, ', ')); end
         c = get(b, 'Centre', []);
         if ~isempty(c) && ~(isscalar(c) && c >= 1 && c <= nV && c == round(c)), error(id, '%s: Selection.Centre: a vertex in 1..%d.', name, nV); end
+        q = struct();
         if isfield(b, 'Vertices') && ~isempty(b.Vertices)
-            m = vertexMask(b.Vertices, nV, sprintf('%s: Selection.Vertices', name), id);  kind = 'tile';
+            q.vertices = num2cell(find(vertexMask(b.Vertices, nV, sprintf('%s: Selection.Vertices', name), id))' - 1);
+            if ~isempty(c), q.centre = double(c) - 1; end
         elseif ~isempty(c) && isfield(b, 'RadiusMM') && isscalar(b.RadiusMM) && b.RadiusMM > 0
-            m = rheome.geom.geodesic(Sf, c) * 1e3 <= b.RadiusMM;  kind = 'disk';   % mesh in metres, as the scale bar
+            q.centre = double(c) - 1;  q.radiusMm = double(b.RadiusMM);
         else
             error(id, '%s: Selection: Vertices, or Centre with RadiusMM (a geodesic disk).', name);
         end
         lab = char(get(b, 'Label', ''));
         if isempty(lab), error(id, '%s: Selection.Label: its name for the key.', name); end
-        ax = pickName(get(b, 'Axis', 'space'), {'space', 'time', 'joint'}, 'Selection.Axis');
-        tokName = struct('space', 'atlas_space', 'time', 'atlas_time', 'joint', 'atlas_joint_cell').(ax);
-        sel(end+1) = struct('mask', m, 'label', lab, 'kind', kind, 'axis', ax, ...
-            'colour', tok.colour.semantic.(tokName).x_value, 'dashed', logical(get(b, 'Dashed', false)), 'centre', c); %#ok<AGROW>
+        q.label = lab;
+        q.axis = pickName(get(b, 'Axis', 'space'), {'space', 'time', 'joint'}, 'Selection.Axis');
+        q.dashed = logical(get(b, 'Dashed', false));
+        sel{end+1} = q; %#ok<AGROW>
     end
 end
 
-function P = paths(a, name, nV, Sf)
-% the shot's paths: traced on the folded surface (From/To) or given (Points, with How); each point kept as a face and
-% barycentric coordinates, so it is drawn on whichever surface the shot shows
-    P = struct('label', {}, 'how', {}, 'points', {}, 'faces', {}, 'bary', {}, 'length_mm', {}, 'geodesic_mm', {});
+function P = paths(a, name, nV)
+% the shot's paths, checked, as the viewer's Shot.paths (0-based): the viewer traces the geodesic between From and To
+    P = {};
     if isempty(a), return; end
-    if ~isstruct(a), error('rheome:snapshot:path', '%s: Paths is a struct (array).', name); end
-    solver = [];
+    id = 'rheome:snapshot:path';
+    if ~isstruct(a), error(id, '%s: Paths is a struct (array).', name); end
     for j = 1:numel(a)
-        b = a(j);  id = 'rheome:snapshot:path';
+        b = a(j);
         bad = setdiff(fieldnames(b), {'From', 'To', 'Points', 'How', 'Label'});
         if ~isempty(bad), error(id, '%s: %s is not a path field.', name, strjoin(bad, ', ')); end
         lab = char(get(b, 'Label', ''));
         if isempty(lab), error(id, '%s: Paths.Label: what the path is, for the key.', name); end
         if isfield(b, 'Points') && ~isempty(b.Points)
-            how = char(get(b, 'How', ''));
-            if isempty(how), error(id, '%s: Paths.How: a given path states how it was traced on the surface (tokens cortex.paths).', name); end
+            if isempty(char(get(b, 'How', ''))), error(id, '%s: Paths.How: a given path states how it was traced on the surface (tokens cortex.paths).', name); end
             X = double(b.Points);
             if size(X, 2) ~= 3 || size(X, 1) < 2, error(id, '%s: Paths.Points: [n x 3], n >= 2.', name); end
-            [fc, bc] = onMesh(X, Sf);  geo = NaN;
-        else
-            fr = get(b, 'From', []);  to = get(b, 'To', []);
-            if ~(isscalar(fr) && isscalar(to) && all([fr to] >= 1 & [fr to] <= nV & [fr to] == round([fr to])))
-                error(id, '%s: Paths: From and To (vertices in 1..%d), or Points with How.', name, nV);
-            end
-            [X, info] = rheome.geom.geodesicpath(Sf, fr, to, solver);  solver = info.solver;
-            fc = info.faces([1:end end]);  bc = bary(X, Sf, fc);  geo = 1e3 * info.distance;
-            how = 'steepest descent of the heat-method distance on the folded surface (rheome.geom.geodesicpath)';
+            error(id, ['%s: Paths.Points: a given path is not drawn now: the viewer draws only the geodesic between From and To ' ...
+                '(vertices in 1..%d) on the folded surface.'], name, nV);
         end
-        P(end+1) = struct('label', lab, 'how', how, 'points', X, 'faces', fc, 'bary', bc, ...
-            'length_mm', 1e3 * sum(vecnorm(diff(X), 2, 2)), 'geodesic_mm', geo); %#ok<AGROW>
+        fr = get(b, 'From', []);  to = get(b, 'To', []);
+        if ~(isscalar(fr) && isscalar(to) && all([fr to] >= 1 & [fr to] <= nV & [fr to] == round([fr to])))
+            error(id, '%s: Paths: From and To (vertices in 1..%d), or Points with How.', name, nV);
+        end
+        q = struct();  q.from = double(fr) - 1;  q.to = double(to) - 1;  q.label = lab;
+        P{end+1} = q; %#ok<AGROW>
     end
 end
 
-function [fc, bc] = onMesh(X, S)
-% each point's nearest face (by its centroid among the nearest vertex's faces) and barycentric coordinates there
-    V = double(S.Vertices);  F = double(S.Faces);
-    nv = dsearchn(V, X);  fc = zeros(size(X, 1), 1);
-    for i = 1:size(X, 1)
-        cand = find(any(F == nv(i), 2));
-        [~, j] = min(vecnorm((V(F(cand,1),:) + V(F(cand,2),:) + V(F(cand,3),:))/3 - X(i,:), 2, 2));
-        fc(i) = cand(j);
-    end
-    bc = bary(X, S, fc);
+function v = viewerShot(s, folded, o, J)
+% the viewer's Shot (nxr-cortical-flow editor/src/viewer/print/panel.ts): 0-based frames and vertices, the width in
+% mm; the keys in one order, so nxr.snapshot's job is this one byte for byte
+    v = struct();
+    if ~isempty(s.Field), v.field = s.Field;  v.unit = s.Unit;  v.label = s.Label; end
+    if ~isempty(s.Reference), v.reference = s.Reference; end
+    if ~isempty(s.Quantity), v.quantity = s.Quantity; end
+    if ~isempty(s.CLim), v.clim = s.CLim; end
+    if ~isempty(s.Colormap), v.colormap = s.Colormap; end
+    v.frames = num2cell(s.frames - 1);
+    v.views = s.view;
+    if ~isempty(s.Hemisphere), v.hemisphere = s.Hemisphere; end
+    v.surface = s.Surface;  v.folded = folded;
+    if ~isempty(s.Vector), v.vector = s.Vector; end
+    if ~isempty(s.Cortex), v.cortex = s.Cortex; end
+    if ~isempty(s.Labelling), v.labelling = s.Labelling; end
+    if ~isempty(s.Outlines), v.outlines = s.Outlines; end
+    if ~isempty(fieldnames(s.Settings)), v.settings = s.Settings; end
+    if ~isempty(s.Selection), v.selections = s.Selection; end
+    if ~isempty(s.Paths), v.paths = s.Paths; end
+    if ~isempty(s.Inset), v.inset = s.Inset; end
+    v.scaleBarMm = o.ScaleBar;
+    if ~isempty(o.ScaleBarKind), v.scaleBarKind = o.ScaleBarKind; end
+    if ~isempty(o.ScaleBarTile), v.scaleBarTile = double(o.ScaleBarTile) - 1; end
+    if ~isempty(s.StagePx), v.stagePx = s.StagePx; end
+    if ~isempty(s.Fit), v.fit = s.Fit; end
+    if ~isempty(s.Dpi), v.dpi = s.Dpi; end
+    if ~isempty(s.MarksInRaster), v.marksInRaster = s.MarksInRaster; end
+    if isempty(s.StagePx) || ~isempty(o.Width), v.widthMm = panelWidth(o.Width, s.ntiles + ~isempty(s.Inset), J); end   % raw pictures: a panel only with a Width
 end
 
-function bc = bary(X, S, fc)
-    V = double(S.Vertices);  F = double(S.Faces);
-    A = V(F(fc,1),:);  e1 = V(F(fc,2),:) - A;  e2 = V(F(fc,3),:) - A;  q = X - A;
-    d11 = sum(e1.*e1, 2);  d12 = sum(e1.*e2, 2);  d22 = sum(e2.*e2, 2);  q1 = sum(q.*e1, 2);  q2 = sum(q.*e2, 2);
-    den = d11.*d22 - d12.^2;  u = (d22.*q1 - d12.*q2)./den;  w = (d11.*q2 - d12.*q1)./den;
-    bc = [1 - u - w, u, w];
+function r = fromReport(rep, s, base, renders, fmt, composed, rdir)
+% out: the files, and the viewer's report with its indices made 1-based
+    r = struct('name', s.Name, 'svg', '', 'pdf', '', 'png', '', 'renders', {renders(:)'});
+    if composed, r.svg = [base '.svg']; end
+    if composed && any(fmt == "pdf"), r.pdf = [base '.pdf']; end
+    if composed && any(fmt == "png"), r.png = [base '.png']; end
+    r.clim = rep.clim(:)';  r.colormap = rep.colormap;  r.quantity = rep.quantity;  r.colorbar = rep.colorbar;
+    r.views = cellstr(rep.views);  r.views = r.views(:)';  r.times = rep.times(:)';  r.dpi = rep.dpi;
+    r.scalebar = rep.scalebar;
+    if ~isempty(r.scalebar), r.scalebar.vertices = r.scalebar.vertices(:) + 1;  r.scalebar.px = reshape(r.scalebar.px, [], 2); end
+    r.legend = rep.legend;
+    r.inset = rep.inset;
+    if ~isempty(r.inset), r.inset.vertices = r.inset.vertices(:) + 1; end
+    sel = struct('label', {}, 'kind', {}, 'axis', {}, 'colour', {}, 'dashed', {}, 'vertices', {});
+    for j = 1:numel(rep.selections)
+        q = rep.selections(j);  if iscell(rep.selections), q = rep.selections{j}; end
+        sel(end+1) = struct('label', q.label, 'kind', q.kind, 'axis', q.axis, 'colour', q.colour, 'dashed', logical(q.dashed), ...
+            'vertices', q.vertices(:) + 1); %#ok<AGROW>
+    end
+    r.selections = sel;
+    P = struct('label', {}, 'how', {}, 'points', {}, 'length_mm', {}, 'geodesic_mm', {}, 'px', {}, 'visible', {});
+    for j = 1:numel(rep.paths)
+        q = rep.paths(j);  if iscell(rep.paths), q = rep.paths{j}; end
+        P(end+1) = struct('label', q.label, 'how', q.how, 'points', reshape(q.points, [], 3), 'length_mm', q.length_mm, ...
+            'geodesic_mm', q.geodesic_mm, 'px', {perRender(q.px, 2, s.ntiles)}, 'visible', {perRender(q.visible, 1, s.ntiles)}); %#ok<AGROW>
+        P(end).visible = cellfun(@logical, P(end).visible, 'UniformOutput', false);
+    end
+    r.paths = P;
+    r.build = rep.build;
+    % only when asked: the labelling painted, the outlines drawn, and raw pictures' stops, fit and renders
+    if isfield(rep, 'labelling'), r.labelling = rep.labelling; end
+    if isfield(rep, 'outlines'), r.outlines = rep.outlines; end
+    if isfield(rep, 'stops'), r.stops = stopsOf(rep.stops); end
+    if isfield(rep, 'fit'), r.fit = rep.fit;  if ~isempty(r.fit), r.fit.shared = logical(r.fit.shared); end, end
+    if isfield(rep, 'renders')
+        R = struct('label', {}, 'view', {}, 'hemisphere', {}, 'camera', {}, 'frame', {}, 'time', {}, 'size_px', {}, 'mmPerPx', {}, ...
+            'fit', {}, 'colorbar', {}, 'png', {}, 'marks', {});
+        for j = 1:numel(rep.renders)
+            q = rep.renders(j);  if iscell(rep.renders), q = rep.renders{j}; end
+            cb = q.colorbar;  if ~isempty(cb), cb.stops = stopsOf(cb.stops); end
+            mk = fullfile(rdir, [q.label '.marks.json']);  if ~isfile(mk), mk = ''; end
+            R(end+1) = struct('label', q.label, 'view', q.view, 'hemisphere', q.hemisphere, 'camera', q.camera, 'frame', q.frame + 1, ...
+                'time', q.time, 'size_px', q.size_px(:)', 'mmPerPx', q.mmPerPx, 'fit', q.fit, 'colorbar', cb, ...
+                'png', fullfile(rdir, [q.label '.png']), 'marks', mk); %#ok<AGROW>
+        end
+        r.raw = R;
+    end
+end
+
+function c = stopsOf(x)
+% a colourbar's stops (JSON [[offset, colour], ...]) as an n x 2 cell {offset, colour}; [] for none
+    c = [];
+    if isempty(x), return; end
+    if ~iscell(x), x = num2cell(x, 2); end
+    c = cell(numel(x), 2);
+    for i = 1:numel(x), q = x{i};  if ~iscell(q), q = num2cell(q); end, c(i, :) = {double(q{1}), char(q{2})}; end
+end
+
+function out = joinOut(out, r)
+% shots asking for different extras (labelling, outlines, raw pictures) give one struct array: each lacks the others' as []
+    if isempty(out), out = r; return; end
+    for f = setdiff(fieldnames(r), fieldnames(out))', [out.(f{1})] = deal([]); end
+    for f = setdiff(fieldnames(out), fieldnames(r))', r.(f{1}) = []; end
+    out = [out orderfields(r, out(1))];
+end
+
+function c = perRender(x, w, n)
+% a report's per-render list (JSON [render][point]([x y])) as one cell per render: [points x w]
+    if iscell(x), c = cellfun(@(y) reshape(y, [], w), x(:)', 'UniformOutput', false); return; end
+    c = cell(1, n);
+    for i = 1:n
+        if w == 1, c{i} = reshape(x(i, :), [], 1); else, c{i} = reshape(x(i, :, :), [], w); end
+    end
+end
+
+function warnOf(name, msg)
+% the viewer's warnings, under Rheome's identifiers where they are Rheome's
+    id = 'rheome:snapshot:viewer';
+    if contains(msg, 'scale bar'), id = 'rheome:snapshot:scalebar'; elseif contains(msg, 'dpi'), id = 'rheome:snapshot:dpi'; end
+    warning(id, '%s: %s', name, msg);
+end
+
+function [w, h] = svgSize(file)
+    t = fileread(file);
+    m = regexp(t, '<svg[^>]*?\swidth="([\d.]+)mm"[^>]*?\sheight="([\d.]+)mm"', 'tokens', 'once');
+    if isempty(m), error('rheome:snapshot:viewer', 'The panel %s has no size in mm.', file); end
+    w = str2double(m{1});  h = str2double(m{2});
 end
 
 function v = get(a, n, d)
@@ -461,6 +775,27 @@ end
 
 function f = firstOf(c)
     f = c{1};
+end
+
+function W = panelWidth(W, ncol, J)
+% mm: given, or the journal's double column for a row of views (or a view and its inset), single for one
+    if isempty(W), if ncol > 1, W = 'double'; else, W = 'single'; end, end
+    if ~isnumeric(W), W = J.width_mm.(pickName(W, fieldnames(J.width_mm), 'Width')); end
+    W = double(W);
+end
+
+function h = hemispheres(S)
+% 1 left, 2 right, 0 neither: the mesh's two largest connected components, the left the one with larger mean y (as
+% the viewer finds them); for the default quantity's check only
+    F = double(S.Faces);  nV = size(S.Vertices, 1);
+    g = graph([F(:,1); F(:,2); F(:,3)], [F(:,2); F(:,3); F(:,1)], [], nV);
+    c = conncomp(g)';
+    n = accumarray(c, 1);
+    [~, o] = sort(n, 'descend');
+    h = zeros(nV, 1);
+    if numel(o) < 2, h(:) = 1; return; end
+    a = c == o(1);  b = c == o(2);
+    if mean(S.Vertices(a, 2)) >= mean(S.Vertices(b, 2)), h(a) = 1; h(b) = 2; else, h(a) = 2; h(b) = 1; end
 end
 
 %% ---------------------------------------------------------------- tokens, colormaps, tools
@@ -481,7 +816,7 @@ function [T, file, sha, shown] = tokens(file, work)
 end
 
 function m = viewerColormaps(vdir)
-% the viewer's own colour tables (its default library), so the colourbar is the render's colours
+% the viewer's own colour tables (its default library): a colormap the viewer has not is refused before it runs
     d = fullfile(vdir, 'colormaps', 'default');
     j = jsondecode(fileread(fullfile(d, 'colormaps.json')));
     [img, ~, alpha] = imread(fullfile(d, 'colormaps.png')); %#ok<ASGLU>
@@ -519,496 +854,11 @@ function n = nodePath(n)
     if isempty(n) || ~isfile(n), error('rheome:snapshot:node', 'No Node.js found (Node= or RHEOME_NODE).'); end
 end
 
-function runDriver(job, node, work)
-    jf = fullfile(work, 'job.json');
-    fid = fopen(jf, 'w');  fwrite(fid, jsonencode(job));  fclose(fid);
-    drv = fullfile(fileparts(mfilename('fullpath')), 'private', 'snapshot_driver.mjs');
+function jf = runDriver(job, name, node, drv, work)
+% the job written (UTF-8 jsonencode: nxr.snapshot writes the same bytes) and the viewer's driver run on it
+    jf = fullfile(work, name);
+    fid = fopen(jf, 'w');  fwrite(fid, unicode2native(jsonencode(job), 'UTF-8'));  fclose(fid);
+    drv = char(java.io.File(drv).getCanonicalPath());   % the real path: a viewer release reached through a symlink otherwise does nothing (driver before 0cfda31)
     [st, msg] = system(sprintf('"%s" "%s" "%s" 2>&1', node, drv, jf));
     if st ~= 0, error('rheome:snapshot:viewer', 'The viewer run failed: %s', strtrim(msg)); end
-end
-
-%% ---------------------------------------------------------------- the geometry: hemispheres, camera, visibility, bar
-
-function h = hemispheres(S)
-% 1 left, 2 right, 0 neither: the mesh's two largest connected components, the left the one with larger mean y (as
-% the viewer finds them)
-    F = double(S.Faces);  nV = size(S.Vertices, 1);
-    g = graph([F(:,1); F(:,2); F(:,3)], [F(:,2); F(:,3); F(:,1)], [], nV);
-    c = conncomp(g)';
-    n = accumarray(c, 1);
-    [~, o] = sort(n, 'descend');
-    h = zeros(nV, 1);
-    if numel(o) < 2, h(:) = 1; return; end
-    a = c == o(1);  b = c == o(2);
-    if mean(S.Vertices(a, 2)) >= mean(S.Vertices(b, 2)), h(a) = 1; h(b) = 2; else, h(a) = 2; h(b) = 1; end
-end
-
-function cam = fitCamera(alpha, X, camera)
-% the orthographic camera of a render, read from it: the shown vertices' projection fitted to the PNG's alpha.
-% Candidates: the four proper rotations about the view direction (right x up = toward the camera: no mirror).
-    d = struct('left', [0 1 0], 'right', [0 -1 0], 'top', [0 0 1], 'bottom', [0 0 -1], 'front', [1 0 0], 'back', [-1 0 0]).(camera);
-    ax = eye(3);  ax = ax(abs(ax * d') < 0.5, :);
-    m = alpha > 0;
-    [r, c] = find(m);
-    if isempty(r), error('rheome:snapshot:camera', 'The render is empty.'); end
-    box = [min(c) max(c) min(r) max(r)];
-    best = [];  scores = [];
-    for right = {ax(1,:), -ax(1,:), ax(2,:), -ax(2,:)}
-        R = [right{1}; -cross(d, right{1})];          % rows: screen x (right), screen y (down) = -up, up = d x right
-        uv = X * R';
-        ext = max(uv) - min(uv);
-        sx = (box(2) - box(1) + 1) / ext(1);  sy = (box(4) - box(3) + 1) / ext(2);
-        s = (sx + sy) / 2;
-        off = [box(1) - 0.5 box(3) - 0.5] - s * min(uv);
-        px = s * uv + off;
-        in = m(sub2ind(size(m), min(max(round(px(:, 2)), 1), size(m, 1)), min(max(round(px(:, 1)), 1), size(m, 2))));
-        score = mean(in) - abs(sx / sy - 1);
-        scores(end+1) = score; %#ok<AGROW>
-        if isempty(best) || score > best.score, best = struct('R', R, 's', s, 'off', off, 'score', score, 'inside', mean(in), 'aspect', sx / sy, 'd', d); end
-    end
-    srt = sort(scores, 'descend');
-    if best.inside < 0.97 || abs(best.aspect - 1) > 0.03 || srt(1) - srt(2) < 0.01
-        error('rheome:snapshot:camera', 'The render''s camera could not be read (%.1f %% of vertices inside, aspect %.3f, margin %.3f).', ...
-            100 * best.inside, best.aspect, srt(1) - srt(2));
-    end
-    cam = best;
-end
-
-function px = project(cam, X)
-    px = cam.s * (X * cam.R') + cam.off;
-end
-
-function vis = visible(Q, d, V, F)
-% exact: a point is visible when the ray from it toward the camera (+d) hits no triangle (Moller-Trumbore)
-    A = V(F(:,1), :);  e1 = V(F(:,2), :) - A;  e2 = V(F(:,3), :) - A;
-    pv = cross(repmat(d, size(F, 1), 1), e2, 2);  det = sum(e1 .* pv, 2);
-    vis = true(size(Q, 1), 1);
-    for k = 1:size(Q, 1)
-        t0 = Q(k, :) - A;
-        u = sum(t0 .* pv, 2) ./ det;
-        qv = cross(t0, e1, 2);
-        v = (qv * d') ./ det;
-        t = sum(e2 .* qv, 2) ./ det;
-        hit = abs(det) > 1e-18 & u >= 0 & v >= 0 & u + v <= 1 & t > 1e-4;   % beyond 0.1 mm: not its own triangles
-        vis(k) = ~any(hit);
-    end
-end
-
-function [bar, G] = scaleBar(Lmm, Sf, Vd, F, shown, cam, alpha, G)
-% a curve on the surface: the mesh-edge shortest path on the folded surface, cut at Lmm of its length, at a visible
-% stretch near the lower edge of the view; drawn at the shown surface's positions (Vd)
-    bar = [];
-    if isempty(G), G = rheome.geom.edgegraph(Sf, Diagonals=false); end
-    L = Lmm / 1e3;
-    px = project(cam, Vd);
-    idx = find(shown);
-    % rough front-most test for the candidates (exact test on the chosen curve below): the nearest to the camera in its cell
-    depth = Vd * cam.d';
-    elen = median(G.Edges.Weight) * cam.s;
-    csz = max(4, 2 * elen);
-    key = floor(px(idx, :) / csz);  [~, ~, ci] = unique(key, 'rows');
-    front = accumarray(ci, depth(idx), [], @max);
-    cand = idx(depth(idx) >= front(ci) - 1.5e-3);
-    [r, c] = find(alpha > 0);
-    target = [min(c) + 0.7 * (max(c) - min(c)), min(r) + 0.88 * (max(r) - min(r))];
-    [~, o] = sort(vecnorm(px(cand, :) - target, 2, 2));
-    for s0 = cand(o(1:min(20, end)))'
-        D = distances(G, s0);
-        ends = cand(D(cand) >= L & D(cand) <= 1.2 * L);
-        if isempty(ends), continue; end
-        v = px(ends, :) - px(s0, :);
-        flat = vecnorm(v, 2, 2) / (L * cam.s);                 % chord on the image / its length: 1 = flat to the view
-        ends = ends(flat >= 0.75);  v = v(flat >= 0.75, :);     % not foreshortened into a sulcus
-        if isempty(ends), continue; end
-        slope = abs(v(:, 2)) ./ max(vecnorm(v, 2, 2), eps) + 0.5 * (v(:, 1) > 0);   % horizontal, leftward first
-        [~, eo] = sort(slope);
-        for e = ends(eo(1:min(5, end)))'
-            path = shortestpath(G, s0, e);
-            w = vecnorm(diff(Sf.Vertices(path, :)), 2, 2);
-            cw = [0; cumsum(w)];
-            j = find(cw >= L, 1);
-            f = (L - cw(j-1)) / w(j-1);
-            P = [Vd(path(1:j-1), :); Vd(path(j-1), :) + f * (Vd(path(j), :) - Vd(path(j-1), :))];
-            if all(visible(P, cam.d, Vd, F(all(shown(F), 2), :)))
-                bar = struct('mm', Lmm, 'length_mm', 1e3 * (cw(j-1) + f * w(j-1)), 'vertices', path(1:j), 'px', project(cam, P));
-                return
-            end
-        end
-    end
-end
-
-%% ---------------------------------------------------------------- the panel
-
-function [r, G, job] = compose(s, surfs, F, hemi, folded, G, tok, cmaps, o)
-% the panel as an SVG in mm at print size (views embedded as PNG at their rendered resolution; text, bars and colourbar
-% vector, editable), and the print job that turns it into PDF and PNG
-    J = tok.theme.(tok.theme.default).page;
-    ink = tok.colour.neutral.neutral_ink.x_value;  slate = tok.colour.neutral.neutral_slate.x_value;
-    paper = tok.colour.neutral.neutral_paper.x_value;
-    fam = strjoin(strcat('''', tok.type.family.x_value, ''''), ', ');
-    nview = numel(s.renders);  strip = numel(s.frames) > 1;
-    W = panelWidth(o.Width, nview, J);
-
-    % the renders, cropped to what they show; one scale (mm per pixel) for the row
-    img = cell(1, nview);  al = img;  crop = zeros(nview, 4);
-    for i = 1:nview
-        [img{i}, ~, al{i}] = imread(fullfile(s.dir, [s.renders(i).label '.png']));
-        if isempty(al{i}), error('rheome:snapshot:alpha', 'The render has no alpha (background must be transparent).'); end
-        al{i} = cortexOnly(al{i});
-        [rr, cc] = find(al{i} > 0);
-        pad = round(0.02 * size(al{i}, 2));
-        crop(i, :) = [max(1, min(cc) - pad), min(size(al{i}, 2), max(cc) + pad), max(1, min(rr) - pad), min(size(al{i}, 1), max(rr) + pad)];
-    end
-    if strip, crop = repmat([min(crop(:, 1)) max(crop(:, 2)) min(crop(:, 3)) max(crop(:, 4))], nview, 1); end   % one box for every frame
-    gap = tok.spacing.viewGap_mm;
-    ncol = nview + ~isempty(s.Inset);                             % the inset: a column of its own, right of the views
-    if ~isempty(s.Inset), W = panelWidth(o.Width, ncol, J); end
-    cw = (W - (ncol - 1) * gap) / ncol;
-    k = min(cw ./ (crop(:, 2) - crop(:, 1) + 1));                 % mm per pixel
-    rowH = k * max(crop(:, 4) - crop(:, 3) + 1);
-    dpi = 25.4 / k;
-    if dpi < J.dpi.combination, warning('rheome:snapshot:dpi', '%s: the views print at %.0f dpi (< %d); raise Scale or narrow Width.', s.Name, dpi, J.dpi.combination); end
-
-    % the vertical layout, mm from the top
-    pt = 25.4 / 72;
-    fa = tok.type.annotation.size_pt;  fv = tok.type.viewLabel.size_pt;
-    y0 = 0;  if strip, y0 = 1.8 * fa * pt; end
-    y1 = y0 + rowH;
-    below = 1.6 * fv * pt;  if strip, below = 2.4 * fa * pt + 1; end
-    yBar = y1 + below + tok.spacing.colorbarGap_mm;  th = tok.spacing.colorbarThickness_mm;
-    H = yBar + th + 0.6 + 1.25 * (tok.type.colorbarTick.size_pt + tok.type.colorbarLabel.size_pt) * pt + 0.4;
-
-    svg = {sprintf(['<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="%gmm" height="%gmm" ' ...
-        'viewBox="0 0 %g %g" font-family="%s">'], W, H, W, H, fam), ...
-        '<style>@page{size:auto;margin:0}</style>', sprintf('<rect width="%g" height="%g" fill="%s"/>', W, H, paper)};
-    T = @(x, y, str, sz, col, anchor, extra) sprintf('<text x="%.3f" y="%.3f" font-size="%.4f" fill="%s" text-anchor="%s"%s>%s</text>', ...
-        x, y, sz * pt, col, anchor, extra, esc(str));
-
-    r = struct('name', s.Name, 'svg', '', 'pdf', '', 'png', '', 'renders', {fullfile(s.dir, strcat({s.renders.label}, '.png'))}, ...
-        'clim', s.CLim, 'colormap', s.Colormap, 'quantity', s.Quantity, 'colorbar', '', 'views', {unique({s.renders.view}, 'stable')}, ...
-        'times', s.times, 'dpi', dpi, 'scalebar', [], 'legend', '', 'settings', {{s.renders.settings}}, 'inset', [], ...
-        'selections', rmfield(s.Selection, {'mask', 'centre'}), 'paths', rmfield(s.Paths, {'faces', 'bary'}), 'cameras', []);
-    for j = 1:numel(s.Selection), r.selections(j).vertices = find(s.Selection(j).mask); end
-    Vd = surfs.(s.Surface).Vertices;
-    E = double(F);  el = median(vecnorm(Vd(E(:, 1), :) - Vd(E(:, 2), :), 2, 2));   % the shown mesh's edge
-    marks = ~isempty(s.Selection) || ~isempty(s.Paths);
-    cams = struct('view', {}, 'render', {}, 'R', {}, 's', {}, 'off', {}, 'd', {}, 'crop', {}, 'origin_mm', {}, 'mm_per_px', {});
-    for i = 1:nview
-        c = crop(i, :);  wpx = c(2) - c(1) + 1;  hpx = c(4) - c(3) + 1;
-        x = (i - 1) * (cw + gap) + (cw - k * wpx) / 2;  y = y0 + (rowH - k * hpx) / 2;
-        svg{end+1} = sprintf('<image x="%.3f" y="%.3f" width="%.3f" height="%.3f" preserveAspectRatio="none" xlink:href="data:image/png;base64,%s"/>', ...
-            x, y, k * wpx, k * hpx, png64(img{i}(c(3):c(4), c(1):c(2), :), al{i}(c(3):c(4), c(1):c(2)))); %#ok<AGROW>
-        % the render's camera (read from its silhouette), for the marks and for callers placing their own
-        h = s.renders(i).hemisphere;  shown = hemi > 0;
-        if ~strcmp(h, 'both'), shown = hemi == find(strcmp({'left', 'right'}, h)); end
-        try
-            cam = fitCamera(al{i}, Vd(shown, :), s.renders(i).camera);
-            cams(i) = struct('view', s.renders(i).view, 'render', r.renders{i}, 'R', cam.R, 's', cam.s, 'off', cam.off, ...
-                'd', cam.d, 'crop', c, 'origin_mm', [x y], 'mm_per_px', k);
-        catch err
-            if marks, rethrow(err); end
-            cam = [];  cams(i).view = s.renders(i).view;  cams(i).render = r.renders{i};
-        end
-        if marks
-            [svg, r] = drawMarks(svg, r, s, cam, al{i}, Vd, F, shown, el, [x y], k, c, tok, pt, i);
-        end
-        cx = x + k * wpx / 2;
-        if strip
-            svg{end+1} = T(cx, y0 - 0.25 * fa * pt, sprintf('t = %s', timeText(s.times(i))), fa, ink, 'middle', ''); %#ok<AGROW>
-        else
-            svg{end+1} = T(cx, y1 + 1.1 * fv * pt, s.renders(i).view, fv, slate, 'middle', ''); %#ok<AGROW>
-        end
-        % one geodesic scale bar per row: on the first view where a visible stretch is found
-        if o.ScaleBar > 0 && isempty(r.scalebar) && ~(~isempty(s.Inset) && i == s.Inset.view && nview > 1)   % not on the inset's region
-            if isempty(cam), cam = fitCamera(al{i}, Vd(shown, :), s.renders(i).camera); end   % says why it fails
-            [bar, G] = scaleBar(o.ScaleBar, surfs.(folded), Vd, F, shown, cam, al{i}, G);
-            if ~isempty(bar)
-                q = [x y] + k * (bar.px - [c(1) c(3)] + 0.5);          % pixel centres -> mm on the page
-                pts = strjoin(ptsText(q), ' ');
-                wl = tok.scalebar.space.width_pt * pt;
-                svg{end+1} = sprintf(['<polyline points="%s" fill="none" stroke="%s" stroke-width="%.4f" stroke-linejoin="round" stroke-linecap="round"/>' ...
-                    '<polyline points="%s" fill="none" stroke="%s" stroke-width="%.4f" stroke-linejoin="round" stroke-linecap="round"/>'], ...
-                    pts, paper, wl + 2 * 0.8 * pt, pts, ink, wl); %#ok<AGROW>   % ink over a paper halo
-                lab = sprintf('%g mm', o.ScaleBar);  lxy = [mean(q([1 end], 1)), min(q(:, 2)) - 0.7];
-                for ang = (0:7) * pi / 4   % the halo: eight paper copies 0.8 pt out (a stroked text prints as a Type 3 font)
-                    svg{end+1} = T(lxy(1) + 0.8 * pt * cos(ang), lxy(2) + 0.8 * pt * sin(ang), lab, fa, paper, 'middle', ''); %#ok<AGROW>
-                end
-                svg{end+1} = T(lxy(1), lxy(2), lab, fa, ink, 'middle', ''); %#ok<AGROW>
-                bar.view = s.renders(i).view;
-                r.scalebar = bar;
-            end
-        end
-    end
-    r.cameras = cams;
-    if ~isempty(s.Inset)
-        [svg, r.inset] = drawInset(svg, s, Vd, F, hemi, img, al, crop, k, cw, gap, y0, rowH, nview, tok, J, T, pt);
-    end
-    if o.ScaleBar > 0 && isempty(r.scalebar), warning('rheome:snapshot:scalebar', '%s: no visible stretch of %g mm for the scale bar; none drawn.', s.Name, o.ScaleBar); end
-    if strip
-        ya = y1 + 1.0;  hl = 1.2;  x0 = 0.05 * W;  xe = 0.95 * W;
-        svg{end+1} = sprintf('<line x1="%.3f" y1="%.3f" x2="%.3f" y2="%.3f" stroke="%s" stroke-width="%.4f"/><polygon points="%.3f,%.3f %.3f,%.3f %.3f,%.3f" fill="%s"/>', ...
-            x0, ya, xe - hl, ya, ink, tok.line.axis_pt * pt, xe, ya, xe - hl, ya - 0.45 * hl, xe - hl, ya + 0.45 * hl, ink);
-        svg{end+1} = T(W / 2, ya + 0.6 + fa * pt, sprintf('%st = %s', char(916), timeText(s.times(2) - s.times(1))), fa, ink, 'middle', '');
-    end
-
-    % the colourbar: the viewer's own colours, quantity (unit re reference), both ends ticked, 0 on a diverging bar
-    cmap = cmaps(s.Colormap);
-    len = tok.spacing.colorbarLength_frac * W;  xb = (W - len) / 2;
-    svg{end+1} = sprintf('<image x="%.3f" y="%.3f" width="%.3f" height="%.3f" preserveAspectRatio="none" xlink:href="data:image/png;base64,%s"/>', ...
-        xb, yBar, len, th, png64(uint8(round(255 * reshape(cmap, 1, [], 3))), []));
-    svg{end+1} = sprintf('<rect x="%.3f" y="%.3f" width="%.3f" height="%.3f" fill="none" stroke="%s" stroke-width="%.4f"/>', xb, yBar, len, th, slate, tok.line.outline_pt * pt);
-    switch s.Quantity
-        case {'signed', 'coupling'}, ticks = [s.CLim(1) 0 s.CLim(2)];  labels = arrayfun(@num, ticks, 'UniformOutput', false);
-        case 'phase', ticks = [-pi 0 pi];  labels = {[char(8722) char(960)], '0', char(960)};
-        otherwise, ticks = [s.CLim(1) mean(s.CLim) s.CLim(2)];  labels = arrayfun(@num, ticks, 'UniformOutput', false);
-    end
-    tl = tok.spacing.tickLength_pt * pt;  ft = tok.type.colorbarTick.size_pt;
-    for j = 1:numel(ticks)
-        tx = xb + len * (ticks(j) - s.CLim(1)) / diff(s.CLim);
-        svg{end+1} = sprintf('<line x1="%.3f" y1="%.3f" x2="%.3f" y2="%.3f" stroke="%s" stroke-width="%.4f"/>', tx, yBar + th, tx, yBar + th + tl, ink, tok.line.tick_pt * pt); %#ok<AGROW>
-        svg{end+1} = T(tx, yBar + th + tl + 0.3 + 0.8 * ft * pt, labels{j}, ft, ink, 'middle', ''); %#ok<AGROW>
-    end
-    if isempty(s.Reference), r.colorbar = sprintf('%s (%s)', s.Label, s.Unit); else, r.colorbar = sprintf('%s (%s re %s)', s.Label, s.Unit, s.Reference); end
-    svg{end+1} = T(W / 2, H - 0.4 - 0.2 * tok.type.colorbarLabel.size_pt * pt, r.colorbar, tok.type.colorbarLabel.size_pt, ink, 'middle', '');
-    svg{end+1} = '</svg>';
-
-    % what the legend must say
-    sname = s.Surface;
-    if strcmp(s.Surface, folded)
-        if strcmp(sname, 'default'), sname = 'folded cortical'; else, sname = sprintf('folded (%s)', sname); end
-    end
-    lg = sprintf('%s view%s of the %s surface', strjoin(r.views, ', '), plural(numel(r.views)), sname);
-    if ~isempty(r.scalebar)
-        if strcmp(s.Surface, folded), lg = sprintf('%s; scale bar %g mm along the folded surface', lg, o.ScaleBar);
-        else, lg = sprintf('%s; scale bar %g mm, distances on the folded surface', lg, o.ScaleBar);
-        end
-    end
-    if ~isempty(r.inset)
-        lg = sprintf('%s; inset: %s, the region outlined on the %s view re-rendered at %s%.3g (%.0f dpi)', lg, s.Inset.Label, ...
-            r.inset.view, char(215), r.inset.magnification, r.inset.dpi);
-    end
-    for j = 1:numel(s.Selection)
-        q = s.Selection(j);  what = struct('tile', 'region', 'disk', 'geodesic disk').(q.kind);
-        if q.dashed, lg = sprintf('%s; dashed: %s (%s, extent)', lg, q.label, what);
-        else, lg = sprintf('%s; filled: %s (%s, selected, %s-axis colour)', lg, q.label, what, q.axis);
-        end
-    end
-    for j = 1:numel(r.paths)
-        lg = sprintf('%s; line: %s, a geodesic of %.0f mm along the folded surface', lg, r.paths(j).label, r.paths(j).length_mm);
-    end
-    if strip, lg = sprintf('%s; %d frames, %st = %s', lg, numel(s.frames), char(916), timeText(s.times(2) - s.times(1))); end
-    r.legend = [lg '.'];
-
-    base = fullfile(o.Out, s.Name);
-    r.svg = [base '.svg'];
-    fid = fopen(r.svg, 'w');
-    if fid < 0, error('rheome:snapshot:write', 'Cannot write %s.', r.svg); end
-    fwrite(fid, unicode2native(strjoin(svg, newline), 'UTF-8'));  fclose(fid);
-    if any(o.Format == "pdf"), r.pdf = [base '.pdf']; end
-    if any(o.Format == "png"), r.png = [base '.png']; end
-    job = struct('svg', r.svg, 'pdf', r.pdf, 'png', r.png, 'width_mm', W, 'height_mm', H, 'dpi', J.dpi.combination);
-end
-
-function [svg, info] = drawInset(svg, s, Vd, F, hemi, img, al, crop, k, cw, gap, y0, rowH, nview, tok, J, T, pt)
-% the inset: the region cut from its own render, in the last column; outlined there and on its view, a leader between
-    In = s.Inset;  vi = In.view;  rv = s.renders(vi);
-    ink = tok.colour.neutral.neutral_ink.x_value;  slate = tok.colour.neutral.neutral_slate.x_value;
-    paper = tok.colour.neutral.neutral_paper.x_value;
-    shown = hemi > 0;
-    if ~strcmp(rv.hemisphere, 'both'), shown = hemi == find(strcmp({'left', 'right'}, rv.hemisphere)); end
-    [im, ~, ai] = imread(fullfile(s.dir, [In.render.label '.png']));  ai = cortexOnly(ai);
-    camI = fitCamera(ai, Vd(shown, :), rv.camera);
-    camV = fitCamera(al{vi}, Vd(shown, :), rv.camera);
-    E = double(F);  el = median(vecnorm(Vd(E(:, 1), :) - Vd(E(:, 2), :), 2, 2));   % the mesh's edge, m
-    mI = regionMask(ai, Vd, shown, In.mask, camI, el);
-    mV = regionMask(al{vi}, Vd, shown, In.mask, camV, el);
-    if strcmp(In.Shape, 'square'), mI = squareOf(mI);  mV = squareOf(mV); end   % a square around the region, not cut
-    if camI.s / camV.s < 2 - 1e-9   % tokens annotation.inset, rule I1: >= 2x the view's pixels per mm of cortex
-        error('rheome:snapshot:inset', '%s: the inset has %.2fx the view''s pixels per mm (< 2, rule I1); the viewer''s canvas caps it: a smaller Scale or Width.', s.Name, camI.s / camV.s);
-    end
-    if ~any(mI(:)) || ~any(mV(:)), error('rheome:snapshot:inset', '%s: the inset''s region is not visible on the %s view.', s.Name, rv.view); end
-    [rr, cc] = find(mI);  pad = 2;
-    b = [max(1, min(cc) - pad), min(size(mI, 2), max(cc) + pad), max(1, min(rr) - pad), min(size(mI, 1), max(rr) + pad)];
-    wpx = b(2) - b(1) + 1;  hpx = b(4) - b(3) + 1;
-    lab = 0;   % the inset's label sits in the row of view labels, under the leader
-    kI = min([cw / wpx, (rowH - lab) / hpx, 25.4 / J.dpi.combination]);   % mm per inset pixel: fill the column, never
-    % below the print dpi (an inset enlarged past its pixels would be the stretched crop rule I1 forbids)
-    xI = nview * (cw + gap) + (cw - kI * wpx) / 2;  yI = y0 + (rowH - lab - kI * hpx) / 2;
-    a = ai(b(3):b(4), b(1):b(2));  a(~mI(b(3):b(4), b(1):b(2))) = 0;   % cut by the region's own mask (or its square)
-    svg{end+1} = sprintf('<image x="%.3f" y="%.3f" width="%.3f" height="%.3f" preserveAspectRatio="none" xlink:href="data:image/png;base64,%s"/>', ...
-        xI, yI, kI * wpx, kI * hpx, png64(im(b(3):b(4), b(1):b(2), :), a));
-    % the outlines: ink over a paper halo, the same on the view and on the inset
-    c = crop(vi, :);  xV = (vi - 1) * (cw + gap) + (cw - k * (c(2) - c(1) + 1)) / 2;  yV = y0 + (rowH - k * (c(4) - c(3) + 1)) / 2;
-    lines = [outline(mV, [xV yV], k, c(1), c(3)), outline(mI, [xI yI], kI, b(1), b(3))];
-    wl = tok.line.outline_pt * pt;                                  % tokens annotation.inset: 0.5 pt ink, the same on both
-    for L = lines
-        pts = strjoin(ptsText(L{1}), ' ');
-        svg{end+1} = sprintf(['<polyline points="%s" fill="none" stroke="%s" stroke-width="%.4f" stroke-linejoin="round"/>' ...
-            '<polyline points="%s" fill="none" stroke="%s" stroke-width="%.4f" stroke-linejoin="round"/>'], pts, paper, wl + 1.2 * pt, pts, ink, wl); %#ok<AGROW>
-    end
-    % the leader: from the region's lowest point down under the row, along it, and up to the inset (never across a view)
-    [rv2, cv2] = find(mV);  [~, j] = max(rv2);
-    p0 = [xV yV] + k * ([cv2(j) rv2(j)] - [c(1) c(3)] + 0.5);
-    [rI, cI] = find(mI);  [~, j] = max(rI);
-    p1 = [xI yI] + kI * ([cI(j) rI(j)] - [b(1) b(3)] + 0.5);
-    yl = y0 + rowH + 0.25;                                         % just under the views, above their labels
-    svg{end+1} = sprintf('<polyline points="%.3f,%.3f %.3f,%.3f %.3f,%.3f %.3f,%.3f" fill="none" stroke="%s" stroke-width="%.4f"/>', ...
-        p0, p0(1), yl, p1(1), yl, p1, ink, tok.line.leader_pt * pt);
-    mag = (kI * camI.s) / (k * camV.s);                           % the inset's mm per mm of cortex, over the view's
-    svg{end+1} = T(nview * (cw + gap) + cw / 2, y0 + rowH + 1.1 * tok.type.viewLabel.size_pt * pt, sprintf('%s, %s%.3g', In.Label, char(215), mag), tok.type.viewLabel.size_pt, slate, 'middle', '');
-    dpiI = 25.4 / kI;
-    if dpiI < J.dpi.combination, warning('rheome:snapshot:dpi', '%s: the inset prints at %.0f dpi (< %d); a smaller Zoom or region.', s.Name, dpiI, J.dpi.combination); end
-    [rv3, cv3] = find(mV);
-    info = struct('label', In.Label, 'view', rv.view, 'magnification', mag, 'dpi', dpiI, 'vertices', find(In.mask), ...
-        'px', [cv3 rv3], 'shape', In.Shape);
-end
-
-function q = squareOf(m)
-% the square (on the image) around a mask's pixels, clipped to the image
-    q = false(size(m));  [rr, cc] = find(m);
-    if isempty(rr), return; end
-    h = ceil(max(max(rr) - min(rr), max(cc) - min(cc)) / 2) + 2;  mc = round([mean([min(rr) max(rr)]) mean([min(cc) max(cc)])]);
-    q(max(1, mc(1) - h):min(end, mc(1) + h), max(1, mc(2) - h):min(end, mc(2) + h)) = true;
-end
-
-function [svg, r] = drawMarks(svg, r, s, cam, alpha, Vd, F, shown, el, xy, k, c, tok, pt, i)
-% the selections (a blended fill in the axis colour, or a dashed extent) and the paths (geodesics, ink, an arrowhead)
-% on one view, placed by the render's own camera and hidden where the surface hides them
-    ink = tok.colour.neutral.neutral_ink.x_value;  paper = tok.colour.neutral.neutral_paper.x_value;
-    toPage = @(px) xy + k * (px - [c(1) c(3)] + 0.5);
-    Fs = F(all(shown(F), 2), :);
-    for j = 1:numel(s.Selection)
-        q = s.Selection(j);
-        m = regionMask(alpha, Vd, shown, q.mask, cam, el);
-        if ~any(m(:)), continue; end
-        if ~q.dashed     % the fill: the colour at the tokens' alpha inside, as a state of the surface
-            mc = m(c(3):c(4), c(1):c(2));  rgb = uint8(reshape(sscanf(q.colour(2:end), '%2x'), 1, 1, 3));
-            svg{end+1} = sprintf('<image x="%.3f" y="%.3f" width="%.3f" height="%.3f" preserveAspectRatio="none" xlink:href="data:image/png;base64,%s"/>', ...
-                xy, k * size(mc, 2), k * size(mc, 1), png64(repmat(rgb, size(mc)), uint8(255 * tok.cortex.selection.fill_alpha * mc))); %#ok<AGROW>
-            sty = sprintf('stroke="%s" stroke-width="%.4f"', ink, 0.35 * pt);                    % as the tile outlines
-        else             % an extent: dashed ink, never a fill (tokens cortex.selection.vs_support)
-            sty = sprintf('stroke="%s" stroke-width="%.4f" stroke-dasharray="%.4f %.4f"', ink, 0.8 * pt, 2 * pt, 1.5 * pt);
-        end
-        for L = outline(m, xy, k, c(1), c(3))
-            svg{end+1} = sprintf('<polyline points="%s" fill="none" %s stroke-linejoin="round"/>', strjoin(ptsText(L{1}), ' '), sty); %#ok<AGROW>
-        end
-        if ~isempty(q.centre) && shown(q.centre) && visible(Vd(q.centre, :), cam.d, Vd, Fs)                % one size for every centre
-            p0 = toPage(project(cam, Vd(q.centre, :)));
-            svg{end+1} = sprintf('<circle cx="%.3f" cy="%.3f" r="%.4f" fill="%s" stroke="%s" stroke-width="%.4f"/>', ...
-                p0, tok.marker.size_pt / 2 * pt, q.colour, ink, tok.marker.edge_pt * pt); %#ok<AGROW>
-        end
-    end
-    wl = tok.cortex.paths.width_pt * pt;
-    for j = 1:numel(s.Paths)
-        q = s.Paths(j);
-        X = q.bary(:, 1) .* Vd(F(q.faces, 1), :) + q.bary(:, 2) .* Vd(F(q.faces, 2), :) + q.bary(:, 3) .* Vd(F(q.faces, 3), :);
-        vis = all(shown(F(q.faces, :)), 2) & visible(X, cam.d, Vd, Fs);   % on the shown hemisphere, in front
-        P = toPage(project(cam, X));
-        r.paths(j).px{i} = project(cam, X);  r.paths(j).visible{i} = vis;
-        run = diff([0; vis(:); 0]);  a = find(run == 1);  b = find(run == -1) - 1;
-        for u = 1:numel(a)
-            if b(u) <= a(u), continue; end
-            pts = strjoin(ptsText(P(a(u):b(u), :)), ' ');
-            svg{end+1} = sprintf(['<polyline points="%s" fill="none" stroke="%s" stroke-width="%.4f" stroke-linejoin="round" stroke-linecap="round"/>' ...
-                '<polyline points="%s" fill="none" stroke="%s" stroke-width="%.4f" stroke-linejoin="round" stroke-linecap="round"/>'], ...
-                pts, paper, wl + 2 * 0.6 * pt, pts, ink, wl); %#ok<AGROW>   % ink over a paper halo, as the scale bar
-        end
-        if vis(end)          % the arrowhead at the end, along the last visible millimetre
-            e = P(end, :);  back = find(vecnorm(P - e, 2, 2) > 0.5, 1, 'last');
-            if ~isempty(back)
-                u = (e - P(back, :)) / norm(e - P(back, :));  nn = [-u(2) u(1)];  hl = 4 * wl;
-                svg{end+1} = sprintf('<polygon points="%.3f,%.3f %.3f,%.3f %.3f,%.3f" fill="%s"/>', e + u * 0.2 * hl, ...
-                    e - u * hl + nn * 0.45 * hl, e - u * hl - nn * 0.45 * hl, ink); %#ok<AGROW>
-            end
-        end
-    end
-end
-
-function a = cortexOnly(a)
-% the render's alpha with the viewer's chrome removed: the viewer paints its own colourbar (lower left) into every
-% PNG and has no setting to leave it out; the cortex is the large connected pieces of the alpha (each >= 5 % of the
-% largest), the colourbar's ramp and glyphs are small ones. Labelled on a 4x max-pooled mask (base MATLAB).
-    f = 4;  m = a > 0;  [H, W] = size(m);
-    p = false(ceil(H / f), ceil(W / f));
-    for di = 1:f, for dj = 1:f, q = m(di:f:end, dj:f:end);  p(1:size(q, 1), 1:size(q, 2)) = p(1:size(q, 1), 1:size(q, 2)) | q; end, end
-    idx = zeros(size(p));  on = find(p);  idx(on) = 1:numel(on);
-    [r, c] = find(p);
-    e = [];
-    right = c < size(p, 2);  rr = r(right);  cr = c(right);  k = p(sub2ind(size(p), rr, cr + 1));
-    e = [e; idx(sub2ind(size(p), rr(k), cr(k))), idx(sub2ind(size(p), rr(k), cr(k) + 1))];
-    down = r < size(p, 1);  rd = r(down);  cd = c(down);  k = p(sub2ind(size(p), rd + 1, cd));
-    e = [e; idx(sub2ind(size(p), rd(k), cd(k))), idx(sub2ind(size(p), rd(k) + 1, cd(k)))];
-    if isempty(on), return; end
-    comp = conncomp(graph(e(:, 1), e(:, 2), [], numel(on)))';
-    n = accumarray(comp, 1);
-    keep = false(size(p));  keep(on) = n(comp) >= 0.05 * max(n);
-    keep = keep(ceil((1:H)' / f), ceil((1:W) / f));
-    a(~keep) = 0;
-end
-
-function m = regionMask(alpha, V, shown, region, cam, edgeLength)
-% the region's pixels on a render: each drawn pixel takes the nearest FRONT vertex (the nearest to the camera in its
-% cell, as for the scale bar); it is the region's when that vertex is
-    px = project(cam, V);  depth = V * cam.d';
-    idx = find(shown);
-    % cells two mesh edges wide: one vertex per cell would let a hidden vertex (the far side of a sulcus or the medial
-    % wall) pass as front-most and claim pixels (as for the scale bar)
-    csz = max(4, 2 * cam.s * edgeLength);
-    key = floor(px(idx, :) / csz);  [~, ~, ci] = unique(key, 'rows');
-    front = accumarray(ci, depth(idx), [], @max);
-    fr = idx(depth(idx) >= front(ci) - 1.5e-3);
-    m = false(size(alpha));
-    inR = fr(region(fr));
-    if isempty(inR), return; end
-    lo = floor(min(px(inR, :), [], 1) - csz);  hi = ceil(max(px(inR, :), [], 1) + csz);    % a vertex's pixels reach half an edge out
-    near = fr(all(px(fr, :) >= lo - 2 * csz & px(fr, :) <= hi + 2 * csz, 2));
-    [cc, rr] = meshgrid(max(1, lo(1)):min(size(alpha, 2), hi(1)), max(1, lo(2)):min(size(alpha, 1), hi(2)));
-    q = [cc(:) rr(:)];  q = q(alpha(sub2ind(size(alpha), q(:, 2), q(:, 1))) > 0, :);
-    if isempty(q), return; end
-    nn = dsearchn(px(near, :), q);
-    hit = region(near(nn));
-    m(sub2ind(size(alpha), q(hit, 2), q(hit, 1))) = true;
-end
-
-function L = outline(m, xy, kk, c0, r0)
-% the mask's boundary as page polylines (mm): contour at 1/2 of the mask, pixel centres to the page
-    C = contourc(double(m), [0.5 0.5]);
-    L = {};  i = 1;
-    while i < size(C, 2)
-        n = C(2, i);  P = C(:, i+1:i+n)';  i = i + n + 1;
-        if n > 8, L{end+1} = xy + kk * (P - [c0 r0] + 0.5); end %#ok<AGROW>
-    end
-end
-
-function W = panelWidth(W, nview, J)
-% mm: given, or the journal's double column for a row of views, single for one
-    if isempty(W), if nview > 1, W = 'double'; else, W = 'single'; end, end
-    if ~isnumeric(W), W = J.width_mm.(pickName(W, fieldnames(J.width_mm), 'Width')); end
-end
-
-function c = ptsText(q)
-    c = arrayfun(@(i) sprintf('%.3f,%.3f', q(i, 1), q(i, 2)), 1:size(q, 1), 'UniformOutput', false);
-end
-
-function b = png64(rgb, alpha)
-% an image as base64 PNG (alpha kept when given)
-    f = [tempname '.png'];  c = onCleanup(@() delete(f));
-    if isempty(alpha), imwrite(rgb, f); else, imwrite(rgb, f, 'Alpha', alpha); end
-    fid = fopen(f, 'r');  b = matlab.net.base64encode(fread(fid, inf, '*uint8')');  fclose(fid);
-end
-
-function t = esc(t)
-    t = strrep(strrep(strrep(t, '&', '&amp;'), '<', '&lt;'), '>', '&gt;');
-end
-
-function t = timeText(s)
-    if abs(s) < 1, t = sprintf('%g ms', round(s * 1e3, 3, 'significant')); else, t = sprintf('%g s', round(s, 4, 'significant')); end
-end
-
-function t = num(x)
-    t = strrep(sprintf('%.3g', x), '-', char(8722));
-end
-
-function s = plural(n)
-    s = '';  if n > 1, s = 's'; end
 end

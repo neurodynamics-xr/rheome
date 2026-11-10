@@ -20,8 +20,9 @@ function L = tiles(T, level, opts)
 % OUTPUT:
 %   L : struct .name .codes [nV x 1] int (-1: no tile) .entries (.code .name), for rheome.io.write.bundle 'Labellings'
 %
-% NOT YET (the viewer): tile OUTLINES with major/minor weights (cortex.marks 'tile outlines' and 'coarser-level
-% boundaries') -- the viewer paints a labelling's fill only; filed with Product.
+% TILE OUTLINES (cortex.marks 'tile outlines' and 'coarser-level boundaries'): the viewer draws them from the labelling,
+% the shown level thin and a coarser level thick -- rheome.snapshot's shot field Outlines (Labelling, Coarser, Width,
+% CoarserWidth, Select), or the viewer setting 'outlines' in rheome.view.
 %
 % Example:
 %   [V, F] = rheome.geom.icosphere(3);  S = struct('Vertices', 0.07*V, 'Faces', F);

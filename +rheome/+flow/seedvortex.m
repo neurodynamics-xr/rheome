@@ -75,7 +75,7 @@ function out = seedvortex(name, varargin)
 % is there.
 %
 % See also: rheome.flow.seedrotor, rheome.operators.gauge, rheome.operators.connection_laplacian,
-%           rheome.detect.criticalPoints, rheome.forward.simulate, rheome.geom.geodesic
+%           rheome.detect.criticalPoints, rheome.forward.simulate, rheome.geom.measure.heatDistance
 %
 % Author: Diellor Basha, 2026
 
@@ -111,7 +111,7 @@ function out = seedvortex(name, varargin)
     end
 
     %% the outward radial direction, from the gradient of the geodesic distance
-    d = rheome.geom.geodesic(S, v);
+    d = rheome.geom.measure.heatDistance(S, v);
     fg = rheome.operators.face_gradient(V, F);
     gx = fg.Gx*d;  gy = fg.Gy*d;  gz = fg.Gz*d;
     er = [fg.W*gx, fg.W*gy, fg.W*gz];

@@ -1,0 +1,428 @@
+{
+ "arrays": {
+  "V_mm": {
+   "file": "V_mm.bin",
+   "dtype": "float64",
+   "shape": [
+    642,
+    3
+   ],
+   "unit": "mm",
+   "note": ""
+  },
+  "F": {
+   "file": "F.bin",
+   "dtype": "int32",
+   "shape": [
+    1280,
+    3
+   ],
+   "unit": "1",
+   "note": "triangles, vertex indices (0-based), counter-clockwise seen from outside"
+  },
+  "mass_mm2": {
+   "file": "mass_mm2.bin",
+   "dtype": "float64",
+   "shape": [
+    642
+   ],
+   "unit": "mm^2",
+   "note": ""
+  },
+  "area_mm2": {
+   "file": "area_mm2.bin",
+   "dtype": "float64",
+   "shape": [
+    642
+   ],
+   "unit": "mm^2",
+   "note": ""
+  },
+  "normals": {
+   "file": "normals.bin",
+   "dtype": "float64",
+   "shape": [
+    642,
+    3
+   ],
+   "unit": "1",
+   "note": ""
+  },
+  "adjacency_indptr": {
+   "file": "adjacency_indptr.bin",
+   "dtype": "int32",
+   "shape": [
+    643
+   ],
+   "unit": "1",
+   "note": "support_adjacency (CSR, symmetric, no self loops; a vertex's neighbours in indices[indptr[i]:indptr[i+1]], sorted ascending)"
+  },
+  "adjacency_indices": {
+   "file": "adjacency_indices.bin",
+   "dtype": "int32",
+   "shape": [
+    3840
+   ],
+   "unit": "1",
+   "note": ""
+  },
+  "P": {
+   "file": "P.bin",
+   "dtype": "float64",
+   "shape": [
+    642,
+    642
+   ],
+   "unit": "1",
+   "note": "[K\u00d7V] Laplace-Beltrami modes as rows, mass-orthonormal, K = V (all modes), ascending lam; sign of each mode: its largest-|.| entry positive (degenerate eigenspaces are arbitrary rotations: compare through mode-invariant outputs)"
+  },
+  "lam_per_mm2": {
+   "file": "lam_per_mm2.bin",
+   "dtype": "float64",
+   "shape": [
+    642
+   ],
+   "unit": "1/mm^2",
+   "note": ""
+  },
+  "mode_norm_s": {
+   "file": "mode_norm_s.bin",
+   "dtype": "float64",
+   "shape": [
+    642
+   ],
+   "unit": "1",
+   "note": ""
+  },
+  "planted_paths_mm": {
+   "file": "planted_paths_mm.bin",
+   "dtype": "float64",
+   "shape": [
+    2,
+    12,
+    3
+   ],
+   "unit": "mm",
+   "note": "[2\u00d7T\u00d73] centre of each planted vortex on the sphere"
+  },
+  "planted_sense": {
+   "file": "planted_sense.bin",
+   "dtype": "int32",
+   "shape": [
+    2
+   ],
+   "unit": "1",
+   "note": ""
+  },
+  "flow": {
+   "file": "flow.bin",
+   "dtype": "float64",
+   "shape": [
+    642,
+    3,
+    12
+   ],
+   "unit": "arbitrary speed units",
+   "note": "[V\u00d73\u00d7T] planted current + noise (row-major: index (v, xyz, t))"
+  },
+  "curl_vertex": {
+   "file": "curl_vertex.bin",
+   "dtype": "float64",
+   "shape": [
+    642,
+    12
+   ],
+   "unit": "flow units / m",
+   "note": "[V\u00d7T] FaceOperators.div_curl of the tangent flow (area-weighted face->vertex); per METRE (nxr's FaceOperators run on the native metre surface), not per mm: Rheome matches only with positions V_mm/1000"
+  },
+  "div_vertex": {
+   "file": "div_vertex.bin",
+   "dtype": "float64",
+   "shape": [
+    642,
+    12
+   ],
+   "unit": "flow units / m",
+   "note": ""
+  },
+  "Z_curl": {
+   "file": "Z_curl.bin",
+   "dtype": "float64",
+   "shape": [
+    642,
+    12
+   ],
+   "unit": "flow units / m x mm (mode coordinates: mass in mm^2, so a curl per metre times mm)",
+   "note": "[K\u00d7T] Cortex.readings()['curl'], mode coordinates (the flow's columns = frames are the 'sensors', C = T)"
+  },
+  "Z_div": {
+   "file": "Z_div.bin",
+   "dtype": "float64",
+   "shape": [
+    642,
+    12
+   ],
+   "unit": "flow units / m x mm (mode coordinates: mass in mm^2, so a curl per metre times mm)",
+   "note": ""
+  },
+  "Z_norm": {
+   "file": "Z_norm.bin",
+   "dtype": "float64",
+   "shape": [
+    642,
+    12
+   ],
+   "unit": "1",
+   "note": ""
+  },
+  "curl_heat10": {
+   "file": "curl_heat10.bin",
+   "dtype": "float64",
+   "shape": [
+    642,
+    12
+   ],
+   "unit": "flow units / m",
+   "note": "[V\u00d7T] core_operator (float32 inside nxr, saved as float64): heat kernel exp(-lam*10^2/2) on Z_curl"
+  },
+  "heat10_threshold_hist_bins": {
+   "file": "heat10_threshold_hist_bins.bin",
+   "dtype": "float64",
+   "shape": [
+    3
+   ],
+   "unit": "1",
+   "note": "[n_bins, lo, hi] of _core_threshold's log histogram: hi = 4 x max|curl_heat10|, lo = hi*1e-6"
+  },
+  "patch_frame": {
+   "file": "patch_frame.bin",
+   "dtype": "int32",
+   "shape": [
+    24
+   ],
+   "unit": "1",
+   "note": "_core_patches rows (frame, sense, centre, area), ordered by frame then sense (+1 first)"
+  },
+  "patch_sense": {
+   "file": "patch_sense.bin",
+   "dtype": "int32",
+   "shape": [
+    24
+   ],
+   "unit": "1",
+   "note": "+1 counter-clockwise (curl >= thr), -1 clockwise"
+  },
+  "patch_centre_mm": {
+   "file": "patch_centre_mm.bin",
+   "dtype": "float64",
+   "shape": [
+    24,
+    3
+   ],
+   "unit": "mm",
+   "note": ""
+  },
+  "patch_area_mm2": {
+   "file": "patch_area_mm2.bin",
+   "dtype": "float64",
+   "shape": [
+    24
+   ],
+   "unit": "mm^2",
+   "note": ""
+  },
+  "steps": {
+   "file": "steps.bin",
+   "dtype": "float64",
+   "shape": [
+    22,
+    9
+   ],
+   "unit": "mm",
+   "note": "[S\u00d79] core_stats(steps=): sense, from-centre xyz (mm), displacement xyz (mm), track id, frame (the frame the core arrives in)"
+  },
+  "dens_ccw": {
+   "file": "dens_ccw.bin",
+   "dtype": "float64",
+   "shape": [
+    642
+   ],
+   "unit": "fraction of frames",
+   "note": ""
+  },
+  "dens_cw": {
+   "file": "dens_cw.bin",
+   "dtype": "float64",
+   "shape": [
+    642
+   ],
+   "unit": "fraction of frames",
+   "note": ""
+  },
+  "life_hist": {
+   "file": "life_hist.bin",
+   "dtype": "int32",
+   "shape": [
+    100
+   ],
+   "unit": "1",
+   "note": ""
+  },
+  "speed_hist": {
+   "file": "speed_hist.bin",
+   "dtype": "int32",
+   "shape": [
+    100
+   ],
+   "unit": "1",
+   "note": ""
+  },
+  "mexhat_radii_mm": {
+   "file": "mexhat_radii_mm.bin",
+   "dtype": "float64",
+   "shape": [
+    6
+   ],
+   "unit": "mm",
+   "note": ""
+  },
+  "mexhat_gain_curl": {
+   "file": "mexhat_gain_curl.bin",
+   "dtype": "float64",
+   "shape": [
+    6,
+    642
+   ],
+   "unit": "1 (gain per mode, per radius)",
+   "note": ""
+  },
+  "mexhat_curl_r25_modes": {
+   "file": "mexhat_curl_r25_modes.bin",
+   "dtype": "float64",
+   "shape": [
+    642,
+    12
+   ],
+   "unit": "1",
+   "note": ""
+  },
+  "mexhat_curl_r50_modes": {
+   "file": "mexhat_curl_r50_modes.bin",
+   "dtype": "float64",
+   "shape": [
+    642,
+    12
+   ],
+   "unit": "1",
+   "note": ""
+  },
+  "curl_hat_level6": {
+   "file": "curl_hat_level6.bin",
+   "dtype": "float64",
+   "shape": [
+    642,
+    12
+   ],
+   "unit": "flow units / m",
+   "note": "the gain is normalised to peak 1, so the values keep the curl's unit (flow units / m)"
+  },
+  "curl_hat_level7": {
+   "file": "curl_hat_level7.bin",
+   "dtype": "float64",
+   "shape": [
+    642,
+    12
+   ],
+   "unit": "flow units / m",
+   "note": ""
+  },
+  "curl_hat_level8": {
+   "file": "curl_hat_level8.bin",
+   "dtype": "float64",
+   "shape": [
+    642,
+    12
+   ],
+   "unit": "flow units / m",
+   "note": ""
+  }
+ },
+ "scalars": {
+  "threshold": 9.36048112897212,
+  "cores_per_frame": 2.0,
+  "area_mm2": 463.04598795776644,
+  "n_tracks": 2,
+  "life_ms": 1000.0,
+  "life_cycles": 2.0,
+  "speed_mm_s": 50.88127769727141,
+  "net_speed_mm_s": 48.5816192527816,
+  "disp_mm": 44.53315098171647,
+  "straightness": 0.9547734202928395,
+  "reversal": 0.0,
+  "persist_half": 0.7777777777777778,
+  "recur_cycle": 0.0,
+  "jaccard_cycle": 0.0,
+  "jaccard_half": 0.21720658156106204,
+  "frames": 12,
+  "threshold_loop_reference": 9.36048112897212
+ },
+ "layout": "little-endian, row-major (C order); float64 or int32 .bin, no header",
+ "parameters": {
+  "subdiv": 3,
+  "radius_mm": 60.0,
+  "frames": 12,
+  "fs_hz": 12.0,
+  "f0_hz": 2.0,
+  "vortex_width_mm": 15.0,
+  "step_mm_per_frame": 4.0,
+  "noise_fraction": 0.01,
+  "seed": 20261102,
+  "core_sigma_mm": 10.0,
+  "core_pct": 98.0,
+  "core_link_mm": 15.0,
+  "levels": [
+   6,
+   7,
+   8
+  ],
+  "histogram_bins": 4096,
+  "native_positions_unit": "m (nxr); V_mm here is x1000",
+  "vortices": [
+   {
+    "sense": 1,
+    "c0": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "via": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   {
+    "sense": -1,
+    "c0": [
+     -0.6,
+     0.7,
+     0.2
+    ],
+    "via": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  ]
+ },
+ "nxr_commit": "9d97761f8bf44916f740940cbc58e8b85a56dae9",
+ "scalar_units": {
+  "threshold": "flow units / m",
+  "area_mm2": "mm^2",
+  "speed_mm_s": "mm/s",
+  "net_speed_mm_s": "mm/s",
+  "disp_mm": "mm",
+  "life_ms": "ms"
+ }
+}

@@ -61,7 +61,7 @@ function [T, X, Ex] = measure_aperiodic(name, S, opts)
 %   so this is the record's Welch PSD up to the segments straddling the window's edges.
 % Ex (third output, figure data): the first offset plant at the largest OffsetX of the first arm, rep 1, first sigma,
 % first speed > 0 (else the first): the hemisphere's cortex, the path, the patch gain at the window's centre and the
-% patch centre per envelope frame, and at the sensors the channel-mean Welch PSDs (2 s Hann) of the background, the
+% patch centre per envelope frame, and at the sensors the channel-mean Welch PSDs (2 s periodic Hann) of the background, the
 % forwarded plant, their sum (total) and the sum's periodic split per fit window (aperiodic = total - periodic).
 %
 % See also: rheome.spectral.decompose, rheome.detect.tilepath, rheome.differential.helmholtzbands,
@@ -95,7 +95,7 @@ function [T, X, Ex] = measure_aperiodic(name, S, opts)
 
     %% the cortex, the instrument, the records
     Hm = S.B.(char(opts.Hemi));  Sh = Hm.S;  lbo = Hm.lbo;  Phi = lbo.Phi;  lam = lbo.Lambda(:);  Mm = lbo.Mass;
-    gv = double(Hm.gv(:));  nV = size(Sh.Vertices, 1);  av = full(sum(Mm, 2)) .* rheome.geom.cortexmask(Sh);
+    gv = double(Hm.gv(:));  nV = size(Sh.Vertices, 1);  av = full(sum(Mm, 2)) .* rheome.geom.select.cortex(Sh);
     Nl = Sh.VertNormals ./ max(vecnorm(Sh.VertNormals, 2, 2), eps);  Sh.VertNormals = Nl;
     st = rheome.load.study(name);  fs = st.rec.sfreq;  REST = double(st.rec.F(S.iSel, :));  clear st
     E = [];  iC = (1:numel(S.iSel))';
@@ -115,7 +115,7 @@ function [T, X, Ex] = measure_aperiodic(name, S, opts)
     if numel(iC) < numel(S.iSel)                         % the shared channels get their own kernel
         Res = rheome.inverse.mne(S.G(iC, :), struct('NoiseCov', S.ncm.NoiseCov(iC, iC)), ...
             struct('ChannelTypes', {S.chT(iC)}, 'InverseMeasure', 'amplitude', 'nVert', S.nV, 'SnrFixed', 3));
-        Res.ImagingKernel = rheome.operators.harmonicfill(S.Sf, Res.ImagingKernel, rheome.geom.cortexmask(S.Sf));   % as rheome.scale.sensors
+        Res.ImagingKernel = rheome.operators.harmonicfill(S.Sf, Res.ImagingKernel, rheome.geom.select.cortex(S.Sf));   % as rheome.scale.sensors
     end
     REST = REST(iC, :);  ER = [];
     if ~isempty(E)
@@ -125,7 +125,7 @@ function [T, X, Ex] = measure_aperiodic(name, S, opts)
     Kr = Res.ImagingKernel;  Kn = Ns(:,1).*Kr(3*gv-2,:) + Ns(:,2).*Kr(3*gv-1,:) + Ns(:,3).*Kr(3*gv,:);  clear Res Kr
     Gs = S.G(iC, :);  Gn = Gs(:,3*gv-2).*Nl(:,1).' + Gs(:,3*gv-1).*Nl(:,2).' + Gs(:,3*gv).*Nl(:,3).';  clear Gs
     nT = round((W + 2*opts.MarginS)*fs);  keep = round(opts.MarginS*fs) + (1:round(W*fs));  Lw = nT/fs;
-    nseg = round(2*fs);  wfun = hann(nseg);
+    nseg = round(2*fs);  wfun = hann(nseg,'periodic');
     [Pr, fw] = pwelch(REST.', wfun, nseg/2, nseg, fs);
     m = fw >= 2 & fw <= 40;  apr = rheome.spectral.aperiodic(Pr(m,:), fw(m));  chi0 = median(apr.exponent);
     mb = fw >= FITR(1) & fw <= FITR(2);  apk = rheome.spectral.aperiodic(Pr(mb,:), fw(mb), struct('knee', true));
@@ -156,7 +156,7 @@ function [T, X, Ex] = measure_aperiodic(name, S, opts)
     for r = 1:opts.Reps
         cand = [];  tries = 0;
         while isempty(cand)
-            cvx = rheome.geom.cortexmask(Sh);  s0 = find(cvx);  s0 = s0(randi(numel(s0)));  d0 = distances(ge, s0);  cand = find(abs(d0(:) - PATH) < 2e-3 & cvx);  tries = tries + 1;   % ends on cortex
+            cvx = rheome.geom.select.cortex(Sh);  s0 = find(cvx);  s0 = s0(randi(numel(s0)));  d0 = distances(ge, s0);  cand = find(abs(d0(:) - PATH) < 2e-3 & cvx);  tries = tries + 1;   % ends on cortex
             if tries > 200, error('scale:aperiodic:path', 'no %g mm geodesic on this hemisphere', opts.PathMM); end
         end
         [pv, ~, eg] = shortestpath(ge, s0, cand(randi(numel(cand))));

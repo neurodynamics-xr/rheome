@@ -75,7 +75,7 @@ function [T, X, Ex] = measure_inject(name, S, opts)
     X = table();  Ex = struct([]);
     for hh = opts.Hemis
         H = S.B.(char(hh));  Sh = H.S;  Phi = H.lbo.Phi;  Mm = H.lbo.Mass;  lam = H.lbo.Lambda(:);
-        av = full(sum(Mm, 2)) .* rheome.geom.cortexmask(H.S);  gv = double(H.gv(:));  nV = numel(gv);  nrm = double(Sh.VertNormals);
+        av = full(sum(Mm, 2)) .* rheome.geom.select.cortex(H.S);  gv = double(H.gv(:));  nV = numel(gv);  nrm = double(Sh.VertNormals);
         rows = reshape((gv' - 1)*3 + (1:3)', [], 1);  K = S.Res.ImagingKernel(rows, :);  GL = S.G(:, rows);
         hk = exp(-lam*(opts.SigmaMM*1e-3)^2/2);
         C = double(E.(char(hh)).C);  nFr = size(C, 2);  nWin = floor(nFr/(W*FR));
@@ -105,7 +105,7 @@ function [T, X, Ex] = measure_inject(name, S, opts)
         for w = 1:nWin, ref(w) = max(Phi*mean(C(:, (w-1)*W*FR + (1:W*FR)), 2)); end
         s1 = zeros(20, 1);  tt = (0:W*fs-1)/fs;
         for q = 1:20
-            cvx = find(rheome.geom.cortexmask(Sh));  g0 = GL*i_blob(cvx(randi(numel(cvx))), Phi, Mm, hk, nrm);   % on cortex
+            cvx = find(rheome.geom.select.cortex(Sh));  g0 = GL*i_blob(cvx(randi(numel(cvx))), Phi, Mm, hk, nrm);   % on cortex
             A = rheome.flow.activation(K*hilbert(filtfilt(bp, (g0*cos(2*pi*F0*tt)).')).');
             s1(q) = max(mean(A, 2));
         end
@@ -114,7 +114,7 @@ function [T, X, Ex] = measure_inject(name, S, opts)
             for n = 1:opts.NPer
                 hf = 1 + (n > opts.NPer/2);  lims = [3, floor(nWin/2); floor(nWin/2) + 1, nWin - 2];
                 w = randi(lims(hf, :));  s0 = (w-1)*W*fs - (MARGIN + PAD)*fs + (1:nSeg);
-                cvx = rheome.geom.cortexmask(Sh);  cvi = find(cvx);  v0 = cvi(randi(numel(cvi)));  car = cos(2*pi*F0*tSeg + 2*pi*rand);  v = opts.Speeds(ci);   % on cortex
+                cvx = rheome.geom.select.cortex(Sh);  cvi = find(cvx);  v0 = cvi(randi(numel(cvi)));  car = cos(2*pi*F0*tSeg + 2*pi*rand);  v = opts.Speeds(ci);   % on cortex
                 switch opts.Cases(ci)
                     case "still"
                         bsig = (GL*i_blob(v0, Phi, Mm, hk, nrm))*(env.*car);  vT = repmat(v0, 1, numel(cIdx));

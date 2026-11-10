@@ -1,6 +1,6 @@
 classdef tMedialWall < matlab.unittest.TestCase
 % The medial wall (decision 3882c4ce, 2026-10-14): excluded from measurements, harmonically filled for operators.
-% rheome.geom.cortexmask, rheome.operators.harmonicfill, rheome.geom.tiles/.tilemean (cortex area),
+% rheome.geom.select.cortex, rheome.operators.harmonicfill, rheome.geom.tiles/.tilemean (cortex area),
 % rheome.group.spin (Cortex=), rheome.detect.criticalPoints (.wall).
 %
 % Author: Diellor Basha, 2026
@@ -24,9 +24,9 @@ classdef tMedialWall < matlab.unittest.TestCase
             % 'unknown' and 'corpuscallosum' are the wall; 'medialorbitofrontal' is cortex
             A = struct('Label', {{'unknown L', 'medialorbitofrontal L', 'precentral L', 'corpuscallosum L'}}, ...
                        'Membership', sparse([1 2 3 4], [1 2 3 4], true, 4, 6));
-            c = rheome.geom.cortexmask(A, 6);
+            c = rheome.geom.select.cortex(A, 6);
             tc.verifyEqual(c, [false; true; true; false; false; false]);
-            tc.verifyEqual(rheome.geom.cortexmask(rmfield(tc.S, 'Cortex')), true(tc.S.nV, 1));
+            tc.verifyEqual(rheome.geom.select.cortex(rmfield(tc.S, 'Cortex')), true(tc.S.nV, 1));
         end
 
         function fillIsHarmonic(tc)
@@ -53,8 +53,8 @@ classdef tMedialWall < matlab.unittest.TestCase
             tc.verifyTrue(all(G.cortex_fraction >= 0 & G.cortex_fraction <= 1));
             tc.verifyLessThan(min(G.cortex_fraction), 1);           % some tile holds wall
             X = randn(S.nV, 1);  Xw = X;  Xw(tc.wall) = 1e6;         % wall values never reach a tile mean
-            tc.verifyEqual(rheome.geom.tilemean(G, Xw, G.area), rheome.geom.tilemean(G, X, G.area), 'AbsTol', 1e-9);
-            m = rheome.geom.tilemean(G, Xw, [], 'median');  tc.verifyLessThan(max(m), 1e6);
+            tc.verifyEqual(rheome.geom.measure.tileMean(G, Xw, G.area), rheome.geom.measure.tileMean(G, X, G.area), 'AbsTol', 1e-9);
+            m = rheome.geom.measure.tileMean(G, Xw, [], 'median');  tc.verifyLessThan(max(m), 1e6);
             G2 = rheome.geom.tiles(T, S, 2);  [~, par] = ismember(floor(G.node_id / 2), G2.node_id);
             tc.verifyEqual(accumarray(par, G.cortex_area), G2.cortex_area, 'RelTol', 1e-12);   % roll-up exact
         end

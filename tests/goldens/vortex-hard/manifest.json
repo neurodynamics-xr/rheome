@@ -1,0 +1,59 @@
+{
+ "scenarios": [
+  {
+   "name": "competition_single",
+   "dir": "competition_single",
+   "doc": "Frame 0: two +1 cores A, B (vertices), 11-14.5 mm apart. Frames 1-5: ONE +1 core C (a neighbour of A, nearer A than B, within 15 mm of both). The nearest track (A's) takes C and continues; B's track closes after one frame (short: in no life/path/disp, and with no step)."
+  },
+  {
+   "name": "competition_greedy",
+   "dir": "competition_greedy",
+   "doc": "Frame 0: +1 cores A, B (11-14.5 mm apart). Frames 1-5: two +1 cores c1 < c2 (vertex index; c1 is listed first), both nearer B than A, c2 nearer B than c1 (and within 15 mm of A). Greedy, in patch order: c1 takes B's track although c2 is nearer; c2 then gets A's track. Distance-optimal assignment would give B to c2."
+  },
+  {
+   "name": "competition_parallel",
+   "dir": "competition_parallel",
+   "doc": "Two +1 cores per frame for 10 frames, 14-17.5 mm apart (not adjacent patches), moving in parallel one vertex (about 8-10 mm) per frame. Each new core is nearer its own previous core than the other one, so greedy linking keeps two 10-frame tracks."
+  },
+  {
+   "name": "tie",
+   "dir": "tie",
+   "doc": "Frame 0: +1 cores at a and b, mirror images in the plane y = 0 (a,b neighbours of c). Frames 1-5: one +1 core at c on the plane: its distance to a and b is EXACTLY equal (float64 equal; the script checks it). Stable argsort breaks the tie by track insertion order: the first-listed core's track (lower vertex index first) wins; the other closes after one frame. "
+  },
+  {
+   "name": "gap_zero_frame",
+   "dir": "gap_zero_frame",
+   "doc": "One +1 core moves a vertex per frame; frame 5 has NO core (all zero). Frames 0-4 and 6-11 give two tracks (5 and 6 frames): the gap closes every track. Also a lone +1 core at frame 2 (a 1-frame track: no step) and a -1 core at frames 8-9 (a 2-frame track: one step, in `steps` but not in life/path/disp)."
+  },
+  {
+   "name": "gap_missing_frames",
+   "dir": "gap_missing_frames",
+   "doc": "The movie has cores in every column, but core_stats is given frames = [0-4, 7-11]: columns 5 and 6 are missing and ignored (they hold a -1 core at far[3] that must NOT appear). A frame jump closes every track: the moving +1 core gives tracks of 5 and 5 frames; the 1-frame (frame 2) and 2-frame -1 (frames 8-9) cores as in gap_zero_frame. `frames` = 10."
+  },
+  {
+   "name": "recurrence",
+   "dir": "recurrence",
+   "doc": "18 frames (3 cycles). A +1 vortex (a vertex and its ring) stays in place, shifting by one edge (about 8 mm, < 15 mm) every 6 frames: it recurs one cycle later every time (recur_cycle share) and its ring overlaps its old self partially or fully (jaccard_cycle between 0 and 1). A second +1 vortex lives only in frames 0-5, far away: it does not recur, so recur_cycle < 1."
+  },
+  {
+   "name": "reversal",
+   "dir": "reversal",
+   "doc": "12 frames. A vortex in one place reverses sense every half cycle (3 frames): +1 frames 0-2, -1 frames 3-5, +1 6-8, -1 9-11 (4 tracks of 3 frames). A second +1 core (one vertex) stays far away unchanged. Half a cycle later the old flipper's place holds the opposite sense (reversal), the steady one the same sense (persist_half): both 0.5."
+  },
+  {
+   "name": "threshold_edge",
+   "dir": "threshold_edge",
+   "doc": "12 frames; 22 cores in frames 0-10 (154 entries >= 1.5, max 2.0 so hi = 8, lo = 8e-6) and ONE entry e in frame 11 chosen on a histogram bin edge, where nxr's float32 log-binning and a float64 port bin it differently (the generator searches for such an e). 7549 zeros + e = 98.0 % of 7704 entries, so the 98th percentile IS e's bin and the threshold is that bin's grid point. nxr (float32) bins e one bin higher than float64 does, so its threshold is one grid step (0.34 %) HIGHER than a float64 port's. e itself is below both thresholds (not a core)."
+  }
+ ],
+ "mesh": "../vortex (V_mm, F, area_mm2, adjacency_*): the first set's mesh, by reference; every scenario's 'curl_heat10' has one row per vertex of it",
+ "parameters": {
+  "fs_hz": 12.0,
+  "f0_hz": 2.0,
+  "core_pct": 98.0,
+  "core_link_mm": 15.0,
+  "histogram_bins": 4096,
+  "amp": 1.0
+ },
+ "nxr_commit": "903fdc286712d0a41269f4a7b0b6bce1b6c01bc3"
+}

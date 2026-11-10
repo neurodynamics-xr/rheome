@@ -4,7 +4,7 @@ function P = tilepeaks(Y, G, opts)
 %   P = rheome.detect.tilepeaks(Y, G)
 %   P = rheome.detect.tilepeaks(Y, G, MinHeight=0.5, Relative=true)
 %
-% The tile twin of rheome.detect.peaks. Y is a field already pooled over tiles (rheome.geom.tilemean), so a peak is
+% The tile twin of rheome.detect.peaks. Y is a field already pooled over tiles (rheome.geom.measure.tileMean), so a peak is
 % a whole tile -- many vertices at once -- and "neighbour" means a tile sharing a boundary (G.A > 0),
 % not a mesh edge. Ties are broken by tile index, so a flat pair yields one peak.
 %
@@ -21,7 +21,7 @@ function P = tilepeaks(Y, G, opts)
 %   .isPeak [nTile x nT] logical     .count [1 x nT]
 %   .tiles  {1 x nT} peak tiles per frame, highest first     .values {1 x nT} their values
 %
-% See also: rheome.detect.tiletrack, rheome.geom.tilemean, rheome.geom.tiles, rheome.detect.peaks
+% See also: rheome.detect.tiletrack, rheome.geom.measure.tileMean, rheome.geom.tiles, rheome.detect.peaks
 %
 % Author: Diellor Basha, 2026
 

@@ -40,7 +40,7 @@ function cp = criticalPoints(J, S, types, op)
 %   .pos [nc x 3]  .charge (+1/-1)  .type {cellstr}  .circulation (|curl|)  .divergence (signed)
 %   .strength (max(|curl|,|div|))  .hemi  .chi [1 x nHemi]  (Poincare-Hopf check = Euler chi)
 %   .wall  the points whose core lies on the MEDIAL WALL (S.Cortex false on >= 2 of the face's vertices;
-%          rheome.geom.cortexmask), same fields: FLAGGED AND NOT REPORTED (decision 3882c4ce, 2026-10-14).
+%          rheome.geom.select.cortex), same fields: FLAGGED AND NOT REPORTED (decision 3882c4ce, 2026-10-14).
 %          The wall is filled, not measured (rheome.operators.harmonicfill). .chi still counts every face.
 %
 % See also: rheome.operators.connection_laplacian, rheome.differential.divergence, rheome.differential.curl, detect_validate
@@ -63,7 +63,7 @@ function cp = criticalPoints(J, S, types, op)
     curlv = rheome.differential.curl(J, S, op.fg);         % [nV] whole-surface vorticity
 
     pos=zeros(0,3); charge=zeros(0,1); circ=zeros(0,1); dvg=zeros(0,1); hemi=zeros(0,1); ty={};  onw=false(0,1);
-    isWall = ~rheome.geom.cortexmask(S);
+    isWall = ~rheome.geom.select.cortex(S);
     chi = zeros(1, nH);
     for hh = 1:nH
         Sh = op.Sh{hh};  gv = op.gv{hh};  C = op.C{hh};    % precomputed hemisphere + connection

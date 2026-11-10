@@ -1,0 +1,154 @@
+{
+ "arrays": {
+  "curl_heat10": {
+   "file": "curl_heat10.bin",
+   "dtype": "float64",
+   "shape": [
+    642,
+    12
+   ],
+   "unit": "flow units / m",
+   "note": "[V x T] the INPUT movie (float32 values saved as float64), built directly on the mesh; core_stats(Hc, eye(T), frames_used, ...)"
+  },
+  "frames_used": {
+   "file": "frames_used.bin",
+   "dtype": "int32",
+   "shape": [
+    10
+   ],
+   "unit": "1",
+   "note": "the frame columns handed to core_stats (a missing frame is a column left out)"
+  },
+  "patch_frame": {
+   "file": "patch_frame.bin",
+   "dtype": "int32",
+   "shape": [
+    13
+   ],
+   "unit": "1",
+   "note": "_core_patches rows (frame, sense, centre, area), ordered by frame then sense (+1 first)"
+  },
+  "patch_sense": {
+   "file": "patch_sense.bin",
+   "dtype": "int32",
+   "shape": [
+    13
+   ],
+   "unit": "1",
+   "note": ""
+  },
+  "patch_centre_mm": {
+   "file": "patch_centre_mm.bin",
+   "dtype": "float64",
+   "shape": [
+    13,
+    3
+   ],
+   "unit": "mm",
+   "note": ""
+  },
+  "patch_area_mm2": {
+   "file": "patch_area_mm2.bin",
+   "dtype": "float64",
+   "shape": [
+    13
+   ],
+   "unit": "mm^2",
+   "note": ""
+  },
+  "steps": {
+   "file": "steps.bin",
+   "dtype": "float64",
+   "shape": [
+    9,
+    9
+   ],
+   "unit": "mm",
+   "note": "[S x 9] core_stats(steps=): sense, from-centre xyz (mm), displacement xyz (mm), track id, frame"
+  },
+  "dens_ccw": {
+   "file": "dens_ccw.bin",
+   "dtype": "float64",
+   "shape": [
+    642
+   ],
+   "unit": "fraction of frames",
+   "note": ""
+  },
+  "dens_cw": {
+   "file": "dens_cw.bin",
+   "dtype": "float64",
+   "shape": [
+    642
+   ],
+   "unit": "fraction of frames",
+   "note": ""
+  },
+  "life_hist": {
+   "file": "life_hist.bin",
+   "dtype": "int32",
+   "shape": [
+    100
+   ],
+   "unit": "1",
+   "note": ""
+  },
+  "speed_hist": {
+   "file": "speed_hist.bin",
+   "dtype": "int32",
+   "shape": [
+    100
+   ],
+   "unit": "1",
+   "note": ""
+  }
+ },
+ "scalars": {
+  "threshold": 4e-06,
+  "cores_per_frame": 1.3,
+  "area_mm2": 73.04398163384784,
+  "n_tracks": 2,
+  "life_ms": 416.6666666666667,
+  "life_cycles": 0.8333333333333334,
+  "speed_mm_s": 110.3867838939286,
+  "net_speed_mm_s": 94.4884452770987,
+  "disp_mm": 31.496148425699566,
+  "straightness": 0.8557786548522648,
+  "reversal": 0.0,
+  "persist_half": 0.0,
+  "recur_cycle": 0.0,
+  "jaccard_cycle": 0.0,
+  "jaccard_half": 0.0,
+  "frames": 10
+ },
+ "scenario": "The movie has cores in every column, but core_stats is given frames = [0-4, 7-11]: columns 5 and 6 are missing and ignored (they hold a -1 core at far[3] that must NOT appear). A frame jump closes every track: the moving +1 core gives tracks of 5 and 5 frames; the 1-frame (frame 2) and 2-frame -1 (frames 8-9) cores as in gap_zero_frame. `frames` = 10.",
+ "scenario_parameters": {
+  "path": [
+   500,
+   487,
+   131,
+   490,
+   471,
+   470,
+   126,
+   126,
+   474,
+   461,
+   462,
+   123
+  ],
+  "lone": 12,
+  "short": [
+   15,
+   201
+  ],
+  "excluded": 19
+ },
+ "mesh_ref": "../../vortex",
+ "layout": "little-endian, row-major (C order); float64 or int32 .bin, no header",
+ "scalar_units": {
+  "threshold": "flow units / m",
+  "area_mm2": "mm^2"
+ },
+ "nxr_commit": "903fdc286712d0a41269f4a7b0b6bce1b6c01bc3"
+}
