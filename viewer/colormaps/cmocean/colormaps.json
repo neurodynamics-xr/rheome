@@ -2,7 +2,7 @@
   "version": 2,
   "library": "cmocean",
   "width": 256,
-  "rows": 12,
+  "rows": 18,
   "colormaps": [
     {
       "name": "thermal",
@@ -159,6 +159,84 @@
       "index": 11,
       "license": "cmocean by Kristen Thyng (MIT; https://github.com/matplotlib/cmocean)",
       "preview": "linear-gradient(90deg, rgb(233,246,171) 0%, rgb(220,219,138) 9%, rgb(210,193,108) 18%, rgb(199,167,82) 27%, rgb(187,143,67) 36%, rgb(171,122,60) 45%, rgb(151,104,58) 55%, rgb(129,88,57) 64%, rgb(106,73,53) 73%, rgb(81,59,47) 82%, rgb(57,45,38) 91%, rgb(34,31,27) 100%)"
+    },
+    {
+      "name": "solar",
+      "source": "cmocean",
+      "source_id": "solar",
+      "type": "sequential",
+      "perceptually_uniform": true,
+      "description": "cmocean solar (Thyng et al. 2016).",
+      "citation": "",
+      "usage": "",
+      "index": 12,
+      "license": "cmocean by Kristen Thyng (MIT; https://github.com/matplotlib/cmocean)",
+      "preview": "linear-gradient(90deg, rgb(51,20,24) 0%, rgb(80,29,33) 9%, rgb(109,37,37) 18%, rgb(137,48,33) 27%, rgb(158,66,26) 36%, rgb(175,88,20) 45%, rgb(188,112,19) 55%, rgb(200,137,23) 64%, rgb(209,164,32) 73%, rgb(217,193,45) 82%, rgb(222,222,59) 91%, rgb(225,253,75) 100%)"
+    },
+    {
+      "name": "oxy",
+      "source": "cmocean",
+      "source_id": "oxy",
+      "type": "sequential",
+      "perceptually_uniform": true,
+      "description": "cmocean oxy (Thyng et al. 2016).",
+      "citation": "",
+      "usage": "",
+      "index": 13,
+      "license": "cmocean by Kristen Thyng (MIT; https://github.com/matplotlib/cmocean)",
+      "preview": "linear-gradient(90deg, rgb(64,5,5) 0%, rgb(102,7,14) 9%, rgb(138,17,9) 18%, rgb(97,96,96) 27%, rgb(119,119,118) 36%, rgb(142,142,141) 45%, rgb(167,166,166) 55%, rgb(193,193,192) 64%, rgb(221,221,220) 73%, rgb(240,249,90) 82%, rgb(230,211,42) 91%, rgb(221,175,25) 100%)"
+    },
+    {
+      "name": "deep",
+      "source": "cmocean",
+      "source_id": "deep",
+      "type": "sequential",
+      "perceptually_uniform": true,
+      "description": "cmocean deep (Thyng et al. 2016).",
+      "citation": "",
+      "usage": "",
+      "index": 14,
+      "license": "cmocean by Kristen Thyng (MIT; https://github.com/matplotlib/cmocean)",
+      "preview": "linear-gradient(90deg, rgb(253,254,204) 0%, rgb(206,236,179) 9%, rgb(156,220,165) 18%, rgb(110,200,163) 27%, rgb(87,177,164) 36%, rgb(76,154,160) 45%, rgb(68,131,155) 55%, rgb(63,108,150) 64%, rgb(63,84,144) 73%, rgb(64,60,115) 82%, rgb(54,43,77) 91%, rgb(40,26,44) 100%)"
+    },
+    {
+      "name": "rain",
+      "source": "cmocean",
+      "source_id": "rain",
+      "type": "sequential",
+      "perceptually_uniform": true,
+      "description": "cmocean rain (Thyng et al. 2016).",
+      "citation": "",
+      "usage": "",
+      "index": 15,
+      "license": "cmocean by Kristen Thyng (MIT; https://github.com/matplotlib/cmocean)",
+      "preview": "linear-gradient(90deg, rgb(238,237,243) 0%, rgb(223,213,205) 9%, rgb(209,190,160) 18%, rgb(171,176,134) 27%, rgb(131,163,121) 36%, rgb(87,149,111) 45%, rgb(36,134,110) 55%, rgb(5,115,110) 64%, rgb(14,94,105) 73%, rgb(33,71,92) 82%, rgb(37,49,73) 91%, rgb(34,27,56) 100%)"
+    },
+    {
+      "name": "topo",
+      "source": "cmocean",
+      "source_id": "topo",
+      "type": "sequential",
+      "perceptually_uniform": true,
+      "description": "cmocean topo (Thyng et al. 2016).",
+      "citation": "",
+      "usage": "",
+      "index": 16,
+      "license": "cmocean by Kristen Thyng (MIT; https://github.com/matplotlib/cmocean)",
+      "preview": "linear-gradient(90deg, rgb(40,26,44) 0%, rgb(64,60,115) 9%, rgb(62,107,150) 18%, rgb(77,155,161) 27%, rgb(112,201,163) 36%, rgb(206,236,179) 45%, rgb(23,57,27) 55%, rgb(65,92,42) 64%, rgb(126,121,63) 73%, rgb(193,151,65) 82%, rgb(219,200,146) 91%, rgb(249,253,228) 100%)"
+    },
+    {
+      "name": "tarn",
+      "source": "cmocean",
+      "source_id": "tarn",
+      "type": "diverging",
+      "perceptually_uniform": true,
+      "description": "cmocean tarn (Thyng et al. 2016).",
+      "citation": "",
+      "usage": "",
+      "index": 17,
+      "license": "cmocean by Kristen Thyng (MIT; https://github.com/matplotlib/cmocean)",
+      "preview": "linear-gradient(90deg, rgb(23,35,14) 0%, rgb(54,74,12) 9%, rgb(118,100,33) 18%, rgb(187,125,57) 27%, rgb(219,170,131) 36%, rgb(242,224,212) 45%, rgb(237,230,213) 55%, rgb(174,190,160) 64%, rgb(106,155,138) 73%, rgb(36,117,123) 82%, rgb(19,75,104) 91%, rgb(16,30,79) 100%)"
     }
   ]
 }
