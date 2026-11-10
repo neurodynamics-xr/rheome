@@ -66,7 +66,7 @@ function L = labelalpha(name, opts)
         E = rheome.flow.envelopemodes(name);  B = rheome.load.bases(name);  C = rheome.geom.cortexnodes(name, MaxDepth=opts.TrajDepth);
         fr = E.L.fs;  rng(opts.Seed);
         for hh = ["L" "R"]
-            H = B.(char(hh));  S = H.S;  av = full(sum(H.lbo.Mass, 2)) .* rheome.geom.cortexmask(S);  h = 2 + (hh == "R");
+            H = B.(char(hh));  S = H.S;  av = full(sum(H.lbo.Mass, 2)) .* rheome.geom.select.cortex(S);  h = 2 + (hh == "R");
             G = rheome.geom.tiles(C.T.(char(hh)), S, opts.TrajDepth, Ruler=rheome.geom.edgegraph(S));
             P = double(G.P);  Wd = (P' * (av .* H.lbo.Phi)) ./ (P' * av);  Wd(~isfinite(Wd)) = 0;   % a tile wholly on the medial wall: no cortex, reads 0 (weight 0)
             gid = G.node_id + (h - 1) .* 2.^G.depth;

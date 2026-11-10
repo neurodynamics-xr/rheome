@@ -4,7 +4,7 @@ function R = onsetspread(Y, G, fs, seed, tPeak, opts)
 %   R = rheome.detect.onsetspread(Y, G, fs, seed, tPeak)
 %   R = rheome.detect.onsetspread(Y, G, fs, seed, tPeak, Radius=0.12, Pre=1, Post=0.5, Centres=xyz)
 %
-% Y is a tile envelope [nTile x nT] at fs (rheome.geom.tilemean of |J^|), G is rheome.geom.tiles WITH a Ruler (.D),
+% Y is a tile envelope [nTile x nT] at fs (rheome.geom.measure.tileMean of |J^|), G is rheome.geom.tiles WITH a Ruler (.D),
 % and (seed, tPeak) is one burst: its tile and the time (s) it peaks there. Each tile within Radius of
 % the seed that takes part in the burst gets an onset time, and the onsets are regressed on distance.
 %

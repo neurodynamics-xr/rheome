@@ -30,7 +30,7 @@ function [T, X, Z] = measure_geometry(name, S, opts)
 %    hemi, depth, node_id, n_vertices, area_mm2, d_eq_mm, geodesic_diameter_mm (double-sweep on the
 %    mesh edge graph: a lower bound on the longest geodesic in the tile, and specific to this Fiedler tiling).
 %    ⭐ CORTEX ONLY (decision 3882c4ce, 2026-10-14): a tile's area, d_eq and the hemisphere's area are its
-%    CORTEX (rheome.geom.cortexmask), the medial wall excluded; the tree is still built on the closed mesh.
+%    CORTEX (rheome.geom.select.cortex), the medial wall excluded; the tree is still built on the closed mesh.
 %    Z.tiles also carries closed_area_mm2 and cortex_fraction; hemisphere_area_closed keeps the old number.
 %    Rows: hemisphere_area (cortex, cm2, band "L" | "R"), hemisphere_area_closed (cm2); parcel_deq_median, n_parcels (band = atlas, over both
 %    hemispheres); tile_deq_median, tile_area_median (band "D<depth>"). A missing atlas gives n_parcels 0.
@@ -67,7 +67,7 @@ function [T, X, Z] = measure_geometry(name, S, opts)
     dmax = max([opts.Levels opts.RollupDepths opts.SizeDepths]);
     for h = opts.Hemis(:)'
         Hh = S.B.(h);  Sh = Hh.S;  lbo = Hh.lbo;  V = double(Sh.Vertices);  Fc = double(Sh.Faces);
-        a = full(sum(lbo.Mass, 2));  Atot = sum(a);  cv = rheome.geom.cortexmask(Sh);  ac = a .* cv;  lam = lbo.Lambda(:);  P = lbo.Phi;
+        a = full(sum(lbo.Mass, 2));  Atot = sum(a);  cv = rheome.geom.select.cortex(Sh);  ac = a .* cv;  lam = lbo.Lambda(:);  P = lbo.Phi;
         Tr = rheome.geom.tree(Sh, L=lbo.L, M=lbo.M, MaxDepth=dmax);
         E = unique(sort([Fc(:,[1 2]); Fc(:,[2 3]); Fc(:,[3 1])], 2), 'rows');
         Gm = graph(E(:,1), E(:,2), vecnorm(V(E(:,1),:) - V(E(:,2),:), 2, 2), size(V, 1));

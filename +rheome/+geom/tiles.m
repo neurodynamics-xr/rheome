@@ -39,8 +39,8 @@ function G = tiles(T, S, depth, opts)
 %
 % ⭐ CORTEX AREA (decision 3882c4ce, 2026-10-14). Tiles are built on the CLOSED hemisphere (the tree is a
 % geometric scaffold), but a tile's size is its cortex: `.cortex_area` (m^2, lumped vertex areas over the
-% vertices S.Cortex marks, rheome.geom.cortexmask) and `.cortex_fraction` of its closed area. A tile wholly
-% on the medial wall has cortex_area 0; rheome.geom.tilemean gives it NaN. Without S.Cortex every vertex counts.
+% vertices S.Cortex marks, rheome.geom.select.cortex) and `.cortex_fraction` of its closed area. A tile wholly
+% on the medial wall has cortex_area 0; rheome.geom.measure.tileMean gives it NaN. Without S.Cortex every vertex counts.
 %
 % INPUTS
 %   T      rheome.geom.tree table            S  the surface T was built on (.Faces, .Vertices)
@@ -94,7 +94,7 @@ function G = tiles(T, S, depth, opts)
     Vx = double(S.Vertices);
     fa = 0.5 * vecnorm(cross(Vx(F(:,2),:) - Vx(F(:,1),:), Vx(F(:,3),:) - Vx(F(:,1),:), 2), 2, 2);
     G.area = accumarray(F(:), repmat(fa / 3, 3, 1), [nV 1]);
-    G.cortex = rheome.geom.cortexmask(S);
+    G.cortex = rheome.geom.select.cortex(S);
     G.cortex_area = double(G.P)' * (G.area .* G.cortex);
     G.cortex_fraction = G.cortex_area ./ (double(G.P)' * G.area);
     nr = T.parent_id ~= 0;

@@ -54,7 +54,7 @@ function out = movingvortex(name, varargin)
 %   .check  speedGeodesicMS, speedEuclideanMS, foldFactor, chordMM, inbandFrac, peakHz,
 %           passageSec, nWaypoints, clamped
 %
-% See also: rheome.flow.vortexatom, rheome.flow.seedvortex, rheome.geom.geodesic, rheome.filters.travwave, rheome.dynamics.dispersion
+% See also: rheome.flow.vortexatom, rheome.flow.seedvortex, rheome.geom.measure.heatDistance, rheome.filters.travwave, rheome.dynamics.dispersion
 %
 % Author: Diellor Basha, 2026
 
@@ -94,7 +94,7 @@ function out = movingvortex(name, varargin)
     sup = base.check.supportSec;
 
     %% 2. the path: length = speed x the envelope's support
-    dStart = rheome.geom.geodesic(S, v0);
+    dStart = rheome.geom.measure.heatDistance(S, v0);
     wantL  = o.SpeedMS * sup;                       % metres
     clamped = false;
     if isempty(o.Target)
@@ -116,7 +116,7 @@ function out = movingvortex(name, varargin)
     else
         vT = o.Target;  L = dStart(vT);
     end
-    dEnd = rheome.geom.geodesic(S, vT);
+    dEnd = rheome.geom.measure.heatDistance(S, vT);
 
     % waypoints ON the geodesic: a vertex is on it when d_start + d_end is minimal
     if L == 0

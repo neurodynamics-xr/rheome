@@ -32,7 +32,7 @@ function out = tiletrack(P, G, Y, opts)
 %            `held` marks frames where Margin kept the track on a non-peak tile
 %   .nTracks
 %
-% See also: rheome.detect.tilepeaks, rheome.geom.tilemean, rheome.geom.tiles, rheome.detect.track
+% See also: rheome.detect.tilepeaks, rheome.geom.measure.tileMean, rheome.geom.tiles, rheome.detect.track
 %
 % Author: Diellor Basha, 2026
 

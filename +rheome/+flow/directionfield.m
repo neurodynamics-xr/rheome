@@ -101,7 +101,7 @@ function out = directionfield(name, varargin)
     z = exp(1i*(phi + o.Rotate));
     if lower(string(o.Envelope)) == "radial"
         [~, vs] = min(vecnorm(V - mean(V(F(fs(1),:),:),1), 2, 2));
-        d = rheome.geom.geodesic(S, vs);
+        d = rheome.geom.measure.heatDistance(S, vs);
         s = o.EnvelopeMM*1e-3/(2*pi);
         z = z .* ((d/s) .* exp(-(d.^2)/(2*s^2)));
     end

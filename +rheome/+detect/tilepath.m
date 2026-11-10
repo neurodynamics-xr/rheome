@@ -4,7 +4,7 @@ function out = tilepath(Y, G, opts)
 %   out = rheome.detect.tilepath(Y, G, Baseline=b)
 %   out = rheome.detect.tilepath(Y, G, Baseline=b, StepCost=0, NumPaths=3, SampleRate=300)
 %
-% Y is a tile field over ONE observation window ([nTile x nF], rheome.geom.tilemean then a dyadic block);
+% Y is a tile field over ONE observation window ([nTile x nF], rheome.geom.measure.tileMean then a dyadic block);
 % G is rheome.geom.tiles. A path is a walk on the tile graph -- each frame it stays or steps to an adjacent
 % tile -- and its score is the sum of (Y - Baseline) along it, less StepCost per step. The best path
 % is found exactly by dynamic programming (Viterbi), with a local-alignment reset so it may START AND

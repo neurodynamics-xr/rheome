@@ -65,7 +65,7 @@ function [T, X, Ex] = measure_cptrack(name, opts)
         grd = @(x) i_tan([fg.W*(fg.Gx*x) fg.W*(fg.Gy*x) fg.W*(fg.Gz*x)], n);
         G = rheome.geom.edgegraph(Sx);
         % the rotor's path: a geodesic from a random vertex, as long as the record needs
-        cvx = rheome.geom.cortexmask(s.S);  cvi = find(cvx);  len = opts.SpeedMS * tt(end);  v0 = cvi(randi(numel(cvi)));  d0 = distances(G, v0)';
+        cvx = rheome.geom.select.cortex(s.S);  cvi = find(cvx);  len = opts.SpeedMS * tt(end);  v0 = cvi(randi(numel(cvi)));  d0 = distances(G, v0)';
         [~, v1] = min(abs(d0 - len) + 1e9 * ~cvx);                    % both ends on cortex  pv = shortestpath(G, v0, v1);
         D = distances(G, pv)';  arc = D(pv(:), 1);  arc = arc(:);   % arclength of each path vertex from v0
         % the source: the vertex farthest from the whole path

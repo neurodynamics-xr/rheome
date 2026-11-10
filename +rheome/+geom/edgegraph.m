@@ -11,9 +11,9 @@ function g = edgegraph(S, opts)
 % between their two opposite vertices -- measured in the UNFOLDED pair, so intrinsic, and only where
 % that segment stays inside the pair -- straightens the path. See the measured table below.
 %
-% ⭐⭐ WHY THIS EXISTS WHEN rheome.geom.geodesic DOES. Until 2026-10-14 the heat method saturated (every
+% ⭐⭐ WHY THIS EXISTS WHEN rheome.geom.measure.heatDistance DOES. Until 2026-10-14 the heat method saturated (every
 % pair beyond ~49 edges read the same distance) and was asymmetric on irregular meshes, so speeds were
-% read off this graph instead. rheome.geom.geodesic now follows geometry-central's robust heat method
+% read off this graph instead. rheome.geom.measure.heatDistance now follows geometry-central's robust heat method
 % (intrinsic Delaunay, lumped mass) and agrees with it to <0.3 % at 5-40 mm and <=1.1 mm everywhere on
 % fsaverage5/6/fsaverage pial; both are 1-6 % above the exact geodesic. This graph remains the ruler
 % that gives PATHS (shortest paths), and rheome.inverse.resolution uses it for r50.
@@ -29,7 +29,7 @@ function g = edgegraph(S, opts)
 % OUTPUT
 %   g          MATLAB graph, Weight = length in metres (mesh units)
 %
-% See also: rheome.geom.geodesic, rheome.inverse.resolution, rheome.geom.tiles
+% See also: rheome.geom.measure.heatDistance, rheome.inverse.resolution, rheome.geom.tiles
 %
 % Author: Diellor Basha, 2026
 

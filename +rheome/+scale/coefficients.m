@@ -18,10 +18,10 @@ function C = coefficients(B, K, F, fs, opts)
 % unconstrained kernel K projected onto the hemisphere's Laplace-Beltrami modes per orientation, the
 % gain g_m(lambda) of each bank member, back to vertices, the norm over the three orientations of the
 % COMPLEX coefficient (the analytic envelope, not |J|, which pulses at twice the carrier -- see
-% rheome.flow.activation), then the area-weighted mean over each tile (rheome.geom.tilemean's formula).
+% rheome.flow.activation), then the area-weighted mean over each tile (rheome.geom.measure.tileMean's formula).
 %
 % ⚠ The envelope is taken per vertex BEFORE the tile mean. A band-pass coefficient averages toward zero
-% over a tile larger than its scale (rheome.geom.tilemean); its envelope does not.
+% over a tile larger than its scale (rheome.geom.measure.tileMean); its envelope does not.
 % ⚠ One bank for both hemispheres, on the smaller of their two lambda_max, so a scale means the same
 % thing left and right. Members losing more than 5% of their mass beyond it (gfb.Usable) are dropped,
 % and so is the lowpass (scaling) member: it has no scale t (NaN), and `scales` is a coordinate.
@@ -93,7 +93,7 @@ function C = coefficients(B, K, F, fs, opts)
                   'node ids are not ladder codes. Use a smaller Depth.'], h, opts.Depth);
         end
         [code, o] = sort(G.node_id + 2.^opts.Depth * hi);        % hemisphere bit: L under 2, R under 3
-        a = full(sum(Mm, 2)) .* rheome.geom.cortexmask(H.S);  P = double(G.P(:, o));
+        a = full(sum(Mm, 2)) .* rheome.geom.select.cortex(H.S);  P = double(G.P(:, o));
         Pw = (P ./ (P' * a)')' .* a';                            % [nTile x nV] area-weighted tile mean
 
         Wh = zeros(numel(code), numel(keep), nT, 'single');

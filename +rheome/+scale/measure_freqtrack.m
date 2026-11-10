@@ -127,7 +127,7 @@ function [T, X] = measure_freqtrack(name, S, opts)
     X = table();
     for hh = opts.Hemis
         h = char(hh);  H = S.B.(h);  Sh = H.S;  Phi = H.lbo.Phi;  Mm = H.lbo.Mass;  lam = H.lbo.Lambda(:);
-        av = full(sum(Mm, 2)) .* rheome.geom.cortexmask(H.S);  gv = double(H.gv(:));  nV = numel(gv);  nrm = double(Sh.VertNormals);
+        av = full(sum(Mm, 2)) .* rheome.geom.select.cortex(H.S);  gv = double(H.gv(:));  nV = numel(gv);  nrm = double(Sh.VertNormals);
         rows = reshape((gv' - 1)*3 + (1:3)', [], 1);  K = S.Res.ImagingKernel(rows, :);  GL = S.G(:, rows);
         hk = exp(-lam*(opts.SigmaMM*1e-3)^2/2);
         ge = rheome.geom.edgegraph(Sh);  Tr = rheome.geom.tree(Sh, L=H.lbo.L, M=Mm, MaxDepth=opts.Depth);
@@ -162,7 +162,7 @@ function [T, X] = measure_freqtrack(name, S, opts)
             cs = opts.Cases(ci);  r0 = opts.Rates(ci);
             for n = 1:opts.NPer
                 hf = 1 + (n > opts.NPer/2);  s0 = randi(lims(hf, :)) + (0:nSeg-1);
-                cvx = find(rheome.geom.cortexmask(Sh));  v0 = cvx(randi(numel(cvx)));  k0 = G.tileOf(v0);  g0 = GL*i_blob(v0, Phi, Mm, hk, nrm);   % on cortex
+                cvx = find(rheome.geom.select.cortex(Sh));  v0 = cvx(randi(numel(cvx)));  k0 = G.tileOf(v0);  g0 = GL*i_blob(v0, Phi, Mm, hk, nrm);   % on cortex
                 gain = zeros(1, nB);                               % per band: real median / unit-tone envelope
                 for b = 1:nB
                     Yu = rd(g0*(env.*cos(2*pi*2^lf(b)*tSeg)), b);

@@ -4,7 +4,7 @@
 `new Manifold(V, F).tracePath(a, b)` in nxr-compute's WASM (`tracePathSurface`: Dijkstra edge path,
 `iterativeShorten()`, `getPathPolyline()` on the input mesh). Generators: `meshes.py` (the meshes and the pairs,
 seeded) then `node ref.mjs` beside `nxr_compute.js`/`.wasm` of the released viewer. `tFlipOut` checks
-`rheome.geom.flipOut` against it.
+`rheome.geom.draw.flipOut` against it.
 
 Keys: `bumpy642`, `bumpy2562` (icospheres of 3 and 4 subdivisions, radius 0.05 m, folded by
 r = 1 + a sin(6 theta) cos(5 phi); `vertices` in metres and `faces` inline, 0-based) and `fsaverage5_lh_pial`

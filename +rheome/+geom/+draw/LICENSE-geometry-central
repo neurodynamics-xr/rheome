@@ -1,5 +1,5 @@
 This license applies to the code ported from geometry-central (https://github.com/nmwsharp/geometry-central,
-commit 8579865362abd2185ef97d7ef0dae09338ab8ff1) in rheome.geom.flipOut and its helpers
+commit 8579865362abd2185ef97d7ef0dae09338ab8ff1) in rheome.geom.draw.flipOut and its helpers
 private/flipoutMesh.m and private/flipoutTrace.m.
 
 MIT License

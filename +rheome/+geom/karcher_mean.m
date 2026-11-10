@@ -1,53 +1,22 @@
-function [centerVertex, centerPos, dispersion] = karcher_mean(S, points, opts)
-% GEOM.KARCHER_MEAN  Intrinsic (geodesic Fréchet) mean of points on the surface.
+function varargout = karcher_mean(varargin)
+% GEOM.KARCHER_MEAN  Deprecated: renamed rheome.geom.measure.karcherMean (the intrinsic mean of points on the surface).
 %
-%   [centerVertex, centerPos, dispersion] = rheome.geom.karcher_mean(S, points)
-%   [...] = rheome.geom.karcher_mean(S, points, opts)
+%   [centerVertex, centerPos, dispersion] = rheome.geom.karcher_mean(S, points, opts)
 %
-% The surface point minimising sum_i w_i * d(p, x_i)^power (geodesic distance) -- the discrete
-% Fréchet mean. power=2 is the Karcher mean; power=1 the geometric median. On a mesh this is an
-% argmin over vertices of a per-vertex objective built from one rheome.geom.geodesic field per source
-% point (the cached solver makes the repeated queries cheap). Faithful to nxr-compute's
-% definition (compute.h: "minimizes sum d(p, source_i)^p"); no log-map / transport port needed.
-% Unlike the ambient (Euclidean) mean, the result stays ON the sheet.
+% Moved 2026-11-10 when rheome.geom's surface functions were grouped by job into measure (numbers), select (a set of
+% vertices) and draw (a curve on the surface), the Editor's and nxr's names. This name forwards to
+% rheome.geom.measure.karcherMean with the same inputs and outputs, and warns once per session (rheome:deprecated).
+% Call rheome.geom.measure.karcherMean.
 %
-% INPUTS:
-%   S      surface struct (.Vertices [nV x 3], .Faces)
-%   points [n x 3] positions (snapped to nearest vertex) OR [n x 1] vertex indices
-%   opts   .weights [n x 1] (default ones)  .power (default 2)  .solver (reuse rheome.geom.geodesic)
-%
-% OUTPUT:
-%   centerVertex  index of the minimiser vertex
-%   centerPos     [1 x 3] its position
-%   dispersion    ( weighted-mean geodesic d^power )^(1/power) = intrinsic spread (metres)
-%
-% See also: rheome.geom.geodesic
+% See also: rheome.geom.measure.karcherMean
 %
 % Author: Diellor Basha, 2026
 
-    if nargin < 3, opts = struct; end
-    if ~isfield(opts,'power') || isempty(opts.power), opts.power = 2; end
-    if size(points,2) == 3
-        sourceVertices = zeros(size(points,1),1);
-        for i = 1:size(points,1)
-            [~, sourceVertices(i)] = min(sum((S.Vertices - points(i,:)).^2, 2));
-        end
-    else
-        sourceVertices = points(:);
+    persistent warned
+    if isempty(warned)
+        warned = true;
+        warning('rheome:deprecated', 'rheome.geom.karcher_mean is deprecated: call rheome.geom.measure.karcherMean (same inputs and outputs).');
     end
-    n = numel(sourceVertices);
-    if ~isfield(opts,'weights') || isempty(opts.weights), opts.weights = ones(n,1); end
-    weights = opts.weights(:);
-
-    if isfield(opts,'solver'), solver = opts.solver; else, solver = []; end
-    objective = zeros(size(S.Vertices,1), 1);
-    for i = 1:n
-        [distance, solver] = rheome.geom.geodesic(S, sourceVertices(i), solver);
-        objective = objective + weights(i) * distance.^opts.power;
-    end
-    [minObjective, centerVertex] = min(objective);
-    centerPos  = S.Vertices(centerVertex, :);
-    dispersion = (minObjective / sum(weights))^(1/opts.power);
+    varargout = cell(1, max(nargout, 1));
+    [varargout{:}] = rheome.geom.measure.karcherMean(varargin{:});
 end
-
-% Author: Diellor Basha, 2026

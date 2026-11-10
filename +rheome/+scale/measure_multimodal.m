@@ -34,7 +34,7 @@ function [T, X, Cn] = measure_multimodal(name, S, opts)
 % directly on that depth's tiles (rheome.geom.tiles); rollup_max_relerr and connectome_rollup_max_relerr are
 % the worst relative differences (round-off when the tree is a heap).
 % ⚠ A SIGNED BAND-PASS COEFFICIENT AVERAGES TOWARD ZERO over a tile larger than its scale
-% (rheome.geom.tilemean), so for PET and fibre members j > 0 compare tiles on ms = sum(a x^2)/sum(a), the
+% (rheome.geom.measure.tileMean), so for PET and fibre members j > 0 compare tiles on ms = sum(a x^2)/sum(a), the
 % coefficient energy; MEG members are powers already (compare on mean).
 % ⚠ RAW MEG POWER ACROSS TILES IS MOSTLY THE KERNEL'S DEPTH SENSITIVITY: in one participant the alpha
 % tile power spans ~1000x while delta/theta varies +-12 %, so rho between raw band powers (and between a raw
@@ -121,7 +121,7 @@ function [T, X, Cn] = measure_multimodal(name, S, opts)
     codes = [];  A = [];  S1 = [];  S2 = [];  tileOf = zeros(nV, 1);  errDirect = 0;  direct = cell(2, D);
     for hi = 1:2
         H = S.B.(hemis(hi));  gv = double(H.gv(:));  Phi = H.lbo.Phi;  Mm = H.lbo.Mass;  lam = H.lbo.Lambda(:);
-        a = full(sum(Mm, 2)) .* rheome.geom.cortexmask(H.S);  nVh = numel(gv);   % cortex only
+        a = full(sum(Mm, 2)) .* rheome.geom.select.cortex(H.S);  nVh = numel(gv);   % cortex only
         g = zeros(numel(lam), numel(keep));
         for j = 1:numel(keep), gm = gain(gfb, keep(j)); g(:, j) = gm(lam); end
         V = zeros(nVh, nF, nJ);
