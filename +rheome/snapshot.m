@@ -823,7 +823,7 @@ function [svg, info] = drawInset(svg, s, Vd, F, hemi, img, al, crop, k, cw, gap,
     mI = regionMask(ai, Vd, shown, In.mask, camI, el);
     mV = regionMask(al{vi}, Vd, shown, In.mask, camV, el);
     if strcmp(In.Shape, 'square'), mI = squareOf(mI);  mV = squareOf(mV); end   % a square around the region, not cut
-    if camI.s / camV.s < 2 - 1e-9   % tokens annotation.inset, rule I1: >= 2x the view's pixels per mm of cortex
+    if camI.s / camV.s < 2 - 1e-3   % tokens annotation.inset, rule I1: >= 2x the view's pixels per mm of cortex (the camera fit reads s to ~2e-4)
         error('rheome:snapshot:inset', '%s: the inset has %.2fx the view''s pixels per mm (< 2, rule I1); the viewer''s canvas caps it: a smaller Scale or Width.', s.Name, camI.s / camV.s);
     end
     if ~any(mI(:)) || ~any(mV(:)), error('rheome:snapshot:inset', '%s: the inset''s region is not visible on the %s view.', s.Name, rv.view); end
