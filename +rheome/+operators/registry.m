@@ -33,10 +33,10 @@ function T = registry()
 % face_average takes it back, weak_curl takes an ambient vertex field to a vertex scalar.
 % Read the `in`/`out` columns and the direction is never in doubt.
 %
-% ⚠ THIS TREE HAS NO EDGE OPERATORS. There is no d0, no d1 and no Hodge star here: the
-% discretisation is FEM hat functions on faces, not DEC on a halfedge complex. The edge
-% variants exist in nxr-compute and are marked 'planned' in rheome.fieldtype.registry so the gap
-% is visible rather than surprising.
+% ⚠ THE ROWS BELOW ARE THE FEM (hat function on faces) OPERATORS. The edge operators -- d0, d1 and the
+% Hodge stars on the intrinsic Delaunay triangulation (DEC on a halfedge complex) -- are built by
+% rheome.operators.hodge_dirac (H.d0, H.d1, H.star0/1/2) and are not yet rows of this table; the edge
+% field types stay 'planned' in rheome.fieldtype.registry until they are (naming pass to follow).
 %
 % COLUMNS
 %   id       the operator, as called

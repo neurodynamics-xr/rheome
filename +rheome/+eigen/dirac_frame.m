@@ -21,6 +21,13 @@ function dbasis = dirac_frame(V, F, tau, nModes, N, hemis, normalize)
 % does this fall back to connected components (fine for synthetic meshes, fragile on real
 % cortex with non-manifold edges).
 %
+% EIGENVALUE CONVENTION. With the default normalize=true the operators are Brainstorm-normalised
+% (each hemisphere's blocks scaled by sL and sE) and .Lambda is a NORMALISED, UNITLESS eigenvalue
+% (spectrum in [0,1]), not a physical one. With normalize=false the operators are unscaled and
+% .Lambda is the physical eigenvalue lambda in 1/m^2 (second order, mesh in metres; lambda = mu^2
+% for the first-order Dirac eigenvalue mu in 1/m). A normalised Lambda must not be read as 1/m^2: use
+% Lambda .* Scales(Hemisphere,1) (below) or normalize=false.
+%
 % INPUTS:  V,F surface;  tau in [0,1] (default caller passes 0.5, as Brainstorm);
 %          nModes modes PER hemisphere;  N (optional) unit vertex normals;
 %          hemis (optional) cell of per-hemisphere vertex-index lists.

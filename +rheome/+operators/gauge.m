@@ -96,8 +96,11 @@ function g = gauge(V, F, varargin)
             u0 = zeros(nV,1);  u0(s) = 1;
             ph = angle((C.B + o.Time*C.A) \ (C.B*u0));
         case "smoothest"
-            [ue,~] = eigs(C.A, C.B, 1, 'smallestabs', struct('tol',1e-8));
-            ph = angle(ue);        % ⚠ eigs with ONE output returns the EIGENVALUE
+            % the lowest eigenvector of the connection Laplacian (the smoothest unit section). Through
+            % eigen.smallest (negative-shift ladder): a direct 'smallestabs' solve of this near-singular
+            % pencil is unreliable (~40 % residual). Two outputs: the eigenvector ue, then the eigenvalue.
+            [ue,~] = rheome.eigen.smallest(C.A, C.B, 1, struct('tol',1e-8,'maxit',1000,'disp',0));
+            ph = angle(ue(:,1));
         case "trivial"
             [ph, Ax] = i_trivial(V, F, C, o);
         otherwise

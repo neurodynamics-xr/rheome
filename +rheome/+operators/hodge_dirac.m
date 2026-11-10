@@ -7,7 +7,7 @@ function H = hodge_dirac(V, F, varargin)
 %       H.d0 [nE x nV], H.d1 [nF x nE], H.star0/star1/star2, H.mesh (rheome.operators.intrinsic_delaunay)
 %
 % D = M^-1 K is self-adjoint in M; its eigenvalues come in pairs +-mu and D^2 is block diagonal with
-% the Hodge Laplacians. Solve the pencil (K, M). star0 = lumped mass, star1 = cotan weight,
+% the Hodge Laplacians. Solve the pencil (K, M). star0 = the mixed-Voronoi lumped mass of the (mollified) input mesh (intrinsic_delaunay S.mass, recorded before the flips), star1 = cotan weight,
 % star2 = 1/area. Port of the Cortical Flow Editor's hodgeDirac.ts.
 %
 % Author: Diellor Basha, 2026

@@ -15,7 +15,7 @@ function S = intrinsic_delaunay(V, F, opt)
 % Bobenko & Springborn 2007. The mass is the mixed Voronoi area of the input triangulation
 % (Meyer, Desbrun, Schroeder & Barr 2003), recorded before the first flip. Edge and halfedge
 % numbering is the cortical-flow one (so matrices are comparable index by index). Closed or with
-% boundary (a boundary edge is never flipped). Signposts / tufted cover are not ported.
+% boundary (a boundary edge is never flipped). Edge lengths are mollified (opt.mollify, S.mollifyEps) and signposts are computed (opt.signposts) as in the Editor; the tufted cover is not ported.
 %
 % Author: Diellor Basha, 2026
 arguments, V (:,3) double, F (:,3) double, opt.eps (1,1) double = 1e-6, opt.signposts (1,1) logical = false, opt.mollify (1,1) double = 1e-6, end
