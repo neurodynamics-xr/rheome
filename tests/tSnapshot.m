@@ -76,6 +76,8 @@ classdef tSnapshot < matlab.unittest.TestCase
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Labelling', 't')), 'rheome:snapshot:shot');  % a field or a labelling
             tc.verifyError(@() run(struct('Labelling', 'zz')), 'rheome:snapshot:option');
             tc.verifyError(@() rheome.snapshot(tc.S, r, Shots=struct('Labelling', 't'), Out=tempname, Viewer=tc.Fake), 'rheome:snapshot:option');   % no Labellings
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm'), 'Selections', struct('name', 's', 'vertices', 9)), 'rheome:bundle:selections');   % forwarded to the bundle
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm'), 'BundlePaths', struct('name', 'p', 'vertices', 1)), 'rheome:bundle:paths');
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Cortex', 2)), 'rheome:snapshot:shot');
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'View', {{'L lateral', 'l lateral'}})), 'rheome:snapshot:shot');   % each view once
             tc.verifyError(@() run(struct('Field', '', 'Outlines', struct('Coarser', 1))), 'rheome:snapshot:outlines');         % its labelling
@@ -226,6 +228,29 @@ classdef tSnapshot < matlab.unittest.TestCase
             tc.assertNotEmpty(r, 'the painted vertex is not visible');
             tc.verifyLessThan(min(hypot(q(1) - (c - 0.5), q(2) - (r - 0.5))), 4, 'the path''s first pixel is off its painted vertex (px)');
         end
+        function bundleSetsAndPathsAreInARawRendersMarks(tc)
+        % Selections= and BundlePaths= go into the bundle; a raw render (StagePx) shown them by Settings lists each set's
+        % edge and each path in its marks, with pixels and ink (colour, width, dash, arrow) for a host to draw as vectors
+            vdir = libraryViewer(tc);
+            [V, F] = rheome.geom.icosphere(3);  S = struct('Vertices', V * 0.05, 'Faces', F);
+            front = find(V(:, 2) > 0.5);  cap = find(V(:, 2) > 0.8);
+            [~, a] = min(vecnorm(V - [-0.6 0.8 0], 2, 2));  [~, b] = min(vecnorm(V - [0.6 0.8 0], 2, 2));
+            X = struct('name', {'cap', 'front'}, 'vertices', {cap, front}, 'style', {'outline', 'extent'}, 'color', {'#d1495b', []}, 'width', {1.2, []});
+            P = struct('name', 'geo', 'vertices', [a b], 'geodesic', true, 'arrow', true, 'ticks', struct('count', 3), 'color', 'ink');
+            out = rheome.snapshot(S, struct('x', V(:, 1)), Out=tempname, Viewer=vdir, Format=[], ScaleBar=0, ...
+                Selections=X, BundlePaths=P, Shots=struct('Field', 'x', 'Unit', 'a.u.', 'View', 'left', 'Hemisphere', 'both', ...
+                'StagePx', [400 300], 'Settings', struct('selections', {{'cap', 'front'}}, 'paths', {{'geo'}})));
+            tc.addTeardown(@() rmdir(fileparts(out.raw(1).png), 's'));
+            mk = jsondecode(fileread(out.raw(1).marks));  o = mk.overlays;  if ~iscell(o), o = num2cell(o); end
+            names = cellfun(@(x) x.overlay, o, 'UniformOutput', false);
+            at = @(n) o{strcmp(names, n)};
+            tc.verifyEqual(at('selection: cap').ink, struct('colour', '#d1495b', 'widthPt', 1.2));
+            tc.verifyEqual(at('selection: front').ink.dash, [2; 1.5]);
+            g = at('path: geo');
+            tc.verifyTrue(g.ink.arrow);
+            tc.verifyNotEmpty(g.pixels);
+            tc.verifyEqual(numel(at('path ticks: geo').ticks), 3);
+        end
         function barLiesWhereTheViewerDrawsIt(tc)
         % paint the bar's vertices (and their neighbours) in the viewer; the curve the viewer reports must run through
         % the painted pixels
@@ -261,6 +286,14 @@ function px = pixelsOf(p)
     else, p = reshape(p, [], 3);
     end
     px = p(:, 1:2);
+end
+
+function vdir = libraryViewer(tc)
+% the viewer to draw with: RHEOME_VIEWER, else the library's release; Chrome
+    vdir = getenv('RHEOME_VIEWER');
+    if isempty(vdir), vdir = fullfile(char(java.lang.System.getProperty('user.home')), 'workspace', 'library', 'software', 'cortical-flow-viewer'); end
+    tc.assumeTrue(isfile(fullfile(vdir, 'viewer.html')) && isfile(fullfile(vdir, 'driver', 'snapshot-driver.mjs')), 'needs the viewer (RHEOME_VIEWER)');
+    tc.assumeTrue(isfile('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome') || ~isempty(getenv('RHEOME_CHROME')), 'needs Chrome');
 end
 
 function [vdir, S] = needs(tc)

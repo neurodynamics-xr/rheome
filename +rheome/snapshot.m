@@ -126,6 +126,14 @@ function out = snapshot(surf, result, varargin)
 %   'Node'      Node.js 22+ (default $RHEOME_NODE, else the usual install)
 %   'Labellings' partitions for the viewer (rheome.viz.tiles), named by a shot's Labelling and Outlines (or Settings)
 %   'Points'    point sets for the viewer (rheome.viz.points: critical points), shown by Settings.points (default all)
+%   'Selections' the bundle's own VERTEX SETS (rheome.io.write.bundle's 'Selections': name, vertices, style fill |
+%               outline | extent, color, width), shown by a shot's Settings.selections (names; default all). Not a shot's
+%               Selection (a key entry the viewer measures): these are drawn as the viewer draws a bundle's sets
+%   'BundlePaths' the bundle's own PATHS (rheome.io.write.bundle's 'Paths': name, vertices or faces + weights, color,
+%               width, geodesic, arrow, ticks), shown by a shot's Settings.paths (names; default all). Not a shot's Paths
+%               (From/To geodesics the report measures). In a raw render (StagePx) each set's edge and each path is an
+%               overlay of <Out>/<Name>/<view>.marks.json ('selection: <name>', 'path: <name>') with its pixels and its
+%               ink (colour, widthPt, dash, arrow); a fill style's fill stays in the PNG
 %   'Wait'      ms after the viewer opens the bundle (default 600); 'Timeout' s per shot (default 60)
 %   'Scale'     ignored (kept so older calls run): the viewer raises its pixel ratio itself so the views print at the
 %               journal's combination dpi
@@ -185,6 +193,8 @@ function out = snapshot(surf, result, varargin)
     p.addParameter('Wait', 600);
     p.addParameter('Labellings', []);
     p.addParameter('Points', []);
+    p.addParameter('Selections', []);
+    p.addParameter('BundlePaths', []);
     p.addParameter('Timeout', 60);
     p.parse(varargin{:});
     o = p.Results;
@@ -229,7 +239,7 @@ function out = snapshot(surf, result, varargin)
     % one bundle, one job, one viewer run for every shot
     if isfield(surf, 'Vertices'), bs = surf; else, bs = surfs; end
     rheome.io.write.bundle(fullfile(work, 'bundle'), bs, result, 'Fs', o.Fs, 'Name', 'rheome.snapshot', ...
-        'Labellings', o.Labellings, 'Points', o.Points);
+        'Labellings', o.Labellings, 'Points', o.Points, 'Paths', o.BundlePaths, 'Selections', o.Selections);
     list = cell(1, numel(shots));
     for k = 1:numel(shots), list{k} = struct('name', shots(k).Name, 'shot', viewerShot(shots(k), folded, o, J)); end
     job = struct();
