@@ -391,7 +391,7 @@ function q = i_framework(Xn, c, fs, o)
     B = c.Phi * (c.g .* (c.Phi' * (c.M * Xn)));
     fr = 1 : max(1, round(fs / o.TrackRate)) : size(B, 2);  rate = fs / (fr(2) - fr(1));
     [~, v] = max(abs(B(:, ceil(end/2))));  sg = sign(B(v, ceil(end/2)));  if sg == 0, sg = 1; end
-    Yt = rheome.geom.tilemean(c.G, sg * B(:, fr), c.av);
+    Yt = rheome.geom.measure.tileMean(c.G, sg * B(:, fr), c.av);
     p = rheome.detect.tilepath(Yt, c.G, Span="full", SampleRate=rate);
     q = i_nanq();
     if ~p.nTracks, return, end
@@ -467,7 +467,7 @@ function c = i_hemi(S, h, post, o)
     lam = H.lbo.Lambda(:);  c.Phi = H.lbo.Phi;  c.M = H.lbo.Mass;  c.av = full(sum(c.M, 2));
     hk = exp(-lam * (o.NormalSigmaMM * 1e-3)^2 / 2);  Nl = unit(Sh.VertNormals);
     Ns = unit(c.Phi * (hk .* (c.Phi' * (c.M * Nl))));
-    gv = double(H.gv(:));  K = S.Res.ImagingKernel;  c.gv = gv;  c.plantMask = double(rheome.geom.cortexmask(H.S));   % plants on cortex only
+    gv = double(H.gv(:));  K = S.Res.ImagingKernel;  c.gv = gv;  c.plantMask = double(rheome.geom.select.cortex(H.S));   % plants on cortex only
     c.Kn = Ns(:,1) .* K(3*gv-2, :) + Ns(:,2) .* K(3*gv-1, :) + Ns(:,3) .* K(3*gv, :);
     c.K3 = K(reshape((3*gv' - 3) + (1:3)', [], 1), :);
     gfb = rheome.graphfilterbank(lam, 'Wavelet', 'logitersine', 'VoicesPerOctave', 2);

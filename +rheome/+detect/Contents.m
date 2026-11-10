@@ -30,7 +30,7 @@
 %       motifs stay one track instead of fragmenting; merge/split events are flagged (flow-
 %       singularity pair bifurcation/annihilation). Each track carries velocity (m/s), lifetime,
 %       straightness (1 traveling / 0 standing), state, birth/death, gaps and an intrinsic home
-%       location (rheome.geom.karcher_mean). Association ported from the sibling repo nxr-tracking
+%       location (rheome.geom.measure.karcherMean). Association ported from the sibling repo nxr-tracking
 %       (tracking/meshByteTrack.ts), adapting ByteTrack [Zhang et al., ECCV 2022] to the cortex.
 %       Validated on a translating vortex + a gap-recovery case (feature_tracking_validate.m);
 %       demo in feature_tracking.m (motifs on real MEG alpha).

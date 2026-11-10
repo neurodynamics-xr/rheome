@@ -14,7 +14,7 @@ function Op = operator(S, Tp, opts)
 %      the cortical dipole; that is right for flow, wrong for a mode of the current;
 %   3. the area-weighted mean over each group tile of depth Depth (rheome.scale.grouptiles: the template's tiles
 %      carried through the registered sphere, so tile k is the same place in every participant), over cortex only
-%      (rheome.geom.cortexmask; decision 3882c4ce). A tile wholly on the medial wall keeps its place with W row 0,
+%      (rheome.geom.select.cortex; decision 3882c4ce). A tile wholly on the medial wall keeps its place with W row 0,
 %      area_mm2 0 and its closed-mesh centroid; rheome.modes.fit drops area-0 tiles from the spin.
 %
 % Op.W [nTiles x nSel]   Op.tiles table: hemi, tile (code), area_mm2, x_mm y_mm z_mm (participant centroid),
@@ -57,7 +57,7 @@ function Op = operator(S, Tp, opts)
         if ~any(keep), error('modes:operator:cutoff', 'no bank member has a wavelength in [%g, %g) mm (members %s mm)', opts.CutoffMM, opts.MaxWavelengthMM, mat2str(round(wl))); end
         hg = sqrt(sum(G(:, keep).^2, 2));  kept = union(kept, wl(keep));
         [P, Ah, ids, C] = rheome.scale.grouptiles(S, Tp, h, opts.Depth);
-        a0 = full(sum(lbo.Mass, 2));  a = a0 .* rheome.geom.cortexmask(S.B.(h).S);  wa = full(sum(P .* a, 1));
+        a0 = full(sum(lbo.Mass, 2));  a = a0 .* rheome.geom.select.cortex(S.B.(h).S);  wa = full(sum(P .* a, 1));
         Pa = (P .* a) ./ wa;  Pa(:, wa == 0) = 0;                                % area-weighted mean over cortex; a tile wholly
         P0 = (P .* a0) ./ full(sum(P .* a0, 1));                                 % on the wall reads 0 (depth 6: 3 of 128 tiles)
         Lw = lbo.Phi * (hg .* (lbo.Phi' * (lbo.Mass * Kq)));                    % low-passed q per vertex

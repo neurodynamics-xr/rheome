@@ -6,7 +6,7 @@ function X = harmonicfill(S, X, cortex)
 %
 % The operators (LB eigenmodes, connection Laplacian, Dirac, div/curl, gauge) need the closed
 % hemisphere: chi = 2, no boundary term. The wall is not cortex, so the field there is not data
-% (rheome.geom.cortexmask). The fill solves Laplace's equation on the wall with the rim values as
+% (rheome.geom.select.cortex). The fill solves Laplace's equation on the wall with the rim values as
 % Dirichlet data -- the minimum-Dirichlet-energy completion -- so the operators see a closed field
 % that adds no divergence or curl the rim does not force (review §4, layer 3).
 %
@@ -20,7 +20,7 @@ function X = harmonicfill(S, X, cortex)
 %   critical point, a vortex, a peak) is flagged and not reported (rheome.flow.critical .onWall).
 % ⚠ Every wall component must touch cortex; a wall island with no rim has no Dirichlet data (error).
 %
-% See also: rheome.geom.cortexmask, rheome.operators.laplace_beltrami, rheome.scale.sensors
+% See also: rheome.geom.select.cortex, rheome.operators.laplace_beltrami, rheome.scale.sensors
 %
 % Author: Diellor Basha, 2026
 

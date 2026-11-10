@@ -1,5 +1,5 @@
 classdef tFlipOut < matlab.unittest.TestCase
-% rheome.geom.flipOut against the viewer's FlipOut (nxr-compute WASM, geometry-central): every pair of
+% rheome.geom.draw.flipOut against the viewer's FlipOut (nxr-compute WASM, geometry-central): every pair of
 % tests/goldens/flipout has the same points (1e-9 m), the same vertex/edge/face placement and the same length
 % (1e-9 relative). fsaverage5 lh pial runs when NXR_FSAVERAGE5 is set.
 %
@@ -21,7 +21,7 @@ classdef tFlipOut < matlab.unittest.TestCase
             cache = [];
             for j = 1:numel(m.paths)
                 p = m.paths(j);  at = sprintf('%s %d -> %d', mesh, p.from, p.to);
-                [P, info] = rheome.geom.flipOut(S, p.from + 1, p.to + 1, cache);  cache = info.cache;
+                [P, info] = rheome.geom.draw.flipOut(S, p.from + 1, p.to + 1, cache);  cache = info.cache;
                 t.assertEqual(size(P, 1), p.nPoints, [at ': number of points']);
                 t.verifyEqual(P, reshape(p.positions, 3, []).', 'AbsTol', 1e-9, [at ': positions']);
                 t.verifyEqual(info.vertices, reshape(p.vertices, 3, []).' + 1, [at ': vertices']);
@@ -31,9 +31,9 @@ classdef tFlipOut < matlab.unittest.TestCase
         end
         function theSameVertexAndBadInput(t)
             [V, F] = rheome.geom.icosphere(2);  S = struct('Vertices', V, 'Faces', F);
-            [P, info] = rheome.geom.flipOut(S, 5, 5);
+            [P, info] = rheome.geom.draw.flipOut(S, 5, 5);
             t.verifyEqual(P, V(5,:));  t.verifyEqual(info.length, 0);
-            t.verifyError(@() rheome.geom.flipOut(S, 0, 5), 'rheome:flipOut:vertex');
+            t.verifyError(@() rheome.geom.draw.flipOut(S, 0, 5), 'rheome:flipOut:vertex');
         end
     end
 end

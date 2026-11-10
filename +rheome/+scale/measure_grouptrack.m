@@ -70,7 +70,7 @@ function [T, X, Best, Win, Paths] = measure_grouptrack(name, S, opts)
     badF = CS.mask(1:dec:end);
     for hh = opts.Hemis
         H = B.(char(hh));  Sh = H.S;  Phi = H.lbo.Phi;  Mm = H.lbo.Mass;
-        av = full(sum(Mm, 2)) .* rheome.geom.cortexmask(H.S);  C = double(E.(char(hh)).C(:, f1:min(f2, end)));  nFr = size(C, 2);  nWin = floor(nFr/(W*FR));
+        av = full(sum(Mm, 2)) .* rheome.geom.select.cortex(H.S);  C = double(E.(char(hh)).C(:, f1:min(f2, end)));  nFr = size(C, 2);  nWin = floor(nFr/(W*FR));
         bw0 = badF(f1:f1 + nFr - 1);  ok = find(~any(reshape(bw0(1:nWin*W*FR), W*FR, nWin), 1));
         % shortcut: an interior artefact block still enters the surrogate, circularly shifted per mode; mask it if a cohort shows many
         g = rheome.geom.edgegraph(Sh);  Tr = rheome.geom.tree(Sh, L=H.lbo.L, M=Mm, MaxDepth=max(opts.Depths));

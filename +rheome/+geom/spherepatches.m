@@ -27,7 +27,7 @@ function P = spherepatches(Sph, opts)
 %   .centre [nP x 3] unit centres                .colat .lon [nP x 1] of the centres, degrees
 %   .spread [nP x 1] degrees (Inf for an empty patch)   .hasPole [nP x 1]   .excluded [nP x 1]
 %
-% See also: rheome.geom.sphereframe, rheome.geom.icosphere, rheome.geom.tilemean
+% See also: rheome.geom.sphereframe, rheome.geom.icosphere, rheome.geom.measure.tileMean
 %
 % Author: Diellor Basha, 2026
 

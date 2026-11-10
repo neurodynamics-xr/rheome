@@ -12,7 +12,7 @@ function S = sensors(name, opts)
 % .Ref ([nSel x nSel] the reference operator applied to the gain; identity for MEG).
 %
 % ⭐ THE MEDIAL WALL IS FILLED (decision 3882c4ce, 2026-10-14). S.Sf.Cortex and S.B.(h).S.Cortex mark cortex
-% (rheome.geom.cortexmask); the kernel's wall rows are replaced by the harmonic extension of its cortical
+% (rheome.geom.select.cortex); the kernel's wall rows are replaced by the harmonic extension of its cortical
 % rows (rheome.operators.harmonicfill), so every field made from S.Res.ImagingKernel is filled before any
 % operator touches it. The inverse itself is unchanged: the wall dipoles stay in the leadfield.
 % Wall="keep" gives the pre-2026-10-14 behaviour (no fill, every vertex counted as cortex), for comparisons.
@@ -47,7 +47,7 @@ function S = sensors(name, opts)
         S.Sf.Cortex = true(S.nV, 1);
         for h = intersect(fieldnames(S.B), {'L','R'})', S.B.(h{1}).S.Cortex = true(numel(S.B.(h{1}).gv), 1); end
     else
-        S.Res.ImagingKernel = rheome.operators.harmonicfill(S.Sf, S.Res.ImagingKernel, rheome.geom.cortexmask(S.Sf));
+        S.Res.ImagingKernel = rheome.operators.harmonicfill(S.Sf, S.Res.ImagingKernel, rheome.geom.select.cortex(S.Sf));
     end
 end
 

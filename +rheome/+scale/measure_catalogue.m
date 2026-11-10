@@ -485,7 +485,7 @@ function C = i_hemi(S, h, o)
     C.Knl = Nl(:,1).*K(3*gv-2,:) + Nl(:,2).*K(3*gv-1,:) + Nl(:,3).*K(3*gv,:);            % G3 rule 11: local normals
     C.Gn  = S.G(:,3*gv-2).*Nl(:,1)' + S.G(:,3*gv-1).*Nl(:,2)' + S.G(:,3*gv).*Nl(:,3)';     % the plant is a normal current
     C.Sg = struct('Vertices', C.V, 'Faces', C.F, 'VertNormals', Nl, 'nV', C.nV, 'Hemi', {{(1:C.nV)'}}, ...
-                  'HemiLabel', {{char("Cortex " + h)}}, 'Comment', '', 'SurfaceFile', '', 'Cortex', rheome.geom.cortexmask(Sh));
+                  'HemiLabel', {{char("Cortex " + h)}}, 'Comment', '', 'SurfaceFile', '', 'Cortex', rheome.geom.select.cortex(Sh));
     C.fg = rheome.operators.face_gradient(C.V, C.F);  C.op = rheome.detect.operator(C.Sg);  C.ge = rheome.geom.edgegraph(Sh);
     C.av = full(sum(M, 2)) .* C.Sg.Cortex;  nF = size(C.F, 1);   % cortex only
     C.Afv = sparse(C.F(:), repmat((1:nF)',3,1), repmat(C.fg.FaceArea,3,1), C.nV, nF);  C.afv = full(sum(C.Afv, 2));

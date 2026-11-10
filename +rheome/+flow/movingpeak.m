@@ -10,7 +10,7 @@ function P = movingpeak(atoms, cums, opts)
 % path. At time t the peak sits at arclength s = SpeedMS * t, and the map is the linear blend of the
 % two atoms either side of s, so the core moves continuously rather than hopping a waypoint at a time.
 %
-% ⭐ BUILD THE PATH ON rheome.geom.edgegraph, NOT ON rheome.geom.geodesic. Shortest paths on edgegraph give `cums`
+% ⭐ BUILD THE PATH ON rheome.geom.edgegraph, NOT ON rheome.geom.measure.heatDistance. Shortest paths on edgegraph give `cums`
 % on a ruler that is symmetric and +1.4% against the analytic geodesic. Choosing waypoints by the heat
 % method -- as rheome.flow.movingvortex does -- switches between near-equal routes around a sulcus, and the
 % planted peak teleports (measured: 46.7 mm steps on a 3 mm spacing).

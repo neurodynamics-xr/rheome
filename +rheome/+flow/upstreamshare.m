@@ -4,9 +4,9 @@ function out = upstreamshare(Z, g, A, opts)
 %   out = rheome.flow.upstreamshare(Z, g, A)
 %   out = rheome.flow.upstreamshare(Z, g, A, Normals=nbar, Mask=own >= 0.25)
 %
-%   Z  = cat(2, ...) of rheome.geom.tilemean of each ambient component of the ANALYTIC band-limited current:
+%   Z  = cat(2, ...) of rheome.geom.measure.tileMean of each ambient component of the ANALYTIC band-limited current:
 %        [nTile x 3 x nT] complex (the quaternion field (0, J) pooled per tile), or [nTile x nT] complex scalar
-%   g  = rheome.geom.tilemean(G, gradientMap, areas): [nTile x 1] the gradient's value per tile
+%   g  = rheome.geom.measure.tileMean(G, gradientMap, areas): [nTile x 1] the gradient's value per tile
 %   A  = rheome.geom.tiles(...).A: [nTile x nTile] tile adjacency (> 0 = touching)
 %
 % U is the weighted share of (adjacent tile pair, frame) samples in which the phase LEADS on the low-g tile,
@@ -50,7 +50,7 @@ function out = upstreamshare(Z, g, A, opts)
 %   d. SCALE. Tiles of rheome.geom.tree at DEPTH 3 on each hemisphere (8 per hemisphere; equivalent-disc
 %      diameters 113-149 mm, median 125-135 mm, measured on two subjects): the finest level whose every tile is
 %      >= 10 cm. Fixed for every recording, never chosen per recording (it would then follow the resolution).
-%      Z = the area-weighted tile mean of each component (rheome.geom.tilemean); Normals = the tile mean of the
+%      Z = the area-weighted tile mean of each component (rheome.geom.measure.tileMean); Normals = the tile mean of the
 %      outward vertex normals.
 %   e. GRADIENT. g = the tile mean of the principal functional gradient (Margulies et al. 2016, gradient 1,
 %      normative map), resampled to the recording's cortex by its spherical registration, signed so that the
@@ -74,7 +74,7 @@ function out = upstreamshare(Z, g, A, opts)
 %             .edges [nE x 2] (k, l) with g_l > g_k   .Ue [nE x 1] per-edge share   .we [nE x 1] per-edge weight
 %             .axis [nTile x 3]  .linearity [nTile x 1]  .phase [nTile x nT]
 %
-% See also: rheome.geom.tiles, rheome.geom.tilemean, rheome.flow.crosstalk, rheome.flow.apparent,
+% See also: rheome.geom.tiles, rheome.geom.measure.tileMean, rheome.flow.crosstalk, rheome.flow.apparent,
 %           rheome.spectral.decompose
 %
 % Author: Diellor Basha, 2026

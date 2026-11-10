@@ -16,7 +16,7 @@ function pts = flipoutTrace(M, v, traceVec, maxIters, target)
 % f.halfedge(), f.halfedge().next(), ... (geometry-central's faceCoords).
 %
 % Author: Diellor Basha, 2026 (a port of geometry-central, MIT, Copyright (c) 2017-2019 Nicholas Sharp and the
-% geometry-central contributors; licence: +rheome/+geom/LICENSE-geometry-central)
+% geometry-central contributors; licence: +rheome/+geom/+draw/LICENSE-geometry-central)
 
     pts = trace(M, v, traceVec, maxIters);
     % SignpostIntrinsicTriangulation::traceIntrinsicHalfedgeAlongInput(he, trimEnd = true)

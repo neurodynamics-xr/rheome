@@ -1,10 +1,10 @@
 function M = flipoutMesh(V, F)
-% FLIPOUTMESH  The halfedge mesh and the input geometry rheome.geom.flipOut works on (private).
+% FLIPOUTMESH  The halfedge mesh and the input geometry rheome.geom.draw.flipOut works on (private).
 %
 %   M = flipoutMesh(V, F)      V [nV x 3], F [nF x 3] 1-based, oriented, manifold
 %
 % A port of geometry-central's mesh construction and of the geometry quantities FlipOut reads, in the same element
-% order and the same floating-point order (see rheome.geom.flipOut for the source, commit and licence):
+% order and the same floating-point order (see rheome.geom.draw.flipOut for the source, commit and licence):
 %   - ManifoldSurfaceMesh::ManifoldSurfaceMesh(polygons)        (manifold_surface_mesh.cpp): halfedges, edges, the
 %     boundary loops, v.halfedge(), f.halfedge(). Edge e has halfedges 2e-1 (e.halfedge(), the one met first in the
 %     face list) and 2e (its twin); everything is 1-based here, in the same order as geometry-central's 0-based ids.
@@ -21,7 +21,7 @@ function M = flipoutMesh(V, F)
 % angleSum, hvF [nH x 2], hvV [nH x 2] (input geometry), angleSumI, signpost (the intrinsic triangulation's start).
 %
 % Author: Diellor Basha, 2026 (a port of geometry-central, MIT, Copyright (c) 2017-2019 Nicholas Sharp and the
-% geometry-central contributors; licence: +rheome/+geom/LICENSE-geometry-central)
+% geometry-central contributors; licence: +rheome/+geom/+draw/LICENSE-geometry-central)
 
     V = double(V);  F = double(F);
     nF = size(F, 1);  nV = max(F(:));
