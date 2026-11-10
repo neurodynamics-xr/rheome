@@ -204,10 +204,12 @@ classdef tSnapshot < matlab.unittest.TestCase
             tc.verifyTrue(ismember(lat, out.selections(1).vertices));
             tc.verifyEqual(out.inset.shape, 'square');
             p = out.paths;
-            G = rheome.geom.edgegraph(S, Diagonals=false);                              % the exact geodesic (the viewer's) is
+            G = rheome.geom.edgegraph(S, Diagonals=false);                              % the drawn geodesic (FlipOut) is
             tc.verifyLessThanOrEqual(p.length_mm, 1e3 * distances(G, lat, far) + 1e-6); % no longer than a mesh walk,
-            tc.verifyGreaterThanOrEqual(p.length_mm, 1e3 * norm(V(lat, :) - V(far, :)));  % no shorter than the chord,
-            tc.verifyEqual(p.length_mm, p.geodesic_mm, 'RelTol', 0.1);                  % and near the heat distance between its ends
+            tc.verifyLessThanOrEqual(p.geodesic_mm, p.length_mm + 1e-9);                % no shorter than the exact distance,
+            tc.verifyGreaterThanOrEqual(p.geodesic_mm, 1e3 * norm(V(lat, :) - V(far, :)));  % itself no shorter than the chord;
+            tc.verifyEqual(p.geodesic_mm, 34.104513669, 'AbsTol', 1e-6);                % the exact (MMP) distance, as pygeodesic
+                                                                                        % gives it on omega_sub0002 (2026-11-10)
             tc.verifyEqual(p.points(1, :), V(lat, :), 'AbsTol', 1e-6);                  % from its first vertex (m)
             tc.verifySubstring(out.legend, 'path of the event');
             tc.verifyEqual(numel(p.px), 4);  tc.verifyEqual(numel(p.visible), 4);

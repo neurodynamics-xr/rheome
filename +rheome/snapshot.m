@@ -101,7 +101,8 @@ function out = snapshot(surf, result, varargin)
 %              A Centre (also allowed with Vertices) is drawn as the tokens' centre: one size, filled with the colour.
 %   Paths      GEODESIC paths on the folded surface (default none; tokens cortex.paths): ink over a paper halo, an
 %              arrowhead at the end, its stretches hidden by the surface thin and dotted. A struct (array) with
-%                From, To  vertices: the viewer's exact geodesic between them (geometry-central) on the folded surface
+%                From, To  vertices: the viewer's geodesic between them on the folded surface (geometry-central's FlipOut:
+%                          locally shortest; out.paths reports its length and the exact distance between them)
 %                Label     what it is ("path of the event")                                            REQUIRED
 %              (Points with How, a path the caller traced, is refused for now: the viewer draws only the geodesics
 %              between From and To.)
@@ -150,8 +151,11 @@ function out = snapshot(surf, result, varargin)
 %         drawn curve, .vertices, .px, .view) or [] .legend (the sentence the figure legend needs: views, surface, the
 %         bar's distance, the interval, the inset, the marks) .inset (.label .view .magnification (x, the inset's
 %         length per the view's) .dpi .vertices .shape) or [] .selections (.label .kind ("tile" | "disk") .axis .colour
-%         .dashed .vertices) .paths (.label .how .points [n x 3] m .length_mm along the folded surface, .geodesic_mm
-%         the distance between its ends, .px and .visible: one cell per render) .build (the viewer's build)
+%         .dashed .vertices) .paths (.label .how .points [n x 3] m .length_mm the drawn path's length along the folded
+%         surface (geometry-central's FlipOut geodesic, locally shortest), .geodesic_mm the EXACT geodesic distance
+%         between its ends (MMP, the shortest path over the faces), so .geodesic_mm <= .length_mm (equal when the drawn
+%         path is the shortest; on fsaverage5 pial up to ~8 % apart), .px and .visible: one cell per render) .build
+%         (the viewer's build)
 %         ONLY WHEN A SHOT OF THE CALL ASKS (else absent; [] in a shot that did not ask): .labelling (the labelling
 %         painted) .outlines (.labelling .coarser ([] none) .width .coarserWidth, pt) and, for raw pictures, .stops (the
 %         colourbar's stops: an n x 2 cell {offset 0-1, colour}, [] with no field) .fit (.margin .shared .zoom (the
