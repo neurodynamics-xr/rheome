@@ -28,6 +28,11 @@
 %   rheome.geom.icosphere     - geodesic sphere by icosahedron subdivision (FreeSurfer-style ico)
 %   rheome.geom.edgegraph     - the mesh as a Dijkstra graph, edges + intrinsic diagonals: +1.4% against the
 %                        analytic great circle at any range, symmetric. The ruler for a speed.
+%   rheome.geom.glue          - the two hemispheres made one closed surface by anatomy (medial walls cut, a bridge
+%                        grown): the editor's glueMesh, bit-identical to nxr-convert eigen/glue.py
+%   rheome.geom.meshkey       - the editor's mesh fingerprint '<nF>:<fnv1a>' a stored basis or kernel records
+%   rheome.geom.hemispheres   - 'L'/'R' per vertex: the two largest pieces, told apart by the left axis (+y SCS, -x MNI)
+%   rheome.geom.sphereregister - points on a registered sphere sampled from a source's cortex (barycentric or nearest)
 %
 % THE SPATIAL PYRAMID (2026-09-25):
 %   rheome.geom.tree   - recursive spectral bisection of a surface: a NESTED, DISJOINT partition,

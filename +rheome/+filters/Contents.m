@@ -40,6 +40,7 @@
 %   rheome.filters.gabor      - spatiotemporal Gabor packet (scale x frequency)
 %   rheome.filters.stmatern   - spatiotemporal 1/f (Whittle-Matern) background
 %   rheome.filters.bandpass   - Gaussian temporal band-pass factor g(omega)
+%   rheome.filters.resample   - rows resampled fs -> another rate, anti-aliased (polyphase Kaiser sinc: scipy's resample_poly)
 %
 % Joint transform + application:
 %   rheome.filters.jspectrum  - joint eigenmode-frequency spectrum  fft(c)/sqrt(NFFT)

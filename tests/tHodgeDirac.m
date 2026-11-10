@@ -54,7 +54,7 @@ classdef tHodgeDirac < matlab.unittest.TestCase
         end
         function cocircularEdgeKeepsTheMassPositive(tc)
             % a square split by its diagonal has cot 90 deg + cot 90 deg = 0: a cocircular edge is Delaunay (never flipped) with cotan weight 0
-            % in [-1e-6, 0], so the 1-form mass star1 = w was <= 0 (the 'mass not positive' of sub-MTL0308 / 0461 / 0631: ~1e-6 x 6e4 edges x density per cortex)
+            % in [-1e-6, 0], so the 1-form mass star1 = w was <= 0 (the 'mass not positive' seen on real cortices: ~1e-6 x 6e4 edges x density per cortex)
             V = [-1 -1 -1; 1 -1 -1; 1 1 -1; -1 1 -1; -1 -1 1; 1 -1 1; 1 1 1; -1 1 1];
             F = [1 3 2; 1 4 3; 5 6 7; 5 7 8; 1 2 6; 1 6 5; 2 3 7; 2 7 6; 3 4 8; 3 8 7; 4 1 5; 4 5 8];   % a cube, outward
             H0 = rheome.operators.hodge_dirac(V, F, star1Floor=-Inf);

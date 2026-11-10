@@ -12,6 +12,11 @@
 %   carrier    - carrier frequency estimated on the PERIODIC component only
 %   synthesise - the inverse of aperiodic: real series with a prescribed 1/f background
 %
+% THE SPECTRAL ROOT (the editor's per-frame chain, run on the CPU):
+%   root       - one chunk's rows to their one-sided spectra (mean out, mirror-padded, N = nextpow2)
+%   column     - the sensor column at a time cut from the root with a gain on frequency: real and analytic
+%   meyerband  - a band's gain a bin (Meyer transitions; neighbouring bands partition power)
+%
 % THE PARTITION IS EXACT. specparam is additive in LOG power, hence multiplicative in linear
 % power, so gains formed as sqrt(peaks/total) do NOT partition. Instead the aperiodic gain comes
 % from the fitted background and the periodic gain is the RESIDUAL:
