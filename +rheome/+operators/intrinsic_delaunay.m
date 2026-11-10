@@ -10,7 +10,7 @@ function S = intrinsic_delaunay(V, F, opt)
 %       S.flips, S.nonDelaunay, S.mollifyEps (m added to every edge length; 0 when no triangle is degenerate; opt.mollify = 0 turns it off)
 %
 % Same vertices and metric as the input; edges are flipped intrinsically (flipped length laid out
-% from the two triangles) until every cotangent weight is >= -eps. Port of nxr-cortical-flow
+% from the two triangles) until every cotangent weight is >= -eps. Port of the Cortical Flow Editor's
 % intrinsicDelaunay.ts, itself geometry-central's flipToDelaunay (Sharp, Soliman & Crane 2019),
 % Bobenko & Springborn 2007. The mass is the mixed Voronoi area of the input triangulation
 % (Meyer, Desbrun, Schroeder & Barr 2003), recorded before the first flip. Edge and halfedge

@@ -37,7 +37,7 @@ function G = tiles(T, S, depth, opts)
 % distance between every pair of centres -- so a track's displacement and path length are read on
 % the same ruler as the planted truth (rheome.geom.edgegraph, +1.4% against the analytic geodesic).
 %
-% ⭐ CORTEX AREA (decision 3882c4ce, 2026-10-14). Tiles are built on the CLOSED hemisphere (the tree is a
+% ⭐ CORTEX AREA (the cortex-only rule, 2026-10-14). Tiles are built on the CLOSED hemisphere (the tree is a
 % geometric scaffold), but a tile's size is its cortex: `.cortex_area` (m^2, lumped vertex areas over the
 % vertices S.Cortex marks, rheome.geom.select.cortex) and `.cortex_fraction` of its closed area. A tile wholly
 % on the medial wall has cortex_area 0; rheome.geom.measure.tileMean gives it NaN. Without S.Cortex every vertex counts.

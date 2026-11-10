@@ -8,7 +8,7 @@ function [T, X, Acf, TF] = measure_events(name, S, opts)
 % the mode-shift surrogate threshold (rheome.scale.measure_grouptrack, same seed and calibration, at one
 % configuration: depth-8 tiles, 18.75 frames/s by default). Each is one row of an event table (hemisphere,
 % tiles visited, first and last time), so the same code reads atlas-cell events once they exist.
-% ⭐ A DETECTION IS A PIECE OF AN EPISODE. The tracker cuts at its 2 s windows: on OMEGA sub-0002, 92% of the
+% ⭐ A DETECTION IS A PIECE OF AN EPISODE. The tracker cuts at its 2 s windows: on an OMEGA recording, 92% of the
 % detections spanned their whole window and 70% sat in consecutive windows, so a +-1 s fit on one piece cannot
 % see the episode's start or end (18% of fits reached r2 0.7). With Merge (default), detections of one
 % hemisphere less than MergeGapS apart whose tiles overlap or touch are one EVENT (tiles: the union).

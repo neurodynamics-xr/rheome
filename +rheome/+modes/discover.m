@@ -157,14 +157,14 @@ function M = discover(files, outDir, opts)
         for s = 2:numel(src)
             Xn = [X{:, b, s}];  nullr.(src(s)) = nan(K, 1);
             if size(Xn, 2) < K, continue; end
-            % F union amendment (design §14, 2026-10-12, decision d62f84ae): an F null is the union of its atoms
+            % F union amendment (design §14, 2026-10-12): an F null is the union of its atoms
             % at EVERY K of Ks, since k-means at one K cuts the field-spread continuum differently per realisation
             kn = K;  if startsWith(src(s), "f_fieldspread"), kn = Ks(Ks <= size(Xn, 2)); end
             Cn = arrayfun(@(k) rheome.modes.cluster(Xn, k, Replicates=opts.Replicates, Seed=opts.Seed), kn, 'uni', 0);
             nullC.(src(s)) = [Cn{:}];  nullK.(src(s)) = repelem(kn(:), kn(:));
             nullr.(src(s)) = max(abs(C' * nullC.(src(s))), [], 2);
         end
-        % F calibration amendment (design §14, 2026-10-13, decision 93764a02): the Level-1 (i) threshold for joint
+        % F calibration amendment (design §14, 2026-10-13): the Level-1 (i) threshold for joint
         % atoms is set by F1 vs F2 -- the lowest best |r| of either realisation's K* atoms to the other's atoms at
         % every K, minus FMargin, capped at RMinF; F3 (f_fieldspread3) does not set it and tests it (jointcheck)
         rminF = NaN;  fLow = NaN;

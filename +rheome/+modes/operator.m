@@ -14,7 +14,7 @@ function Op = operator(S, Tp, opts)
 %      the cortical dipole; that is right for flow, wrong for a mode of the current;
 %   3. the area-weighted mean over each group tile of depth Depth (rheome.scale.grouptiles: the template's tiles
 %      carried through the registered sphere, so tile k is the same place in every participant), over cortex only
-%      (rheome.geom.select.cortex; decision 3882c4ce). A tile wholly on the medial wall keeps its place with W row 0,
+%      (rheome.geom.select.cortex; the cortex-only rule). A tile wholly on the medial wall keeps its place with W row 0,
 %      area_mm2 0 and its closed-mesh centroid; rheome.modes.fit drops area-0 tiles from the spin.
 %
 % Op.W [nTiles x nSel]   Op.tiles table: hemi, tile (code), area_mm2, x_mm y_mm z_mm (participant centroid),

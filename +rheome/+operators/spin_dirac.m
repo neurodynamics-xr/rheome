@@ -8,7 +8,7 @@ function S = spin_dirac(V, F)
 %       S.H, S.area    [nF x 1]     integrated mean curvature and area per face
 %       S.mass         [4nF x 4nF]  area (x) I4: the eigenproblem is D phi = mu mass phi
 %
-% Port of nxr-cortical-flow editor/src/engine/toolbox/differential/spinDirac.ts (hyperedges, assemble).
+% Port of the Cortical Flow Editor's engine/toolbox/differential/spinDirac.ts (hyperedges, assemble).
 % Hyperedge across the halfedge e (ccw in face i) to face j:  E_ij = |e| tan(theta/2) + e, quaternion [w x y z],
 % sin(theta) = (n_i x n_j).e/|e|, cos(theta) = n_i.n_j. Rows 4(i-1)+r, interleaved [w x y z].
 % Hoffmann & Ye arXiv 1802.06278; Ye, Diamanti, Tang, Guibas & Hoffmann, CGF 37(5) 2018.

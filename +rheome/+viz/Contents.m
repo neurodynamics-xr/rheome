@@ -17,7 +17,7 @@
 %   rheome.viz.marks   a render's marks sidecar (<render>.marks.json, nxr.marks@1): every overlay with its key, what
 %                      figure_check.py E1 reads (Chekhov's gun)
 %
-% EVERY CORTICAL VISUAL, AND WHO DRAWS IT (the viewer's README: nxr-cortical-flow editor/src/viewer/README.md)
+% EVERY CORTICAL VISUAL, AND WHO DRAWS IT (the viewer's README: the Cortical Flow Editor's viewer/README.md)
 %   a real field, a vector field's |v| n.v div curl     viewer: a colour / isolines / halfMax layer
 %   tangent field (arrows), full field or per tile      viewer: an arrows layer (form x | xt; level)
 %   Hodge potentials phi, psi                            bundle 'Potentials' (solved in MATLAB), viewer: colour

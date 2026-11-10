@@ -17,7 +17,7 @@ function manifest = bundle(folder, surf, result, varargin)
 %   selection_<k>.bin  int32 [n], vertex set k (0-based)                            optional, the manifest's 'selections'
 % The manifest may carry 'settings', the viewer's settings to open with (rheome.view writes them).
 % Every file is .bin: MATLAB's uihtml server answers 404 for an extension it does not know (.f32, .i32; R2026a).
-% The reader is the Cortical Flow viewer (nxr-cortical-flow editor/src/viewer/bundle.ts; format and protocol in its
+% The reader is the Cortical Flow viewer (the Cortical Flow Editor's viewer/bundle.ts; format and protocol in its
 % README.md); it finds the hemispheres itself, as the mesh's two largest connected components.
 %
 % INPUTS:
@@ -53,7 +53,7 @@ function manifest = bundle(folder, surf, result, varargin)
 %               such as 'ink', or '#rrggbb'), .width (pt, 0 < width <= 20), .geodesic (true: the vertices are WAYPOINTS
 %               the viewer joins by geodesics on the folded surface; vertices only), .arrow (true: an arrowhead at the
 %               end), .ticks (a geodesic path as a time line: struct with .every_mm (> 0) or .count (>= 2), one of
-%               them, and optionally .labels, texts). The viewer's README (nxr-cortical-flow editor/src/viewer) says how
+%               them, and optionally .labels, texts). The viewer's README (the Cortical Flow Editor's viewer) says how
 %               each is drawn.
 %   'Selections' struct array (or cell of structs), one VERTEX SET each (a tile, a mask, a support; shown by the
 %               viewer setting 'selections', default all): .name, .vertices [n x 1] (1-BASED) or a logical [nV] mask;

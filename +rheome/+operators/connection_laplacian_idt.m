@@ -10,7 +10,7 @@ function [L, M, S] = connection_laplacian_idt(V, F, nSym)
 %   rescaled to 2*pi at its vertex (a boundary vertex keeps its own angle sum). nSym raises every
 %   rotation to that power (n-RoSy: 1 vector, 2 line, 4 cross field). Same operator as
 %   rheome.operators.connection_laplacian, but on the Delaunay triangulation (weights >= 0, no
-%   sliver-driven spectrum top). Port of nxr-cortical-flow connectionLaplacian.ts
+%   sliver-driven spectrum top). Port of the Cortical Flow Editor's connectionLaplacian.ts
 %   (Sharp, Soliman & Crane, "The Vector Heat Method", 2019, sec. 5).
 %
 % Author: Diellor Basha, 2026

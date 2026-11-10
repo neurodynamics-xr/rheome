@@ -136,7 +136,7 @@ function [Z, Y, Op] = jointfields(name, S, opts)
         add("f_fieldspread", Xf, "per");  srcs(end+1) = "f_fieldspread";
         Xf2 = i_fieldspread(S, Tp, F, fw, mask, E, opts, RandStream('mt19937ar', 'Seed', opts.Seed + 18));
         add("f_fieldspread2", Xf2, "per");  srcs(end+1) = "f_fieldspread2";   % F union: both realisations are the null
-        % F calibration amendment (design §14, 2026-10-13, decision 93764a02): F3 tests the r_min that F1 vs F2 set
+        % F calibration amendment (design §14, 2026-10-13): F3 tests the r_min that F1 vs F2 set
         Xf3 = i_fieldspread(S, Tp, F, fw, mask, E, opts, RandStream('mt19937ar', 'Seed', opts.Seed + 19));
         add("f_fieldspread3", Xf3, "per");  srcs(end+1) = "f_fieldspread3";  clear Xf2 Xf3
     end
@@ -209,7 +209,7 @@ function [X, T, B] = i_canary(S, Xf, fw, o, rs)
     c2 = mean(V(V(:,3) >= prctile(V(:,3), 80) & V(:,1) <= median(V(:,1)), :), 1);
     g = @(c, s) exp(-vecnorm(V - c, 2, 2).^2 / (2 * s^2));
     Q = rheome.geom.select.cortex(S.Sf) .* [exp(1i*2*pi/0.200 * V(:,1)), g(c1, 0.03) + exp(-1i*pi/2) * g(c0, 0.03), ...
-         cos(2*pi/0.200 * V(:,3)), exp(1i*2*pi/0.050 * V(:,1)) .* g(c2, 0.04)];          % planted on cortex only (decision 3882c4ce)
+         cos(2*pi/0.200 * V(:,3)), exp(1i*2*pi/0.050 * V(:,1)) .* g(c2, 0.04)];          % planted on cortex only
     names = ["wave200_ap"; "pair_fo"; "standing200"; "fine50"];
     B = Gn * Q;  B = B ./ vecnorm(B);  N = size(Xf, 2);  t = (0:N-1) / fw;
     oc = find(o.Octaves(:, 1) <= o.CanaryHz & o.Octaves(:, 2) > o.CanaryHz, 1);

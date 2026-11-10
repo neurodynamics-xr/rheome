@@ -4,7 +4,7 @@ function [T, Ex] = measure_panelexamples(name, S)
 %   [T, Ex] = rheome.scale.measure_panelexamples(name)
 %
 % One example per figure, each made by the measure whose group numbers the figure shows, with small options
-% (request 64b475b1, for Graphics 059029b9):
+% (the example panels of a figure):
 %   fig4  rheome.scale.measure_plantfloors, one source + one vortex at 130 mm on the left hemisphere, noise-free,
 %         10 dB and without the instrument: the planted current and the recovered band maps
 %   fig5  the point spread of the whitened plain MNE for the left-hemisphere seed whose r50 is the median of the

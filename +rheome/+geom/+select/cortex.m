@@ -9,7 +9,7 @@ function c = cortex(src, nV)
 % inflated to a sphere; that patch is not cortex (thickness 0, no Desikan-Killiany label). The source
 % space still puts dipoles on it, so values there are leakage, not measurements. Rheome keeps the
 % closed mesh for its operators (rheome.operators.harmonicfill) and EXCLUDES the wall from every
-% measurement: areas, sums, means, counts, plants and spin nulls run over c only (decision 3882c4ce,
+% measurement: areas, sums, means, counts, plants and spin nulls run over c only (the cortex-only rule,
 % Diellor 2026-10-14; review: medial-wall-review.md).
 %
 % Cortex = the vertices some parcel covers, other than 'unknown', 'corpuscallosum' and 'Medial_wall'.

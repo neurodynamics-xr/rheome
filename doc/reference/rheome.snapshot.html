@@ -7,7 +7,7 @@
     out = rheome.snapshot(surf, result, Shots=shots, Out=folder)
     out = rheome.snapshot(surf, result, Shots=struct('Field', &quot;div&quot;, 'Unit', &quot;1/s&quot;, 'Label', &quot;divergence&quot;), Out=&quot;figs&quot;)
  
-  Every cortical panel of a figure the same way: the viewer (nxr-cortical-flow editor/dist-viewer, the renderer of
+  Every cortical panel of a figure the same way: the Cortical Flow viewer (the renderer of
   rheome.view) draws each view in headless Chrome at print resolution, and MATLAB lays the views out with the
   figure tokens (library/styles/tokens/figure-tokens.json): the colormap and limits by quantity, the colourbar with
   quantity, unit and reference, view labels, a geodesic scale bar on the folded surface, and for a time series one

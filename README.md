@@ -160,7 +160,7 @@ data cache (see `tests/rheomeTestSubject.m`).
 The version lives in the root `Contents.m`. `build/check_install.m` installs a built `.mltbx` into a
 clean MATLAB path and runs the quick start. The documentation is rebuilt by `doc/tools/build_docs.m`
 and its examples checked by `doc/tools/run_doc_examples.m`. `build/vendor_viewer.m` copies a new viewer build
-(nxr-cortical-flow `editor/dist-viewer`) into `viewer/`, stamped with its commit; commit it with the release. The repository holds what the add-on
+(the Cortical Flow viewer build) into `viewer/`, stamped with its commit; commit it with the release. The repository holds what the add-on
 leaves out: `tests/`, `build/`, `doc/source/` and `doc/tools/`.
 
 ## Licence
