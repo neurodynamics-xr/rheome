@@ -1204,7 +1204,7 @@
   "medialWall": {
    "status": "DECIDED 2026-10-14 (Diellor, decision 3882c4ce: exclude; request c21de0c4; spec medial-wall-review.md §(4) layer 1)",
    "why": "The medial wall is the patch that closes each FreeSurfer hemisphere across the corpus callosum and the diencephalic cut; it holds no grey matter. Source values there are leakage of the resolution kernel, not measurements, so nothing measured is drawn on it.",
-   "mask": "cortex = rheome.geom.cortexmask (vertices some Desikan-Killiany (else Destrieux) parcel covers, other than unknown / corpuscallosum / Medial_wall; labels matched by prefix) or FreeSurfer ?h.cortex.label on fsaverage; wall = not cortex. A render without a mask for its surface is not a final figure.",
+   "mask": "cortex = rheome.geom.select.cortex (nxr.geom.select.cortex; vertices some Desikan-Killiany (else Destrieux) parcel covers, other than unknown / corpuscallosum / Medial_wall; labels matched by prefix) or FreeSurfer ?h.cortex.label on fsaverage; wall = not cortex. A render without a mask for its surface is not a final figure.",
    "fill": "neutral-medial-wall, flat (shading compressed to 0.85-1.0), on every view, folded, inflated and cropped",
    "rim": "neutral-ink 0.5 pt at the cortex / wall boundary (no grey clears every diverging and cyclic centre, so the rim carries the distinction)",
    "nothing_on_it": [
@@ -1222,7 +1222,7 @@
    "key": "a grey swatch with an ink edge: \"medial wall (not cortex)\"",
    "code": {
     "python (house renderer)": "projects/cortical-flow/draft/code/medialwall.py: wall masks (store atlas, FreeSurfer label, an exported cortex vector), paint(), rim(), keep_arrows(), limits(), LEGEND; wired into figstyle.surf_render / arrows / face_arrows (staging/ms1-figures) and brains.tiles_image",
-    "rheome viewer and rheome.show (the one rendering path, cortex.render)": "asked of Methods (request c21de0c4 follow-up): read this rule and draw the wall from rheome.geom.cortexmask"
+    "rheome viewer and rheome.show (the one rendering path, cortex.render)": "asked of Methods (request c21de0c4 follow-up): read this rule and draw the wall from rheome.geom.select.cortex"
    },
    "source": [
     "lab"
@@ -1378,10 +1378,10 @@
   },
   "paths": {
    "status": "REVISION 3 (Diellor's board comments 23-28, 2026-10-14; request 32d86cd6)",
-   "rule": "a path on the cortex is a GEODESIC on the folded surface: traced on the mesh, never a polyline joined in the image or through the volume. Method: the Editor's traceGeodesic (steepest descent of Rheome's heat-method distance, rheome.geom.geodesic), or an exact geodesic; its length is measured along the surface.",
+   "rule": "a path on the cortex is a GEODESIC on the folded surface: traced on the mesh, never a polyline joined in the image or through the volume. Method: FlipOut (Sharp & Crane 2020, ported from geometry-central): draw.flipOut, called by nxr.geom.draw.line, rheome.geom.draw.line, the Editor's Geodesic line tool and the viewer, which draw the same line (to 1e-9 m). A FlipOut line is a geodesic, shortest among the routes near it; its length is measured along the surface and is at least the exact distance between its ends (geometry-central's MMP, exactDistance), which the viewer reports beside it (length_mm, geodesic_mm).",
    "width_pt": 1.0,
    "check": "G1 (figure_check, from <stem>.marks.json): a path drawn without geodesic provenance (style.path_on_cortex(..., geodesic=True, how=…))",
-   "code": "style.path_on_cortex(ax, F, k, r.xy(points), geodesic=True, how='Editor traceGeodesic over rheome.geom.geodesic')",
+   "code": "style.path_on_cortex(ax, F, k, r.xy(points), geodesic=True, how='FlipOut (nxr.geom.draw.line)')",
    "source": [
     "crane2013",
     "lab"
