@@ -22,6 +22,7 @@
 %   rheome.geom.draw.flipOut              - the FlipOut geodesic between two vertices (Sharp & Crane 2020): a port
 %                        of geometry-central's, the line the viewer, nxr and the Editor draw (to 1e-9 m)
 %   rheome.geom.draw.line                 - a geodesic between two vertices on the faces (calls draw.flipOut)
+%   rheome.geom.draw.flipMesh             - the mesh FlipOut works on, built once (pass it to line / flipOut)
 %
 % Functions:
 %   rheome.geom.icosphere     - geodesic sphere by icosahedron subdivision (FreeSurfer-style ico)

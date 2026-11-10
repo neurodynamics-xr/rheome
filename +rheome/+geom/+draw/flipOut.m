@@ -1,8 +1,8 @@
-function [P, info] = flipOut(S, from, to, cache)
+function [P, info] = flipOut(S, from, to, mesh)
 % GEOM.DRAW.FLIPOUT  The FlipOut geodesic between two vertices: the edge-flip shortening of a Dijkstra path, on the faces.
 %
 %   [P, info] = rheome.geom.draw.flipOut(S, from, to)
-%   [P, info] = rheome.geom.draw.flipOut(S, from, to, cache)    % reuse info.cache from a call on the same S
+%   [P, info] = rheome.geom.draw.flipOut(S, from, to, mesh)     % mesh = rheome.geom.draw.flipMesh(S), or info.mesh
 %
 % A locally shortest path (a geodesic) on the surface from vertex `from` to vertex `to`, found by FlipOut (Sharp &
 % Crane 2020): start from the shortest path along the mesh's edges (Dijkstra), then repeatedly straighten the
@@ -37,7 +37,8 @@ function [P, info] = flipOut(S, from, to, cache)
 % INPUTS:
 %   S       surface (.Vertices [nV x 3], .Faces [nF x 3], 1-based, oriented, manifold; a boundary is allowed)
 %   from, to   vertex indices (1-based)
-%   cache   (optional) info.cache from an earlier call on the same S (the halfedge mesh and its geometry)
+%   mesh    (optional) rheome.geom.draw.flipMesh(S), or info.mesh from an earlier call on S (the halfedge mesh
+%           and its geometry, built once)
 %
 % OUTPUTS:
 %   P     [n x 3] the path's points, from `from` to `to`, on the input faces
@@ -46,14 +47,23 @@ function [P, info] = flipOut(S, from, to, cache)
 %         .weights   [n x 3] so P(i,:) = weights(i,:) * Vertices(vertices(i,:),:): a vertex [1 0 0], an edge
 %                    [1-t t 0], a face its barycentric coordinates
 %         .faces     [n-1 x 1] the input face each segment lies in
-%         .nFlips .nShortenIters (FlipEdgeNetwork's counters)  .cache (pass it back for the next path)
+%         .nFlips .nShortenIters (FlipEdgeNetwork's counters)  .mesh (pass it back for the next path)
+%         .cache (deprecated, one release: the same as .mesh)
 %
-% See also: rheome.geom.draw.line, rheome.geom.measure.heatDistance, rheome.geom.edgegraph
+% See also: rheome.geom.draw.flipMesh, rheome.geom.draw.line, rheome.geom.edgegraph
 %
 % Author: Diellor Basha, 2026 (port; the algorithm and the code ported are geometry-central's, above)
 
-    if nargin < 4 || isempty(cache), cache = flipoutMesh(S.Vertices, S.Faces); end
-    M = cache;
+    if nargin < 4 || isempty(mesh)
+        M = flipoutMesh(S.Vertices, S.Faces);
+    elseif ~isFlipMesh(mesh)
+        error('rheome:flipOut:mesh', 'mesh must be rheome.geom.draw.flipMesh(S) (a %s was passed).', class(mesh));
+    elseif mesh.nV ~= size(S.Vertices, 1) || mesh.nF ~= size(S.Faces, 1)
+        error('rheome:flipOut:mesh', 'The mesh was built for another surface (%d vertices, %d faces; S has %d, %d).', ...
+            mesh.nV, mesh.nF, size(S.Vertices, 1), size(S.Faces, 1));
+    else
+        M = mesh;
+    end
     if ~(isscalar(from) && isscalar(to) && from >= 1 && to >= 1 && from <= M.nV && to <= M.nV && from == round(from) && to == round(to))
         error('rheome:flipOut:vertex', 'from and to are vertex indices in 1..%d.', M.nV);
     end
@@ -62,7 +72,7 @@ function [P, info] = flipOut(S, from, to, cache)
     if from == to                                                  % tracePathSurface: the point itself
         P = M.P(from, :);
         info = struct('length', 0, 'vertices', [from from from], 'weights', [1 0 0], 'faces', zeros(0, 1), ...
-            'nFlips', 0, 'nShortenIters', 0, 'cache', M);
+            'nFlips', 0, 'nShortenIters', 0, 'mesh', M, 'cache', M);
         return
     end
 
@@ -116,7 +126,7 @@ function [P, info] = flipOut(S, from, to, cache)
     lenSum = 0;
     for k = 1:numel(heList), lenSum = lenSum + iL(ceil(heList(k) / 2)); end   % FlipEdgeNetwork::length()
     info = struct('length', lenSum, 'vertices', Vt, 'weights', W, 'faces', segmentFaces(M, pts), ...
-        'nFlips', nFlips, 'nShortenIters', nShortenIters, 'cache', M);
+        'nFlips', nFlips, 'nShortenIters', nShortenIters, 'mesh', M, 'cache', M);
 
     % =================================================================================================================
     % Nested: the network (flip_geodesics.cpp) and the intrinsic triangulation (signpost / intrinsic triangulation)

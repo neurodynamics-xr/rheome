@@ -31,9 +31,12 @@ function phi = heatDistanceEigen(basis, fg, seeds, opts)
 %
 % INPUTS:
 %   basis  .Phi [nV x K], .Lambda [K x 1], .Mass [nV x nV]   (LBO eigenbasis)
-%   fg     rheome.operators.face_gradient bundle
+%   fg     rheome.operators.face_gradient bundle (or any struct with .Gx .Gy .Gz .FaceArea, and .Faces)
 %   seeds  [1 x nS] vertex indices to measure distance FROM
-%   opts   .t  diffusion time (default h^2, h = mean edge length -- Crane's recommendation)
+%   opts   .t  diffusion time (default max(h^2, 50/max(Lambda)), h = mean edge length: see below). Without .t, h
+%              is read from fg: from .Vertices and .Faces when fg carries them, else from the face gradients
+%              (an edge's length is 2*FaceArea*|grad phi| of the vertex opposite it: the same h, to rounding).
+%              Neither: error rheome:heatDistanceEigen:noT -- give opts.t.
 %
 % OUTPUT:
 %   phi    [nV x nS] geodesic distance from each seed, zero at the seed
@@ -43,16 +46,11 @@ function phi = heatDistanceEigen(basis, fg, seeds, opts)
 % Author: Diellor Basha, 2026 (after Crane, Weischedel & Wardetzky 2013)
 
     if nargin < 4, opts = struct(); end
-    Phi = basis.Phi;  lam = basis.Lambda(:);  M = basis.Mass;
+    Phi = basis.Phi;  lam = basis.Lambda(:);
     nV  = size(Phi,1);  seeds = seeds(:).';
 
     if ~isfield(opts,'t') || isempty(opts.t)
-        V = fg.Faces;  P = fg.Vertices;
-        if isempty(P)
-            h = sqrt(full(sum(M(:)))/nV);            % fall back to the mass-derived spacing
-        else
-            h = mean(vecnorm(P(V(:,1),:) - P(V(:,2),:), 2, 2));
-        end
+        h = meanEdgeLength(fg);
         % ⚠ CRANE'S t = h^2 IS FOR AN EXACT SOLVE AND FAILS IN A TRUNCATED BASIS. At t = h^2 the
         % kernel is so peaked that the highest retained mode is barely damped (lambda_max*t ~ 3),
         % so the reconstruction rings and the distance is meaningless -- measured 127 mm median
@@ -91,6 +89,28 @@ function phi = heatDistanceEigen(basis, fg, seeds, opts)
     % the constant is free; pin it so the seed reads zero, and distance is positive
     for i = 1:numel(seeds), phi(:,i) = phi(:,i) - phi(seeds(i), i); end
     phi = abs(phi);
+end
+
+
+function h = meanEdgeLength(fg)
+% the mean length of each face's edge from its 1st to its 2nd vertex, as from positions: from fg.Vertices when fg
+% carries them, else from face_gradient's operators (grad phi_3 = (N x (p2 - p1)) / (2A), so |p2 - p1| = 2A |grad phi_3|)
+    if ~isstruct(fg) || ~isfield(fg, 'Faces') || isempty(fg.Faces)
+        error('rheome:heatDistanceEigen:noT', ['heatDistanceEigen needs opts.t, or fg with .Faces to estimate it ' ...
+            'from the mean edge length (fg from rheome.operators.face_gradient, or a struct with .Vertices and .Faces).']);
+    end
+    F = fg.Faces;
+    if isfield(fg, 'Vertices') && ~isempty(fg.Vertices)
+        P = fg.Vertices;
+        h = mean(vecnorm(P(F(:,1),:) - P(F(:,2),:), 2, 2));
+    elseif all(isfield(fg, {'Gx', 'Gy', 'Gz', 'FaceArea'}))
+        k = sub2ind(size(fg.Gx), (1:size(F, 1)).', F(:,3));
+        g = full([fg.Gx(k), fg.Gy(k), fg.Gz(k)]);
+        h = mean(2 * fg.FaceArea(:) .* vecnorm(g, 2, 2));
+    else
+        error('rheome:heatDistanceEigen:noT', ['heatDistanceEigen needs opts.t: fg carries neither .Vertices nor the ' ...
+            'face gradients (.Gx .Gy .Gz .FaceArea) to estimate it from the mean edge length.']);
+    end
 end
 
 % Author: Diellor Basha, 2026

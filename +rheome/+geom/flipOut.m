@@ -1,7 +1,7 @@
 function varargout = flipOut(varargin)
 % GEOM.FLIPOUT  Deprecated: renamed rheome.geom.draw.flipOut (the FlipOut geodesic between two vertices).
 %
-%   [P, info] = rheome.geom.flipOut(S, from, to, cache)
+%   [P, info] = rheome.geom.flipOut(S, from, to, mesh)          % mesh = rheome.geom.draw.flipMesh(S) (formerly info.cache)
 %
 % Moved 2026-11-10 when rheome.geom's surface functions were grouped by job into measure (numbers), select (a set of
 % vertices) and draw (a curve on the surface), the Editor's and nxr's names. This name forwards to rheome.geom.draw.flipOut

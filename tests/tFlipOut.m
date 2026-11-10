@@ -18,10 +18,10 @@ classdef tFlipOut < matlab.unittest.TestCase
                 t.assumeFalse(isempty(root), 'NXR_FSAVERAGE5 is not set: fsaverage5 skipped.');
                 S = readSurf(fullfile(root, 'surf', 'lh.pial'));
             end
-            cache = [];
+            M = [];
             for j = 1:numel(m.paths)
                 p = m.paths(j);  at = sprintf('%s %d -> %d', mesh, p.from, p.to);
-                [P, info] = rheome.geom.draw.flipOut(S, p.from + 1, p.to + 1, cache);  cache = info.cache;
+                [P, info] = rheome.geom.draw.flipOut(S, p.from + 1, p.to + 1, M);  M = info.mesh;
                 t.assertEqual(size(P, 1), p.nPoints, [at ': number of points']);
                 t.verifyEqual(P, reshape(p.positions, 3, []).', 'AbsTol', 1e-9, [at ': positions']);
                 t.verifyEqual(info.vertices, reshape(p.vertices, 3, []).' + 1, [at ': vertices']);
@@ -34,6 +34,24 @@ classdef tFlipOut < matlab.unittest.TestCase
             [P, info] = rheome.geom.draw.flipOut(S, 5, 5);
             t.verifyEqual(P, V(5,:));  t.verifyEqual(info.length, 0);
             t.verifyError(@() rheome.geom.draw.flipOut(S, 0, 5), 'rheome:flipOut:vertex');
+            t.verifyError(@() rheome.geom.draw.flipOut(S, 1, 5, struct('Gx', 1)), 'rheome:flipOut:mesh');
+            [V3, F3] = rheome.geom.icosphere(3);
+            t.verifyError(@() rheome.geom.draw.flipOut(S, 1, 5, rheome.geom.draw.flipMesh(struct('Vertices', V3, 'Faces', F3))), ...
+                'rheome:flipOut:mesh');
+        end
+        function aFlipMeshDrawsTheSameLines(t)
+            [V, F] = rheome.geom.icosphere(3);  S = struct('Vertices', V, 'Faces', F);
+            M = rheome.geom.draw.flipMesh(S);
+            for p = [1 200; 7 600; 300 12].'
+                [P0, i0] = rheome.geom.draw.flipOut(S, p(1), p(2));
+                [P1, i1] = rheome.geom.draw.flipOut(S, p(1), p(2), M);
+                [P2, i2] = rheome.geom.draw.line(S, p(1), p(2), M);
+                [P3, ~] = rheome.geom.draw.line(S, p(1), p(2), i2.mesh);
+                t.verifyEqual(P1, P0);  t.verifyEqual(P2, P0);  t.verifyEqual(P3, P0);
+                t.verifyEqual(i1.length, i0.length);  t.verifyEqual(i2.length, i0.length);
+                t.verifyEqual(i1.vertices, i0.vertices);  t.verifyEqual(i2.weights, i0.weights);
+                t.verifyEqual(i1.mesh, M);  t.verifyEqual(i2.mesh, M);  t.verifyEqual(i2.solver, M);   % .solver echoes the 4th argument (deprecated)
+            end
         end
     end
 end
