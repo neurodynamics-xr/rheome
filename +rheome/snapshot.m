@@ -41,7 +41,10 @@ function out = snapshot(surf, result, varargin)
 %   Time       s from the first sample; a vector of equally spaced times is a strip (default 0)
 %   Frames     1-based frames, in place of Time
 %   View       "standard" (L lateral, L medial, R medial, R lateral: the figure system's four), one of those four,
-%              or a viewer camera "left" | "right" | "top" | "bottom" | "front" | "back" with Hemisphere; or a
+%              a viewer camera "left" | "right" | "top" | "bottom" | "front" | "back" with Hemisphere, or a CAMERA
+%              DIRECTION [x y z] with Hemisphere (from the brain toward the camera, as the viewer's setting view; up the
+%              viewer's +z; its label "<hemisphere>, [x, y, z]", its render <hemisphere>-from-<x>_<y>_<z>, the numbers
+%              as given with - written m and . written p); or a
 %              list of these (a cell or string array: the views in that order, each once) (default "standard"). A
 %              strip of several views is a row a view
 %   Hemisphere "both" | "left" | "right", with a viewer camera (default "both"; one for every camera of the list)
@@ -65,6 +68,8 @@ function out = snapshot(surf, result, varargin)
 %              smallest zoom: one scale), or true for the defaults (default none: the viewer's own framing)
 %   Dpi        raw pictures: the dpi they print at (72-1200), which sizes the drawn lines (outlines, isolines) in pt
 %              (default the screen's, 96)
+%   MarksInRaster  raw pictures: true draws the bundle's paths (BundlePaths), the selections' edges and the points'
+%              badges IN each render too (still reported in its marks); default false: left out, for the host to draw
 %   Settings   struct of further viewer settings, applied last (README of the viewer, 'The settings')
 %   Name       the files' name (default "shot<k>")
 %   Inset      a MULTISCALE INSET (default none): a region of one view re-rendered by the viewer with its camera on
@@ -294,7 +299,7 @@ function shots = normalise(in, result, surfs, T, fs, tok, cmaps, labs, barTile)
     if ~iscell(in), error('rheome:snapshot:input', 'Shots: a struct array or a cell array of structs is expected.'); end
     known = {'Field', 'Unit', 'Label', 'Reference', 'Quantity', 'CLim', 'Colormap', 'Time', 'Frames', 'View', ...
         'Hemisphere', 'Surface', 'Vector', 'Settings', 'Name', 'Inset', 'Selection', 'Paths', 'Cortex', 'Labelling', 'Outlines', ...
-        'StagePx', 'Fit', 'Dpi'};
+        'StagePx', 'Fit', 'Dpi', 'MarksInRaster'};
     fields = fieldnames(result);
     S1 = surfs.(firstOf(fieldnames(surfs)));
     nV = size(S1.Vertices, 1);
@@ -346,11 +351,22 @@ function shots = normalise(in, result, surfs, T, fs, tok, cmaps, labs, barTile)
         % views: the figure system's four, one of them, or a viewer camera with a hemisphere; or a list of these (a strip
         % of several views is a row a view)
         v = g('View', 'standard');
-        if iscell(v) || (isstring(v) && numel(v) > 1), v = cellstr(v); v = v(:)'; else, v = {char(v)}; end
+        if isnumeric(v), v = {v};
+        elseif iscell(v) || (isstring(v) && numel(v) > 1), if ~iscell(v), v = cellstr(v); end, v = v(:)'; else, v = {char(v)}; end
         views4 = {'L lateral', 'left', 'left'; 'L medial', 'left', 'right'; 'R medial', 'right', 'left'; 'R lateral', 'right', 'right'};
         s.Hemisphere = '';  s.views = cell(0, 3);  s.view = {};
         for j = 1:numel(v)
-            vj = char(v{j});
+            vj = v{j};
+            if isnumeric(vj)                                  % a camera direction [x y z] (from the brain toward the camera)
+                if ~(numel(vj) == 3 && isreal(vj) && all(isfinite(vj(:))) && any(vj(:) ~= 0))
+                    error('rheome:snapshot:shot', '%s: View: a camera direction is [x y z], three finite numbers not all 0.', s.Name);
+                end
+                if isempty(s.Hemisphere), s.Hemisphere = pickName(g('Hemisphere', 'both'), {'both', 'left', 'right'}, 'Hemisphere'); end
+                h = s.Hemisphere;  d = double(vj(:)');
+                s.views = [s.views; {sprintf('%s, [%s]', h, strjoin(arrayfun(@jsonencode, d, 'UniformOutput', false), ', ')), h, d}];  s.view{end+1} = d; %#ok<AGROW>
+                continue
+            end
+            vj = char(vj);
             if strcmpi(vj, 'standard'), s.views = [s.views; views4];  s.view{end+1} = 'standard'; %#ok<AGROW>
             elseif any(strcmpi(vj, views4(:, 1))), w = views4(strcmpi(vj, views4(:, 1)), :);  s.views = [s.views; w];  s.view{end+1} = w{1}; %#ok<AGROW>
             else
@@ -414,7 +430,7 @@ function shots = normalise(in, result, surfs, T, fs, tok, cmaps, labs, barTile)
             end
         end
         s.Outlines = outlines(g('Outlines', []), s.Name, labs);
-        [s.StagePx, s.Fit, s.Dpi] = raw(a, s);
+        [s.StagePx, s.Fit, s.Dpi, s.MarksInRaster] = raw(a, s);
         s.ntiles = size(s.views, 1) * numel(fr);
         if ~isempty(barTile) && barTile > s.ntiles
             error('rheome:snapshot:shot', '%s: ScaleBarTile %d: there are %d renders.', s.Name, barTile, s.ntiles);
@@ -494,10 +510,10 @@ function o = outlines(a, name, labs)
     if ~isempty(st), o.selectStyle = pickName(st, {'fill', 'extent'}, 'Outlines.SelectStyle'); end
 end
 
-function [px, fit, dpi] = raw(a, s)
-% RAW PICTURES: StagePx [w h] (each render exactly that), Fit (Margin, Shared), Dpi; as the viewer's Shot fields
+function [px, fit, dpi, mir] = raw(a, s)
+% RAW PICTURES: StagePx [w h] (each render exactly that), Fit (Margin, Shared), Dpi, MarksInRaster; as the viewer's Shot fields
     id = 'rheome:snapshot:raw';
-    px = get(a, 'StagePx', []);  fit = [];  dpi = [];
+    px = get(a, 'StagePx', []);  fit = [];  dpi = [];  mir = [];
     if ~isempty(px)
         if ~(isnumeric(px) && numel(px) == 2 && all(px(:) == round(px(:)) & px(:) >= 16 & px(:) <= 8192))
             error(id, '%s: StagePx: [width height], integer pixels 16-8192.', s.Name);
@@ -526,6 +542,13 @@ function [px, fit, dpi] = raw(a, s)
     if ~isempty(d)
         if isempty(px) || ~(isnumeric(d) && isscalar(d) && d >= 72 && d <= 1200), error(id, '%s: Dpi (72-1200) is for raw pictures (StagePx).', s.Name); end
         dpi = double(d);
+    end
+    m = get(a, 'MarksInRaster', []);
+    if ~isempty(m)
+        if isempty(px) || ~(isscalar(m) && (islogical(m) || (isnumeric(m) && any(m == [0 1]))))
+            error(id, '%s: MarksInRaster (true or false) is for raw pictures (StagePx).', s.Name);
+        end
+        mir = logical(m);
     end
 end
 
@@ -642,6 +665,7 @@ function v = viewerShot(s, folded, o, J)
     if ~isempty(s.StagePx), v.stagePx = s.StagePx; end
     if ~isempty(s.Fit), v.fit = s.Fit; end
     if ~isempty(s.Dpi), v.dpi = s.Dpi; end
+    if ~isempty(s.MarksInRaster), v.marksInRaster = s.MarksInRaster; end
     if isempty(s.StagePx) || ~isempty(o.Width), v.widthMm = panelWidth(o.Width, s.ntiles + ~isempty(s.Inset), J); end   % raw pictures: a panel only with a Width
 end
 
