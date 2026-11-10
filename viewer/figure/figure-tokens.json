@@ -1,10 +1,10 @@
 {
  "$description": "Figure tokens of Neurodynamics-XR: the rules of every figure as machine-readable values. Read by library/styles/schematics/style.py (matplotlib), library/styles/matlab/nxr_figure_tokens.m (MATLAB) and figure_check.py; the viewer and rheome exporters are asked to read it too. The colour group is synced from the design tokens (workspace.pergammon design_tokens) by sync_colour.py; never edit it by hand. Units are in the key names (_pt, _mm). Each rule carries why it is so and its source (keys of 'sources').",
  "meta": {
-  "version": "2.1.0",
-  "status": "ADOPTED 2026-10-14 (Diellor): v1.0.0 and revisions 1-2 are the figure system in force; the production board shows it, the figure template board keeps the change history",
+  "version": "2.3.0",
+  "status": "ADOPTED 2026-10-14 (Diellor): v1.0.0 and revisions 1-2 are the figure system in force; revision 3 applies his third round of comments (23-28) as he asked them; the production board shows it, the figure template board keeps the change history",
   "owner": "org:design-lead",
-  "request": "5539a66784c7e6476d17bf5305c41bb3",
+  "request": "32d86cd60eda9d18248d1d78d349372b",
   "updated": "2026-10-14",
   "format": "Structure after the Design Tokens Community Group format ($value, $description, groups); units in key names for simple consumption from Python and MATLAB.",
   "board": "library/styles/design-board/board.html (production; generated: make design-board)",
@@ -20,7 +20,7 @@
    "7 one colormap per quantity (quantity)",
    "8 cortical view layouts (cortex.layouts)",
    "9 math typesetting (type.math)",
-   "10 medial wall: with Science (request bb0d7cbd)",
+   "10 medial wall: masked in every cortical figure (cortex.medialWall; Diellor's decision 3882c4ce, request c21de0c4)",
    "11 icons vs pictograms, frames (icon; library/styles/icon-board)",
    "12 events on traces: labelled trace default, spans allowed (dynamics.traceWithEvent)"
   ],
@@ -30,14 +30,25 @@
    "15 space-time plot and time-tracks (dynamics.spaceTime, dynamics.timeTrack)",
    "16 insets: higher resolution, any shape (annotation.inset)",
    "17 panel title vs axis label: layout check O4 (layout.codes), plot top pad 2 mm",
-   "18 phase: cyclic map for now; phasor glyph with Methods (marker.phasor, proposed)",
+   "18 phase: cyclic map flow-phase; the phasor glyph (marker.phasor, token; style.phasor, rheome.show.phasor)",
    "19 levels are the grid, not a field: no colormap; level indicator and level scalogram (levels)",
    "20 no sentences in figures (textSide.in_figure_text X1); folded cortex the default, inflated an option (cortex.surface)",
    "21 Chekhov's gun on the cortex: every overlay keyed (cortex.marks)",
    "22 arrows show the full field by default (cortex.arrows)"
   ],
   "change_history": "library/styles/figure-board/board.html (revisions 1-2 and the comments behind them)",
-  "adopted_request": "31fb7a21f84d227d0de148010fa6856b"
+  "adopted_request": "31fb7a21f84d227d0de148010fa6856b",
+  "revision3": [
+   "23 alignment: one key band per row, views anchored at the top (alignment, legend.keyBand.align, O5)",
+   "24 selection: the selected tile a blended fill in its axis colour, centres one size, supports dashed (cortex.selection); tile-shaped insets beside square and circle (annotation.inset)",
+   "25 one rendering path: the viewer through rheome.snapshot for every cortical image (cortex.render, V1)",
+   "26 paths are geodesics on the folded surface (cortex.paths, G1)",
+   "27 stacked panels on a shared x axis (layout.stack, style.stack, O6)",
+   "28 several levels at once by line weight, like major / minor grid lines (levels.draw.multi)"
+  ],
+  "revision4": [
+   "29 illustration: the illustration look (rig, material, silhouette, roles, cortex mute) as tokens read by recipe.py and the viewer's look 'illustration' (illustration; request cc6245681486c3f9c6771e5f9b08e970; additive, no existing token changed)"
+  ]
  },
  "sources": {
   "elsevier-sizing": {
@@ -220,6 +231,10 @@
   "editor-time-sequence-2026-10-02": {
    "cite": "Cortical Flow Editor design spec \"Time in the Editor: the sequence and its clips\" (research/code/nxr-cortical-flow/docs/superpowers/specs/2026-10-02-editor-time-sequence-and-clips-design.md), agreed by Diellor 2026-10-02",
    "says": "every tool result has tracks: its parameters along the time Line, flat when static, keyed when dynamic; masks are tracks with keyable lanes (centre, radius, level)"
+  },
+  "crane2013": {
+   "cite": "Crane K, Weischedel C, Wardetzky M (2013). Geodesics in heat: a new approach to computing distance based on heat flow. ACM Trans Graph 32(5):152.",
+   "url": "https://doi.org/10.1145/2516971.2516977"
   }
  },
  "type": {
@@ -413,11 +428,15 @@
  },
  "colour": {
   "$description": "SYNCED from the design tokens by tokens/sync_colour.py (workspace.pergammon design_tokens). Edit the design token, not this group.",
-  "synced": "2026-10-14T17:54:41Z",
+  "synced": "2026-10-14T21:09:24Z",
   "neutral": {
    "neutral-ink": {
     "$value": "#1d232b",
     "meaning": "Neutral: text and outlines on light backgrounds (encodes nothing)"
+   },
+   "neutral-medial-wall": {
+    "$value": "#b4b8bd",
+    "meaning": "Neutral: the medial wall on every cortical surface: the patch that closes each FreeSurfer hemisphere, not cortex (no grey matter). Drawn flat in this grey with a neutral-ink rim (0.5 pt) at the cortex boundary; no data colour, no colour scale, no arrows, isolines, critical points or tile fills on it (encodes nothing)"
    },
    "neutral-mist": {
     "$value": "#c9d0d9",
@@ -539,6 +558,12 @@
     "scale": "sequential",
     "name": "current magnitude: blue-grey – yellow, sequential"
    },
+   "flow-phase": {
+    "$value": "twilight_shifted",
+    "meaning": "Phase or direction of a cortical quantity, cyclic from -pi to pi",
+    "scale": "cyclic",
+    "name": "phase: cyclic, black – blue – white – red – black"
+   },
    "flow-potential": {
     "$value": "cmo.diff",
     "meaning": "Scalar potential φ of the irrotational (Helmholtz) part of a cortical field: navy negative, white zero, olive positive; symmetric limits",
@@ -574,13 +599,6 @@
     "meaning": "Tau PET uptake as SUVR (ratio to a stated reference region): low pale yellow, high dark brown",
     "scale": "sequential",
     "name": "tau SUVR: pale yellow – brown, sequential"
-   },
-   "flow-phase": {
-    "$value": "twilight_shifted",
-    "scale": "cyclic",
-    "status": "APPROVED (board open point 3, 2026-10-14)",
-    "meaning": "Phase or direction of a cortical quantity, cyclic from -pi to pi",
-    "name": "phase: cyclic, black – blue – white – red – black"
    }
   },
   "brand": {
@@ -757,6 +775,14 @@
     "source": [
      "nature-build"
     ]
+   },
+   {
+    "rule": "Views and plots in one row start at one height: the key band is reserved to the row's tallest band in every panel of the row (a panel without keys keeps the empty band), and views are anchored at the top of their cells, so a colourbar in one panel never pushes its views below the neighbours'.",
+    "why": "comment 23: a colourbar used in one panel only pushed its cortical view down (the crop specimen)",
+    "check": "O5 in style.save",
+    "source": [
+     "wong2011-layout"
+    ]
    }
   ],
   "check": "style.figure places cells on the grid; figure_check flags letters out of order"
@@ -897,7 +923,9 @@
     "label": "right of the bar, on its row",
     "ticks": "under the bar, 6 pt, inside the row"
    },
-   "rows": "'g' = a glyph-key row (3.2 mm), 's' = a colour-scale row (5.4 mm: bar, ticks under it); figure(keys={'B': 'sg'})"
+   "rows": "'g' = a glyph-key row (3.2 mm), 's' = a colour-scale row (5.4 mm: bar, ticks under it); figure(keys={'B': 'sg'})",
+   "align": "row",
+   "align_note": "every panel whose cell starts in the same mosaic row gets the row's tallest key band (style.figure(align_keys=True), the default; nxr_figure 'AlignKeys')"
   },
   "frame": "none",
   "background": "none",
@@ -989,16 +1017,18 @@
    "rule": "an inset is justified only by showing MORE: a higher-resolution, more informative view of what its origin marks (a finer render, a finer mesh, a finer dyadic level), never a stretched or upsampled crop of the parent",
    "check": "style.inset refuses an inset whose source has fewer than 2x the parent's pixels per mm of the object (I1)",
    "shapes": [
-    "rectangle",
-    "circle",
-    "the tile's own outline (any closed path)"
+    "square (a rectangle on the image)",
+    "circle: a GEODESIC DISK selection (Rheome / Editor), its outline the disk's boundary on the surface",
+    "tile: the tile's own outline (a dyadic tile selection)"
    ],
    "outline": "the same shape on the origin and the inset, 0.5 pt ink; a 0.5 pt ink leader joins them when they are not adjacent",
    "multiscale": "the natural inset of our framework: a whole-brain map at a coarse level with an inset of one tile at a finer level; the inset names its level (\"level 7, 2 mm\")",
    "source": [
     "jambor2021",
     "lab"
-   ]
+   ],
+   "selection": "an inset takes the shape of the selection it shows: style.inset(..., shape='tile' | 'disk' | 'circle' | 'rect'); tile and disk insets are cut by the region's own mask, outlined by its contour",
+   "revision3": "REVISION 3 (Diellor's board comments 23-28, 2026-10-14; request 32d86cd6): the tile itself as an inset shape, beside square and circle; insets follow the Rheome / Editor selections"
   }
  },
  "outline": {
@@ -1171,6 +1201,33 @@
     "lab"
    ]
   },
+  "medialWall": {
+   "status": "DECIDED 2026-10-14 (Diellor, decision 3882c4ce: exclude; request c21de0c4; spec medial-wall-review.md §(4) layer 1)",
+   "why": "The medial wall is the patch that closes each FreeSurfer hemisphere across the corpus callosum and the diencephalic cut; it holds no grey matter. Source values there are leakage of the resolution kernel, not measurements, so nothing measured is drawn on it.",
+   "mask": "cortex = rheome.geom.cortexmask (vertices some Desikan-Killiany (else Destrieux) parcel covers, other than unknown / corpuscallosum / Medial_wall; labels matched by prefix) or FreeSurfer ?h.cortex.label on fsaverage; wall = not cortex. A render without a mask for its surface is not a final figure.",
+   "fill": "neutral-medial-wall, flat (shading compressed to 0.85-1.0), on every view, folded, inflated and cropped",
+   "rim": "neutral-ink 0.5 pt at the cortex / wall boundary (no grey clears every diverging and cyclic centre, so the rim carries the distinction)",
+   "nothing_on_it": [
+    "data colour",
+    "colour-scale limits (computed over cortex vertices only)",
+    "arrows",
+    "isolines",
+    "critical points",
+    "tile fills or selection fills",
+    "paths, markers and labels of results"
+   ],
+   "kept_on_it": "tile outlines only where a tile itself is drawn (tiles are built on the closed surface, a geometric scaffold); anatomy-only renders (no data) may show the wall in the same grey",
+   "exempt": "the sphere and analytic surfaces (no wall); a hemisphere shown in lateral view only, where the wall is not visible (the legend phrase is still given if any medial view appears in the figure)",
+   "legend": "The medial wall (not cortex) is drawn grey, outlined; it carries no values or arrows.",
+   "key": "a grey swatch with an ink edge: \"medial wall (not cortex)\"",
+   "code": {
+    "python (house renderer)": "projects/cortical-flow/draft/code/medialwall.py: wall masks (store atlas, FreeSurfer label, an exported cortex vector), paint(), rim(), keep_arrows(), limits(), LEGEND; wired into figstyle.surf_render / arrows / face_arrows (staging/ms1-figures) and brains.tiles_image",
+    "rheome viewer and rheome.show (the one rendering path, cortex.render)": "asked of Methods (request c21de0c4 follow-up): read this rule and draw the wall from rheome.geom.cortexmask"
+   },
+   "source": [
+    "lab"
+   ]
+  },
   "arrows": {
    "status": "REVISION 2 (Diellor's board comment 22, 2026-10-14; request 5539a667)",
    "rule": "arrows show the FULL field by default: one arrow at every sample of the mesh the field is defined on; no striding and no random subsampling",
@@ -1248,20 +1305,16 @@
      "key": "tile outlines: level ℓ (n tiles, spacing)"
     },
     "selected tile or region": {
-     "style": "ink 1.2 pt, or the concept colour if the key names it",
-     "key": "its name: \"tile 13 (level 4)\""
+     "style": "a blended fill in its axis colour (cortex.selection: atlas-space at 35 % for a space tile), outline as the other tiles",
+     "key": "its name: \"tile 13 (level 4), selected\""
     },
     "mask, scout or wavelet support": {
-     "style": "1.0 pt in its concept colour (atlas-space for a space tile)",
+     "style": "ink 0.8 pt dashed (2 / 1.5): an extent, never a fill",
      "key": "its name (\"support of ψ at tile 13\")"
     },
     "tile centre or atom centre": {
-     "style": "paper disc, ink edge, ONE size",
+     "style": "paper disc, ink edge, ONE size for every centre, the selected one included",
      "key": "tile centres"
-    },
-    "highlighted centre": {
-     "style": "a larger disc only if the key names it",
-     "key": "\"centre of tile 13\""
     },
     "critical points": {
      "style": "+ source, - sink, ○ vortex (ink edge)",
@@ -1276,18 +1329,61 @@
      "key": "what vector, and its scale"
     },
     "path / trajectory": {
-     "style": "ink 1.0 pt with an arrowhead at the end",
+     "style": "a GEODESIC on the folded surface (cortex.paths), ink 1.0 pt with an arrowhead at the end",
      "key": "path of the <event>"
     },
     "coarser-level boundaries": {
-     "style": "ink 0.9 pt (heavier: they are a subset of the shown level's)",
-     "key": "level ℓ−1 boundaries"
+     "style": "levels.draw.multi: one weight per level, coarser heavier",
+     "key": "level ℓ boundaries, by weight"
+    },
+    "selected centre": {
+     "style": "the same disc, filled with the selection colour",
+     "key": "\"centre of tile 13\" (or one entry with the selection)"
     }
    },
    "size": "marker size never varies unless a size key gives its meaning",
    "source": [
     "chekhov",
     "jambor2021",
+    "lab"
+   ]
+  },
+  "selection": {
+   "status": "REVISION 3 (Diellor's board comments 23-28, 2026-10-14; request 32d86cd6)",
+   "rule": "a SELECTED tile or region is a state of the surface, as in Rheome and the Editor: one colour blended inside it, never a heavy border. The selection's outline is the shown level's tile outline (0.35 pt ink), no heavier.",
+   "colour": "the selected cell's axis colour: atlas-space for a space tile or a geodesic disk on the cortex, atlas-time for a time tile, atlas-joint-cell for a joint cell (no new colour: the selection is a cell of that axis)",
+   "fill_alpha": 0.35,
+   "centre": "the selected tile's centre is the same size as every other centre, filled with the selection colour",
+   "vs_support": "a wavelet support or mask is an EXTENT: a dashed ink line (0.8 pt, dashes 2 / 1.5), never a fill, so a support never reads as a selection",
+   "kinds": {
+    "tile": "a dyadic tile (Rheome rheome.selection.wavelettile, the Editor's tile selection)",
+    "geodesic disk": "all points within r mm along the folded surface (the heat-method distance); shown and inset as a circle"
+   },
+   "editor_note": "the Editor's mask layer desaturates the outside and edges the mask in its selection colour (--c-sel); the figure convention is the blended fill inside; Product asked to align the viewer's selection highlight (request to org:cortical-flow-lead)",
+   "code": "style.select_fill(ax, r.mask(v, f, in_tile), cell='space'); key: style.key(kind='patch', color=style.selection_colour('space'), alpha=0.35)",
+   "source": [
+    "lab"
+   ]
+  },
+  "render": {
+   "status": "REVISION 3 (Diellor's board comments 23-28, 2026-10-14; request 32d86cd6)",
+   "rule": "every cortical image is rendered ONE way: the Cortical Flow viewer through rheome.snapshot (its smooth folded mesh, colours and lighting, as Diellor sees it in the viewer). No per-figure renderers (matplotlib triangles, PyVista, Brainstorm or Matlab patch screenshots), not for illustrations either.",
+   "marks": "what is drawn ON the cortex (tile outlines, the selection, a path, centres, inset outlines) is vector, placed by the render's own camera (read from the render: the silhouette fitted, IoU >= 0.95) and hidden where the surface hides it; the scale bar is rheome.snapshot's geodesic bar",
+   "code": "MATLAB: rheome.snapshot(surf, result, Shots=…, Out=…); Python boards: library/styles/figure-board/viewer/viewer_render.py (one MATLAB batch for the shots; ViewerRender.img / .xy / .visible / .mask); style.cortex_views records each render's provenance",
+   "check": "V1 (figure_check, from <stem>.marks.json): a cortical image not rendered by the viewer",
+   "mesh": "fsaverage6 (40,962 vertices a hemisphere) for whole views; fsaverage (163,842) for insets; a participant's own surface for data",
+   "source": [
+    "lab"
+   ]
+  },
+  "paths": {
+   "status": "REVISION 3 (Diellor's board comments 23-28, 2026-10-14; request 32d86cd6)",
+   "rule": "a path on the cortex is a GEODESIC on the folded surface: traced on the mesh, never a polyline joined in the image or through the volume. Method: the Editor's traceGeodesic (steepest descent of Rheome's heat-method distance, rheome.geom.geodesic), or an exact geodesic; its length is measured along the surface.",
+   "width_pt": 1.0,
+   "check": "G1 (figure_check, from <stem>.marks.json): a path drawn without geodesic provenance (style.path_on_cortex(..., geodesic=True, how=…))",
+   "code": "style.path_on_cortex(ax, F, k, r.xy(points), geodesic=True, how='Editor traceGeodesic over rheome.geom.geodesic')",
+   "source": [
+    "crane2013",
     "lab"
    ]
   }
@@ -1376,9 +1472,58 @@
    "weissgerber2015"
   ],
   "phasor": {
-   "status": "REVISION 2 (Diellor's board comment 18, 2026-10-14; request 5539a667) - PROPOSED, with Methods (request to Methods)",
-   "now": "phase takes the cyclic map flow-phase",
-   "proposal": "a phasor glyph: a small circle with a radius at the phase angle (length = amplitude when keyed); the same glyph in Python, Rheome and the Editor; polar plots for distributions (as in the sleep study)"
+   "status": "TOKEN (revision 2, Diellor's board comment 18, 2026-10-14; designed with Methods in Rheome, request 0f976130, 2026-10-14)",
+   "meaning": "phase: an angle on a circle, shown as a direction, never as a number on a line",
+   "circle": {
+    "colour": "neutral-slate",
+    "width": "line.outline_pt",
+    "radius": "|phasor| = radius (key it)"
+   },
+   "ticks": {
+    "at": [
+     0,
+     "pi/2",
+     "pi",
+     "-pi/2"
+    ],
+    "span": [
+     0.92,
+     1.08
+    ],
+    "width": "line.tick_pt",
+    "colour": "neutral-slate",
+    "only": "one glyph (polar plot), not markers"
+   },
+   "phase": {
+    "colour": "quantity.phase (flow-phase, -pi … pi)",
+    "point": "no amplitude: a marker on the circle (marker.size_pt, edge neutral-ink marker.edge_pt) - a distribution, the sleep study polar plot",
+    "vector": "with amplitude a: length a / max(a) * radius, line.arrow_pt, a filled head of min(0.22 radius, 0.6 length)"
+   },
+   "mean": {
+    "colour": "neutral-ink",
+    "width": "1.6 x line.arrow_pt",
+    "length": "R * radius, R = |mean(a e^{i phase})| / mean(a) (a = 1 without amplitudes)",
+    "angle": "mu = arg mean(a e^{i phase})",
+    "only": "one glyph (default); off for markers"
+   },
+   "convention": "0 to the right, counter-clockwise positive (mathematical)",
+   "labels": {
+    "text": [
+     "$0$",
+     "$\\pi/2$",
+     "$\\pi$",
+     "$-\\pi/2$"
+    ],
+    "at": "1.14 radius",
+    "size": "type.tickLabel",
+    "only": "a standalone polar plot"
+   },
+   "marker": "one glyph per location (at = n x 2): circle and the phase point or vector only - no ticks, no mean, no labels",
+   "implementations": {
+    "python": "style.phasor(ax, phase, amplitude=None, at=(0,0), radius=1, mean=None, labels=None) -> R, mu",
+    "matlab": "rheome.show.phasor(ax, phase, Name, Value) (Rheome, feat/figure-components)"
+   },
+   "key": "the legend says the circle is |phasor| = radius, the colour is phase (flow-phase), and the dark arrow is the mean resultant"
   }
  },
  "textSide": {
@@ -1708,7 +1853,7 @@
     }
    },
    "overrides": {},
-   "fonts_files": "library/styles/Epilogue,Fraunces,Instrument_Sans,Inter,Petrona/Inter/static (registered by style.py)",
+   "fonts_files": "library/fonts/inter/static (registered by style.py)",
    "source": [
     "lab"
    ],
@@ -1932,13 +2077,28 @@
    "O1": "text overlaps text",
    "O2": "an artist leaves its panel cell",
    "O3": "a key or colourbar overlaps axes, ticks or labels",
-   "O4": "an axes element (tick labels, axis title, offset text, axes text) enters its panel header or key band"
+   "O4": "an axes element (tick labels, axis title, offset text, axes text) enters its panel header or key band",
+   "O5": "panels of one row whose key bands end, or whose views start, at different heights",
+   "O6": "panels of a stack with different x ranges or plot edges"
   },
   "source": [
    "nature-spec",
    "wong2011-layout"
   ],
-  "revision2": "REVISION 2 (Diellor's board comment 17, 2026-10-14; request 5539a667): O4 added; the plot pad top is 2 mm so the top tick label clears the heading; offset text is checked like other text"
+  "revision2": "REVISION 2 (Diellor's board comment 17, 2026-10-14; request 5539a667): O4 added; the plot pad top is 2 mm so the top tick label clears the heading; offset text is checked like other text",
+  "stack": {
+   "status": "REVISION 3 (Diellor's board comments 23-28, 2026-10-14; request 32d86cd6)",
+   "rule": "Panels that share an x axis (time, frequency) may be STACKED on one base: one x axis at the bottom, the plots' left and right edges aligned, the x range shared, no x tick labels or title above the bottom part; the parts sit gap_mm apart instead of a gutter and a header. Each part keeps its letter (top left, beside its plot) and its y label; a lower part has no heading (it goes in the legend); the stack's keys go in the key band of its top panel.",
+   "when": "a space-time plot and its time-tracks; a trace, its spectrogram and its event raster; band power and phase over frequency: whenever the reader compares the parts at the same x",
+   "gap_mm": 2.0,
+   "code": "style.stack(F, ['B', 'C']) right after style.figure(...); MATLAB nxr_stack(F, 'BC')",
+   "check": "O6: the stack's x ranges and plot edges",
+   "source": [
+    "tufte",
+    "wickham2010",
+    "lab"
+   ]
+  }
  },
  "explain": {
   "status": "NEW (Diellor's board comment 5, 2026-10-14): Chekhov's gun",
@@ -1952,6 +2112,118 @@
   "source": [
    "chekhov",
    "jambor2021",
+   "lab"
+  ]
+ },
+ "illustration": {
+  "$description": "The ILLUSTRATION look: one camera-attached light rig, one material, one silhouette rule and role colours, shared by the PyVista recipe (library/styles/illustrations/recipe.py reads this group) and the Cortical Flow viewer's look 'illustration' (nxr-cortical-flow editor/src/viewer). No number of the look is written in either renderer. Objects encode nothing: roles map to neutrals only. Shape: the viewer's IllustrationTokens (nxr-cortical-flow editor/src/viewer/illustration.ts): lights [{name, dir, intensity}], material {ambient, diffuse, specular, power}, silhouette {colour, width_pt, atWidth_mm}, role {role: colour token}, cortex {colormap, mute, muteTo, tone}; the other keys are the recipe's and are ignored by the viewer.",
+  "status": "DRAFT 2026-10-14 (Graphics, request cc624568; design edbf0aca part 2): the values are the recipe's as rendered since 2026-10-08, moved here unchanged; acceptance is the side-by-side review of cf-ill-eeg (PyVista vs viewer) after the viewer's look PR",
+  "lights": [
+   {
+    "name": "key",
+    "dir": [
+     -0.55,
+     0.75,
+     1.0
+    ],
+    "intensity": 0.95,
+    "why": "upper left, in front: the reading light"
+   },
+   {
+    "name": "fill",
+    "dir": [
+     0.9,
+     -0.15,
+     0.6
+    ],
+    "intensity": 0.4,
+    "why": "right, low: opens the shadow side"
+   },
+   {
+    "name": "rim",
+    "dir": [
+     0.0,
+     0.6,
+     -1.0
+    ],
+    "intensity": 0.35,
+    "why": "behind, above: separates the silhouette from the background"
+   }
+  ],
+  "$lights": "Camera-attached directional lights. dir: the direction from the scene TOWARD the light in the CAMERA basis (+x screen right, +y screen up, +z toward the viewer), not normalised (normalise before use). intensity: VTK's light intensity (the viewer scales to its own light model so the side-by-side matches; the ratios key:fill:rim are the rule).",
+  "material": {
+   "$description": "One Phong material for every mesh (VTK lighting coefficients). The ambient term is ambient x the object's own colour (no separate ambient light). smooth: per-vertex normals interpolated.",
+   "ambient": 0.42,
+   "diffuse": 0.7,
+   "specular": 0.2,
+   "power": 30,
+   "specularColour": "neutral-paper",
+   "smooth": true,
+   "overrides": "an object may raise its specular (glossy device shells: 0.35-0.45), stated in its object.json 'material'; nothing else changes per object"
+  },
+  "silhouette": {
+   "$description": "An ink outline on the outer silhouette of every mesh (creases inside a mesh are not drawn), unlit.",
+   "colour": "neutral-ink",
+   "width_pt": 0.2657,
+   "atWidth_mm": 25,
+   "reference": {
+    "render_px": 1600,
+    "print_mm": 25,
+    "px": 6.0,
+    "why": "the recipe's 6 px at a 1600 px render is 0.2657 pt when the illustration prints atWidth_mm (25 mm) wide (illustrations print 15-30 mm); width_pt at atWidth_mm is the rule, px derive from it at the actual render size"
+   },
+   "weights": {
+    "$description": "silhouette width as a fraction of width_pt, by object (object.json 'silhouette'): the recipe's sil_w 2.5 / 2.0 / 1.5 -> default / secondary / fine; rims: the scanners' rims (feature edges) at 0.6; none: no outline (bore linings, detector blocks)",
+    "default": 1.0,
+    "secondary": 0.8,
+    "fine": 0.6,
+    "rims": 0.6,
+    "none": 0.0
+   },
+   "why": "one line weight across the illustration set so a scalp, a dewar and a brain drawn apart still look drawn by one hand"
+  },
+  "role": {
+   "skin": "neutral-mist",
+   "anatomy": "neutral-mist",
+   "device": "neutral-paper",
+   "device2": "neutral-slate",
+   "line": "neutral-ink"
+  },
+  "$role": {
+   "$description": "Scene-object role -> neutral colour token (a key of colour.neutral). An object's object.json 'color' (a neutral name or #rrggbb) overrides its role.",
+   "meaning": {
+    "skin": "scalp and body",
+    "anatomy": "non-cortical anatomy",
+    "device": "scanner shells, dewar",
+    "device2": "bores, detector rings, tables, caps, toolboxes",
+    "line": "sensors, electrodes, arrows"
+   }
+  },
+  "background": {
+   "default": "transparent",
+   "flat": "neutral-paper",
+   "crop_px": 12,
+   "why": "illustrations are placed on the figure page; the render is cropped to its content plus a 12 px pad"
+  },
+  "cortex": {
+   "$description": "The cortex in an illustration: cmocean amp (colormaps/amp.json; token cortex-curvature) of the folded (pial) surface's mean curvature, FreeSurfer sign (sulci > 0), lifted toward paper by mute. Without a curvature field, one flat tone. tone: the viewer's flat cortex when a bundle carries no curvature (a colour token); tone_index/tone_hex: the recipe's flat tone for parametric cortex (sheets, glass): amp[tone_index] lifted by mute (not a colour token; it encodes nothing)",
+   "colormap": "cortex-curvature",
+   "mute": 0.45,
+   "muteTo": "neutral-paper",
+   "tone": "neutral-mist",
+   "quantity": "curvature",
+   "surface": "pial",
+   "range": "symmetric [-m, m], m = max(|p1|, |p99|) (the viewer's autoRange)",
+   "smooth_iterations": 12,
+   "tone_index": 110,
+   "tone_hex": "#e0af9f",
+   "why": "the cortex reads as tissue (pink, biological) without competing with any data colour laid over it"
+  },
+  "objects": {
+   "$description": "The recipe's geometry, exported once (positions.bin float32 [n x 3], faces.bin int32 [m x 3] 0-based, object.json): library/media/illustrations/objects/<name>/, built by library/styles/illustrations/export_objects.py",
+   "path": "library/media/illustrations/objects"
+  },
+  "source": [
    "lab"
   ]
  },
@@ -2083,19 +2355,45 @@
   "status": "ADOPTED 2026-10-14 (revision 2)",
   "rule": "dyadic levels are the grid, not a field: the increments of the parcellation of space and time over the manifold, like the grid spacing of Euclidean space and the spacing used for the calculations and the differential operators. A level never gets a colormap and a tile is never coloured by its level or code in a data figure.",
   "draw": {
-   "space": "tile outlines in ink: the shown level 0.35 pt; the boundaries it shares with the next coarser level 0.9 pt, so the nesting is visible (coarser boundaries are a subset of finer ones); a tile is named by its number, never a colour",
-   "time": "tile boundaries as ticks or mist lines on the time axis",
-   "spacing": "a level is stated by its spacing: \"level 4 (16 tiles, about 33 mm)\""
+   "space": "tile outlines in ink, the levels shown by weight (levels.draw.multi: up to three, 1.0 / 0.5 / 0.25 pt, coarser heavier); one level alone at 0.35 pt; a tile is named by its number, never a colour",
+   "time": "tile boundaries as lines on the time axis by the same weights, in slate (style.level_lines)",
+   "spacing": "a level is stated by its spacing: \"level 4 (16 tiles, about 33 mm)\"",
+   "multi": {
+    "status": "REVISION 3 (Diellor's board comments 23-28, 2026-10-14; request 32d86cd6)",
+    "rule": "several levels at once are drawn like the major and minor grid lines of a 2-D plot: one line weight per level, coarser levels heavier, each boundary drawn once at its coarsest level (coarser boundaries are a subset of finer ones), as isolines show several values",
+    "weights_pt": [
+     1.0,
+     0.5,
+     0.25
+    ],
+    "max_levels": 3,
+    "cortex_colour": "neutral-ink",
+    "plot_colour": "neutral-mist",
+    "key": "one entry per level, by weight: \"level 3: 8 tiles, 50 mm\"",
+    "code": "cortex: style.level_weights(n) for the tile outlines; plots: style.level_lines(ax, (t0, t1), [2, 3, 4])",
+    "plot_note": "on a plot the lines are grid lines: mist, behind the data, so they never compete with a trace"
+   }
   },
   "slice": {
-   "what": "one level is a slice through the constant-Q stack",
-   "indicator": "the level indicator: a z-stack glyph of the levels as stacked bars of halving width, the shown level filled ink, the others mist outlines; numbered at the shown level",
-   "code": "style.level_indicator(ax, levels, shown)"
+   "what": "one cortical depth (a spatial level) is a slice through the dyadic stack of space tiles",
+   "indicator": "the level indicator: a z-stack glyph of the depths as stacked bars of halving width, FINER UP (depth 0, the coarsest, at the bottom), the shown depth filled ink, the others mist outlines; labelled by what it measures, \"depth 4 · ≈ 90 mm\" (equivalent-disc diameter from the tile table of the cortex shown, never a formula, never an index alone); when a MEG reading is shown, a dashed slate rule marks the MEG separation floor (2 r50 ≈ 95–100 mm) and the finer depths beyond it are drawn lighter",
+   "code": "style.level_indicator(ax, n_levels, shown, spacing_mm={depth: mm}, floor=dict(depth=3, text='MEG floor ≈ 95–100 mm'))",
+   "status": "REVISION 4 2026-10-14 (Science's level-stack review, request ef2c73a0): finer up, spacing printed, MEG floor"
   },
   "volume": {
-   "what": "the volume of the levels: a scalogram over the manifold axis (time, or distance along a path) x level, each cell a tile of halving width; outlines only, or a value per cell on its quantity's map",
-   "code": "style.level_scalogram(ax, n_levels, values=None)",
-   "status": "ADOPTED 2026-10-14"
+   "status": "REVISION 4 2026-10-14 (Science's level-stack review, request ef2c73a0): split into two modes; not for MS1 figures until the depth/level term and the alpha tile duration (164.8 ms vs 8–16 Hz) are settled",
+   "rule": "two time volumes that must not be mixed; both finer up; neither has a spatial axis (a time tile is linked to no cortical depth)",
+   "scalogram": {
+    "what": "time x octave (the Heisenberg tiling): one row per octave band, its tiles the band's time tiles of the duration the tile table gives (one cycle of the band's lowest frequency), so a row holds duration x f_low tiles; rows labelled \"8–16 Hz · 125 ms\" (band, tile duration); a value per tile on its quantity's map, or outlines only",
+    "rollup_outline": "never: tiles of different bands do not sum each other",
+    "code": "style.level_scalogram(ax, (t0, t1), bands=[dict(f_low=, f_high=, tile_s=), …], values=None)"
+   },
+   "pyramid": {
+    "what": "time x aggregation level within ONE band: the parent tile at the bottom, each row up halving the tiles, the band's own time tiles at the top; rows labelled by tile duration (\"0.66 s\"), the band named in the key; the field is the sums of the band's LINEAR power (exact roll-up); if shown in dB the legend says the sums are of linear power",
+    "rollup_outline": "yes: a tile and the tiles it rolls up into (cell=)",
+    "code": "style.level_pyramid(ax, t0, tile_s, n_levels, power=linear, band='alpha 8–16 Hz', db=True)"
+   },
+   "index": "figures name a level by what it measures (space: depth d, coarse = 0, with its equivalent-disc mm; time: band and tile duration); the atlas store's finest = 0 index stays in Rheome and is converted in one Rheome function, never in figure code"
   },
   "tile_code_map": "atlas-tile-code is not used for levels or tiles in data figures; it stays only for the dyadic-code schematic (S6) until Science and Methods review the level visualisation",
   "source": [
