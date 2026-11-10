@@ -57,15 +57,25 @@ classdef tHodgeDirac < matlab.unittest.TestCase
             % in [-1e-6, 0], so the 1-form mass star1 = w was <= 0 (the 'mass not positive' seen on real cortices: ~1e-6 x 6e4 edges x density per cortex)
             V = [-1 -1 -1; 1 -1 -1; 1 1 -1; -1 1 -1; -1 -1 1; 1 -1 1; 1 1 1; -1 1 1];
             F = [1 3 2; 1 4 3; 5 6 7; 5 7 8; 1 2 6; 1 6 5; 2 3 7; 2 7 6; 3 4 8; 3 8 7; 4 1 5; 4 5 8];   % a cube, outward
-            H0 = rheome.operators.hodge_dirac(V, F, star1Floor=-Inf);
-            tc.verifyLessThanOrEqual(min(H0.M), 1e-12, 'the cube has cocircular edges: M_e = 0 without the floor');
-            H = rheome.operators.hodge_dirac(V, F);
+            H0 = rheome.operators.hodge_dirac(V, F);
+            tc.verifyLessThanOrEqual(min(H0.M), 1e-12, 'the cube has cocircular edges: M_e = 0 without the floor (the default)');
+            tc.verifyEqual(H0.star1Clamped, 0);
+            H = rheome.operators.hodge_dirac(V, F, 'star1Floor', 1e-6);
             tc.verifyGreaterThan(H.star1Clamped, 0);
             tc.verifyTrue(all(isfinite(H.M)) && all(H.M > 0), 'M > 0 and finite');
         end
         function floorTouchesNothingOnAGenericMesh(tc)
             [V, F] = rheome.geom.icosphere(3);  V = V .* [1 1.3 0.6];
-            tc.verifyEqual(rheome.operators.hodge_dirac(V, F).star1Clamped, 0);
+            tc.verifyEqual(rheome.operators.hodge_dirac(V, F, 'star1Floor', 1e-6).star1Clamped, 0);
+        end
+        function defaultStar1IsTheRawCotanWeight(tc)
+            % no floor by default (as nxr): star1 is intrinsic_delaunay's cotan weight exactly; an explicit floor only raises it
+            [V, F] = rheome.geom.icosphere(3);  V = V .* [1 1.3 0.6];
+            H = rheome.operators.hodge_dirac(V, F);
+            tc.verifyEqual(H.star1, H.mesh.star1, 'the default leaves star1 = the raw cotan weight');
+            tc.verifyEqual(H.M(H.mesh.nV+1:H.mesh.nV+H.mesh.nE), H.mesh.star1);
+            Hf = rheome.operators.hodge_dirac(V, F, 'star1Floor', 1e-6);
+            tc.verifyEqual(Hf.star1, max(H.mesh.star1, 1e-6));
         end
     end
 end
