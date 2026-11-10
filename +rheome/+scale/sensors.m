@@ -11,7 +11,7 @@ function S = sensors(name, opts)
 % Returns S with .G .ncm .chT .Loc .iSel .nV .Res (rheome.inverse.mne output) .B (rheome.load.bases) .Sf
 % .Ref ([nSel x nSel] the reference operator applied to the gain; identity for MEG).
 %
-% ⭐ THE MEDIAL WALL IS FILLED (decision 3882c4ce, 2026-10-14). S.Sf.Cortex and S.B.(h).S.Cortex mark cortex
+% ⭐ THE MEDIAL WALL IS FILLED (the cortex-only rule, 2026-10-14). S.Sf.Cortex and S.B.(h).S.Cortex mark cortex
 % (rheome.geom.select.cortex); the kernel's wall rows are replaced by the harmonic extension of its cortical
 % rows (rheome.operators.harmonicfill), so every field made from S.Res.ImagingKernel is filled before any
 % operator touches it. The inverse itself is unchanged: the wall dipoles stay in the leadfield.

@@ -25,7 +25,7 @@ function R = spin(M, Ref, U, hemi, opts)
 % spins (m = 16 at depth 3) and many rotations land a tile on itself: ties are counted against the effect (>=),
 % so the test is conservative there and cannot reach small p. Read its calibration (rheome.group.calibrate).
 %
-% MEDIAL WALL (decision 3882c4ce, 2026-10-14). Cortex= marks the tiles that hold cortex (rheome.geom.tiles
+% MEDIAL WALL (the cortex-only rule, 2026-10-14). Cortex= marks the tiles that hold cortex (rheome.geom.tiles
 % .cortex_area > 0). The others are dropped before anything else: they are neither scored nor a target of a
 % rotated tile (the rotated wall is discarded and reassigned to the nearest cortex tile), and .index then
 % numbers the kept tiles (R.cortex says which).

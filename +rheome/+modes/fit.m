@@ -373,7 +373,7 @@ function [names, P] = i_planted(S, W)
     c0 = mean(V(V(:,1) <= prctile(V(:,1), 10), :), 1);  c1 = mean(V(V(:,1) >= prctile(V(:,1), 90), :), 1);
     g = @(c) exp(-vecnorm(V - c, 2, 2).^2 / (2 * 0.030^2));
     P = W * Gn * (rheome.geom.select.cortex(S.Sf) .* [exp(1i * 2*pi/0.200 * V(:,1)), g(c1) + exp(-1i*pi/2) * g(c0), ...
-                  g(c1 + [0 0.04 0]) + exp(-1i*pi/3) * g(c0 - [0 0.04 0])]);         % planted on cortex only (decision 3882c4ce)
+                  g(c1 + [0 0.04 0]) + exp(-1i*pi/3) * g(c0 - [0 0.04 0])]);         % planted on cortex only
     names = ["planted_wave200_ap" "planted_pair_fo" "planted_pair_lateral"];
 end
 

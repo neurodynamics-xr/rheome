@@ -4,7 +4,7 @@ function out = snapshot(surf, result, varargin)
 %   out = rheome.snapshot(surf, result, Shots=shots, Out=folder)
 %   out = rheome.snapshot(surf, result, Shots=struct('Field', "div", 'Unit', "1/s", 'Label', "divergence"), Out="figs")
 %
-% Every cortical panel of a figure the same way: the Cortical Flow viewer (nxr-cortical-flow editor/dist-viewer, the
+% Every cortical panel of a figure the same way: the Cortical Flow viewer (the
 % renderer of rheome.view) draws AND COMPOSES each panel in headless Chrome, by the figure tokens
 % (library/styles/tokens/figure-tokens.json): the colormap and limits by quantity, the colourbar with quantity, unit
 % and reference, view labels, a geodesic scale bar on the folded surface, selections, paths, an inset, and for a time
@@ -127,7 +127,7 @@ function out = snapshot(surf, result, varargin)
 %               figure-tokens.json if it exists, else the viewer's vendored viewer/figure/figure-tokens.json). The viewer
 %               is served the file used, and its sha256 and path go into every <Name>.marks.json (tokens_sha256, tokens_path).
 %   'Viewer'    the viewer folder (default as rheome.view: $RHEOME_VIEWER, else prefdir/rheome-viewer); it must ship
-%               driver/snapshot-driver.mjs (a viewer build of nxr-cortical-flow 3899e5947, 2026-11-10, or later)
+%               driver/snapshot-driver.mjs (a Cortical Flow viewer build of 2026-11-10 or later)
 %   'Chrome'    Chrome or Chromium (default $RHEOME_CHROME, else the usual install)
 %   'Node'      Node.js 22+ (default $RHEOME_NODE, else the usual install)
 %   'Labellings' partitions for the viewer (rheome.viz.tiles), named by a shot's Labelling and Outlines (or Settings)
@@ -170,7 +170,7 @@ function out = snapshot(surf, result, varargin)
 % cut at exactly 'ScaleBar' mm of its length, placed by Rheome's rule (an anchor among the front-most vertices near
 % the lower right of the silhouette, ends 1-1.2 L away, flat to the view, horizontal and leftward first) where every
 % point of it is seen; one bar a row. Limits, visibility (a ray cast toward the camera) and the bar are the viewer's
-% (nxr-cortical-flow editor/src/viewer/print/limits.ts, visible.ts, scalebar.ts), by the rules Rheome used.
+% (the Cortical Flow Editor's viewer/print/limits.ts, visible.ts, scalebar.ts), by the rules Rheome used.
 %
 % Needs the viewer (WebGPU), Chrome and Node; nothing else in Rheome does.
 %
@@ -235,7 +235,7 @@ function out = snapshot(surf, result, varargin)
     drv = fullfile(vdir, 'driver', 'snapshot-driver.mjs');
     if ~isfile(drv)
         error('rheome:snapshot:driver', ['The viewer at %s has no snapshot driver (driver/snapshot-driver.mjs): rheome.snapshot needs ' ...
-            'a Cortical Flow viewer build of nxr-cortical-flow 3899e5947 (2026-11-10) or later.'], vdir);
+            'a Cortical Flow viewer build of 2026-11-10 or later.'], vdir);
     end
     cmaps = viewerColormaps(vdir);
 
@@ -643,7 +643,7 @@ function P = paths(a, name, nV)
 end
 
 function v = viewerShot(s, folded, o, J)
-% the viewer's Shot (nxr-cortical-flow editor/src/viewer/print/panel.ts): 0-based frames and vertices, the width in
+% the viewer's Shot (the Cortical Flow Editor's viewer/print/panel.ts): 0-based frames and vertices, the width in
 % mm; the keys in one order, so nxr.snapshot's job is this one byte for byte
     v = struct();
     if ~isempty(s.Field), v.field = s.Field;  v.unit = s.Unit;  v.label = s.Label; end

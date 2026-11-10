@@ -10,7 +10,7 @@ function out = view(varargin)
 % Rheome RUNS without the viewer (R2023b and later); its figures of the cortex are drawn by it (rheome.viz).
 % The result is written as a rheome.bundle@1 folder (rheome.io.write.bundle) and opened:
 %   R2026a+       inside MATLAB, a uifigure + uihtml on the viewer's viewer.html (the Cortical Flow viewer,
-%                 nxr-cortical-flow editor/dist-viewer; its README.md has the format and protocol). The viewer folder is RHEOME_VIEWER, default prefdir/rheome-viewer, installed
+%                 the Cortical Flow viewer build; its README.md has the format and protocol). The viewer folder is RHEOME_VIEWER, default prefdir/rheome-viewer, installed
 %                 there from the copy shipped in <rheome>/viewer when that exists; the bundle is written beneath
 %                 it, because uihtml serves only that folder's tree. The figure is reused by the next call.
 %   R2023b-R2025b the Cortical Flow desktop app, by its URL (corticalflow://view?bundle=<folder>).

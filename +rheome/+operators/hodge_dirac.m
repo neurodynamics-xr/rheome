@@ -8,7 +8,7 @@ function H = hodge_dirac(V, F, varargin)
 %
 % D = M^-1 K is self-adjoint in M; its eigenvalues come in pairs +-mu and D^2 is block diagonal with
 % the Hodge Laplacians. Solve the pencil (K, M). star0 = lumped mass, star1 = cotan weight,
-% star2 = 1/area. Port of nxr-cortical-flow hodgeDirac.ts.
+% star2 = 1/area. Port of the Cortical Flow Editor's hodgeDirac.ts.
 %
 % Author: Diellor Basha, 2026
 fl = 1e-6;  k = find(strcmp(string(varargin(1:2:end)), "star1Floor"), 1);              % name-value: star1Floor (default 1e-6), the rest to intrinsic_delaunay

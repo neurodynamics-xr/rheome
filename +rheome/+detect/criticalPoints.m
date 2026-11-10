@@ -40,7 +40,7 @@ function cp = criticalPoints(J, S, types, op)
 %   .pos [nc x 3]  .charge (+1/-1)  .type {cellstr}  .circulation (|curl|)  .divergence (signed)
 %   .strength (max(|curl|,|div|))  .hemi  .chi [1 x nHemi]  (Poincare-Hopf check = Euler chi)
 %   .wall  the points whose core lies on the MEDIAL WALL (S.Cortex false on >= 2 of the face's vertices;
-%          rheome.geom.select.cortex), same fields: FLAGGED AND NOT REPORTED (decision 3882c4ce, 2026-10-14).
+%          rheome.geom.select.cortex), same fields: FLAGGED AND NOT REPORTED (the cortex-only rule, 2026-10-14).
 %          The wall is filled, not measured (rheome.operators.harmonicfill). .chi still counts every face.
 %
 % See also: rheome.operators.connection_laplacian, rheome.differential.divergence, rheome.differential.curl, detect_validate

@@ -29,7 +29,7 @@ function [T, X, Z] = measure_geometry(name, S, opts)
 %    Z.tiles: one row per rheome.geom.tree tile at depths opts.SizeDepths (depth 0 = the hemisphere) --
 %    hemi, depth, node_id, n_vertices, area_mm2, d_eq_mm, geodesic_diameter_mm (double-sweep on the
 %    mesh edge graph: a lower bound on the longest geodesic in the tile, and specific to this Fiedler tiling).
-%    ⭐ CORTEX ONLY (decision 3882c4ce, 2026-10-14): a tile's area, d_eq and the hemisphere's area are its
+%    ⭐ CORTEX ONLY (the cortex-only rule, 2026-10-14): a tile's area, d_eq and the hemisphere's area are its
 %    CORTEX (rheome.geom.select.cortex), the medial wall excluded; the tree is still built on the closed mesh.
 %    Z.tiles also carries closed_area_mm2 and cortex_fraction; hemisphere_area_closed keeps the old number.
 %    Rows: hemisphere_area (cortex, cm2, band "L" | "R"), hemisphere_area_closed (cm2); parcel_deq_median, n_parcels (band = atlas, over both

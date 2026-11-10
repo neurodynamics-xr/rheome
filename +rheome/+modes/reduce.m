@@ -15,7 +15,7 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
 %     (iv)  split-half ICC(2,1) of the mode's gev >= 0.5 with the lower bound of its 95 % CI > 0.3 (percentile
 %           bootstrap over participants, NBoot)
 %   Labels: standing (median pg < StandingRad), otherwise lagged-or-rotating. No label makes a propagation call
-%     (design 52798c1e section 13, decision 1f8b4008): on the canary heads no single N3 margin separated a planted
+%     (design section 13): on the canary heads no single N3 margin separated a planted
 %     200 mm wave from a planted lagged pair, so travelling is UNRESOLVED at >= 100 mm, like rotation (a planted
 %     rotation reads |r| 0.994 to its two-phase source). The N3 excess r_n3_sim - r_n3 is reported per mode as a
 %     descriptive number (n3_excess_median; test n3_lagged in modes_tests.csv), and n3_above_margin says whether
@@ -63,7 +63,7 @@ function [C, Ts] = reduce(fitFiles, centroidsFile, outDir, opts)
         opts.Fdr (1,1) double = 0.05
         opts.NBoot (1,1) double = 2000
         opts.Seed (1,1) double = 1
-        opts.N3Margin (1,1) double = 0.02   % frozen 2026-10-12 (1f8b4008); descriptive only (n3_above_margin)
+        opts.N3Margin (1,1) double = 0.02   % frozen 2026-10-12; descriptive only (n3_above_margin)
     end
     if isscalar(fitFiles) && endsWith(fitFiles, ".txt"), fitFiles = string(strip(splitlines(strtrim(fileread(fitFiles))))); fitFiles(fitFiles == "") = []; end
     if ~exist(outDir, 'dir'), mkdir(outDir); end

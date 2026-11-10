@@ -13,8 +13,8 @@ function R = jointcheck(files, outDir, opts)
 %              planted coefficients over the depths (the head's own T(s), rheome.modes.scaletransfer) and of
 %              its best-matching atom
 %   F          no atom of null F passes Level-1 (i), with the threshold calibrated on F and tested out of sample
-%              (F calibration amendment, design §14, 2026-10-13, decision 93764a02; it follows the F union
-%              amendment, 2026-10-12, decision d62f84ae, after which 1 of 11 F atoms still read |r| 0.678 < 0.7):
+%              (F calibration amendment, design §14, 2026-10-13; it follows the F union
+%              amendment, 2026-10-12, after which 1 of 11 F atoms still read |r| 0.678 < 0.7):
 %              r_min_f = min(0.7, f_low - 0.05), f_low the lowest best |r| of F1's or F2's K* atoms to the other
 %              realisation's atoms at EVERY K (rheome.modes.discover); then each atom of a third realisation F3
 %              (f_fieldspread3, which does not set r_min_f) at K* against every F1 and F2 atom at every K: it would
@@ -53,7 +53,7 @@ function R = jointcheck(files, outDir, opts)
     [rows, byK, fr, trf, heads] = i_score(M, files);
     rec0 = arrayfun(@(g) all(rows.r_best_atom(rows.plant == g) >= opts.RMin), gated);
     kRule = [M.bands.K];
-    % J5 amendment (design §14, 2026-10-12, decision 09a28c49): K* = max(rule, the smallest K at which every gated
+    % J5 amendment (design §14, 2026-10-12): K* = max(rule, the smallest K at which every gated
     % plant is recovered in every head); pass 2 rediscovers at that K* (F atoms included) and gives the verdict
     G = groupsummary(byK(ismember(byK.plant, gated), :), 'K', 'min', 'r_best_atom');
     kSep = min(G.K(G.min_r_best_atom >= opts.RMin));  if isempty(kSep), kSep = NaN; end
