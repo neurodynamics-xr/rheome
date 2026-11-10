@@ -10,6 +10,9 @@
 %                        pair) and saturating at ~49 edges on a sphere. Read speeds with edgegraph.
 %   rheome.geom.edgegraph     - the mesh as a Dijkstra graph, edges + intrinsic diagonals: +1.4% against the
 %                        analytic great circle at any range, symmetric. The ruler for a speed.
+%   rheome.geom.flipOut       - the FlipOut geodesic between two vertices (Sharp & Crane 2020): a port of
+%                        geometry-central's, the line the viewer, nxr and the Editor draw (to 1e-9 m)
+%   rheome.geom.geodesicpath  - a geodesic path between two vertices on the faces (calls flipOut)
 %   rheome.geom.karcher_mean  - intrinsic (geodesic Fréchet) mean of points on the surface
 %
 % THE SPATIAL PYRAMID (2026-09-25):
