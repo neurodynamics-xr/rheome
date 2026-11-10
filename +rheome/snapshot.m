@@ -280,7 +280,9 @@ function shots = normalise(in, result, surfs, T, fs, tok, cmaps, Sf)
         qn = s.Quantity;  if strcmp(qn, 'signed'), qn = 'divergence'; end   % the tokens name each signed quantity; one map
         bq = tok.quantity.(qn);
         tokenName = regexp(bq.colormap, '^[\w\-]+', 'match', 'once');
-        s.Colormap = char(g('Colormap', tok.colour.colormap.(strrep(tokenName, '-', '_')).x_value));
+        s.Colormap = char(g('Colormap', tokenName));
+        tk = strrep(s.Colormap, '-', '_');   % a figure-token name stands for its colormap, as the viewer reads it: $value, 'cmo.' dropped
+        if isfield(tok.colour.colormap, tk), s.Colormap = regexprep(char(tok.colour.colormap.(tk).x_value), '^cmo\.', ''); end
         if ~isKey(cmaps, s.Colormap)
             error('rheome:snapshot:colormap', '%s: the viewer has no colormap ''%s'' (%s quantity); give Colormap= or add it to the viewer.', s.Name, s.Colormap, s.Quantity);
         end
