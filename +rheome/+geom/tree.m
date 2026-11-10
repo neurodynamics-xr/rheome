@@ -167,10 +167,11 @@ function [p, q] = i_split(L, M, g, idx, P)
     f = [];
     try
         wr = warning('off', 'all');
-        [V, D] = eigs(Ls, Ms, 2, 'smallestabs', 'Tolerance', 1e-6, 'MaxIterations', 500);
+        % eigen.smallest returns the modes ascending: column 1 is the constant (null) mode of a
+        % connected patch, column 2 the Fiedler vector.
+        [V, ~] = rheome.eigen.smallest(Ls, Ms, 2, struct('tol', 1e-6, 'maxit', 500, 'disp', 0));
         warning(wr);
-        [~, o] = sort(diag(D));
-        f = V(:, o(2));
+        f = V(:, 2);
     catch
         f = [];
     end

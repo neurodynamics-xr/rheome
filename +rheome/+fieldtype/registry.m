@@ -38,8 +38,8 @@ function T = registry()
     % id                    domains                 rank      bundle      field       n_form repr                      comp status   notes
     'scalarVertex',        {'complex','graph','points'}, 'vertex', 'scalar',   'real',      'zero','na',                    1, 'built',  'vorticity, divergence, curvature: [nV x nT]'
     'scalarFace',          {'complex'},            'face',   'scalar',   'real',      'na',  'na',                    1, 'built',  'per-face wavenumber magnitude, winding number'
-    'oneFormEdge',         {'complex','graph'},    'edge',   'scalar',   'real',      'one', 'na',                    1, 'planned','no d0/d1 here; nxr-compute has them'
-    'twoFormFace',         {'complex'},            'face',   'scalar',   'real',      'two', 'na',                    1, 'planned','needs a Hodge star'
+    'oneFormEdge',         {'complex','graph'},    'edge',   'scalar',   'real',      'one', 'na',                    1, 'planned','edge 1-forms: d0, d1 are built by operators.hodge_dirac (not yet rows of operators.registry)'
+    'twoFormFace',         {'complex'},            'face',   'scalar',   'real',      'two', 'na',                    1, 'planned','2-forms: the Hodge stars are built by operators.hodge_dirac (not yet rows of operators.registry)'
     'tangentVertex',       {'complex'},            'vertex', 'tangent',  'complex',   'na',  'intrinsic_complex',     1, 'built',  'rheome.operators.connection_laplacian'
     'tangentFace',         {'complex'},            'face',   'tangent',  'complex',   'na',  'intrinsic_complex',     1, 'planned',''
     'tangentEdge',         {'complex'},            'edge',   'tangent',  'complex',   'na',  'intrinsic_complex',     1, 'planned',''

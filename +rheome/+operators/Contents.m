@@ -17,6 +17,16 @@
 %                                 summing to chi, face curvature WRAPPED (the chart parts removed)
 %   rheome.operators.face_gradient     - per-face constant-gradient primitives (div/curl)
 %   rheome.operators.dirac_frame       - relative Dirac quaternion operator (default: tau blend)
+%   rheome.operators.dirac_intrinsic   - Crane's intrinsic quaternionic Dirac itself: vertex quaternions -> faces
+%   rheome.operators.dirac_intrinsic_sq - intrinsic (edge-based) quaternionic Dirac squared, D' MF D
+%   rheome.operators.dirac_extrinsic   - relative (extrinsic) Dirac energy block E = D' *_F D
+%   rheome.operators.spin_dirac        - spin Diracs on quaternion spinors per face (extrinsic, Hoffmann-Ye, Ye)
+%   rheome.operators.vertex_to_face    - vertex spinors to faces, A (4nF x 4nV)
+%   rheome.operators.intrinsic_delaunay - intrinsic Delaunay triangulation (flips, mollified lengths, mixed-Voronoi mass, signposts) and its cotangent Laplacian
+%   rheome.operators.hodge_dirac       - Hodge-Dirac d + delta on 0/1/2-forms (K, M, d0, d1, stars) over the intrinsic Delaunay triangulation
+%   rheome.operators.connection_laplacian_idt - connection (vector) Laplacian on the intrinsic Delaunay triangulation
+%   rheome.operators.weak_differential - weak-form curl and divergence as [nV x 3nV] operators
+%   rheome.operators.harmonicfill      - a field on the medial wall replaced by its harmonic extension from the rim
 %
 % WHOLE-BRAIN connectome operators (from tractography fibers; the connectome couples the
 % two hemispheres, so these are single-block whole-brain, not per-hemisphere):

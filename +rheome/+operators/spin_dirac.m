@@ -14,7 +14,7 @@ function S = spin_dirac(V, F)
 % Hoffmann & Ye arXiv 1802.06278; Ye, Diamanti, Tang, Guibas & Hoffmann, CGF 37(5) 2018.
 %
 % shortcut: the face-spinor eigenproblem has spurious small eigenvalues (the cell doubling); solve on vertex
-% spinors through rheome.operators.spin_vertex_to_face, as Ye et al. do.
+% spinors through rheome.operators.vertex_to_face, as Ye et al. do.
 nF = size(F,1); nV = size(V,1);
 e1 = V(F(:,2),:)-V(F(:,1),:); e2 = V(F(:,3),:)-V(F(:,1),:);
 c = cross(e1, e2, 2); l = vecnorm(c, 2, 2);
