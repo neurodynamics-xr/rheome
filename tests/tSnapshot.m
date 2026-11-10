@@ -32,7 +32,7 @@ classdef tSnapshot < matlab.unittest.TestCase
             tc.verifyError(@() run(struct('Field', 'b', 'Unit', 'mm')), 'rheome:snapshot:option');
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Wrong', 1)), 'rheome:snapshot:shot');
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'View', 'sideways')), 'rheome:snapshot:option');
-            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Frames', [1 2])), 'rheome:snapshot:shot');      % a strip: one view
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Frames', [1 2])), 'rheome:snapshot:node');      % a strip of several views: allowed (phase 3)
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Frames', [1 2 4], 'View', 'L lateral')), 'rheome:snapshot:shot');   % unequal
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Frames', 5)), 'rheome:snapshot:shot');
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'CLim', [-1 2])), 'rheome:snapshot:clim');      % signed: symmetric
@@ -65,6 +65,40 @@ classdef tSnapshot < matlab.unittest.TestCase
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Selection', struct('Centre', 1, 'RadiusMM', 80, 'Label', 'disk'), ...
                 'Paths', struct('From', 1, 'To', 4, 'Label', 'p'), 'Inset', struct('Label', 'the disk'))), 'rheome:snapshot:node');
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'View', 'R medial', 'Vector', 'v')), 'rheome:snapshot:node');
+        end
+        function refusesBadNewOptions(tc)
+        % the phase-3 fields (no field, Cortex, Labelling, Outlines, raw pictures, the bar's kind, 'auto' and tile), each refused by name
+            r = struct('a', [-1; 0; 1; 2] * ones(1, 4), 'v', zeros(12, 4));
+            L = struct('name', {'t', 'h'}, 'codes', {[0; 0; 1; 1], [0; 0; 0; 1]});
+            run = @(shot, varargin) rheome.snapshot(tc.S, r, 'Shots', shot, 'Out', tempname, 'Viewer', tc.Fake, 'Node', '/nonexistent', ...
+                'Chrome', fullfile(tc.Fake, 'viewer.html'), 'Labellings', L, varargin{:});
+            tc.verifyError(@() run(struct('Field', '', 'Unit', 'mm')), 'rheome:snapshot:shot');                   % no field: no unit
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Labelling', 't')), 'rheome:snapshot:shot');  % a field or a labelling
+            tc.verifyError(@() run(struct('Labelling', 'zz')), 'rheome:snapshot:option');
+            tc.verifyError(@() rheome.snapshot(tc.S, r, Shots=struct('Labelling', 't'), Out=tempname, Viewer=tc.Fake), 'rheome:snapshot:option');   % no Labellings
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Cortex', 2)), 'rheome:snapshot:shot');
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'View', {{'L lateral', 'l lateral'}})), 'rheome:snapshot:shot');   % each view once
+            tc.verifyError(@() run(struct('Field', '', 'Outlines', struct('Coarser', 1))), 'rheome:snapshot:outlines');         % its labelling
+            tc.verifyError(@() run(struct('Field', '', 'Outlines', struct('Labelling', 't', 'Wrong', 1))), 'rheome:snapshot:outlines');
+            tc.verifyError(@() run(struct('Field', '', 'Outlines', struct('Labelling', 't', 'Width', 50))), 'rheome:snapshot:outlines');
+            tc.verifyError(@() run(struct('Field', '', 'Outlines', struct('Labelling', 't', 'Coarser', 0.5))), 'rheome:snapshot:outlines');
+            tc.verifyError(@() run(struct('Field', '', 'Outlines', struct('Labelling', 't', 'Select', 1.5))), 'rheome:snapshot:outlines');
+            tc.verifyError(@() run(struct('Field', '', 'Outlines', struct('Labelling', 't', 'SelectStyle', 'dots'))), 'rheome:snapshot:option');
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'StagePx', [10 10])), 'rheome:snapshot:raw');
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Fit', true)), 'rheome:snapshot:raw');         % fit: raw pictures only
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Dpi', 300)), 'rheome:snapshot:raw');
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'StagePx', [64 64], 'Fit', struct('Margin', 0.7))), 'rheome:snapshot:raw');
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'StagePx', [64 64], 'Dpi', 30)), 'rheome:snapshot:raw');
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'StagePx', [64 64], 'Inset', struct('Vertices', [1 2 3], 'Label', 'x'))), 'rheome:snapshot:raw');
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm'), 'ScaleBar', 'big'), 'rheome:snapshot:input');
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm'), 'ScaleBarKind', 'curved'), 'rheome:snapshot:option');
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm'), 'ScaleBarTile', 0), 'rheome:snapshot:input');
+            tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'View', 'L lateral'), 'ScaleBarTile', 2), 'rheome:snapshot:shot');   % 1 render
+            % every check passed: as far as Node
+            tc.verifyError(@() run(struct('Labelling', 't', 'Outlines', struct('Labelling', 't', 'Coarser', 'h', 'Select', [0 1], 'SelectStyle', 'extent'), ...
+                'Cortex', 0.5, 'StagePx', [64 48], 'Fit', struct('Margin', 0.1, 'Shared', true), 'Dpi', 300), 'ScaleBar', 'auto', 'ScaleBarKind', 'plane', ...
+                'ScaleBarTile', 4), 'rheome:snapshot:node');
+            tc.verifyError(@() run(struct('Field', '', 'Vector', 'v', 'Cortex', false, 'View', {{'L lateral', 'left'}}, 'Frames', 1:3)), 'rheome:snapshot:node');
         end
     end
     methods (Test, TestTags = {'Viewer'})
