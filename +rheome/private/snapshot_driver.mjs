@@ -132,9 +132,11 @@ for (const shot of job.shots) {
   const errs = await evalp(`window.__ev.filter(e=>e[0]==='error').map(e=>e[1])`)
   if (errs?.length) fail(`${shot.name}: the viewer refused ${JSON.stringify(errs)}`)
   // a screenshot the viewer never answers (e.g. a canvas too large for the GPU) fails the run instead of hanging it
+  // the PNG stays in the page and is read back in 1 MB slices: a DevTools reply over ~4 MB never arrives (a 4000 x 3040 render is ~5 MB)
   const shotEv = await Promise.race([evalp(`(async()=>{const p=new Promise(r=>{window.addEventListener('viewer:screenshot',e=>r({png:e.detail.png,marks:e.detail.marks}),{once:true});` +
     `window.addEventListener('viewer:error',e=>r({png:'error: '+e.detail.code+': '+e.detail.message}),{once:true})});` +
-    `await window.viewer.screenshot(${shot.scale ?? job.scale ?? 2}, true);return await p})()`),
+    `await window.viewer.screenshot(${shot.scale ?? job.scale ?? 2}, true);window.__shot=await p;return {n:window.__shot.png.length,marks:window.__shot.marks}})()`)
+      .then(async (r) => { let png = ''; for (let i = 0; i < r.n; i += 1 << 20) png += await evalp(`window.__shot.png.slice(${i}, ${i + (1 << 20)})`); await evalp('delete window.__shot'); return { png, marks: r.marks } }),
     new Promise((r) => { timer = setTimeout(r, 1000 * (job.timeout ?? 60)) })
       .then(() => fail(`${shot.name}: no screenshot in ${job.timeout ?? 60} s at pixel ratio ${shot.scale ?? job.scale ?? 2}`))])
   clearTimeout(timer)   // this shot's clock only
