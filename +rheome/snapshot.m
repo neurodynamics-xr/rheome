@@ -126,7 +126,7 @@ function out = snapshot(surf, result, varargin)
 %               figure-tokens.json if it exists, else the viewer's vendored viewer/figure/figure-tokens.json). The viewer
 %               is served the file used, and its sha256 and path go into every <Name>.marks.json (tokens_sha256, tokens_path).
 %   'Viewer'    the viewer folder (default as rheome.view: $RHEOME_VIEWER, else prefdir/rheome-viewer); it must ship
-%               driver/snapshot-driver.mjs (a viewer build of nxr-cortical-flow ad9d824, 2026-11-09, or later)
+%               driver/snapshot-driver.mjs (a viewer build of nxr-cortical-flow 3899e5947, 2026-11-10, or later)
 %   'Chrome'    Chrome or Chromium (default $RHEOME_CHROME, else the usual install)
 %   'Node'      Node.js 22+ (default $RHEOME_NODE, else the usual install)
 %   'Labellings' partitions for the viewer (rheome.viz.tiles), named by a shot's Labelling and Outlines (or Settings)
@@ -231,7 +231,7 @@ function out = snapshot(surf, result, varargin)
     drv = fullfile(vdir, 'driver', 'snapshot-driver.mjs');
     if ~isfile(drv)
         error('rheome:snapshot:driver', ['The viewer at %s has no snapshot driver (driver/snapshot-driver.mjs): rheome.snapshot needs ' ...
-            'a Cortical Flow viewer build of nxr-cortical-flow ad9d824 (2026-11-09) or later.'], vdir);
+            'a Cortical Flow viewer build of nxr-cortical-flow 3899e5947 (2026-11-10) or later.'], vdir);
     end
     cmaps = viewerColormaps(vdir);
 
