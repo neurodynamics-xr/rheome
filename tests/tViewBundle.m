@@ -55,6 +55,43 @@ classdef tViewBundle < matlab.unittest.TestCase
             tc.verifyEqual(reshape(rd(d, j.surfaces(1).positions, 'single'), 3, []), single(Si.Vertices'));
             tc.verifyFalse(isfield(j, 'settings'));   % no settings given, none written
         end
+        function writesPathsAndSelections(tc)
+        % the bundle's own paths (vertices; faces + weights; a geodesic by waypoints) and vertex sets (each style), 0-based
+        % on disk, only what is given in the manifest (the viewer's README: paths[], selections[])
+            d = tempname;  c = onCleanup(@() rmdir(d, 's'));
+            P = {struct('name', 'line', 'vertices', [1 3 2]), ...
+                 struct('name', 'bary', 'faces', [1; 4], 'weights', [0.2 0.3 0.5; 1 0 0], 'color', 'ink', 'width', 0.75), ...
+                 struct('name', 'geo', 'vertices', [1 2], 'geodesic', true, 'arrow', true, ...
+                        'ticks', struct('count', 3, 'labels', {{'a', 'b', 'c'}}))};
+            X = struct('name', {'tile', 'edge', 'mask'}, 'vertices', {[1 2], 3, logical([0 1 1 0])'}, ...
+                       'style', {'fill', 'outline', 'extent'}, 'color', {'atlas-space', '#3a7ca5', []}, 'width', {[], 1.5, []});
+            m = rheome.io.write.bundle(d, tc.S, rand(4, 2), 'Paths', P, 'Selections', X);
+            t = fileread(m);  j = jsondecode(t);
+            tc.verifyEqual(cellfun(@(x) x.name, j.paths, 'UniformOutput', false)', {'line', 'bary', 'geo'});
+            tc.verifyEqual(rd(d, j.paths{1}.vertices, 'int32'), int32([0; 2; 1]));
+            tc.verifyEqual(rd(d, j.paths{2}.faces, 'int32'), int32([0; 3]));
+            tc.verifyEqual(reshape(rd(d, j.paths{2}.weights, 'single'), 3, [])', single([0.2 0.3 0.5; 1 0 0]));
+            tc.verifySubstring(t, '"name":"geo","vertices":"path_3_vertices.bin","geodesic":true,"arrow":true,"ticks":{"count":3,"labels":["a","b","c"]}');
+            tc.verifySubstring(t, '{"name":"line","vertices":"path_1_vertices.bin"}');
+            tc.verifyEqual(cellfun(@(x) x.style, j.selections, 'UniformOutput', false)', {'fill', 'outline', 'extent'});
+            tc.verifyEqual(rd(d, j.selections{3}.vertices, 'int32'), int32([1; 2]));
+            tc.verifySubstring(t, '{"name":"mask","vertices":"selection_3.bin","style":"extent"}');   % only what is given
+            tc.verifyEqual(j.selections{2}.width, 1.5);
+        end
+        function refusesBadPathsAndSelections(tc)
+            d = tempname;  c = onCleanup(@() rmdir(d, 's'));  mkdir(d);
+            w = @(varargin) rheome.io.write.bundle(d, tc.S, rand(4, 2), varargin{:});
+            tc.verifyError(@() w('Paths', struct('name', 'p', 'vertices', 1)), 'rheome:bundle:paths');
+            tc.verifyError(@() w('Paths', struct('name', 'p', 'faces', [1 2], 'weights', [0.5 0.6 0; 1 0 0])), 'rheome:bundle:paths');
+            tc.verifyError(@() w('Paths', struct('name', 'p', 'faces', [1 2], 'weights', [1 0 0; 1 0 0], 'geodesic', true)), 'rheome:bundle:paths');
+            tc.verifyError(@() w('Paths', struct('name', 'p', 'vertices', [1 2], 'ticks', struct('count', 3))), 'rheome:bundle:paths');
+            tc.verifyError(@() w('Paths', struct('name', {'p', 'p'}, 'vertices', {[1 2], [2 3]})), 'rheome:bundle:paths');
+            tc.verifyError(@() w('Paths', struct('name', 'p', 'vertices', [1 2], 'hidden', true)), 'rheome:bundle:paths');
+            tc.verifyError(@() w('Selections', struct('name', 's', 'vertices', 5)), 'rheome:bundle:selections');
+            tc.verifyError(@() w('Selections', struct('name', 's', 'vertices', 1, 'style', 'dots')), 'rheome:bundle:selections');
+            tc.verifyError(@() w('Selections', struct('name', 's', 'vertices', 1, 'color', 'Red')), 'rheome:bundle:selections');
+            tc.verifyError(@() w('Selections', struct('name', 's', 'vertices', 1, 'width', 0)), 'rheome:bundle:selections');
+        end
         function mapsEveryOption(tc)
             d = tempname;  old = getenv('RHEOME_VIEWER');  setenv('RHEOME_VIEWER', d);
             c = onCleanup(@() cleanup(d, old));

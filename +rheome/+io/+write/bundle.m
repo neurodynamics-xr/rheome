@@ -12,6 +12,9 @@ function manifest = bundle(folder, surf, result, varargin)
 %                         listed in the manifest's 'surfaces'
 %   codes_<k>.bin  int32 [nV], labelling k's code a vertex (< 0: none)          optional, the manifest's 'labellings'
 %   points_<k>_{vertices,frames,signs}.bin  int32 [n], point set k (0-based)      optional, the manifest's 'points'
+%   path_<k>_vertices.bin  int32 [n] (0-based), OR path_<k>_faces.bin int32 [n] (0-based) and path_<k>_weights.bin
+%                          float32 [3 x n] (a point's three barycentric weights after another)   optional, the manifest's 'paths'
+%   selection_<k>.bin  int32 [n], vertex set k (0-based)                            optional, the manifest's 'selections'
 % The manifest may carry 'settings', the viewer's settings to open with (rheome.view writes them).
 % Every file is .bin: MATLAB's uihtml server answers 404 for an extension it does not know (.f32, .i32; R2026a).
 % The reader is the Cortical Flow viewer (nxr-cortical-flow editor/src/viewer/bundle.ts; format and protocol in its
@@ -42,6 +45,22 @@ function manifest = bundle(folder, surf, result, varargin)
 %               .frames [n x 1] (1-based frame each point is shown at; 0: every frame; none: every frame), .signs
 %               [n x 1] (+1 / -1, drawn as plus / minus; none: +1), .color '#rrggbb'. rheome.viz.points makes one
 %               from rheome.detect.criticalPoints / rheome.flow.critical.
+%   'Paths'     struct array (or cell of structs), one PATH ON THE SURFACE each (drawn as a depth-tested line; shown by the
+%               viewer setting 'paths', default all): .name, and its points ON the mesh, either .vertices [n x 1] (1-BASED,
+%               n >= 2) or .faces [n x 1] (1-BASED rows of the first surface's Faces) with .weights [n x 3] (barycentric:
+%               >= 0, summing to 1; the corners in Faces' order), so the path follows every embedding. Optional:
+%               .color (a figure-token colour's name, e.g. 'atlas-event' (the viewer's default), 'neutral-ink', a neutral
+%               such as 'ink', or '#rrggbb'), .width (pt, 0 < width <= 20), .geodesic (true: the vertices are WAYPOINTS
+%               the viewer joins by geodesics on the folded surface; vertices only), .arrow (true: an arrowhead at the
+%               end), .ticks (a geodesic path as a time line: struct with .every_mm (> 0) or .count (>= 2), one of
+%               them, and optionally .labels, texts). The viewer's README (nxr-cortical-flow editor/src/viewer) says how
+%               each is drawn.
+%   'Selections' struct array (or cell of structs), one VERTEX SET each (a tile, a mask, a support; shown by the
+%               viewer setting 'selections', default all): .name, .vertices [n x 1] (1-BASED) or a logical [nV] mask;
+%               optional .style 'fill' (the viewer's default: a blended fill) | 'outline' (its edge in its colour) |
+%               'extent' (a dashed ink line, never a fill), .color (as a path's), .width (pt, 0 < width <= 20).
+%   Names are non-empty and unique within Paths and within Selections; keys not listed above are refused. Only what
+%   is given is written.
 %
 % OUTPUT:
 %   manifest : full path of the manifest.json written.
@@ -57,6 +76,8 @@ function manifest = bundle(folder, surf, result, varargin)
     p.addParameter('Potentials', false);
     p.addParameter('Labellings', []);
     p.addParameter('Points', []);
+    p.addParameter('Paths', []);
+    p.addParameter('Selections', []);
     p.parse(varargin{:});
     o = p.Results;
 
@@ -119,6 +140,8 @@ function manifest = bundle(folder, surf, result, varargin)
     if numel(surfs) > 1, m.surfaces = num2cell(alt); end   % a JSON array even for one
     if ~isempty(o.Labellings), m.labellings = labellings(folder, o.Labellings, nV); end
     if ~isempty(o.Points), m.points = points(folder, o.Points, nV, T); end
+    if ~isempty(o.Paths), m.paths = paths(folder, o.Paths, nV, size(F, 1)); end
+    if ~isempty(o.Selections), m.selections = selections(folder, o.Selections, nV); end
     if ~isempty(o.Settings), m.settings = o.Settings; end
     manifest = fullfile(folder, 'manifest.json');
     fid = fopen(manifest, 'w');
@@ -176,6 +199,142 @@ function out = points(folder, P, nV, T)
             out{k}.signs = [pre 'signs.bin'];
         end
         if isfield(x, 'color') && ~isempty(x.color), out{k}.color = char(x.color); end
+    end
+end
+
+function out = paths(folder, P, nV, nF)
+% each path's points written (vertices, or faces and weights; 0-based), its manifest entry returned
+    id = 'rheome:bundle:paths';
+    P = asCell(P, 'Paths');  out = cell(1, numel(P));  seen = {};
+    for k = 1:numel(P)
+        x = P{k};  need(x, {'name'}, 'Paths');
+        nm = itemName(x.name, 'Paths', seen);  seen{end+1} = nm; %#ok<AGROW>
+        known(x, {'name', 'vertices', 'faces', 'weights', 'color', 'width', 'geodesic', 'arrow', 'ticks'}, nm, 'Paths');
+        pre = sprintf('path_%d_', k);
+        e = struct('name', nm);
+        hasV = given(x, 'vertices');
+        if hasV == (given(x, 'faces') || given(x, 'weights')) || (~hasV && ~(given(x, 'faces') && given(x, 'weights')))
+            error(id, '%s: give vertices, or faces and weights (not both).', nm);
+        end
+        if hasV
+            v = double(x.vertices(:));
+            if numel(v) < 2 || any(v < 1 | v > nV | v ~= round(v)), error(id, '%s: vertices must be 2 or more 1-based indices into the %d vertices.', nm, nV); end
+            put(folder, [pre 'vertices.bin'], v - 1, 'int32');
+            e.vertices = [pre 'vertices.bin'];
+        else
+            f = double(x.faces(:));  n = numel(f);
+            if n < 2 || any(f < 1 | f > nF | f ~= round(f)), error(id, '%s: faces must be 2 or more 1-based indices into the %d faces.', nm, nF); end
+            w = double(x.weights);
+            if ~isequal(size(w), [n 3]) || any(~(w(:) >= -1e-3)) || any(~(abs(sum(w, 2) - 1) < 1e-3))
+                error(id, '%s: weights must be [n x 3], one row a face (n = %d), barycentric (>= 0, summing to 1).', nm, n);
+            end
+            put(folder, [pre 'faces.bin'], f - 1, 'int32');
+            put(folder, [pre 'weights.bin'], w', 'single');
+            e.faces = [pre 'faces.bin'];  e.weights = [pre 'weights.bin'];
+        end
+        if given(x, 'color'), e.color = colour(x.color, nm, id); end
+        if given(x, 'width'), e.width = lineWidth(x.width, nm, id); end
+        geo = false;
+        if given(x, 'geodesic')
+            geo = flag(x.geodesic, nm, 'geodesic', id);  e.geodesic = geo;
+            if geo && ~hasV, error(id, '%s: a geodesic path is given by vertices (its waypoints).', nm); end
+        end
+        if given(x, 'arrow'), e.arrow = flag(x.arrow, nm, 'arrow', id); end
+        if given(x, 'ticks')
+            if ~geo, error(id, '%s: ticks are for a geodesic path (geodesic: true).', nm); end
+            e.ticks = ticks(x.ticks, nm, id);
+        end
+        out{k} = e;
+    end
+end
+
+function out = selections(folder, X, nV)
+% each vertex set's vertices written (0-based), its manifest entry returned
+    id = 'rheome:bundle:selections';
+    X = asCell(X, 'Selections');  out = cell(1, numel(X));  seen = {};
+    for k = 1:numel(X)
+        x = X{k};  need(x, {'name', 'vertices'}, 'Selections');
+        nm = itemName(x.name, 'Selections', seen);  seen{end+1} = nm; %#ok<AGROW>
+        known(x, {'name', 'vertices', 'style', 'color', 'width'}, nm, 'Selections');
+        v = x.vertices;
+        if islogical(v) && numel(v) == nV, v = find(v(:));
+        elseif islogical(v), v = -1;          % a mask is [nV]
+        else, v = double(v(:));
+        end
+        if isempty(v) || any(v < 1 | v > nV | v ~= round(v)), error(id, '%s: vertices must be 1-based indices into the %d vertices, or a mask [nV].', nm, nV); end
+        file = sprintf('selection_%d.bin', k);
+        put(folder, file, v - 1, 'int32');
+        e = struct('name', nm, 'vertices', file);
+        if given(x, 'style')
+            st = x.style;
+            if ~((ischar(st) || (isstring(st) && isscalar(st))) && any(strcmp(char(st), {'fill', 'outline', 'extent'})))
+                error(id, '%s: style must be fill, outline or extent.', nm);
+            end
+            e.style = char(st);
+        end
+        if given(x, 'color'), e.color = colour(x.color, nm, id); end
+        if given(x, 'width'), e.width = lineWidth(x.width, nm, id); end
+        out{k} = e;
+    end
+end
+
+function t = given(x, f)
+    t = isfield(x, f) && ~isempty(x.(f));
+end
+
+function nm = itemName(x, name, seen)
+% a path's or vertex set's name: a non-empty text, once
+    if ~((ischar(x) && (isrow(x) || isempty(x))) || (isstring(x) && isscalar(x))) || strlength(string(x)) == 0
+        error(['rheome:bundle:' lower(name)], '%s: each name is a non-empty text.', name);
+    end
+    nm = char(x);
+    if any(strcmp(nm, seen)), error(['rheome:bundle:' lower(name)], '%s: %s is named twice.', name, nm); end
+end
+
+function known(x, keys, nm, name)
+    bad = setdiff(fieldnames(x), keys);
+    if ~isempty(bad), error(['rheome:bundle:' lower(name)], '%s: %s: not a key of %s (%s).', nm, strjoin(bad, ', '), name, strjoin(keys, ', ')); end
+end
+
+function c = colour(x, nm, id)
+% a figure-token colour's name (a neutral among them) or #rrggbb, as the viewer reads it
+    if ~((ischar(x) && isrow(x)) || (isstring(x) && isscalar(x))) || isempty(regexp(char(x), '^(#[0-9a-fA-F]{6}|[a-z][a-z0-9-]*)$', 'once'))
+        error(id, '%s: color must be a colour token''s name or #rrggbb.', nm);
+    end
+    c = char(x);
+end
+
+function w = lineWidth(x, nm, id)
+    if ~(isnumeric(x) && isreal(x) && isscalar(x) && x > 0 && x <= 20), error(id, '%s: width must be a line width in pt, 0 < width <= 20.', nm); end
+    w = double(x);
+end
+
+function b = flag(x, nm, what, id)
+    if ~(isscalar(x) && (islogical(x) || (isnumeric(x) && (x == 0 || x == 1)))), error(id, '%s: %s must be true or false.', nm, what); end
+    b = logical(x);
+end
+
+function t = ticks(x, nm, id)
+% a geodesic's ticks: every_mm or count (one of them), optionally labels
+    msg = '%s: ticks: every_mm (mm > 0) or count (2 or more), one of them, and optionally labels (texts).';
+    if ~(isstruct(x) && isscalar(x)) || ~isempty(setdiff(fieldnames(x), {'every_mm', 'count', 'labels'})) || isfield(x, 'every_mm') == isfield(x, 'count')
+        error(id, msg, nm);
+    end
+    if isfield(x, 'every_mm')
+        e = x.every_mm;
+        if ~(isnumeric(e) && isreal(e) && isscalar(e) && e > 0), error(id, msg, nm); end
+        t = struct('every_mm', double(e));
+    else
+        c = x.count;
+        if ~(isnumeric(c) && isreal(c) && isscalar(c) && c >= 2 && c == round(c)), error(id, msg, nm); end
+        t = struct('count', double(c));
+    end
+    if isfield(x, 'labels')
+        L = x.labels;
+        if ischar(L) && (isrow(L) || isempty(L)), L = {L}; end
+        if isstring(L), L = cellstr(L); end
+        if ~iscellstr(L), error(id, msg, nm); end
+        t.labels = reshape(L, 1, []);
     end
 end
 
