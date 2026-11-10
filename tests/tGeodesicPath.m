@@ -1,6 +1,6 @@
 classdef tGeodesicPath < matlab.unittest.TestCase
-% rheome.geom.geodesicpath: a great circle on a sphere (its length and its points on the surface), and a path
-% around a fold is not a chord. The fsaverage comparison against the exact geodesic is in request 07dbab95's evidence.
+% rheome.geom.geodesicpath (FlipOut, rheome.geom.flipOut): a great circle on a sphere (its length and its points on
+% the surface), and the reused solver reversed. Point-for-point parity with the viewer's FlipOut is tFlipOut.
 %
 % Author: Diellor Basha, 2026
     methods (Test)
