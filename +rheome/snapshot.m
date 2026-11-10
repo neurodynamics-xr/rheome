@@ -592,6 +592,7 @@ function jf = runDriver(job, name, node, drv, work)
 % the job written (UTF-8 jsonencode: nxr.snapshot writes the same bytes) and the viewer's driver run on it
     jf = fullfile(work, name);
     fid = fopen(jf, 'w');  fwrite(fid, unicode2native(jsonencode(job), 'UTF-8'));  fclose(fid);
+    drv = char(java.io.File(drv).getCanonicalPath());   % the real path: a viewer release reached through a symlink otherwise does nothing (driver before 0cfda31)
     [st, msg] = system(sprintf('"%s" "%s" "%s" 2>&1', node, drv, jf));
     if st ~= 0, error('rheome:snapshot:viewer', 'The viewer run failed: %s', strtrim(msg)); end
 end
