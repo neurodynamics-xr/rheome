@@ -6,6 +6,9 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
 % The store is named by $RHEOME_NXR_STORE (a dataset folder holding dataset.sqlite) and never written: nxr-convert reads it through
 % a read-only sqlite URI. Nothing from it is kept: no subject, value or array of a store lives in this repository (it is public).
 % Skipped when the variable is unset, the store is absent, or nxr-convert / uv are not found.
+% DEVELOPMENT CACHE (opt-in): with $RHEOME_DEV_CACHE set to a folder, each large eigen-solve is kept there by its glued mesh's key
+% and mode count, and reused only when the glued positions are identical too; unset, every solve is run. Development data only:
+% never in the repository, never read by the toolbox.
 %
 % Author: Diellor Basha, 2026
 
@@ -98,7 +101,7 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
                 own = K.Weights(strcmp({K.Weights.mesh}, rheome.geom.meshkey(G)));          % the weights fused on this subject's glued mesh
                 tc.assertNotEmpty(own, [at ': fused weights on the glued mesh rheome builds']);
                 tc.verifyEqual(double(own(1).B), i_zarr(tc, here, own(1).Path, size(own(1).B), []), [at ': the fused weights']);
-                Hd = rheome.operators.hodge_dirac(X, G); sol = rheome.eigen.hodge_dirac(Hd, own(1).K + 100);
+                Hd = rheome.operators.hodge_dirac(X, G); sol = i_solve(Hd, X, G, own(1).K + 100);
                 mu = sort(sqrt([sol.exactLambda; sol.coexactLambda]));
                 tc.assertGreaterThanOrEqual(numel(mu), own(1).K, [at ': the band covers the weights'' modes']);
                 tc.verifyEqual(mu(1:own(1).K), own(1).mu, 'RelTol', 1e-9, [at ': the weights'' eigenvalues, rebuilt']);
@@ -123,7 +126,7 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
                     [TX, TG, Tkeep] = rheome.geom.glue(TPin, Tm.Faces, Tm.Wall);
                     tc.assertEqual(rheome.geom.meshkey(TG), Wr.mesh, [at ': the template''s glued mesh']);
                     TH = rheome.operators.hodge_dirac(TX, TG);
-                    tmpl = struct('full', rheome.eigen.hodge_package(rheome.eigen.hodge_dirac(TH, Wr.K + 200), TH), 'keep', Tkeep, 'X', TX, 'Pin', TPin, ...
+                    tmpl = struct('full', rheome.eigen.hodge_package(i_solve(TH, TX, TG, Wr.K + 200), TH), 'keep', Tkeep, 'X', TX, 'Pin', TPin, ...
                         'Fin', Tm.Faces, 'Sphere', Tm.Sphere, 'Left', "-x", 'mesh', Wr.mesh, 'pkg', []);
                 end
                 Tp = tmpl.full; Tp.mu = Tp.mu(1:Wr.K); Tp.kind = Tp.kind(1:Wr.K); Tp.P = Tp.P(:, 1:Wr.K); tmpl.pkg = Tp;
@@ -139,6 +142,20 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
             end
         end
     end
+end
+
+function sol = i_solve(H, X, G, n)
+% rheome.eigen.hodge_dirac(H, n), from the development cache when $RHEOME_DEV_CACHE names a folder and holds this mesh's solve
+dir = string(getenv('RHEOME_DEV_CACHE'));
+if dir == "", sol = rheome.eigen.hodge_dirac(H, n); return, end
+key = rheome.geom.meshkey(G); f = fullfile(dir, replace(key, ":", "_") + "_" + n + ".mat");
+if isfile(f)
+    c = load(f, 'sol', 'X', 'key');
+    if strcmp(c.key, key) && isequal(c.X, X), sol = c.sol; return, end
+end
+sol = rheome.eigen.hodge_dirac(H, n);
+if ~isfolder(dir), mkdir(dir); end
+save(f, 'sol', 'X', 'key', '-v7.3');
 end
 
 function g = i_registered(tc, kernelId)
