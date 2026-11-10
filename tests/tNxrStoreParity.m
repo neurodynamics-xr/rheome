@@ -1,11 +1,11 @@
 classdef tNxrStoreParity < matlab.unittest.TestCase
-% rheome.io.read.nxrsurface -> rheome.geom.glue -> rheome.operators.hodge_dirac -> rheome.eigen.hodge_dirac against nxr-convert's
-% own chain (tests/nxr_convert_chain.py: modes_input, glue_mesh, prepared, solve_hodge) on every subject of a real nxr store:
+% rheome.io.read.nxrsurface -> rheome.geom.glue -> rheome.operators.hodge_dirac -> rheome.eigen.hodge_dirac against nxr's
+% own chain (tests/nxr_chain.py: modes_input, glue_mesh, prepared, solve_hodge) on every subject of a real nxr store:
 % the same surface and wall read, the same glued mesh (bit for bit) and key, the same flips, the same band of modes.
 %
-% The store is named by $RHEOME_NXR_STORE (a dataset folder holding dataset.sqlite) and never written: nxr-convert reads it through
+% The store is named by $RHEOME_NXR_STORE (a dataset folder holding dataset.sqlite) and never written: nxr reads it through
 % a read-only sqlite URI. Nothing from it is kept: no subject, value or array of a store lives in this repository (it is public).
-% Skipped when the variable is unset, the store is absent, or nxr-convert / uv are not found.
+% Skipped when the variable is unset, the store is absent, or nxr / uv are not found.
 % DEVELOPMENT CACHE (opt-in): with $RHEOME_DEV_CACHE set to a folder, each large eigen-solve is kept there by its glued mesh's key
 % and mode count, and reused only when the glued positions are identical too; unset, every solve is run. Development data only:
 % never in the repository, never read by the toolbox.
@@ -20,8 +20,8 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
         function find(tc)
             tc.store = string(getenv('RHEOME_NXR_STORE'));
             tc.assumeTrue(tc.store ~= "" && isfile(fullfile(tc.store, 'dataset.sqlite')), 'RHEOME_NXR_STORE is unset or holds no nxr store');
-            tc.nxr = fullfile(getenv('HOME'), 'workspace/research/code/nxr-cortical-flow/backend/convert/nxr-convert');
-            tc.assumeTrue(isfile(fullfile(tc.nxr, 'pyproject.toml')) && system('command -v uv >/dev/null') == 0, 'nxr-convert or uv not found');
+            tc.nxr = getenv('NXR');                                           % the nxr checkout
+            tc.assumeTrue(isfile(fullfile(tc.nxr, 'pyproject.toml')) && system('command -v uv >/dev/null') == 0, 'nxr ($NXR) or uv not found');
             [st, out] = system(sprintf('sqlite3 -readonly "%s" "SELECT name FROM subject WHERE kind = ''subject'' AND status = ''complete'' ORDER BY name"', ...
                 fullfile(tc.store, 'dataset.sqlite')));
             tc.assertEqual(st, 0, out);
@@ -31,14 +31,14 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
     end
 
     methods (Test)
-        function chainIsNxrConverts(tc)
+        function chainIsNxrs(tc)
             for k = 1:numel(tc.subjects)
                 s = tc.subjects(k); at = sprintf('subject %d', k);           % by number: the diagnostics name no participant
                 o = tempname; c = onCleanup(@() rmdir(o, 's'));
                 cmd = sprintf('uv run --frozen --project "%s" python -I "%s" "%s" "%s" 200 "%s" 2>&1', tc.nxr, ...
-                    fullfile(fileparts(mfilename('fullpath')), 'nxr_convert_chain.py'), tc.store, s, o);
+                    fullfile(fileparts(mfilename('fullpath')), 'nxr_chain.py'), tc.store, s, o);
                 [st, out] = system(cmd);
-                tc.assertEqual(st, 0, sprintf('%s: nxr-convert failed: %s', at, out));
+                tc.assertEqual(st, 0, sprintf('%s: nxr failed: %s', at, out));
                 py = @(n, w) reshape(i_read(fullfile(o, n + ".f64")), w, [])';
 
                 S = rheome.io.read.nxrsurface(tc.store, s);
@@ -87,7 +87,7 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
                 tc.verifyGreaterThan(R.Fs, 0);
                 tc.verifyEqual(double(R.Data), i_zarr(tc, here, R.Path, size(R.Data), [1 size(R.Data,1) R.Samples]), [at ': a recording chunk']);
                 tc.verifyEqual(double(K.W), i_zarr(tc, here, K.Path, size(K.W), []), [at ': the kernel']);
-                % THE RESAMPLED COPY (nxr-convert resample: scipy resample_poly of the whole recording): the recording's first samples,
+                % THE RESAMPLED COPY (nxr resample: scipy resample_poly of the whole recording): the recording's first samples,
                 % 8 channels, resampled here; the copy's ends match from the recording's start, so only this chunk's far end is left out
                 r3 = nxrsql300(tc, s, K.Recording);
                 if r3 ~= ""
@@ -115,7 +115,7 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
                 rel = vecnorm(Ba - Bs, 2, 2) ./ max(vecnorm(Bs, 2, 2), eps);
                 tc.verifyLessThan(norm(Ba - Bs, 'fro') / norm(Bs, 'fro'), 1e-4, [at ': the fused weights, rebuilt']);
                 tc.verifyLessThan(median(rel(b)), 1e-6, [at ': a typical flow row, rebuilt (float32 storage)']);
-                % THE REGISTRATION: the kernel registered onto its template (nxr-convert registerkernel), its weights rebuilt here — the
+                % THE REGISTRATION: the kernel registered onto its template (nxr registerkernel), its weights rebuilt here — the
                 % template's basis (glue, solve), the transfer T through the spheres, [T a; muT^-1 T muS b] — against the stored ones.
                 % The subject's mode signs cancel in T*B; the template's are aligned per mode
                 g = i_registered(tc, K.Id);
@@ -131,9 +131,10 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
                 end
                 Tp = tmpl.full; Tp.mu = Tp.mu(1:Wr.K); Tp.kind = Tp.kind(1:Wr.K); Tp.P = Tp.P(:, 1:Wr.K); tmpl.pkg = Tp;
                 tc.verifyEqual(tmpl.pkg.mu, Wr.mu, 'RelTol', 1e-9, [at ': the template''s eigenvalues, rebuilt']);
-                subj = struct('pkg', pkg, 'keep', keep, 'X', X, 'Pin', double(single(S.Vertices)), 'Fin', S.Faces, 'Sphere', S.Sphere, 'Left', "+y");
-                [T, Rg] = rheome.eigen.transfer(subj, tmpl, Sampling=g.sampling);
-                Ck = rheome.eigen.transfercheck(T, Rg, subj, tmpl);
+                subj = rheome.register.solve(pkg, keep, X); tsol = rheome.register.solve(tmpl.pkg, tmpl.keep, tmpl.X);
+                reg = rheome.register.surfaces(double(single(S.Vertices)), S.Faces, S.Sphere, tmpl.Pin, tmpl.Fin, tmpl.Sphere, Sampling=g.sampling);
+                [T, Rg] = rheome.register.mode_registration(subj, tsol, reg);
+                Ck = rheome.register.check_mode_registration(T, Rg, subj, tsol, reg);
                 tc.verifyTrue(all(Ck.target), [at ': the transfer on smooth fields (errT < 0.15, corrT > 0.95)']);
                 if g.flow == "fields", Bt = rheome.inverse.hodge_register(B, T, pkg.mu, tmpl.pkg.mu); else, Bt = rheome.inverse.hodge_register(B, T); end
                 Bs = double(Wr.B); a = 1:Wr.K; b = Wr.K + a;

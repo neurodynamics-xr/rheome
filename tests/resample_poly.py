@@ -1,7 +1,7 @@
-"""scipy's resample_poly on rows, for tResample: the reference rheome.filters.resample is held to (nxr-convert's call: the ratio of
+"""scipy's resample_poly on rows, for tResample: the reference rheome.filters.resample is held to (nxr's call: the ratio of
 the two rates in mHz, reduced; default window and padding).
 
-    uv run --frozen --project <nxr-convert> python -I resample_poly.py <rows.f64 [C x T] row-major> <C> <fs> <to> <out.f64>
+    uv run --frozen --project <nxr checkout> python -I resample_poly.py <rows.f64 [C x T] row-major> <C> <fs> <to> <out.f64>
 """
 import sys
 from fractions import Fraction

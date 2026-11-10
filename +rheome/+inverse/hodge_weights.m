@@ -19,12 +19,12 @@ function B = hodge_weights(W, pkg, X, G, keep, Pin)
 % (column k: the divergence and curl of mode k's flow, -grad P_k exact or -n x grad P_k coexact, read the same way), so a flow
 % synthesised from b reads back to b whatever the discretisation. Linear in W.
 %
-% Port of nxr-convert eigen/fused.py (fused_weights, carry_kernel; FaceOperators = the editor's faceGradient.ts), itself the
+% Port of nxr.inverse.fused (fused_weights, carry_kernel; FaceOperators = the editor's faceGradient.ts), itself the
 % editor's hodgeSynthesisWeights. Positions are rounded to single first, as the editor receives them.
 %
 % See also: rheome.eigen.hodge_package, rheome.io.read.nxrkernel, rheome.spectral.column
 %
-% Author: Diellor Basha, 2026 (port of nxr-convert fused_weights)
+% Author: Diellor Basha, 2026 (port of nxr fused_weights)
 arguments, W (:,:) {mustBeNumeric}, pkg (1,1) struct, X (:,3) double, G (:,3) double, keep (:,1) double = [], Pin (:,3) double = zeros(0, 3), end
 C = size(W, 2); nIn = size(Pin, 1);
 if isempty(keep), keep = (1:size(X, 1))'; Pin = X; nIn = size(X, 1); end

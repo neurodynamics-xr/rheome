@@ -14,7 +14,7 @@ function [X, G, keep, bridge] = glue(P, F, wall)
 % stitched by the triangulation of least total edge length. Checked as the editor checks: every half-edge once, every edge on two
 % faces, one piece, chi = chi1 + chi2 - 2.
 %
-% Port of the Cortical Flow editor's glue.ts (glueMesh), held equal to it through nxr-convert eigen/glue.py: the same faces, the same bridge
+% Port of the Cortical Flow editor's glue.ts (glueMesh), held equal to it through nxr.geom.glue: the same faces, the same bridge
 % points (tests/tGlueHodgeParity). Every sum runs in the editor's order, so the positions match bit for bit.
 %
 % See also: rheome.geom.meshkey, rheome.operators.intrinsic_delaunay, rheome.eigen.hodge_dirac

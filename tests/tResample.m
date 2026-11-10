@@ -1,7 +1,7 @@
 classdef tResample < matlab.unittest.TestCase
 % rheome.filters.resample: the length rule, a band-limited sine carried through, the class kept, and scipy's resample_poly
-% (tests/resample_poly.py, nxr-convert's call) on synthetic rows for several ratios, down and up. The scipy check is skipped
-% when nxr-convert or uv are absent.
+% (tests/resample_poly.py, nxr's call) on synthetic rows for several ratios, down and up. The scipy check is skipped
+% when nxr or uv are absent.
 %
 % Author: Diellor Basha, 2026
 
@@ -28,8 +28,8 @@ classdef tResample < matlab.unittest.TestCase
         end
 
         function scipyAgrees(tc, rates)
-            nxr = fullfile(getenv('HOME'), 'workspace/research/code/nxr-cortical-flow/backend/convert/nxr-convert');
-            tc.assumeTrue(isfile(fullfile(nxr, 'pyproject.toml')) && system('command -v uv >/dev/null') == 0, 'nxr-convert or uv not found');
+            nxr = getenv('NXR');                                  % the nxr checkout
+            tc.assumeTrue(isfile(fullfile(nxr, 'pyproject.toml')) && system('command -v uv >/dev/null') == 0, 'nxr ($NXR) or uv not found');
             x = randn(RandStream('mt19937ar', 'Seed', 11), 3, 1001) + 5;
             d = tempname; mkdir(d); c = onCleanup(@() rmdir(d, 's'));
             fid = fopen(fullfile(d, 'x.f64'), 'w'); fwrite(fid, x', 'double'); fclose(fid);

@@ -4,7 +4,7 @@ function [labels, mass] = surfaceladder(V, F, maxTiles)
 %   [labels, mass] = rheome.geom.surfaceladder(V, F)
 %   [labels, mass] = rheome.geom.surfaceladder(V, F, maxTiles)
 %
-% A port, step for step, of nsp's atlas ladder (nxr_convert/atlas/ladder.py, itself a port of
+% A port, step for step, of nsp's atlas ladder (atlas/ladder.py, itself a port of
 % cortical-flow's surfaceLadder), so labels(:, l+1) is the stored atlas code of every vertex at
 % level l. Each level halves every tile by EQUAL MASS across its geodesic diameter: two Dijkstra
 % sweeps inside the tile find the far ends a and b, vertices are STABLY sorted by d_a - d_b and cut

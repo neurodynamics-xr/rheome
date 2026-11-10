@@ -1,5 +1,7 @@
 % EIGEN  Spectral basis of the surface operators.
 %
+% The modes only (their registration to a template is rheome.register).
+%
 % Eigenmodes of the Laplace-Beltrami operator, forming the basis every atom is
 % projected onto and reconstructed from.
 %
@@ -7,10 +9,8 @@
 %   rheome.eigen.modes       - solve L phi = lambda M phi, M-orthonormal, smallest first (LBO / any pencil)
 %   rheome.eigen.dirac_frame - relative-Dirac quaternion eigenbasis
 %   rheome.eigen.hodge_dirac - Hodge-Dirac modes split into exact and coexact ladders, cut at one lambda
-%                       (nxr-convert solve_hodge; on rheome.operators.hodge_dirac of the glued surface)
+%                       (nxr solve_hodge; on rheome.operators.hodge_dirac of the glued surface)
 %   rheome.eigen.hodge_package - those modes as one vertex potential each, merged by mu (the basis the editor reads)
-%   rheome.eigen.transfer     - a subject's mode coefficients carried onto a template's: T, through the registered spheres
-%   rheome.eigen.transfercheck - T measured on smooth fields (spherical harmonics l = 1..3)
 %   rheome.eigen.lift        - ambient-flat quaternion LIFT of a scalar basis (L (x) I3); used for
 %                       Dirac-Connectome = lift of the LB-Connectome basis
 %   rheome.eigen.connectome  - low modes of the normalized connectome Laplacian (normalized-adjacency

@@ -1,4 +1,4 @@
-"""tSurfaceLadder golden: nsp's atlas ladder (nxr_convert/atlas/ladder.py) on ladderWriteMeshes' meshes.
+"""tSurfaceLadder golden: nsp's atlas ladder (atlas/ladder.py) on ladderWriteMeshes' meshes.
 python3.12 -I ladderCaptureGolden.py <ladder.py> <meshes.mat> <out.mat>  (numpy + scipy)"""
 import importlib.util, sys
 import numpy as np, scipy.io as sio

@@ -16,14 +16,17 @@ function R = nxrrecording(store, subject, recording, opts)
 %   .Data      [C x n] single, the samples asked for ([] when none), rows in channel order, as stored
 %   .Fs        sampling rate (Hz) = 1/spacing;  .T0  the time of sample 1 (s);  .nSamples  the whole recording's length
 %   .Channels  [C x 1] string, the members' names;  .Bad [C x 1] logical (all false when no flags are stored)
-%   .Unit      the field's unit ('' when not stated);  .Samples the span read;  .Name, .Session, .Id, .Path
+%   .Unit      the field's unit ('' when not stated);  .Samples the span read;  .Name, .Id, .Path
+%   .Acquisition  struct: the recording's acquisition row (schema 50): id, label and the BIDS entities ses, task, run, acq, proc, split ('' where not stated)
+%
+% The catalogue must be schema 50 (rheome.io.read.nxrsurface lists what is refused otherwise).
 %
 % See also: rheome.io.read.nxrkernel, rheome.io.read.zarr
 %
 % Author: Diellor Basha, 2026
 arguments, store (1,1) string, subject (1,1) string, recording (1,1) string, opts.Samples double = [], end
 q = @(s) "'" + replace(s, "'", "''") + "'";
-f = nxrsql(store, "SELECT f.id, f.name, f.path, f.session, f.unit, f.manifold_id, u.path AS store FROM field f JOIN subject u ON u.id = f.subject_id " + ...
+f = nxrsql(store, "SELECT f.id, f.name, f.path, f.acquisition_id, f.unit, f.manifold_id, u.path AS store FROM field f JOIN subject u ON u.id = f.subject_id " + ...
     "WHERE u.name = " + q(subject) + " AND u.status = 'complete' AND f.status = 'complete' AND f.kind = 'recording' AND f.name = " + q(recording));
 if isempty(f), error('io:read:nxr:notFound', '%s: no recording ''%s''', subject, recording); end
 fac = nxrsql(store, "SELECT m.id, m.type, m.n_vertices, m.geometry_id FROM geometry_dimension d JOIN manifold p ON p.geometry_id = d.geometry_id " + ...
@@ -35,7 +38,7 @@ if isempty(ln) || isempty(ln.spacing) || ~strcmp(ln.cs, 'clock'), error('io:read
 z = fullfile(store, f.store);
 C = fac(1).n_vertices; T = fac(2).n_vertices;
 R = struct('Data', single([]), 'Fs', 1 / ln.spacing, 'T0', i_num(ln.origin), 'nSamples', T, 'Channels', i_names(store, z, fac(1).id, C, q), ...
-    'Bad', false(C, 1), 'Unit', i_str(f.unit), 'Samples', [], 'Name', f.name, 'Session', i_str(f.session), 'Id', f.id, 'Path', fullfile(z, f.path));
+    'Bad', false(C, 1), 'Unit', i_str(f.unit), 'Samples', [], 'Name', f.name, 'Acquisition', nxracquisition(store, f.acquisition_id), 'Id', f.id, 'Path', fullfile(z, f.path));
 fl = nxrsql(store, "SELECT s.array_path, s.dictionary_id FROM selection s WHERE s.manifold_id = " + q(fac(1).id) + " AND s.name = " + q(f.name + "_flags") + ...
     " AND s.array_path IS NOT NULL AND s.dictionary_id IS NOT NULL AND s.status = 'complete'");
 if ~isempty(fl)

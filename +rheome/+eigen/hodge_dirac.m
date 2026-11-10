@@ -9,9 +9,9 @@ function sol = hodge_dirac(H, nModes)
 % On a closed surface every nonzero Hodge-Dirac pair (K, M) is exact or coexact: an exact mode is (psi, d0 psi / mu, 0)/sqrt(2),
 % a coexact one (0, delta chi / mu, chi)/sqrt(2) with delta = star1^-1 d1' star2, mu = sqrt(lambda). So the pencil is solved as two
 % Laplacian ladders: about nModes/2 + 1 pairs each (half and half by Weyl's law), the constants (lambda <= 1e-6 max) out, both cut at
-% ONE lambda (the smaller ladder's top) so the band is complete. Shift-invert just below 0 (sigma = -1e-3), as nxr-convert.
+% ONE lambda (the smaller ladder's top) so the band is complete. Shift-invert just below 0 (sigma = -1e-3), as nxr.
 %
-% Port of nxr-convert eigen/hodge_dirac.py solve_hodge (the editor's make-hodge-package split); parity in tests/tHodgeDiracSolveParity.
+% Port of nxr.eigen.hodge_dirac solve_hodge (the editor's make-hodge-package split); parity in tests/tHodgeDiracSolveParity.
 %
 % Example:
 %   [V, F] = rheome.geom.icosphere(3);
@@ -19,7 +19,7 @@ function sol = hodge_dirac(H, nModes)
 %
 % See also: rheome.operators.hodge_dirac, rheome.geom.glue
 %
-% Author: Diellor Basha, 2026 (port of nxr-convert solve_hodge)
+% Author: Diellor Basha, 2026 (port of nxr solve_hodge)
 arguments, H (1,1) struct, nModes (1,1) double {mustBePositive, mustBeInteger}, end
 s0 = H.star0; s1 = H.star1; s2 = H.star2; nV = numel(s0); nF = numel(s2);
 want = floor(nModes/2) + 1;

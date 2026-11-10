@@ -6,7 +6,7 @@ function S = nxrsurface(store, subject, opts)
 %
 % An nxr store is a folder holding dataset.sqlite (the catalogue) and one <subject>.nxr.zarr per subject. The surface is the
 % subject's PRIMARY one (or the surface named by Surface=); its medial wall is the vertices its Desikan-Killiany atlas codes
-% 'unassigned' (or 'unknown'), the wall rheome.geom.glue cuts. The lookups are nxr-convert's (eigen/hodge_dirac.py modes_input
+% 'unassigned' (or 'unknown'), the wall rheome.geom.glue cuts. The lookups are nxr's (eigen/hodge_dirac.py modes_input
 % and medial_wall), so the same subject gives the same arrays.
 %
 % INPUTS:  store    the dataset folder (holds dataset.sqlite)     subject  the subject's name (its subject.name row)
@@ -18,10 +18,10 @@ function S = nxrsurface(store, subject, opts)
 %   .Sphere   [nV x 3] its registered sphere (the surface <name>_sphere, as stored), [] when none
 %
 % ⚠ The editor receives positions as float32: for a basis the editor will accept (rheome.geom.glue -> rheome.eigen.hodge_dirac,
-%   as nxr-convert prepares it) round first, double(single(S.Vertices)).
+%   as nxr prepares it) round first, double(single(S.Vertices)).
 %
-% Reads the catalogue with the sqlite3 command-line tool (read-only; MATLAB's sqlite needs the Database Toolbox) and the
-% arrays with rheome.io.read.zarr (uncompressed zarr v3; anything else is refused, not misread).
+% Reads the catalogue in process through MATLAB's Python (sqlite3, read-only; schema 50 only) and the
+% arrays with rheome.io.read.zarr (zarr v3, raw or compressed; anything else is refused, not misread).
 %
 % See also: rheome.io.read.zarr, rheome.geom.glue, rheome.io.read.surface, rheome.eigen.hodge_dirac
 %
