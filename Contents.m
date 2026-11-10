@@ -19,6 +19,7 @@
 % Packages
 %   rheome.operators         - Discrete differential operators on a triangle surface mesh.
 %   rheome.eigen             - Spectral basis of the surface operators.
+%   rheome.register          - A subject registered to its template (fsaverage), by vertices or in the modes (nxr.register).
 %   rheome.graphtransform    - Field <-> coefficient transforms for graphfilterbank.
 %   rheome.filters           - Spectral filter kernels g(lambda[,omega/t]) and their application.
 %   rheome.jtv               - Joint time-vertex filterbanks: construction, duals, analysis and synthesis.

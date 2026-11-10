@@ -11,7 +11,7 @@ function [y, p, q] = resample(x, fs, to, opts)
 % Beyond the input's ends the signal is taken as zero (scipy's padtype 'constant'): the first and last ~10*max(p,q)/q output
 % samples see the edge, so a chunk is resampled with context and trimmed, or the whole recording at once.
 %
-% Port of scipy.signal.resample_poly (window ('kaiser', 5.0), padtype 'constant'), what nxr-convert resample_rows uses: the
+% Port of scipy.signal.resample_poly (window ('kaiser', 5.0), padtype 'constant'), what nxr resample_rows uses: the
 % 300 Hz copy of a stored recording is this function's output. MATLAB's own resample designs its filter differently (firls).
 %
 % Example:

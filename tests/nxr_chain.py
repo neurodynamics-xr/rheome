@@ -1,16 +1,17 @@
-"""nxr-convert's own chain on one subject of an nxr store, for tNxrStoreParity: modes_input (its lookups and reads, unchanged) ->
-glue_mesh -> prepared -> solve_hodge. The store is opened READ-ONLY (a sqlite URI, no writer lock); outputs are little-endian f64 files.
+"""nxr's own chain on one subject of an nxr store, for tNxrStoreParity: modes_input (its lookups and reads, unchanged) ->
+glue_mesh -> prepare -> solve_hodge. The store is opened READ-ONLY (a sqlite URI, no writer lock); outputs are little-endian f64 files.
 
-    uv run --frozen --project <nxr-convert> python -I nxr_convert_chain.py <store> <subject> <n_modes> <out>
+    uv run --frozen --project <nxr checkout> python -I nxr_chain.py <store> <subject> <n_modes> <out>
 """
 import sqlite3
 import sys
 from pathlib import Path
 
 import numpy as np
-from nxr_convert.eigen.glue import glue_mesh, mesh_key
-from nxr_convert.eigen.hodge_dirac import modes_input, solve_hodge
-from nxr_convert.eigen.intrinsic import prepared
+from nxr.eigen.hodge_dirac import solve_hodge
+from nxr.geom.glue import glue_mesh, mesh_key
+from nxr.operators.intrinsic_delaunay import prepare
+from nxr.pipelines.hodge import modes_input
 
 
 class _Db:
@@ -39,7 +40,7 @@ class _Subject:
 store, name, n, out = Path(sys.argv[1]), sys.argv[2], int(sys.argv[3]), Path(sys.argv[4])
 inp = modes_input(_Subject(store, name))
 V, G, keep, _ = glue_mesh(inp["P"], inp["F"], inp["wall"])
-m = prepared(V, G)
+m = prepare(V, G, signposts=False)
 sol = solve_hodge(m, n)
 out.mkdir(parents=True, exist_ok=True)
 for k, a in {"P": inp["P"], "F": inp["F"], "wall": inp["wall"], "V": V, "G": G, "keep": keep, "iF": m.F,

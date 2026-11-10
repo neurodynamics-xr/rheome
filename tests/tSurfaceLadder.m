@@ -1,6 +1,6 @@
 classdef tSurfaceLadder < matlab.unittest.TestCase
 % The atlas's tiles in MATLAB: rheome.geom.surfaceladder is bit-exact to nsp's atlas ladder
-% (nxr_convert/atlas/ladder.py), and rheome.geom.tree's Ladder / Codes routes carry its codes.
+% (atlas/ladder.py), and rheome.geom.tree's Ladder / Codes routes carry its codes.
 %
 % Golden: ladderGolden.mat (ladderWriteMeshes.m -> ladderCaptureGolden.py, ladder.py under CPython
 % 3.12) and pysortGolden.mat (pysortCaptureGolden.py -> pysortWriteGolden.m). On the ten VR1

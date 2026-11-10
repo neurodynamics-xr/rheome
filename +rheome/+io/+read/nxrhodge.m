@@ -1,5 +1,5 @@
 function H = nxrhodge(store, subject, opts)
-% IO.READ.NXRHODGE  Read a stored Hodge-Dirac basis (nxr-convert hodge) from an nxr store.
+% IO.READ.NXRHODGE  Read a stored Hodge-Dirac basis (nxr hodge) from an nxr store.
 %
 %   H = rheome.io.read.nxrhodge(store, subject)                   % the 'hodgeDirac' basis, every mode
 %   H = rheome.io.read.nxrhodge(store, subject, Modes=200, Name="hodgeDirac")

@@ -5,7 +5,7 @@ function key = meshkey(F)
 %
 % The faces are hashed as the editor holds them: 0-based int32, row by row, little-endian. A stored product (a Hodge-Dirac
 % basis, fused weights) records the key of the mesh it was made on; the editor refuses one whose key differs.
-% Port of the Cortical Flow editor's meshKey (nxr-convert eigen/glue.py mesh_key).
+% Port of the Cortical Flow editor's meshKey (nxr.geom.glue mesh_key).
 %
 % See also: rheome.geom.glue
 %

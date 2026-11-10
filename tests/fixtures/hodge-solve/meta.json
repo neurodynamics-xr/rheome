@@ -2,5 +2,5 @@
   "n_modes": 40,
   "exact": 21,
   "coexact": 20,
-  "source": "nxr-convert eigen.hodge_dirac.solve_hodge on tests/fixtures/editor-parity (glue_mesh, prepared)"
+  "source": "nxr.eigen.hodge_dirac.solve_hodge on tests/convert/fixtures/editor-parity (glue_mesh, prepared)"
 }

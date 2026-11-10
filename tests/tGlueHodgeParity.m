@@ -1,8 +1,8 @@
 classdef tGlueHodgeParity < matlab.unittest.TestCase
-% rheome.geom.glue, rheome.operators.intrinsic_delaunay / hodge_dirac and rheome.eigen.hodge_dirac against the editor and nxr-convert:
-% the editor's golden files (nxr-convert tests/fixtures/editor-parity: a two-piece mesh with a medial wall on each, written by the
-% editor's own code) and nxr-convert's solve_hodge on it (tests/fixtures/hodge-solve, written by nxr-convert). The same checks as
-% nxr-convert's test_eigen_parity.py. Skipped when the editor fixtures are absent.
+% rheome.geom.glue, rheome.operators.intrinsic_delaunay / hodge_dirac and rheome.eigen.hodge_dirac against the editor and nxr:
+% the editor's golden files (nxr tests/convert/fixtures/editor-parity: a two-piece mesh with a medial wall on each, written by the
+% editor's own code) and nxr's solve_hodge on it (tests/fixtures/hodge-solve, written by nxr). The same checks as
+% nxr's test_eigen_parity.py. Skipped when the editor fixtures are absent.
 %
 % Author: Diellor Basha, 2026
 
@@ -13,7 +13,7 @@ classdef tGlueHodgeParity < matlab.unittest.TestCase
 
     methods (TestClassSetup)
         function load(tc)
-            tc.G = fullfile(getenv('HOME'), 'workspace/research/code/nxr-cortical-flow/backend/convert/nxr-convert/tests/fixtures/editor-parity');
+            tc.G = fullfile(getenv('NXR'), 'tests/convert/fixtures/editor-parity');       % $NXR: the nxr checkout
             tc.assumeTrue(isfile(fullfile(tc.G, 'mesh.wall.u8')), 'the editor-parity fixtures are absent');
             tc.P = reshape(i_read(fullfile(tc.G, 'mesh.P.f64'), 'double'), 3, [])';
             tc.F = reshape(i_read(fullfile(tc.G, 'mesh.F.i32'), 'int32'), 3, [])' + 1;
@@ -53,7 +53,7 @@ classdef tGlueHodgeParity < matlab.unittest.TestCase
             tc.verifyEqual(H.M, i_read(fullfile(tc.G, 'hodge.mass.f64'), 'double'), 'RelTol', 1e-9, 'M');
         end
 
-        function solveIsNxrConverts(tc)
+        function solveIsNxrs(tc)
             S = fullfile(fileparts(mfilename('fullpath')), 'fixtures', 'hodge-solve');
             meta = jsondecode(fileread(fullfile(S, 'meta.json')));
             [X, Gf] = rheome.geom.glue(tc.P, tc.F, tc.wall);

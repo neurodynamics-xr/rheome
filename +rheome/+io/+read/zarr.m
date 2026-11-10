@@ -1,5 +1,5 @@
 function [x, meta] = zarr(folder, range)
-% IO.READ.ZARR  Read an uncompressed zarr v3 array, or any rectangular part of it, without the zarr toolbox.
+% IO.READ.ZARR  Read a zarr v3 array, or any rectangular part of it, without the zarr toolbox.
 %
 %   x = rheome.io.read.zarr(folder)                       % the whole array
 %   x = rheome.io.read.zarr(folder, {[], [s0 s1]})        % every row, columns s0..s1 (1-based, inclusive)
@@ -12,8 +12,13 @@ function [x, meta] = zarr(folder, range)
 % meta     the zarr.json (shape, data_type, chunk_grid, codecs, attributes, ...)
 %
 % Reads three layouts: one chunk, a regular grid of chunks, and sharding_indexed shards (each shard read only for the inner
-% chunks the range touches, by its index). A chunk or inner chunk absent from disk is the fill value. Only raw little-endian
-% bytes are read: a compressed or transposed array is refused, never misread.
+% chunks the range touches, by its index). A chunk or inner chunk absent from disk is the fill value. Chunks are raw
+% little-endian bytes, or compressed as nxr writes arrays over 4 MiB (the bytes codec then blosc; also zstd and gzip, and a
+% trailing crc32c): the sharding, the regions and the placing are done here, only a chunk's DECODE is numcodecs', called
+% through MATLAB's Python (in process, as rheome.io.read.nxrsql calls sqlite3). A transposed array, or a codec not named
+% here, is refused, never misread. If numcodecs cannot be imported by MATLAB's Python the error says what to install:
+% MATLAB R2023b takes Python 3.9-3.11, so `uv venv --python 3.11 <dir>` and `uv pip install --python <dir>/bin/python numcodecs`,
+% then `pyenv(Version="<dir>/bin/python")` before MATLAB's first Python call of the session.
 % shortcut: the shard index's crc32c is skipped, not checked; check it if shards ever arrive from outside the hub's writers.
 %
 % Example:
@@ -38,13 +43,15 @@ codecs = i_list(meta.codecs);
 inner = [];
 if numel(codecs) == 1 && strcmp(codecs{1}.name, 'sharding_indexed')
     sc = codecs{1}.configuration;
-    i_raw(i_list(sc.codecs), folder);
+    innerCodecs = i_chain(i_list(sc.codecs), folder);
     ic = i_list(sc.index_codecs);
-    i_raw(ic(1), folder);
+    if ~strcmp(ic{1}.name, 'bytes') || (isfield(ic{1}, 'configuration') && isfield(ic{1}.configuration, 'endian') && ~strcmp(ic{1}.configuration.endian, 'little'))
+        error('io:read:zarr:layout', '%s: shard index codecs', folder);
+    end
     if numel(ic) > 2 || (numel(ic) == 2 && ~strcmp(ic{2}.name, 'crc32c')), error('io:read:zarr:layout', '%s: shard index codecs', folder); end
     inner = sc.chunk_shape(:)'; idxCrc = 4 * (numel(ic) == 2); atEnd = ~isfield(sc, 'index_location') || strcmp(sc.index_location, 'end');
 else
-    i_raw(codecs, folder);
+    chain = i_chain(codecs, folder);
 end
 if isempty(range), range = cell(1, nd); end
 if numel(range) ~= nd, error('io:read:zarr:range', '%s: %d ranges for %d dimensions', folder, numel(range), nd); end
@@ -61,7 +68,7 @@ for c = i_cells(lo, hi, outer)'                                  % the outer chu
     f = fullfile(folder, key(c));
     if isempty(inner)
         if ~isfile(f), continue, end
-        x = i_place(x, i_bytes(f, 0, prod(outer), cls, folder), outer, o, lo, hi);
+        x = i_place(x, i_chunk(f, 0, [], prod(outer), cls, chain, folder), outer, o, lo, hi);
         continue
     end
     if ~isfile(f), continue, end
@@ -76,8 +83,7 @@ for c = i_cells(lo, hi, outer)'                                  % the outer chu
     for q = i_cells(ilo - o, ihi - o, inner)'
         q = q'; k = sum(q .* stride) + 1;                        %#ok<FXSET>
         if ix(1,k) == intmax('uint64'), continue, end            % absent: the fill value
-        if double(ix(2,k)) ~= prod(inner) * i_size(cls), error('io:read:zarr:layout', '%s: inner chunk of %d bytes, not raw', f, ix(2,k)); end
-        x = i_place(x, i_bytes(fid, double(ix(1,k)), prod(inner), cls, f), inner, o + q .* inner, lo, hi);
+        x = i_place(x, i_chunk(fid, double(ix(1,k)), double(ix(2,k)), prod(inner), cls, innerCodecs, f), inner, o + q .* inner, lo, hi);
     end
     clear cl
 end
@@ -96,11 +102,35 @@ end
 x(dst{:}) = b(src{:});
 end
 
-function v = i_bytes(f, offset, n, cls, name)
-if isnumeric(f), fid = f; else, fid = fopen(f, 'r', 'ieee-le'); cl = onCleanup(@() fclose(fid)); end
+function v = i_chunk(f, offset, nbytes, n, cls, chain, name)
+% n values of class cls from a chunk stored at f (a file name: the whole file; a file id: nbytes at offset), decoded through chain
+if isnumeric(f), fid = f; else, fid = fopen(f, 'r', 'ieee-le'); cl = onCleanup(@() fclose(fid)); nbytes = []; end
 fseek(fid, offset, 'bof');
-v = fread(fid, n, [cls '=>' cls]);
-if numel(v) ~= n, error('io:read:zarr:layout', '%s: %d of %d values (a compressed or truncated chunk)', name, numel(v), n); end
+if isempty(nbytes), b = fread(fid, Inf, 'uint8=>uint8'); else, b = fread(fid, nbytes, 'uint8=>uint8'); end
+b = b(:)';
+for k = numel(chain):-1:1
+    switch chain{k}.name
+        case 'crc32c', b = b(1:end-4);                           % shortcut: not checked
+        case {'blosc', 'zstd', 'gzip'}, b = i_decode(b, chain{k}.name, name);
+    end
+end
+if numel(b) ~= n * i_size(cls), error('io:read:zarr:layout', '%s: a chunk of %d bytes for %d values (truncated)', name, numel(b), n); end
+v = typecast(b, cls); v = v(:);
+end
+
+function b = i_decode(b, codec, name)
+% one chunk decoded by numcodecs (MATLAB's Python): the codecs' own frames carry their parameters
+cls = struct('blosc', 'Blosc', 'zstd', 'Zstd', 'gzip', 'GZip');
+try
+    out = pyrun(["import numpy as np, numcodecs"; "out = np.frombuffer(getattr(numcodecs, cls)().decode(bytes(bytearray(buf))), dtype=np.uint8)"], "out", cls=cls.(codec), buf=b);
+catch e
+    if contains(e.message, 'numcodecs')
+        error('io:read:zarr:codec', ['%s: the %s codec needs numcodecs in MATLAB''s Python (pyenv): MATLAB R2023b takes Python 3.9-3.11; ' ...
+            'uv venv --python 3.11 <dir>; uv pip install --python <dir>/bin/python numcodecs; then pyenv(Version="<dir>/bin/python") before the first Python call (%s)'], name, codec, e.message);
+    end
+    error('io:read:zarr:codec', '%s: %s chunk not decoded: %s', name, codec, e.message);
+end
+b = uint8(out); b = b(:)';
 end
 
 function cells = i_cells(lo, hi, cs)
@@ -120,14 +150,16 @@ switch enc.name
 end
 end
 
-function i_raw(codecs, folder)
-% the only array codec read: raw bytes, little-endian
-if numel(codecs) ~= 1 || ~strcmp(codecs{1}.name, 'bytes')
-    error('io:read:zarr:layout', '%s: codecs %s are not read (compressed or transposed): refused rather than misread', folder, strjoin(cellfun(@(c) c.name, codecs, 'UniformOutput', false), '+'));
+function codecs = i_chain(codecs, folder)
+% the chunk codecs read: the bytes codec (little-endian) first, then any of blosc, zstd, gzip, crc32c; anything else is refused
+names = cellfun(@(c) c.name, codecs, 'UniformOutput', false);
+if isempty(names) || ~strcmp(names{1}, 'bytes') || ~all(ismember(names(2:end), {'blosc', 'zstd', 'gzip', 'crc32c'}))
+    error('io:read:zarr:layout', '%s: codecs %s are not read (transposed or unknown): refused rather than misread', folder, strjoin(names, '+'));
 end
 if isfield(codecs{1}, 'configuration') && isfield(codecs{1}.configuration, 'endian') && ~strcmp(codecs{1}.configuration.endian, 'little')
     error('io:read:zarr:layout', '%s: big-endian', folder);
 end
+codecs = codecs(2:end);
 end
 
 function c = i_list(c)

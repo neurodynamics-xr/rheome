@@ -1,6 +1,6 @@
 """zarr-python's read of a part of an array, for tNxrStoreParity: the reference rheome.io.read.zarr is held to on a real store.
 
-    uv run --frozen --project <nxr-convert> python -I zarr_slice.py <array folder> <out .f64> [first last per dimension, 1-based inclusive]
+    uv run --frozen --project <nxr checkout> python -I zarr_slice.py <array folder> <out .f64> [first last per dimension, 1-based inclusive]
 """
 import sys
 

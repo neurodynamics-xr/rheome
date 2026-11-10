@@ -10,12 +10,12 @@ function [J, F] = hodge_synthesis(w, pkg, X, G)
 %       function), .normal = s2 = sum_coexact a P (the normal current)
 %
 % For an analytic column (complex w) call it on real(w) and imag(w): amplitude and phase at a vertex follow from the two.
-% Port of nxr-convert eigen/fused.py synthesis (the editor's HodgeBrushFilter sums and currentFromSums); the inverse of
+% Port of nxr.inverse.fused synthesis (the editor's HodgeBrushFilter sums and currentFromSums); the inverse of
 % rheome.inverse.hodge_weights: reading J back returns w.
 %
 % See also: rheome.inverse.hodge_weights, rheome.spectral.column
 %
-% Author: Diellor Basha, 2026 (port of nxr-convert synthesis)
+% Author: Diellor Basha, 2026 (port of nxr synthesis)
 arguments, w (:,:) double, pkg (1,1) struct, X (:,3) double, G (:,3) double, end
 K = numel(pkg.mu); P = double(pkg.P);
 if size(w, 1) ~= 2 * K, error('rheome:hodge_synthesis', '%d rows of weights for %d modes', size(w, 1), K); end

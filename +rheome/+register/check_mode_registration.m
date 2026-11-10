@@ -1,7 +1,7 @@
-function C = transfercheck(T, R, subj, tmpl)
-% EIGEN.TRANSFERCHECK  A transfer measured on smooth fields: the real spherical harmonics l = 1..3 of the sphere positions.
+function C = check_mode_registration(T, R, subject, template, reg)
+% REGISTER.CHECK_MODE_REGISTRATION  A registration in the modes measured on smooth fields: the real spherical harmonics l = 1..3.
 %
-%   C = rheome.eigen.transfercheck(T, R, subj, tmpl)        % [T, R] = rheome.eigen.transfer(subj, tmpl)
+%   C = rheome.register.check_mode_registration(T, R, subject, template, reg)        % [T, R] = rheome.register.mode_registration(...)
 %
 % C  table, one row per (l, m):
 %    errReg    the registration: R's pull of the subject's field, analysed on the template, against the field analysed there
@@ -10,36 +10,26 @@ function C = transfercheck(T, R, subj, tmpl)
 %              (area-weighted correlation on the template's glued vertices)
 %    gate      errReg <= 0.05;  target  errT < 0.15 and corrT > 0.95
 % Each error is the norm of the difference over the norm of the truth (coefficients), so the harmonics' normalisation does not
-% enter. Port of nxr-convert eigen/register.py check_transfer.
+% enter. As nxr.register.modes.check_mode_registration (err_reg, err_trunc, err_T, corr_T).
 %
-% See also: rheome.eigen.transfer
+% See also: rheome.register.mode_registration
 %
-% Author: Diellor Basha, 2026 (port of nxr-convert check_transfer)
-arguments, T (:,:) double, R (:,:), subj (1,1) struct, tmpl (1,1) struct, end
-ms = nnz(subj.keep > 0); mt = nnz(tmpl.keep > 0);
-[Ys, lm] = i_harmonics(subj.Sphere(subj.keep(1:ms), :));
-Ys = [Ys; zeros(size(subj.X, 1) - ms, size(Ys, 2))];             % the subject's bridge: not cortex, no data
-cut = setdiff((1:size(tmpl.Pin, 1))', tmpl.keep(1:mt));
-[nn, d] = knnsearch(tmpl.Pin(cut, :), tmpl.X(mt+1:end, :), 'K', 3);
-w = 1 ./ max(d, 1e-9); w = w ./ sum(w, 2);
-Yc = i_harmonics(tmpl.Sphere(cut, :));
-Yb = zeros(size(tmpl.X, 1) - mt, size(Yc, 2)); for j = 1:3, Yb = Yb + w(:, j) .* Yc(nn(:, j), :); end
-Yt = [i_harmonics(tmpl.Sphere(tmpl.keep(1:mt), :)); Yb];
-cs = i_fold(subj.pkg, Ys); ct = i_fold(tmpl.pkg, Yt); creg = i_fold(tmpl.pkg, R * Ys);
-Tc = T * cs; rec = double(tmpl.pkg.P) * Tc;
+% Author: Diellor Basha, 2026
+arguments, T (:,:) double, R (:,:), subject (1,1) struct, template (1,1) struct, reg (1,1) struct, end
+ms = subject.kept; mt = template.kept;
+[Ys, lm] = i_harmonics(reg.subject_sphere(subject.keep(1:ms), :));
+Ys = [Ys; zeros(size(subject.positions, 1) - ms, size(Ys, 2))];  % the subject's bridge: not cortex, no data
+[cut, B] = bridge_rows(template, reg.template_positions);
+Yt = [i_harmonics(reg.template_sphere(template.keep(1:mt), :)); B * i_harmonics(reg.template_sphere(cut, :))];
+cs = fold(subject, Ys); ct = fold(template, Yt); creg = fold(template, R * Ys);
+Tc = T * cs; rec = double(template.P) * Tc;
 nrm = @(x, y) vecnorm(x - y) ./ vecnorm(y);
-m = tmpl.pkg.mass(:);
+m = template.mass(:);
 x = rec - (m' * rec) / sum(m); y = Yt - (m' * Yt) / sum(m);
 corrT = (sum(m .* x .* y) ./ sqrt(sum(m .* x .^ 2) .* sum(m .* y .^ 2)))';
 errReg = nrm(creg, ct)'; errTrunc = nrm(Tc, creg)'; errT = nrm(Tc, ct)';
 C = table(lm(:, 1), lm(:, 2), errReg, errTrunc, errT, corrT, errReg <= 0.05, errT < 0.15 & corrT > 0.95, ...
     'VariableNames', {'l', 'm', 'errReg', 'errTrunc', 'errT', 'corrT', 'gate', 'target'});
-end
-
-function E = i_fold(pkg, X)
-P = double(pkg.P); co = pkg.kind(:) == 2;
-E = P' * (pkg.mass(:) .* X); E(~co, :) = 2 * E(~co, :);
-if any(co), G = P(:, co)' * (pkg.mass(:) .* P(:, co)); Rc = chol((G + G') / 2); E(co, :) = Rc \ (Rc' \ E(co, :)); end
 end
 
 function [Y, lm] = i_harmonics(X)
