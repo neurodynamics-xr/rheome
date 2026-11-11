@@ -3,7 +3,8 @@ function d = tiledot(sumsA, nA, sumsB, nB, nMin)
 %
 %   d = rheome.cores.tiledot(sumsA, nA, sumsB, nB)          % nMin = 10 (nxr NMIN_TILE)
 %
-% d [T x 1] = (sA/nA) . (sB/nB), each run's mean resultant vector (not unit); NaN where either run has n < nMin. One null draw at a time. Ports nxr-analysis src/nxr/vortex_cores.py tile_dot (line 90, commit 0db82e4).
+% sumsA, sumsB: the runs' tile-sense sums as rheome.cores.crossings gives them (tangent vectors AT THE TILE CENTRES since nxr 1.15.0: the two runs' vectors lie
+% in the same plane). d [T x 1] = (sA/nA) . (sB/nB), each run's mean resultant vector (not unit); NaN where either run has n < nMin. One null draw at a time. Ports nxr-analysis src/nxr/vortex_cores.py tile_dot (line 90, commit 0db82e4).
 %
 % See also: rheome.cores.repeat, rheome.cores.tilepq
 %
