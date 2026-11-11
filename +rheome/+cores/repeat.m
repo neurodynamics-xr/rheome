@@ -3,6 +3,7 @@ function r = repeat(sumsA, nA, sumsB, nB, nMin)
 %
 %   r = rheome.cores.repeat(sumsA, nA, sumsB, nB)          % nMin = 10 (nxr NMIN_TILE)
 %
+% sums as rheome.cores.crossings gives them (tangent vectors at the tile centres since nxr 1.15.0, so the two runs' tile vectors lie in one plane).
 % Tiles with n >= nMin in BOTH runs, the two senses pooled (rheome.cores.senses); per tile the cosine of the two pooled sum vectors,
 % weight min(nA, nB); r = sum(c*w)/sum(w), NaN when no tile qualifies. Ports nxr-analysis src/nxr/vortex_cores.py repeat (line 83,
 % commit 0db82e4).

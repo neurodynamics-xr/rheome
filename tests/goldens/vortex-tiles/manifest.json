@@ -182,10 +182,10 @@
    "dtype": "float64",
    "shape": [
     3689,
-    3
+    2
    ],
    "unit": "1",
-   "note": "unit mean tangent vector (3-D, in the surface's tangent plane) of each crossing, same order",
+   "note": "unit mean tangent vector of each crossing, carried to its tile's centre, as (re, im) in the centre's gauge (nxr.geom.logmap), same order",
    "source": "Tiles.crossings vortex_cores.py:65"
   },
   "cross_sums_A_l7": {
@@ -245,10 +245,10 @@
    "dtype": "float64",
    "shape": [
     4187,
-    3
+    2
    ],
    "unit": "1",
-   "note": "unit mean tangent vector (3-D, in the surface's tangent plane) of each crossing, same order",
+   "note": "unit mean tangent vector of each crossing, carried to its tile's centre, as (re, im) in the centre's gauge (nxr.geom.logmap), same order",
    "source": "Tiles.crossings vortex_cores.py:65"
   },
   "stage_R_A": {
@@ -527,10 +527,10 @@
    "file": "dc_places.bin",
    "dtype": "int32",
    "shape": [
-    143
+    130
    ],
    "unit": "1",
-   "note": "place vertex indices (into V_mm / normals, not into support)",
+   "note": "place indices INTO `support` (the pooling carries every support vertex's vectors to its nearest place)",
    "source": "direction_consistency vortex.py:760"
   },
   "dc_result": {
@@ -876,5 +876,5 @@
   ],
   "q": 0.05
  },
- "nxr_commit": "5b076f3817966bab159ec2998e7f6a7373ddfcce"
+ "nxr_commit": "c1ea8bc5a89fd2378b5874d28a68c7a7e0fe2b65"
 }

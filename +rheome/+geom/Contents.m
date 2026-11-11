@@ -24,6 +24,10 @@
 %   rheome.geom.draw.line                 - a geodesic between two vertices on the faces (calls draw.flipOut)
 %   rheome.geom.draw.flipMesh             - the mesh FlipOut works on, built once (pass it to line / flipOut)
 %
+% Vectors on a fold:
+%   rheome.geom.GeometryKit   - the vector heat method's transport and the connection Laplacian's gauge: lift / embed tangent vectors, carry them to an anchor
+%                        (nxr GeometryKit). Vectors from different places are carried before they are added.
+%
 % Functions:
 %   rheome.geom.icosphere     - geodesic sphere by icosahedron subdivision (FreeSurfer-style ico)
 %   rheome.geom.edgegraph     - the mesh as a Dijkstra graph, edges + intrinsic diagonals: +1.4% against the
