@@ -1,5 +1,5 @@
 classdef tOpticalflowConnection < matlab.unittest.TestCase
-% rheome.dynamics.opticalflow_connection (the default regulariser of opticalflow_scalar / flow.apparent) is the Cortical Flow
+% rheome.dynamics.opticalflow_connection (the smoothness of opticalflow_scalar / flow.apparent) is the Cortical Flow
 % Editor's optical flow: parity with the Editor's own output (tests/goldens/opticalflow-connection, made by nxr-neuro's generator
 % from the Editor's code) and the Editor test's assertions (sphere bump direction and speed, gauge freedom, stationary -> 0).
 %
@@ -54,20 +54,16 @@ classdef tOpticalflowConnection < matlab.unittest.TestCase
             tc.verifyEqual(max(abs(v), [], 'all'), 0);
         end
 
-        function theFrameRegulariserIsTheOldMethodAndKeepsItsDefault(tc)
+        function theDefaultsAreTheEditorsAndTheFrameMethodIsGone(tc)
             [V, F] = rheome.geom.icosphere(2);  V = 0.1*V;  n = size(V, 1);
-            S = struct('Vertices', V, 'Faces', F, 'VertNormals', V ./ vecnorm(V, 2, 2), 'nV', n);
+            S = struct('Vertices', V, 'Faces', F, 'nV', n);
             [I, ~] = i_bump(V, 0.1, 3);
-            a = rheome.dynamics.opticalflow_scalar(I, S, struct('regulariser', 'frame'));
-            b = rheome.dynamics.opticalflow_scalar(I, S, struct('regulariser', 'frame', 'alpha', 1));
-            tc.verifyEqual(a, b);                                              % its alpha default stays 1
-            c = rheome.dynamics.opticalflow_scalar(I, S);
-            tc.verifyGreaterThan(norm(a - c) / norm(a), 1e-3);                  % and it is not the default
-            tc.verifyError(@() rheome.dynamics.opticalflow_scalar(I, S, struct('regulariser', 'nope')), 'dynamics:opticalflow_scalar:regulariser');
-            R = rheome.flow.apparent(I, S, Rate=100);                           % flow.apparent: connection, alpha 0.01
-            tc.verifyEqual(R.regulariser, "connection");  tc.verifyEqual(R.alpha, 0.01);
-            R = rheome.flow.apparent(I, S, Rate=100, Regulariser="frame");
-            tc.verifyEqual(R.alpha, 1);  tc.verifyEqual(R.velocity, a);
+            a = rheome.dynamics.opticalflow_scalar(I, S);                      % a call of opticalflow_connection
+            tc.verifyEqual(a, rheome.dynamics.opticalflow_connection(I, S));
+            R = rheome.flow.apparent(I, S, Rate=100);                           % flow.apparent: alpha 0.01
+            tc.verifyEqual(R.alpha, 0.01);  tc.verifyEqual(R.velocity, a);
+            tc.verifyFalse(isfield(R, 'regulariser'));
+            tc.verifyError(@() rheome.flow.apparent(I, S, Rate=100, Regulariser="frame"), 'MATLAB:TooManyInputs');   % the option is gone
         end
     end
 end

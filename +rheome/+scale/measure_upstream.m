@@ -70,7 +70,7 @@ function [T, X] = measure_upstream(name, S, opts)
 %                source's shape, not the residual. Do not read U* as travel.
 %   "total"      U_total: h = 1, the periodic gain switched off (WAVE-OR-LEAKAGE H3b, Delta_ap = U_total - U).
 %                The aperiodic fit still runs and gives the covariates. Whole span only.
-%   "of"         U_of: the comparator (P2). Horn-Schunck optical flow (rheome.flow.apparent, Alpha 1) of the
+%   "of"         U_of: the comparator (P2). Horn-Schunck optical flow (rheome.flow.apparent, connection Laplacian, Alpha 0.01) of the
 %                periodic slow-band envelope |J| per vertex and hemisphere; the share of sum |v| |grad g| a over
 %                vertices and frame pairs with v . grad g > 0. Whole span only. Never pooled with U.
 %                ⚠ solved in chunks of OfChunk frames (each chunk normalised on its own by opticalflow_scalar).
@@ -115,7 +115,7 @@ function [T, X] = measure_upstream(name, S, opts)
         opts.Geometry (1,1) logical = false % return the readout's head geometry H as T; reads no samples
     end
     V1 = struct('Depth', 3, 'Band', [1 8], 'Rate', 50, 'FitRange', [1 45], 'LineHz', 60, 'SegS', 8, ...
-                'OwnMin', opts.OwnMin, 'KeptMin', 0.5, 'EdgeS', 10, 'WindowS', 4, 'MaxLagS', 0.5, 'OfAlpha', 1);   % readout v1, frozen
+                'OwnMin', opts.OwnMin, 'KeptMin', 0.5, 'EdgeS', 10, 'WindowS', 4, 'MaxLagS', 0.5, 'OfAlpha', 0.01);   % readout v1; the flow arm moved to the connection Laplacian, Alpha 0.01, 2026-11-11
     if isempty(S), S = rheome.scale.sensors(name); end
     if opts.Geometry, T = i_geometry(name, S, V1, opts);  X = table();  return, end   % rheome.scale.measure_lambdaedge
     st = rheome.load.study(name);  fs = st.rec.sfreq;  F = double(st.rec.F(S.iSel, :));  clear st
@@ -317,7 +317,7 @@ function U = i_of(S, H, Za, valid, rate, V1, chunk)
         for s = 1:chunk:nT-1
             fr = s:min(s + chunk, nT);  if numel(fr) < 2, continue; end
             J = reshape(Kh * Za(:, fr), 3, nV, []);  A = squeeze(sqrt(sum(abs(J).^2, 1)));
-            o = rheome.flow.apparent(A, Hh.S, Rate=rate, Band=V1.Band, Alpha=V1.OfAlpha, Regulariser="frame");   % readout v1 is frozen: the pre-2026-11-11 method
+            o = rheome.flow.apparent(A, Hh.S, Rate=rate, Band=V1.Band, Alpha=V1.OfAlpha);   % connection Laplacian (Editor), re-validated 2026-11-11; earlier v1 numbers used the removed frame smoothness, Alpha 1: recompute
             v = permute(reshape(o.velocity, 3, nV, []), [2 1 3]);              % [nV x 3 x nPairs]
             ok = reshape(valid(fr(1:end-1)) & valid(fr(2:end)), 1, 1, []);
             up = sum(v .* Hh.gradg, 2) > 0;  w = vecnorm(v, 2, 2) .* gn .* Hh.a .* ok;

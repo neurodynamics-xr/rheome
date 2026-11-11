@@ -11,8 +11,8 @@ function [velocityField, info] = opticalflow_connection(activityMap, surface, op
 %
 % C is the connection Laplacian of the intrinsic Delaunay triangulation (rheome.operators.connection_laplacian_idt: cotan weights,
 % each edge carrying a vector across by its parallel transport), M the mixed-Voronoi mass. v'Cv compares a vector with its
-% neighbour's TRANSPORTED to it, so the smoothness does not depend on any frame; the old rheome.dynamics.opticalflow_scalar
-% penalty, alpha (a'Ka + b'Kb), smooths frame coefficients and does (Rheome's (1,1,1)xn frames turn across every fold).
+% neighbour's TRANSPORTED to it, so the smoothness does not depend on any frame. (The earlier penalty alpha (a'Ka + b'Kb) on the
+% coefficients in per-vertex (1,1,1)xn frames did, and was removed 2026-11-11.)
 %
 % The system is in C's own gauge: vectors go in and out FACE BY FACE through the intrinsic corner angles (the signposts of the
 % INPUT faces, before the Delaunay flips), never through a vertex's projected plane. The Editor's DATA TERM is reproduced: the
@@ -23,8 +23,7 @@ function [velocityField, info] = opticalflow_connection(activityMap, surface, op
 % INPUTS:
 %   activityMap  [nV x nT] non-negative scalar activity per vertex per frame
 %   surface      struct with .Vertices [nV x 3] and .Faces [nF x 3] (in metres: the velocity is in surface units per frame)
-%   opts.alpha   smoothness weight, dimensionless (default 0.01, the Editor's). ⚠ Not comparable with the 'frame' regulariser's
-%                alpha: C and a'Ka are different penalties. vCv is not zero on a rigid rotation of a sphere (curvature term), so the
+%   opts.alpha   smoothness weight, dimensionless (default 0.01, the Editor's). ⚠ vCv is not zero on a rigid rotation of a sphere (curvature term), so the
 %                prior pulls the speed LOW as alpha grows (sphere bump: 95 % of truth at 0.01, 80 % at 0.1, 33 % at 1).
 %   opts.peak    the normaliser (default max of the map)
 %   opts.mollify, opts.flipEps  as rheome.operators.intrinsic_delaunay (1e-6)

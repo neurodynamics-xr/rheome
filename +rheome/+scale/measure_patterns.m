@@ -41,7 +41,7 @@ function [T, X] = measure_patterns(name, S, item, opts)
 %                 dispersion    top / bottom |lambda| quintile ratio of each Dirac mode's periodic peak
 %                               frequency (Welch 8 s periodic Hann, aperiodic knee fit 1-45 Hz, peak in 6-16 Hz), the
 %                               hemisphere's Dirac modes applied to the MNE current. Single-subject reference: 1.01, a wave needs 3.1.
-%                 rotation_r    corr of |curl v| (rheome.flow.apparent of the 8-16 Hz envelope, 300 Hz) with
+%                 rotation_r    corr of |curl v| (rheome.flow.apparent of the 8-16 Hz envelope, 300 Hz, connection Laplacian, Alpha 0.01; the single-subject reference below was made with the removed frame smoothness, Alpha 1: recompute) with
 %                               |curl J| over vertices, per 2 s tile, NumTiles tiles; median. Single-subject reference: r = -0.11.
 %               ⚠⚠ THE PHASE-RANDOMISED SURROGATE CANNOT BE THE NULL FOR THE FIRST TWO. Both are functions of
 %               each mode's power spectrum, and a shared random phase per bin leaves every mode's spectrum
@@ -299,7 +299,7 @@ function X = i_twoflows(C, Fa, tc, Lt, dec, rate, fs, dur, h)
         idx = tc(i) - Lt/2 + (0:dec:Lt-1);
         Jc = C.K * Fa(:, idx);
         A = rheome.flow.activation(Jc, Rate=rate, Band=[8 16]);
-        Ap = rheome.flow.apparent(A, C.Sh, Rate=rate, Band=[8 16], Alpha=1, Regulariser="frame");   % the pre-2026-11-11 method (re-check with "connection")
+        Ap = rheome.flow.apparent(A, C.Sh, Rate=rate, Band=[8 16], Alpha=0.01);   % connection Laplacian, Alpha 0.01 (the Editor's); re-validated 2026-11-11
         vJ = rheome.differential.curl(real(Jc), C.Sh, C.fg);
         cv{i} = abs(mean(Ap.vorticity, 2));  cj{i} = abs(mean(vJ(:, 1:end-1), 2));
     end

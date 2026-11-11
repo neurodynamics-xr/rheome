@@ -12,7 +12,7 @@ function readout = flow_readout(velocityField, surface)
 %
 % Reuses rheome.differential.divergence / rheome.differential.curl on the velocity field.
 %
-% See also: rheome.dynamics.opticalflow_scalar, rheome.dynamics.opticalflow_vector, rheome.differential.divergence
+% See also: rheome.dynamics.opticalflow_scalar, rheome.differential.divergence
 %
 % Author: Diellor Basha, 2026
 

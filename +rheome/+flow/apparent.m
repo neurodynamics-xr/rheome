@@ -3,7 +3,6 @@ function R = apparent(A, S, opts)
 %
 %   R = rheome.flow.apparent(A, S)
 %   R = rheome.flow.apparent(A, S, Rate=300, Band=[8 16], Alpha=0.01)
-%   R = rheome.flow.apparent(A, S, Regulariser="frame", Alpha=1)      % the pre-2026-11-11 method, to reproduce old results
 %
 % The second flow pipeline, and it answers a DIFFERENT question from rheome.flow.curl. Given a
 % scalar activation map A [nV x nT] (rheome.flow.activation), estimate the velocity field v of the
@@ -29,12 +28,11 @@ function R = apparent(A, S, opts)
 % can be either genuine propagation converging or an amplitude change the model cannot
 % express. That ambiguity is intrinsic to the method, not to this implementation.
 %
-% ⚠ THE SMOOTHNESS IS THE CONNECTION LAPLACIAN BY DEFAULT (PI decision, 2026-11-11): the Cortical Flow Editor's and nxr's method,
-% frame-free. The earlier default ('frame': alpha (a'Ka + b'Kb) on the coefficients in the (1,1,1)xn frames) depends on the
-% frame; on a real 1 s alpha window its divergence/curl correlated 0.05/0.00 with the connection-Laplacian flow and its speed was
-% nearly uniform. ⚠ Results made with the old default should be re-checked. ⚠ Alpha is not comparable across regularisers
-% (default 0.01 for 'connection', 1 for 'frame'); .regulariser and .alpha are recorded.
-%
+% ⚠ THE SMOOTHNESS IS THE CONNECTION LAPLACIAN (PI ruling, 2026-11-11): the Cortical Flow Editor's and nxr's method, frame-free.
+% The earlier 'frame' smoothness (alpha (a'Ka + b'Kb) on the coefficients in the (1,1,1)xn frames) depended on the frame and was
+% REMOVED: on a real 1 s alpha window its divergence/curl correlated 0.05/0.00 with this flow and its speed was nearly uniform.
+% ⚠ Results made before 2026-11-11 used it and must be recomputed. .alpha is recorded.
+
 % ⚠ IT IS AN APERTURE-LIMITED ESTIMATE. Horn-Schunck recovers only the velocity component
 % along the intensity gradient (the aperture problem); the rest is supplied by the smoothness
 % prior, so `Alpha` is not a cosmetic knob -- it sets how much of v is data and how much is
@@ -57,8 +55,7 @@ function R = apparent(A, S, opts)
 %     Rate   frame rate of A in Hz. ⚠ REQUIRED for .speed to be in m/s; without it .speed is
 %            returned empty and only .speedPerFrame is filled.
 %     Band   [fLo fHi] recorded for provenance
-%     Regulariser "connection" (default) | "frame" (see above)
-%     Alpha  Horn-Schunck smoothness weight (default 0.01 for "connection", 1 for "frame")
+%     Alpha  Horn-Schunck smoothness weight (default 0.01, the Editor's)
 %     Frames restrict to these frame indices before estimating (all)
 %
 % OUTPUT (struct R):
@@ -66,7 +63,7 @@ function R = apparent(A, S, opts)
 %   .divergence [nV x nT-1]  div v: where the pattern converges (-) or emerges (+)
 %   .vorticity  [nV x nT-1]  curl v: rotation of the pattern, CCW positive from outside
 %   .speed      [nV x nT-1]  |v| in m/s          .speedPerFrame  |v| in m/frame
-%   .rate .band .alpha .regulariser .nV .nT .seconds  provenance of the estimate
+%   .rate .band .alpha .nV .nT .seconds  provenance of the estimate
 %
 % See also: rheome.flow.activation, rheome.flow.curl, rheome.flow.divergence, rheome.dynamics.opticalflow_scalar,
 %           rheome.dynamics.flow_readout, rheome.differential.curl
@@ -78,8 +75,7 @@ function R = apparent(A, S, opts)
         S      (1,1) struct
         opts.Rate   (1,1) double = NaN
         opts.Band         double = []
-        opts.Regulariser (1,1) string {mustBeMember(opts.Regulariser, ["connection" "frame"])} = "connection"
-        opts.Alpha  (1,1) double = NaN          % NaN: the regulariser's own default
+        opts.Alpha  (1,1) double = 0.01
         opts.Frames       double = []
     end
     if ~isreal(A) || any(A(:) < 0)
@@ -96,10 +92,9 @@ function R = apparent(A, S, opts)
         error('flow:apparent:frames', 'Optical flow needs at least two frames; got %d.', size(A,2));
     end
 
-    if ~isnan(opts.Alpha) && ~(opts.Alpha > 0), error('flow:apparent:alpha', 'Alpha must be positive.'); end
-    if isnan(opts.Alpha), opts.Alpha = 0.01 + 0.99*(opts.Regulariser == "frame"); end   % each regulariser's own default
+    if ~(opts.Alpha > 0), error('flow:apparent:alpha', 'Alpha must be positive.'); end
     t0 = tic;
-    v  = rheome.dynamics.opticalflow_scalar(A, S, struct('alpha', opts.Alpha, 'regulariser', char(opts.Regulariser)));
+    v  = rheome.dynamics.opticalflow_scalar(A, S, struct('alpha', opts.Alpha));
     rd = rheome.dynamics.flow_readout(v, S);
 
     R = struct();
@@ -108,7 +103,7 @@ function R = apparent(A, S, opts)
     R.vorticity     = rd.vorticity;
     R.speedPerFrame = rd.speed;
     if isfinite(opts.Rate), R.speed = rd.speed * opts.Rate; else, R.speed = []; end
-    R.rate = opts.Rate;  R.band = opts.Band;  R.alpha = opts.Alpha;  R.regulariser = opts.Regulariser;
+    R.rate = opts.Rate;  R.band = opts.Band;  R.alpha = opts.Alpha;
     R.nV = S.nV;  R.nT = size(A,2);  R.seconds = toc(t0);
 end
 % Author: Diellor Basha, 2026

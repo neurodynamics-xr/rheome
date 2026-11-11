@@ -8,7 +8,7 @@ function out = parityWriteGolden(fixture, out)
 %
 % A Gaussian bump (sigma 12 mm) moves 5 mm a frame along +y for 21 frames at 100 Hz. Written as float64 little-endian,
 % ROW-MAJOR [rows x cols] as golden.json names them: Lx (mesh cotan L * frame 1), Mlumped, MgalRowSum, I [T x nV],
-% flow_alpha1 and flow_alpha0_01 [(T-1) x 3nV] (rheome.dynamics.opticalflow_scalar), div and curl of flow_alpha1
+% flow_alpha1 and flow_alpha0_01 [(T-1) x 3nV] (rheome.dynamics.opticalflow_scalar = opticalflow_connection, the Editor's method), div and curl of flow_alpha1
 % [(T-1) x nV] (the face gradient). Not a test: the parity test lives on the Editor's side; Rheome is the reference.
 %
 % Author: Diellor Basha, 2026
@@ -28,8 +28,8 @@ function out = parityWriteGolden(fixture, out)
     G.Mlumped = put(out, 'Mlumped', full(diag(Ml)));
     G.MgalRowSum = put(out, 'MgalRowSum', full(sum(Mg, 2)));
     G.I = put(out, 'I', I');
-    tic; v1 = rheome.dynamics.opticalflow_scalar(I, s, struct('alpha', 1, 'regulariser', 'frame'));    t1 = toc;
-    tic; v2 = rheome.dynamics.opticalflow_scalar(I, s, struct('alpha', 0.01, 'regulariser', 'frame')); t2 = toc;
+    tic; v1 = rheome.dynamics.opticalflow_scalar(I, s, struct('alpha', 1));    t1 = toc;
+    tic; v2 = rheome.dynamics.opticalflow_scalar(I, s, struct('alpha', 0.01)); t2 = toc;
     G.flow_alpha1 = put(out, 'flow_alpha1', v1');
     G.flow_alpha0_01 = put(out, 'flow_alpha0_01', v2');
     fg = rheome.operators.face_gradient(V, F);
