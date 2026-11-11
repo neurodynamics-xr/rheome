@@ -47,7 +47,7 @@ function h = psitime(f, band, width)
 %   h      same shape as f, gains in [0,1]
 %
 % Use it directly as a psiTime kernel of a joint bank:
-%   rheome.jtv.bank(Lambda, f, frame.g, {@(w) rheome.filters.psitime(w/(2*pi), band)}, [], 'type','js')
+%   rheome.jtv.bank(Lambda, f, frame.g, {@(f) rheome.filters.psitime(f, band)}, [], 'type','js')
 %
 % See also: rheome.flow.joint, rheome.jtv.bank, rheome.filters.firbandpass
 %

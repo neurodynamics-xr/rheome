@@ -188,17 +188,19 @@ function [fb, bands, frame] = bank(nT, fs, cfg)
 end
 
 function [fb, bands, frame] = i_framebank(nT, fs, cfg)
-% the timefilterbank path: bands are integer octaves of the anchor, plus the two edge bands
+% the timefilterbank path: bands are integer octaves of the anchor, plus the two edge bands.
+% Gain sqrt(2) (peak sqrt(2), sum |g|^2 = 2) keeps the tile statistics Parseval-direct, sum |coef|^2 * weight =
+% sum x^2, which is what ingest.reduce stores; a peak-2 bank would double every stored energy.
     V = cfg.VoicesPerOctave;  a = cfg.Anchor;
     lim = cfg.FrequencyLimits;
     fb = rheome.timefilterbank(nT, 'SamplingFrequency', fs, 'VoicesPerOctave', V, 'Anchor', a, ...
-                        'FrequencyLimits', lim, 'Oversample', cfg.Oversample);
+                        'FrequencyLimits', lim, 'Oversample', cfg.Oversample, 'Gain', sqrt(2));
     sup = support(fb);
     if isfinite(cfg.MaxSupport)
         fLo = sup.timeTimesFc / cfg.MaxSupport;
         if isempty(lim), lim = [fLo, fs/2]; else, lim(1) = max(lim(1), fLo); end
         fb = rheome.timefilterbank(nT, 'SamplingFrequency', fs, 'VoicesPerOctave', V, 'Anchor', a, ...
-                            'FrequencyLimits', lim, 'Oversample', cfg.Oversample);
+                            'FrequencyLimits', lim, 'Oversample', cfg.Oversample, 'Gain', sqrt(2));
     end
     fc = centerFrequencies(fb);                              % ascending, edges included
     kd = kinds(fb);

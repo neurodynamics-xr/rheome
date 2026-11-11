@@ -11,7 +11,7 @@ function f = centerFrequencies(obj)
 %
 % Author: Diellor Basha, 2026
 
-    lam = obj.Lambda;  om = obj.Omega;  ff = obj.Frequencies;
+    lam = obj.Lambda;  om = obj.Frequencies;  ff = obj.Frequencies;
     f = zeros(1, obj.NumMembers);
     for m = 1:obj.NumMembers
         P = abs(jfb_member(obj, m, lam, om)).^2;

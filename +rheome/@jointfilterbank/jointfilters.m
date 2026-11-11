@@ -15,7 +15,7 @@ function W = jointfilters(obj, m, varargin)
 % Author: Diellor Basha, 2026
 
     if nargin >= 2 && ~isempty(m)
-        W = jfb_member(obj, m, obj.Lambda, obj.Omega);
+        W = jfb_member(obj, m, obj.Lambda, obj.Frequencies);
         return;
     end
 
@@ -23,7 +23,7 @@ function W = jointfilters(obj, m, varargin)
     p.addParameter('Force', false);
     p.parse(varargin{:});
 
-    lam = obj.Lambda;  om = obj.Omega;
+    lam = obj.Lambda;  om = obj.Frequencies;
     K = numel(lam);  nO = numel(om);  Nf = obj.NumMembers;
     if ~p.Results.Force
         jfb_guard(obj, [K nO Nf], 'the whole bank');

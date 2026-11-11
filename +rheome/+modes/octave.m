@@ -18,7 +18,7 @@ function [z, rate, valid] = octave(Y, fs, edges, mask)
 
     N = size(Y, 2);  if nargin < 4 || isempty(mask), mask = false(1, N); end
     h = rheome.jointfilterbank.band(edges(1), edges(2));
-    fk = (0:N-1) * fs / N;  pos = 2:ceil(N/2);  H = zeros(1, N);  H(pos) = 2 * h(2*pi*fk(pos));
+    fk = (0:N-1) * fs / N;  pos = 2:ceil(N/2);  H = zeros(1, N);  H(pos) = 2 * h(fk(pos));
     m = max(1, floor(fs / (3 * edges(2))));  rate = fs / m;
     z = ifft(fft(Y, [], 2) .* H, [], 2);  z = single(z(:, 1:m:end));  T = size(z, 2);
     bad = any(reshape([logical(mask(:)'), false(1, m*T - N)], m, T), 1);

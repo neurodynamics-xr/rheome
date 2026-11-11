@@ -6,8 +6,12 @@ classdef jointfilterbank
 %
 % Every combination of three factor lists -- GSPBox's dgw composition:
 %
-%   W_i(lambda,omega) = K_k(lambda,omega) * psi_g,g(lambda) * psi_t,t(omega)
+%   W_i(lambda,f) = K_k(lambda,f) * psi_g,g(lambda) * psi_t,t(f)
 %   Nf = Ng * Nt * Nk
+%
+% UNITS: the temporal frequency f is in HERTZ (jfb.Frequencies), and every time factor and joint
+% kernel is called with f in hertz, never omega = 2*pi*f (jfb.Omega is kept as a read-only convenience).
+% A kernel that needs rad/s converts itself (speedkernel does).
 %
 % ⭐ NOTHING IS MATERIALISED. The class stores HANDLES and an index, never products. A
 % separable member is a rank-1 outer product: storing its factors costs [K]+[nOmega]
@@ -29,8 +33,8 @@ classdef jointfilterbank
         Transform                    = []
         MaxBytes          (1,1) double {mustBePositive} = 2e9
         Bands                        = []      % [nb x 2] Hz
-        TimeFilters                  = {}      % {1 x Nt} @(omega)
-        JointKernels                 = {}      % {1 x Nk} @(lambda, omega)
+        TimeFilters                  = {}      % {1 x Nt} @(f), f in Hz
+        JointKernels                 = {}      % {1 x Nk} @(lambda, f), f in Hz
         Labels                       = {}
     end
 
@@ -57,8 +61,8 @@ classdef jointfilterbank
         NumJoint
         Index
         Separable
-        TimeMembers                            % resolved {1 x Nt} @(omega) -- Bands + TimeFilters
-        KernelMembers                          % resolved {1 x Nk} @(lambda,omega)
+        TimeMembers                            % resolved {1 x Nt} @(f), f in Hz -- Bands + TimeFilters
+        KernelMembers                          % resolved {1 x Nk} @(lambda,f), f in Hz
     end
 
     methods
@@ -233,7 +237,7 @@ classdef jointfilterbank
             obj.Index_ = [IG(:), IT(:), IK(:)];
 
             % Separable iff every kernel is identically 1 on a probe of the real axes.
-            lp = obj.Lambda;  wp = obj.Omega;
+            lp = obj.Lambda;  wp = obj.Frequencies;
             lp = lp(round(linspace(1, numel(lp), min(8, numel(lp)))));
             wp = wp(round(linspace(1, numel(wp), min(8, numel(wp)))));
             obj.Sep_ = true;

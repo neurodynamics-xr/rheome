@@ -1,5 +1,5 @@
 function h = band(f1, f2, width)
-% JOINTFILTERBANK.BAND  A raised-cosine temporal band member, as an @(omega) handle.
+% JOINTFILTERBANK.BAND  A raised-cosine temporal band member, as an @(f) handle (f in Hz).
 %
 %   h = rheome.jointfilterbank.band(f1, f2)          % width = min(0.1*(f2-f1), 1.0) Hz
 %   h = rheome.jointfilterbank.band(f1, f2, width)   % width = 0 -> brick wall
@@ -21,8 +21,8 @@ function h = band(f1, f2, width)
 %          caps a fraction-of-bandwidth rule at 1 Hz, because 10% of a [1 45] Hz band is
 %          4.4 Hz of taper eating the low-frequency end. Clamped to at most half the
 %          bandwidth so the two edges cannot overlap.
-% OUTPUT:  h  @(omega) -> gains in [0,1], same shape as omega (rad/s in, so it composes
-%          directly as a psi_t factor).
+% OUTPUT:  h  @(f) -> gains in [0,1], same shape as f (HERTZ in, like every time factor and
+%          joint kernel of the joint bank, so it composes directly as a psi_t factor).
 %
 % Author: Diellor Basha, 2026
 
@@ -32,11 +32,11 @@ function h = band(f1, f2, width)
         error('jointfilterbank:band', 'band must be increasing, got [%g %g].', f1, f2);
     end
     width = max(0, min(width, bw/2));
-    h = @(w) i_band(w, f1, f2, width);
+    h = @(f) i_band(f, f1, f2, width);
 end
 
-function g = i_band(omega, f1, f2, width)
-    ff = double(omega) / (2*pi);
+function g = i_band(f, f1, f2, width)
+    ff = double(f);
     g  = double(ff > f1 & ff < f2);              % brick wall; shaped below
     if width > 0
         lo = ff > f1 & ff < f1 + width;

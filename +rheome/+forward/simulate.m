@@ -219,13 +219,13 @@ function out = simulate(name, varargin)
     switch fam
         case "resonator"
             % eigenmode-FREQUENCY: a resonance at f0 with bandwidth Q, per mode
-            Hf = rheome.filters.resonator(lam, i_omega(fs,nT), f0, Qb);   % [nModes x nF]
+            Hf = rheome.filters.resonator(lam, i_freq(fs,nT), f0, Qb, 'positive');   % [nModes x nF]
             C  = i_fromspectrum(c0 .* Hf, nT);
         case "gabor"
-            Hf = rheome.filters.gabor(lam, i_omega(fs,nT), 2*pi/(o.WavelengthMM*1e-3), f0, 1);
+            Hf = rheome.filters.gabor(lam, i_freq(fs,nT), 2*pi/(o.WavelengthMM*1e-3), f0, 1, 'positive');
             C  = i_fromspectrum(c0 .* Hf, nT);
         case "travwave"
-            Hf = rheome.filters.travwave(lam, i_omega(fs,nT), 1.0, 1);
+            Hf = rheome.filters.travwave(lam, i_freq(fs,nT), 1.0, 1, 0, 'positive');
             C  = i_fromspectrum(c0 .* Hf, nT);
         case "oscillator"
             % eigenmode-TIME, the simplest analytic case: every mode oscillates at f0 with a
@@ -362,9 +362,8 @@ function r = i_route(usePat)
     if usePat, r = "pattern"; else, r = "modes"; end
 end
 
-function w = i_omega(fs, nT)
-    f = (0:floor(nT/2)) * fs/nT;      % the positive half, as the 'js' domain expects
-    w = 2*pi*f;
+function f = i_freq(fs, nT)
+    f = (0:floor(nT/2)) * fs/nT;      % Hz, the positive half (kernels get hertz and the half stated)
 end
 
 function C = i_fromspectrum(Chat, nT)

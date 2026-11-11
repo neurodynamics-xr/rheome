@@ -78,7 +78,7 @@ function out = sensor_wavelets(outDir, varargin)
     hold on;
     for b = 1:size(bands,1)
         h = rheome.jointfilterbank.band(bands(b,1), bands(b,2));
-        plot(fHalf, h(2*pi*fHalf), 'LineWidth', 1);
+        plot(fHalf, h(fHalf), 'LineWidth', 1);
     end
     grid on; xlim([0 50]); xlabel('f (Hz)'); ylabel('gain'); title('psi_t: 4 rates');
     subplot(1,3,3);
@@ -123,7 +123,7 @@ function out = sensor_wavelets(outDir, varargin)
     Ub = cell(1, size(bands,1));
     for b = 1:size(bands,1)
         h  = rheome.jointfilterbank.band(bands(b,1), bands(b,2));
-        Gk = Hs(:,4) * h(2*pi*f);                            % scale g4 x this rate
+        Gk = Hs(:,4) * h(f);                            % scale g4 x this rate
         Ub{b} = rheome.filters.impulse(basis, seed, Gk, 'js', N);
         S  = abs(fft(sum(M.Phi' * Ub{b}, 1), N)).^2;  S = S(1:floor(N/2)+1);
         rateRec(b) = sum(fHalf .* S) / max(sum(S), eps);
@@ -179,13 +179,13 @@ function out = sensor_wavelets(outDir, varargin)
     % ---------- Fig 5 + ANALYSIS: a generated pattern lands in its own cell ----------
     igPlant = 4;  ibPlant = 2;
     hP = rheome.jointfilterbank.band(bands(ibPlant,1), bands(ibPlant,2));
-    Up = rheome.filters.impulse(basis, seed, Hs(:,igPlant) * hP(2*pi*f), 'js', N);
+    Up = rheome.filters.impulse(basis, seed, Hs(:,igPlant) * hP(f), 'js', N);
     Cp = i_jspec(M.Phi, Up, N);
     E  = zeros(gfb.NumMembers, size(bands,1));
     for ig = 1:gfb.NumMembers
         for ib = 1:size(bands,1)
             hb = rheome.jointfilterbank.band(bands(ib,1), bands(ib,2));
-            E(ig, ib) = sum(abs(Cp .* (Hs(:,ig) * hb(2*pi*fHalf))).^2, 'all');
+            E(ig, ib) = sum(abs(Cp .* (Hs(:,ig) * hb(fHalf))).^2, 'all');
         end
     end
     E = E / max(E(:));
@@ -196,13 +196,13 @@ function out = sensor_wavelets(outDir, varargin)
     for ig = mScale
         for ib = 1:size(bands,1)
             hb = rheome.jointfilterbank.band(bands(ib,1), bands(ib,2));
-            Uc = rheome.filters.impulse(basis, seed, Hs(:,ig) * hb(2*pi*f), 'js', N);
+            Uc = rheome.filters.impulse(basis, seed, Hs(:,ig) * hb(f), 'js', N);
             Cc = i_jspec(M.Phi, Uc, N);
             Ec = zeros(gfb.NumMembers, size(bands,1));
             for jg = 1:gfb.NumMembers
                 for jb = 1:size(bands,1)
                     hj = rheome.jointfilterbank.band(bands(jb,1), bands(jb,2));
-                    Ec(jg, jb) = sum(abs(Cc .* (Hs(:,jg) * hj(2*pi*fHalf))).^2, 'all');
+                    Ec(jg, jb) = sum(abs(Cc .* (Hs(:,jg) * hj(fHalf))).^2, 'all');
                 end
             end
             [~, k] = max(Ec(:));  [gHit, bHit] = ind2sub(size(Ec), k);
@@ -298,7 +298,7 @@ function i_writejson(outDir, E)
         end
         for b = 1:nB
             h  = rheome.jointfilterbank.band(E.bands(b,1), E.bands(b,2));
-            Ub = rheome.filters.impulse(basis, v, Hs(:,4) * h(2*pi*f), 'js', N);
+            Ub = rheome.filters.impulse(basis, v, Hs(:,4) * h(f), 'js', N);
             rateTrace(a,b,:)   = i_unit(Ub(v, kRate));
             rateField(a,b,:,:) = i_perframe(Ub(:, kRate));
         end
@@ -434,7 +434,7 @@ function P = i_panel(E)
             for b = 1:numel(rates)
                 fAx = (0:nT-1) / Twin;                   % the window's own bin grid
                 h = rheome.jointfilterbank.band(0.7*rates(b), 1.4*rates(b));
-                U = rheome.filters.impulse(bi, v, Hi(:,m) * h(2*pi*fAx), 'js', nT);
+                U = rheome.filters.impulse(bi, v, Hi(:,m) * h(fAx), 'js', nT);
                 A(a,b,:,:) = i_perframe(U);
             end
         end

@@ -21,8 +21,8 @@ classdef tTimeFilterBank < matlab.unittest.TestCase
 
         function theFrameIsTightOnTheWholeAxis(tc)
             b = framebounds(tc.tfb);
-            tc.verifyEqual(b.A, 1, 'AbsTol', 1e-12);
-            tc.verifyEqual(b.B, 1, 'AbsTol', 1e-12);
+            tc.verifyEqual(b.A, 2, 'AbsTol', 1e-12);                    % Gain^2/2 for the default Gain = 2
+            tc.verifyEqual(b.B, 2, 'AbsTol', 1e-12);
             tc.verifyEqual(b.Uncovered, 0);
             tc.verifyTrue(isframetight(tc.tfb));
         end
@@ -32,7 +32,7 @@ classdef tTimeFilterBank < matlab.unittest.TestCase
             for m = 1:tc.tfb.NumMembers
                 out = true(1, size(H, 2));  out(B(m,1):B(m,2)) = false;
                 tc.verifyEqual(max(abs(H(m, out))), 0, sprintf('member %d', m));
-                tc.verifyGreaterThan(max(H(m, :)), 1);                 % peak sqrt(2)
+                tc.verifyEqual(max(H(m, :)), tc.tfb.Gain, 'RelTol', 2e-3);   % the sampled peak IS the gain (2): the grid misses the centre by < 0.1%
             end
             k = kinds(tc.tfb);
             tc.verifyEqual(k{1}, 'lowpass');  tc.verifyEqual(k{end}, 'highpass');
@@ -71,7 +71,7 @@ classdef tTimeFilterBank < matlab.unittest.TestCase
             E = sum(arrayfun(@(c) sum(abs(c.coef).^2) * c.weight, C));
             X = fft(x);
             excluded = (abs(X(1))^2 + abs(X(tc.N/2+1))^2) / tc.N;      % DC and Nyquist bins
-            tc.verifyEqual(E, sum(x.^2) - excluded, 'RelTol', 1e-10);
+            tc.verifyEqual(E, tc.tfb.Gain^2/2 * (sum(x.^2) - excluded), 'RelTol', 1e-10);   % (Gain^2/2) x the record's energy
         end
 
         function oversampleChangesLengthsNotEnergies(tc)
@@ -101,7 +101,7 @@ classdef tTimeFilterBank < matlab.unittest.TestCase
             tc.verifyGreaterThanOrEqual(min(fc), 2);
             tc.verifyLessThanOrEqual(max(fc) * 2^(1/t.VoicesPerOctave), 40 * (1 + 1e-9));
             b = framebounds(t);
-            tc.verifyEqual(b.A, 1, 'AbsTol', 1e-12);                   % edge members still complete it
+            tc.verifyEqual(b.A, 2, 'AbsTol', 1e-12);                   % edge members still complete it
         end
 
         function supportIsScaleCovariantAndQIsConstant(tc)
@@ -111,6 +111,25 @@ classdef tTimeFilterBank < matlab.unittest.TestCase
             ok = s.perMember(1, :) > 0;
             tc.verifyLessThan(std(s.perMember(1, ok)) / median(s.perMember(1, ok)), 0.05);
             tc.verifyGreaterThan(s.Q, 3);  tc.verifyLessThan(s.Q, 20);
+        end
+
+        function gainIsThePeakAndAToneOfAmplitudeAGivesGHalfA(tc)
+            % one meaning of gain: the peak in-band response, so |c| = (Gain/2) * A for a real tone on a member's centre
+            A = 1.5;  t = (0:tc.N-1)' / tc.fs;
+            for G = [1 2 3]
+                tf = rheome.timefilterbank(tc.N, 'SamplingFrequency', tc.fs, 'Gain', G);
+                tc.verifyEqual(tf.Gain, G);
+                [H, ~] = freqz(tf);
+                tc.verifyEqual(max(H, [], 2), G * ones(tf.NumMembers, 1), 'RelTol', 2e-3, sprintf('sampled peak, Gain %g', G));
+                fcb = centerFrequencies(tf);                            % a band member's exact peak is AT its centre
+                tc.verifyEqual(gains(tf, 5, fcb(5)), G, 'AbsTol', 1e-12);
+                b = framebounds(tf);                                    % tight at any gain: Gain^2/2
+                tc.verifyEqual([b.A b.B], G^2/2 * [1 1], 'AbsTol', 1e-12);
+                C = wt(tf, A * cos(2*pi*8*t));                          % 8 Hz = 2^(12/4) is a member centre, on a bin
+                fc = centerFrequencies(tf);  [~, m] = min(abs(fc - 8));
+                tc.verifyEqual(max(abs(C(m).coef)), G/2 * A, 'RelTol', 1e-9, sprintf('|c|, Gain %g', G));
+            end
+            tc.verifyError(@() rheome.timefilterbank(tc.N, 'SamplingFrequency', tc.fs, 'Gain', 0), ?MException);
         end
 
         function aToneLandsInTheMembersAroundIt(tc)

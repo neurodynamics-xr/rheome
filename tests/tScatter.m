@@ -137,6 +137,27 @@ classdef tScatter < matlab.unittest.TestCase
             tc.verifyEqual(size(S.Pairs,1), sum(sum(sig(:).' > sig(:))));
         end
 
+        function lowPassTakesNoPartInThePairingAndItersineHasSecondOrder(tc)
+            % scale = 1/(centre wavenumber); the low-pass member is excluded from the coarser-second pairing, so a
+            % mexhat bank of M members (one low-pass) computes (M-1)(M-2)/2 pairs and an itersine bank, which used to
+            % get none (all scales +Inf), gets its band pairs.
+            fx = tc.fixture();  F = tc.field(fx, 2, 9);
+            Sm = rheome.filters.scatter(fx.basis, F, fx.frame, struct('MaxBytes', tc.MB));
+            nW = fx.M - 1;
+            tc.verifyEqual(size(Sm.Pairs, 1), nW*(nW-1)/2);
+            tc.verifyTrue(isnan(Sm.Sigma(1)) && all(Sm.Sigma(2:end) > 0));         % the scaling function has no scale
+            tc.verifyFalse(any(Sm.Pairs(:) == 1), 'the low-pass member is in a pair');
+            fi = rheome.filters.frame('itersine', 8, fx.basis.Lambda);
+            Si = rheome.filters.scatter(fx.basis, F, fi, struct('MaxBytes', tc.MB));
+            tc.verifyEqual(size(Si.Pairs, 1), 7*6/2);                               % 8 windows, the first is the low-pass
+            tc.verifyFalse(any(Si.Pairs(:) == 1));
+            k = Si.Sigma;  tc.verifyTrue(all(k(Si.Pairs(:,2)) > k(Si.Pairs(:,1))));   % second always coarser
+            tc.verifyTrue(all(isfinite(Si.S2(~isnan(Si.S2)))));
+            fh = rheome.filters.frame('heat', [], fx.basis.Lambda);                  % a scale-space of low-passes keeps all
+            Sh = rheome.filters.scatter(fx.basis, F, fh, struct('MaxBytes', tc.MB, 'Order', 1));
+            tc.verifyTrue(all(isfinite(Sh.Sigma)));
+        end
+
         function constantFieldFallsThrough(tc)
             % A constant field is the lambda = 0 mode alone. Every band-pass member has
             % g(0) = 0, so S1 must vanish on them -- and NOT on the low-pass member, which

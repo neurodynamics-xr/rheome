@@ -11,7 +11,7 @@ classdef tJfbLazy < matlab.unittest.TestCase
             ig = j.Index(m,1);  it = j.Index(m,2);
             gv = gain(fx.gfb, ig);
             hv = j.TimeMembers{it};
-            expected = gv(j.Lambda) * hv(j.Omega);
+            expected = gv(j.Lambda) * hv(j.Frequencies);      % time factors take f in Hz
             tc.verifyEqual(jointfilters(j, m), expected, 'AbsTol', 0);
         end
 

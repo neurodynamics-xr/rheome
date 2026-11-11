@@ -63,7 +63,7 @@ classdef tSensorGenerate < matlab.unittest.TestCase
                                          'SamplingFrequency', fs, 'SignalLength', N, ...
                                          'Args', {30});
             basis = struct('Phi',M.Phi, 'Lambda',M.Lambda, 'Mass',speye(G.nV), 'nV',G.nV);
-            ref = rheome.filters.impulse(basis, seed, rheome.filters.wave(M.Lambda, t, 30, M.Lmax), 'ts');
+            ref = rheome.filters.impulse(basis, seed, rheome.filters.wave(M.Lambda, t, 30), 'ts');
             tc.verifyEqual(U, ref, 'AbsTol', 1e-12);
             tc.verifyEqual(info.Domain, 'ts');
         end
