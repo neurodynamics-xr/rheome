@@ -67,7 +67,7 @@ assert(isfile(out.manifest))
 % <howto_snapshot.html How to make print-ready cortical panels>). It needs
 % the viewer, Chrome and Node.js.
 
-if ~isempty(getenv('RHEOME_VIEWER')) && isfile(fullfile(getenv('RHEOME_VIEWER'), 'viewer.html'))
+if ~isempty(getenv('RHEOME_VIEWER')) && isfile(fullfile(getenv('RHEOME_VIEWER'), 'index.html'))
     shot = struct('Field', "psi", 'Label', "stream function", 'Unit', "a.u.", 'View', "left", ...
         'Hemisphere', "left", 'Settings', struct('labelling', L.name));
     rheome.snapshot(H.S, result, Shots=shot, Out=rheome.load.outpath('figures', 'stream', name), ...

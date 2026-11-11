@@ -740,6 +740,15 @@
     "source": [
      "lab"
     ]
+   },
+   "spectrum": {
+    "$value": "banked to 45 degrees: the width-to-height ratio at which the median absolute slope of the median series, on the axes drawn (log-log by default), reads at 45 degrees; a parade's cells each banked alike, never taller than wide",
+    "width_to_height_min": 1.0,
+    "why": "a spectrum's 1/f slope, its peaks and departures from 1/f are read as angles, best near 45 degrees; a cell stretched tall flattens the frequency axis and exaggerates every slope",
+    "added": "2026-11-11 (Diellor: nxr.show.psd)",
+    "source": [
+     "cleveland1984"
+    ]
    }
   },
   "source": [

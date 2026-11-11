@@ -126,8 +126,8 @@ function out = snapshot(surf, result, varargin)
 %   'Tokens'    the figure tokens' JSON (default $NXR_FIGURE_TOKENS, else $HOME/workspace/library/styles/tokens/
 %               figure-tokens.json if it exists, else the viewer's vendored viewer/figure/figure-tokens.json). The viewer
 %               is served the file used, and its sha256 and path go into every <Name>.marks.json (tokens_sha256, tokens_path).
-%   'Viewer'    the viewer folder (default as rheome.view: $RHEOME_VIEWER, else prefdir/rheome-viewer); it must ship
-%               driver/snapshot-driver.mjs (a Cortical Flow viewer build of 2026-11-10 or later)
+%   'Viewer'    the Editor's build folder (default as rheome.view: $RHEOME_VIEWER, else prefdir/rheome-viewer); it must ship
+%               index.html and driver/snapshot-driver.mjs (a Cortical Flow Editor build of 2026-11-11 or later)
 %   'Chrome'    Chrome or Chromium (default $RHEOME_CHROME, else the usual install)
 %   'Node'      Node.js 22+ (default $RHEOME_NODE, else the usual install)
 %   'Labellings' partitions for the viewer (rheome.viz.tiles), named by a shot's Labelling and Outlines (or Settings)
@@ -231,8 +231,8 @@ function out = snapshot(surf, result, varargin)
     [tok, tokFile, tokSha, tokShown] = tokens(o.Tokens, work);
     vdir = char(o.Viewer);
     if isempty(vdir), vdir = viewerFolder(); end
-    editor = isfile(fullfile(vdir, 'index.html')) && ~isfile(fullfile(vdir, 'viewer.html'));   % THE EDITOR's build draws the snapshots
-    if ~isfile(fullfile(vdir, 'viewer.html')) && ~editor, error('rheome:snapshot:noviewer', 'No viewer at %s (Viewer= or RHEOME_VIEWER): an Editor build (index.html) or a viewer build (viewer.html).', vdir); end
+    % THE EDITOR's build draws the snapshots (the viewer, viewer.html, was retired 2026-11-11)
+    if ~isfile(fullfile(vdir, 'index.html')), error('rheome:snapshot:noviewer', 'No Editor build at %s (Viewer= or RHEOME_VIEWER): the build folder with index.html.', vdir); end
     drv = fullfile(vdir, 'driver', 'snapshot-driver.mjs');
     if ~isfile(drv)
         error('rheome:snapshot:driver', ['The viewer at %s has no snapshot driver (driver/snapshot-driver.mjs): rheome.snapshot needs ' ...
@@ -258,7 +258,7 @@ function out = snapshot(surf, result, varargin)
     list = cell(1, numel(shots));
     for k = 1:numel(shots), list{k} = struct('name', shots(k).Name, 'shot', viewerShot(shots(k), folded, o, J)); end
     job = struct();
-    job.format = 'nxr-snapshot-job@1';  if editor, job.editor = vdir; else, job.viewer = vdir; end;  job.bundle = 'bundle';  job.out = 'out';
+    job.format = 'nxr-snapshot-job@1';  job.editor = vdir;  job.bundle = 'bundle';  job.out = 'out';
     job.chrome = chromePath(o.Chrome);  job.tokens = tokFile;  job.tokens_sha256 = tokSha;  job.tokens_path = tokShown;
     job.size = windowSize(double(tok.cortex.viewer.size_px(:)'), shots);  job.wait = o.Wait;  job.timeout = o.Timeout;  job.shots = list;
     node = nodePath(o.Node);

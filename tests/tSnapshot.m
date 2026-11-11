@@ -12,9 +12,9 @@ classdef tSnapshot < matlab.unittest.TestCase
     end
     methods (TestMethodSetup)
         function fakeViewer(tc)
-        % a viewer folder with the files read before rendering: viewer.html, the driver and the default colormap library
+        % an Editor build folder with the files read before rendering: index.html, the driver and the default colormap library
             d = tempname;  mkdir(fullfile(d, 'colormaps', 'default'));  mkdir(fullfile(d, 'driver'));
-            fclose(fopen(fullfile(d, 'viewer.html'), 'w'));
+            fclose(fopen(fullfile(d, 'index.html'), 'w'));
             fclose(fopen(fullfile(d, 'driver', 'snapshot-driver.mjs'), 'w'));
             names = {'viridis', 'cividis', 'PuOr_r', 'magma'};
             j = struct('version', 2, 'library', 'default', 'width', 256, 'rows', 4, ...
@@ -28,7 +28,7 @@ classdef tSnapshot < matlab.unittest.TestCase
     methods (Test)
         function refusesBadShots(tc)
             r = struct('a', [-1; 0; 1; 2] * ones(1, 4), 'v', zeros(12, 4));
-            run = @(shot) rheome.snapshot(tc.S, r, Shots=shot, Out=tempname, Viewer=tc.Fake, Node='/nonexistent', Chrome=fullfile(tc.Fake, 'viewer.html'));
+            run = @(shot) rheome.snapshot(tc.S, r, Shots=shot, Out=tempname, Viewer=tc.Fake, Node='/nonexistent', Chrome=fullfile(tc.Fake, 'index.html'));
             tc.verifyError(@() run(struct('Field', 'a')), 'rheome:snapshot:unit');                 % a colourbar needs a unit
             tc.verifyError(@() run(struct('Field', 'b', 'Unit', 'mm')), 'rheome:snapshot:option');
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Wrong', 1)), 'rheome:snapshot:shot');
@@ -72,7 +72,7 @@ classdef tSnapshot < matlab.unittest.TestCase
             r = struct('a', [-1; 0; 1; 2] * ones(1, 4), 'v', zeros(12, 4));
             L = struct('name', {'t', 'h'}, 'codes', {[0; 0; 1; 1], [0; 0; 0; 1]});
             run = @(shot, varargin) rheome.snapshot(tc.S, r, 'Shots', shot, 'Out', tempname, 'Viewer', tc.Fake, 'Node', '/nonexistent', ...
-                'Chrome', fullfile(tc.Fake, 'viewer.html'), 'Labellings', L, varargin{:});
+                'Chrome', fullfile(tc.Fake, 'index.html'), 'Labellings', L, varargin{:});
             tc.verifyError(@() run(struct('Field', '', 'Unit', 'mm')), 'rheome:snapshot:shot');                   % no field: no unit
             tc.verifyError(@() run(struct('Field', 'a', 'Unit', 'mm', 'Labelling', 't')), 'rheome:snapshot:shot');  % a field or a labelling
             tc.verifyError(@() run(struct('Labelling', 'zz')), 'rheome:snapshot:option');
@@ -294,14 +294,14 @@ end
 function vdir = libraryViewer(tc)
 % the viewer to draw with: RHEOME_VIEWER, else the library's release; Chrome
     vdir = getenv('RHEOME_VIEWER');
-    if isempty(vdir), vdir = fullfile(char(java.lang.System.getProperty('user.home')), 'workspace', 'library', 'software', 'cortical-flow-viewer'); end
+    if isempty(vdir), vdir = fullfile(char(java.lang.System.getProperty('user.home')), 'workspace', 'library', 'software', 'cortical-flow-editor'); end
     tc.assumeTrue(isBuild(vdir) && isfile(fullfile(vdir, 'driver', 'snapshot-driver.mjs')), 'needs the viewer (RHEOME_VIEWER)');
     tc.assumeTrue(isfile('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome') || ~isempty(getenv('RHEOME_CHROME')), 'needs Chrome');
 end
 
 function [vdir, S] = needs(tc)
     vdir = getenv('RHEOME_VIEWER');
-    if isempty(vdir), vdir = fullfile(char(java.lang.System.getProperty('user.home')), 'workspace', 'research', 'code', 'nxr-cortical-flow', 'editor', 'dist-viewer'); end
+    if isempty(vdir), vdir = fullfile(char(java.lang.System.getProperty('user.home')), 'workspace', 'research', 'code', 'nxr-cortical-flow', 'editor', 'dist'); end
     tc.assumeTrue(isBuild(vdir), 'needs the viewer (RHEOME_VIEWER)');
     tc.assumeTrue(isfile('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome') || ~isempty(getenv('RHEOME_CHROME')), 'needs Chrome');
     tc.assumeTrue(rheome.load.has('omega_sub0002'), 'needs the omega_sub0002 surface in +data');
@@ -309,6 +309,6 @@ function [vdir, S] = needs(tc)
 end
 
 function ok = isBuild(vdir)
-% an Editor build (index.html) or a viewer build (viewer.html): rheome.snapshot draws with either
-    ok = isfile(fullfile(vdir, 'index.html')) || isfile(fullfile(vdir, 'viewer.html'));
+% an Editor build (index.html): what rheome.snapshot draws with
+    ok = isfile(fullfile(vdir, 'index.html'));
 end

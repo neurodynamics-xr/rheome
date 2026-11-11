@@ -118,8 +118,8 @@ out = rheome.view(r, Fs=fs, Layers={{"velocity", "abs"}, {"velocity"}});
 % layer |{"x"}|; |Arrows=false| drops the arrows layers.
 
 %% Install the viewer
-% Inside MATLAB (R2026a+) the viewer is a folder with |viewer.html| (the
-% Cortical Flow viewer's build, |editor/dist-viewer|).
+% Inside MATLAB (R2026a+) the viewer is a folder with |view.html| (the
+% Cortical Flow Editor's build, |editor/dist|).
 % Rheome uses |RHEOME_VIEWER| if you set it, else |prefdir/rheome-viewer|,
 % which it installs from the copy shipped with Rheome (its |viewer| folder)
 % when there is one. On R2023b-R2025b, install the Cortical Flow desktop app
