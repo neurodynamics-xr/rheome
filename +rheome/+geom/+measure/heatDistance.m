@@ -14,7 +14,7 @@ function [distance, solver] = heatDistance(S, sourceVertices, solver, opt)
 % and the mass are rheome.operators.intrinsic_delaunay's (the Cortical Flow Editor's intrinsicDelaunay.ts: ONE Delaunay,
 % PI 2026-11-10): FIFO flips at opt.flipEps (1e-6), mollify opt.mollify (1e-6), and the heat step uses the
 % mixed-Voronoi mass of the mollified input mesh (S.mass; it was the barycentric A/3 of the flipped mesh), t = h^2
-% (h = mean edge length of the mollified input). The solver records .mesh (the intrinsic_delaunay struct), .mollify, .flipEps.
+% (h = mean edge length of the intrinsic Delaunay mesh, after the flips: the Editor's HeatMethod). The solver records .mesh (the intrinsic_delaunay struct), .mollify, .flipEps.
 %
 % ⭐ WHY THE REWRITE (2026-10-14). The earlier version saturated at ~46 mm on fsaverage6 pial (true
 % max ~240 mm) and was 20-30 % off within 40 mm, and its Cholesky failed on fsaverage. Three causes:
@@ -77,9 +77,7 @@ function solver = i_build(V, F, mollify, flipEps)
 % mollify, FIFO flips at flipEps, the mixed-Voronoi mass of the mollified input), each face laid out in its own 2-D frame.
     nV = size(V, 1);  nF = size(F, 1);
     D = rheome.operators.intrinsic_delaunay(V, F, mollify=mollify, flipEps=flipEps);
-    pairs = [F(:,[2 3]); F(:,[3 1]); F(:,[1 2])];
-    ue = unique(sort(pairs, 2), 'rows');
-    h = mean(vecnorm(V(ue(:,1),:) - V(ue(:,2),:), 2, 2)) + D.mollifyEps;   % heat time t = h^2: mean mollified edge length of the INPUT mesh
+    h = mean(D.len);                                        % heat time t = h^2: mean edge length of the intrinsic (flipped) mesh, as the Editor's HeatMethod
     he = reshape(1:3*nF, 3, [])';                           % halfedge of (f,k): corner k -> k+1
     len = D.len;
     FE = D.edgeOf(he(:, [2 3 1]));                          % FE(f,c): the edge opposite corner c (corner c+1 -> c+2)
