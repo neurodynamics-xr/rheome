@@ -54,6 +54,8 @@ class Cohort(unittest.TestCase):
             r9 = [r for r in out if r["node_id"] == 9][0]
             self.assertTrue(r9["polar"] and np.isnan(r9["axis_deg"]) and np.isnan(r9["axis_R"]))
             self.assertTrue(os.path.isfile(os.path.join(d, "out", "gaugecohort.csv")))
+            ex = cohort.gauge(os.path.join(d, "ex"), [ind], exclude=["omega/sub-0[4-6]", "other/*"])   # tarballs out
+            self.assertEqual([r for r in ex if r["node_id"] == 8][0]["n"], 4)
 
     def test_relative_from_sums_equals_rows(self):
         hdr = "level,code,hemisphere,field,modality,unit,member,scale_mm,area_m2,sum_ax,sum_ax2,mean,ms\n"
