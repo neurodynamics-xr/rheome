@@ -28,8 +28,8 @@ function out = parityWriteGolden(fixture, out)
     G.Mlumped = put(out, 'Mlumped', full(diag(Ml)));
     G.MgalRowSum = put(out, 'MgalRowSum', full(sum(Mg, 2)));
     G.I = put(out, 'I', I');
-    tic; v1 = rheome.dynamics.opticalflow_scalar(I, s, struct('alpha', 1));    t1 = toc;
-    tic; v2 = rheome.dynamics.opticalflow_scalar(I, s, struct('alpha', 0.01)); t2 = toc;
+    tic; v1 = rheome.dynamics.opticalflow_scalar(I, s, struct('alpha', 1, 'regulariser', 'frame'));    t1 = toc;
+    tic; v2 = rheome.dynamics.opticalflow_scalar(I, s, struct('alpha', 0.01, 'regulariser', 'frame')); t2 = toc;
     G.flow_alpha1 = put(out, 'flow_alpha1', v1');
     G.flow_alpha0_01 = put(out, 'flow_alpha0_01', v2');
     fg = rheome.operators.face_gradient(V, F);

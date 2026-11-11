@@ -1,0 +1,2 @@
+The Cortical Flow Editor's own optical flow (`flow/opticalFlow.ts`) on small meshes: positions, faces, maps (float32 values), alpha, C (triplets of the real 2n x 2n pencil), M, the gradient in C's gauge `g`, the frame-0 gauge solution `z` (dense float64) with its embedding `zv`, and the Editor's float32 velocity.
+Made by nxr-neuro's `compute/test/golden/gen_opticalflow_connection_golden.mts` (`NXR_CORTICAL_FLOW=<Editor monorepo> tsx ...`); this copy omits its `sphere2` mesh. Read by `tests/tOpticalflowConnection.m`.

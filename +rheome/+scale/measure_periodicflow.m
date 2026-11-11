@@ -169,7 +169,7 @@ function [T, X, G] = measure_periodicflow(name, S, opts)
             if v == 1, Xv = Xw; else, Xv = Xper; end
             Fa = hilbert(filtfilt(bp, Xv.')).';                 % ⚠ time down columns, then back
             A = rheome.flow.activation(K * Fa(:, idx), Rate=rate, Band=band);
-            o = rheome.flow.apparent(A, SL, Rate=rate, Band=band, Alpha=opts.Alpha);
+            o = rheome.flow.apparent(A, SL, Rate=rate, Band=band, Alpha=opts.Alpha, Regulariser="frame");   % the pre-2026-11-11 method (re-check with "connection", Alpha 0.01)
             mE = mean(A(:, 1:end-1), 1);  mS = median(o.speed, 1);
             r = corr(mE(:), mS(:));  ne = i_neff(mE(:), mS(:));
             Am{v} = mean(A, 2);
