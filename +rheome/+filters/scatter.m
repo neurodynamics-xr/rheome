@@ -36,8 +36,14 @@ function S = scatter(basis, F, frame, opts)
 %
 % ⭐ THE SECOND WAVELET MUST BE COARSER. |g_m1(L) F| is a smooth envelope whose energy
 % lies BELOW m1's band, so a finer m2 sees essentially nothing -- Mallat's lambda2 <
-% lambda1 rule. Pairs with sigma(m2) <= sigma(m1) are left NaN rather than computed,
-% which is also what keeps the second order affordable (roughly half of M^2).
+% lambda1 rule. A member's SCALE here is 1/(its centre wavenumber) (frame.Centers, the gain-weighted
+% centroid of sqrt(lambda)), a quantity every family has; a pair is computed iff the second member's scale
+% is larger. Pairs that fail it are left NaN rather than computed, which is also what keeps the
+% second order affordable (roughly half of M^2). The LOW-PASS member (the one that is 1 at lambda = 0 and
+% carries no band: the scaling function of a mexhat bank, the first itersine window, a Meyer or log-itersine low-pass) has
+% no scale and takes no part in the pairing, as first or second member: it would otherwise be a
+% second-order partner of every band. A heat bank is a scale-space of low-pass members and keeps all of them,
+% ordered by their centres. Pass frame.LowPass (a logical per member) to override the detection.
 %
 % ⭐ S1's MEMBER INDEX IS A CALIBRATED SCALE READOUT -- INSIDE THE BAND. Plant an atom
 % built from member m and S1 peaks on m exactly, but only for members between the basis
@@ -57,7 +63,7 @@ function S = scatter(basis, F, frame, opts)
 % INPUTS:
 %   basis  struct with .Phi [nV x K], .Lambda [K x 1], .Mass [nV x nV]
 %   F      [nV x nT] field, real or complex (complex strongly preferred -- see above)
-%   frame  from rheome.filters.frame (needs .g and .Sigma)
+%   frame  from rheome.filters.frame (needs .g, .Family, .Lrange and .Centers; .Sigma is reported, not used)
 %   opts   .Order     1 | 2                        (default 2)
 %          .MaxBytes  peak array budget in bytes   (default 5e8 = 500 MB)
 %          .Pool      [nV x nR] pooling weights    (default [] = mass-weighted global mean)
@@ -87,9 +93,9 @@ function S = scatter(basis, F, frame, opts)
     if ~(isscalar(maxBytes) && maxBytes > 0)
         error('filters:scatter:maxBytes', 'MaxBytes must be a positive scalar.');
     end
-    if ~isfield(frame, 'Sigma')
+    if ~all(isfield(frame, {'Centers','g','Lrange'}))
         error('filters:scatter:frame', ...
-            'frame needs .Sigma to order the cascade. Build it with rheome.filters.frame.');
+            'frame needs .Centers, .g and .Lrange to order the cascade. Build it with rheome.filters.frame.');
     end
 
     Phi = basis.Phi;  Mass = basis.Mass;  lam = double(basis.Lambda(:));
@@ -115,10 +121,12 @@ function S = scatter(basis, F, frame, opts)
     nR = size(w, 2);
     wt = w.';                                       % [nR x nV]
 
-    % Low-pass / scaling members carry no scale; they are the COARSEST thing in the bank,
-    % so Inf is the ordering-correct reading of the NaN, not a missing value.
-    sig = double(frame.Sigma(:)).';
-    sig(~isfinite(sig)) = Inf;
+    % Each member's scale is 1/(centre wavenumber); the low-pass member has none (NaN) and is not paired.
+    kc  = double(frame.Centers(:)).';
+    low = i_lowpass(frame, M);
+    sig = 1 ./ kc;
+    sig(low | ~isfinite(sig) | kc <= 0) = NaN;
+    okm = isfinite(sig);
 
     % --- the byte budget -> a block of time columns ------------------------------------
     % Peak concurrent per column, worst case (complex input):
@@ -142,7 +150,7 @@ function S = scatter(basis, F, frame, opts)
     pairs = zeros(0, 2);
     for m1 = 1:M
         for m2 = 1:M
-            if sig(m2) > sig(m1), pairs(end+1, :) = [m1 m2]; end %#ok<AGROW>
+            if okm(m1) && okm(m2) && sig(m2) > sig(m1), pairs(end+1, :) = [m1 m2]; end %#ok<AGROW>
         end
     end
 
@@ -165,7 +173,7 @@ function S = scatter(basis, F, frame, opts)
                 C1 = Phi' * (Mass * U1);            % [K x nj]
                 clear U1
                 for m2 = 1:M
-                    if ~(sig(m2) > sig(m1)), continue; end
+                    if ~(okm(m1) && okm(m2) && sig(m2) > sig(m1)), continue; end
                     U2 = abs(Phi * (H(:, m2) .* C1));
                     S2(m1, m2, :, j) = reshape(wt * U2, 1, 1, nR, nj);
                 end
@@ -181,6 +189,21 @@ function S = scatter(basis, F, frame, opts)
                'Sigma', sig, 'Pairs', pairs, 'Order', order, ...
                'BlockSize', blk, 'NumBlocks', nb, ...
                'PeakBytes', perCol * blk, 'MaxBytes', maxBytes);
+end
+
+function low = i_lowpass(frame, M)
+% The low-pass members: frame.LowPass if given, else (not for a heat bank) those whose gain at
+% lambda = 0 is at least half their peak over [0, lmax].
+    if isfield(frame, 'LowPass') && ~isempty(frame.LowPass)
+        low = logical(frame.LowPass(:)).';  return;
+    end
+    low = false(1, M);
+    if strcmpi(frame.Family, 'heat'), return; end
+    lg = linspace(0, frame.Lrange(2), 512).';
+    for m = 1:M
+        gm = abs(frame.g{m}(lg));
+        low(m) = gm(1) > 0.5 * max(gm);
+    end
 end
 
 function v = i_opt(o, f, d)

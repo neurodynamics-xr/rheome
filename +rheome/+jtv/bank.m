@@ -7,18 +7,24 @@ function [G, info] = bank(Lambda, f, psiGraph, psiTime, K, varargin)
 %
 % Follows GSPBox's gsp_jtv_design_dgw:
 %
-%   W(lambda,omega) = K(lambda,omega) .* psi_graph(lambda) .* psi_time(omega)
+%   W(lambda,f) = K(lambda,f) .* psi_graph(lambda) .* psi_time(f)
 %
 % and forms every combination, so a bank of Ng graph kernels, Nt time kernels and Nk joint kernels
 % has Ng*Nt*Nk members. The separable case is K = 1; a speed-selective filter is a non-separable K,
-% e.g. @(l,w) exp(-(w - c*sqrt(l)).^2 / (2*d^2)).
+% e.g. rheome.jointfilterbank.speedkernel(c, d), or @(l,f) exp(-(f - c*sqrt(l)/(2*pi)).^2 / (2*df^2)).
 %
-% FILTER TYPE -- 'js' vs 'ts'. GSPBox distinguishes filters defined in (lambda,omega) from those
-% defined in (lambda,t), and the distinction is not cosmetic: a 'ts' kernel must be transformed
-% along the time axis before it can multiply a joint SPECTRUM, and applying it as though it were
-% 'js' filters the wrong axis while looking entirely plausible. This bank is built and applied in
-% (lambda,omega), so 'js' is the only type it evaluates; 'ts' is REFUSED rather than quietly
-% mishandled. The field is recorded on info so a caller storing banks can tell them apart.
+% UNITS. The frequency axis f is in HERTZ and SIGNED, and every time factor and joint kernel
+% receives f in hertz (never omega = 2*pi*f). A kernel that needs an angular frequency converts
+% itself (rheome.jointfilterbank.speedkernel does, so a speed stays in length/s).
+%
+% FILTER TYPE -- 'js' vs 'ts'. GSPBox distinguishes filters defined in (lambda,f) from those
+% defined in (lambda,t), and the distinction is not cosmetic: a 'ts' kernel (diffusion, wave,
+% dampedwave, kleingordon, schrodinger) is a function of a time LAG, the response to an impulse as
+% elapsed time goes by. It cannot multiply a joint (lambda,f) SPECTRUM: it must be transformed along
+% the time axis first (rheome.filters.jtv), and applying it as though it were 'js' filters the wrong
+% axis while looking entirely plausible. This bank is built and applied in (lambda,f), so 'js' is the
+% only type it evaluates; 'ts' is REFUSED rather than quietly mishandled. The field is recorded on
+% info so a caller storing banks can tell them apart.
 %
 % THE AXES ARE FIRST CLASS. Pass 'axes' (a rheome.jtv.axes) and the bank carries the axes it was designed
 % on; rheome.jtv.analysis then checks the spectrum it is handed against them. This catches the failure a
@@ -27,13 +33,13 @@ function [G, info] = bank(Lambda, f, psiGraph, psiTime, K, varargin)
 %
 % INPUTS:
 %   Lambda    [K x 1] eigenvalues
-%   f         [1 x nOmega] frequencies (Hz); omega = 2*pi*f is passed to the kernels
+%   f         [1 x nOmega] frequencies (Hz, signed); passed to the kernels as they are
 %   psiGraph  function handle or cell array, each @(lambda) -> gain  (default {@(l) ones(size(l))})
-%   psiTime   function handle or cell array, each @(omega) -> gain   (default {@(w) ones(size(w))})
-%   K         function handle or cell array, each @(lambda,omega) -> gain (default {@(l,w) 1})
+%   psiTime   function handle or cell array, each @(f) -> gain, f in Hz   (default {@(f) ones(size(f))})
+%   K         function handle or cell array, each @(lambda,f) -> gain, f in Hz (default {@(l,f) 1})
 %
 % NAME-VALUE:
-%   'type'    'js' (default, (lambda,omega)) | 'ts' ((lambda,t) -- REFUSED, see above)
+%   'type'    'js' (default, (lambda,f)) | 'ts' ((lambda,t) -- REFUSED, see above)
 %   'axes'    a rheome.jtv.axes struct; recorded on info and checked by rheome.jtv.analysis
 %   'labels'  {1 x Nf} cellstr naming the members, for figures and tables
 %
@@ -51,8 +57,8 @@ function [G, info] = bank(Lambda, f, psiGraph, psiTime, K, varargin)
 % Author: Diellor Basha, 2026 (after F. Grassi, GSPBox)
 
     if nargin < 3 || isempty(psiGraph), psiGraph = {@(l) ones(size(l))}; end
-    if nargin < 4 || isempty(psiTime),  psiTime  = {@(w) ones(size(w))}; end
-    if nargin < 5 || isempty(K),        K        = {@(l,w) ones(size(l))}; end
+    if nargin < 4 || isempty(psiTime),  psiTime  = {@(f) ones(size(f))}; end
+    if nargin < 5 || isempty(K),        K        = {@(l,f) ones(size(l))}; end
     if ~iscell(psiGraph), psiGraph = {psiGraph}; end
     if ~iscell(psiTime),  psiTime  = {psiTime};  end
     if ~iscell(K),        K        = {K};        end
@@ -65,16 +71,17 @@ function [G, info] = bank(Lambda, f, psiGraph, psiTime, K, varargin)
     o = p.Results;
 
     if ~any(strcmpi(o.type, {'js','ts'}))
-        error('jtv:bank:type', 'type must be ''js'' (lambda,omega) or ''ts'' (lambda,t), got ''%s''.', o.type);
+        error('jtv:bank:type', 'type must be ''js'' (lambda,f) or ''ts'' (lambda,t), got ''%s''.', o.type);
     end
     if strcmpi(o.type, 'ts')
         error('jtv:bank:tsUnsupported', ...
-            ['type ''ts'' defines the kernel in (lambda,t); this bank is evaluated in ' ...
-             '(lambda,omega). Transform the kernel along the time axis first and pass it as ''js''.']);
+            ['type ''ts'' defines the kernel in (lambda,t): it acts on a time LAG, as a propagator ' ...
+             '(diffusion, wave, ...), and cannot multiply a joint (lambda,f) spectrum, which this bank ' ...
+             'is evaluated on. Transform the kernel along the time axis first (rheome.filters.jtv) and pass it as ''js''.']);
     end
 
     lam = double(Lambda(:));
-    om  = 2*pi*double(f(:)).';
+    om  = double(f(:)).';                       % Hz, signed: the kernels' argument
     [LL, WW] = ndgrid(lam, om);
 
     Ng = numel(psiGraph);  Nt = numel(psiTime);  Nk = numel(K);

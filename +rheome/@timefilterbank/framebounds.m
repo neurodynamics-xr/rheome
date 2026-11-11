@@ -1,11 +1,11 @@
 function b = framebounds(obj)
-% FRAMEBOUNDS  Frame bounds of S/2 over the whole axis (0, fs/2), excluding the DC and Nyquist bins.
+% FRAMEBOUNDS  Frame bounds of S/2 over the whole axis (0, fs/2), excluding the DC and Nyquist bins; A = B = Gain^2/2.
 %
 %   b = framebounds(tfb)   .A .B .Tightness (B/A) .Uncovered (fraction of bins with S ~ 0)
 %
 % The half is the real-signal convention used by the store: for real x,
 % sum_m ||w_m||^2 = A * sum x^2 = B * sum x^2 when tight, up to the two excluded bins.
-% Tight by construction: A = B = 1 to round-off (tests/tTimeFilterBank.m).
+% Tight by construction: A = B = Gain^2/2 to round-off (2 for the default Gain = 2; tests/tTimeFilterBank.m).
 %
 % See also: isframetight, rheome.graphfilterbank/framebounds
 %

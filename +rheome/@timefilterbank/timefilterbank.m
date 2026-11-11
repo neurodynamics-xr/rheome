@@ -3,13 +3,21 @@ classdef timefilterbank
 %
 %   tfb = rheome.timefilterbank(SignalLength, 'SamplingFrequency', fs)
 %   tfb = rheome.timefilterbank(SignalLength, 'SamplingFrequency', fs, 'VoicesPerOctave', 4, ...
-%                        'Anchor', 1, 'FrequencyLimits', [], 'Oversample', 2)
+%                        'Anchor', 1, 'FrequencyLimits', [], 'Oversample', 2, 'Gain', 2)
 %
 % Analytic kernels g_m(f) on the one-sided DFT grid of a record, itersine windows of two
 % voices' width on xi = V*log2(f/Anchor), member k centred at xi = k, plus a low-pass and
-% a high-pass member completing the frame so that S(f) = sum_m |g_m|^2 = 2 on the whole
-% axis (0, fs/2): a TIGHT frame in the analytic gain-2 convention, under which
-% sum_m ||w_m||^2 = sum x^2 for a real signal up to the DC and Nyquist bins.
+% a high-pass member completing the frame so that S(f) = sum_m |g_m|^2 = Gain^2 on the whole
+% axis (0, fs/2): a TIGHT frame.
+%
+% ⭐ GAIN HAS ONE MEANING: THE PEAK IN-BAND RESPONSE. Every member's peak gain is Gain (any positive
+% number, recorded as tfb.Gain; default 2, the analytic-signal convention), in this bank as in the
+% Morse, Morlet and Bump families. A real tone of amplitude A inside a member's passband then gives
+% |coefficient| = (Gain/2)*A: with the default 2 the coefficient magnitude IS the physical amplitude.
+% The frame follows: sum_m |g_m|^2 = Gain^2, so for a real signal sum_m ||w_m||^2 = (Gain^2/2) sum x^2 up to
+% the DC and Nyquist bins (Gain = 2: twice the signal energy, because the analytic coefficient of an
+% amplitude-A tone has amplitude A and energy A^2, the signal's own being A^2/2). Before this definition the
+% default carried sum |g|^2 = 2, i.e. a peak of sqrt(2) and |c| = 0.71*A.
 %
 % wt(tfb, x) returns each member's coefficients at the member's OWN rate: the inverse FFT
 % of its bins alone, at Oversample x the bin count. Magnitudes are exact at those instants.
@@ -48,6 +56,7 @@ classdef timefilterbank
         VoicesPerOctave
         Anchor
         Oversample
+        Gain
         MinBins = 8
     end
 
@@ -74,6 +83,7 @@ classdef timefilterbank
             p.addParameter('Anchor', 1, @(v) isscalar(v) && v > 0);
             p.addParameter('FrequencyLimits', [], @(v) isempty(v) || (numel(v) == 2 && v(1) > 0 && v(2) > v(1)));
             p.addParameter('Oversample', 2, @(v) isscalar(v) && v >= 1);
+            p.addParameter('Gain', 2, @(v) isscalar(v) && isnumeric(v) && v > 0 && isfinite(v));
             p.parse(varargin{:});
             o = p.Results;
             if isempty(o.SamplingFrequency)
@@ -87,6 +97,7 @@ classdef timefilterbank
             obj.VoicesPerOctave   = o.VoicesPerOctave;
             obj.Anchor            = o.Anchor;
             obj.Oversample        = o.Oversample;
+            obj.Gain              = o.Gain;
             obj = i_design(obj, o.FrequencyLimits);
         end
 

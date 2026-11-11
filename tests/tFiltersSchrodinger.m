@@ -22,13 +22,13 @@ classdef tFiltersSchrodinger < matlab.unittest.TestCase
             % exp(-lambda t) against exp(-i lambda t): the Wick rotation, and nothing else
             H = rheome.filters.diffusion(tc.lam, tc.t);
             G = rheome.filters.schrodinger(tc.lam, tc.t);
-            tc.verifyEqual(abs(log(max(H,realmin))), abs(angle(G)), 'AbsTol', 1e-9);
+            tc.verifyEqual(G, exp(1i * log(max(H, realmin))), 'AbsTol', 1e-9);       % exp(-i lambda t) = exp(i log H)
         end
 
         function eachModeTurnsAtItsOwnEigenvalue(tc)
             % ⭐ the dispersion relation omega = lambda, which is what makes it a straight
             %   ridge in the joint plane
-            G = rheome.filters.schrodinger(tc.lam, tc.t, 1, 1);      % lmax = 1, so omega = lambda
+            G = rheome.filters.schrodinger(tc.lam, tc.t, 1);         % hbar = 1, so omega = lambda (physical units)
             for k = [5 17 33]
                 ph = unwrap(angle(G(k,:)));
                 rate = -median(diff(ph))/median(diff(tc.t));

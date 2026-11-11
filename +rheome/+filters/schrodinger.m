@@ -1,9 +1,11 @@
-function G = schrodinger(lambda, t, hbar, lmax)
+function G = schrodinger(lambda, t, hbar)
 % FILTERS.SCHRODINGER  Free-particle propagator on the graph (eigenmode x time, 'ts' domain).
 %
-%   G = rheome.filters.schrodinger(lambda, t, hbar, lmax)
+%   G = rheome.filters.schrodinger(lambda, t, hbar)
 %
-% g(lambda,t) = exp(-1i * (lambda/lmax) * t / hbar). The member the propagator family was
+% g(lambda,t) = exp(-1i * lambda * t / hbar). Each mode turns at the angular rate omega = lambda/hbar
+% (rad/s); with hbar = 1/D it is the Wick rotation of rheome.filters.diffusion. In PHYSICAL UNITS
+% (lambda in 1/length^2, t in seconds), not normalised by lambda_max. The member the propagator family was
 % missing: diffusion is exp(-lambda*t), this is exp(-1i*lambda*t). Same operator, imaginary
 % time -- which is the whole content of the Wick rotation, and the reason a heat kernel
 % spreads while this one only turns.
@@ -35,9 +37,11 @@ function G = schrodinger(lambda, t, hbar, lmax)
 %
 % INPUTS:
 %   lambda [K x 1] eigenvalues       t [1 x N] time-lag axis
-%   hbar   rate (default 1)          lmax spectral normalizer (default max(lambda))
+%   hbar   rate unit (default 1): each mode turns at lambda/hbar rad/s
 % OUTPUT:
 %   G      [K x N] COMPLEX gains g(lambda_k, t_n), |G| = 1 everywhere
+%
+% A (lambda,t) kernel acts on a time LAG; it cannot multiply a joint (lambda,f) spectrum.
 %
 % See also: rheome.filters.diffusion, rheome.filters.wave, rheome.filters.kleingordon, rheome.filters.travwave,
 %           rheome.dynamics.dispersion, jointfilterbank
@@ -45,10 +49,8 @@ function G = schrodinger(lambda, t, hbar, lmax)
 % Author: Diellor Basha, 2026
 
     if nargin < 3 || isempty(hbar), hbar = 1;            end
-    if nargin < 4 || isempty(lmax), lmax = max(lambda);  end
     assert(hbar ~= 0, 'rheome.filters.schrodinger: hbar must be nonzero.');
-    sc = 1 / max(lmax, eps);
-    G  = exp( -1i * sc * double(lambda(:)) .* double(t(:)') / hbar );
+    G  = exp( -1i * double(lambda(:)) .* double(t(:)') / hbar );
 end
 
 % Author: Diellor Basha, 2026

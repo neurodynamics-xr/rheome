@@ -20,7 +20,7 @@ function C = iwt(obj, Y, mode)
     if ~any(strcmpi(mode, {'dual','tight'}))
         error('jointfilterbank:mode', 'mode must be ''dual'' or ''tight'', got ''%s''.', mode);
     end
-    lam = obj.Lambda;  om = obj.Omega;
+    lam = obj.Lambda;  om = obj.Frequencies;
     K = numel(lam);  nO = numel(om);  Nf = obj.NumMembers;
     if size(Y,1) ~= K || size(Y,2) ~= nO || size(Y,3) ~= Nf
         error('jointfilterbank:size', ...

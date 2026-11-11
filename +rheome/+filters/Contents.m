@@ -28,18 +28,20 @@
 %   rheome.filters.toquat     - physical 3-vector [3nV x ..] -> pure quaternion [4nV x ..] (w=0)
 %   rheome.filters.steer      - right-quaternion steer: rigidly re-aim every dipole by q0
 %
-% Joint kernels, eigenmode x TIME ('ts')  g(lambda,t):
-%   rheome.filters.diffusion  - physical-time heat (spreads)
-%   rheome.filters.wave       - wave propagation (expanding wavefront)
+% Joint kernels, eigenmode x TIME LAG ('ts')  g(lambda,t), physical units, act on a lag (they cannot multiply a joint spectrum):
+%   rheome.filters.diffusion  - exp(-D*lambda*|t|), physical-time heat (spreads)
+%   rheome.filters.wave       - cos(t*c*sqrt(lambda)), wave propagation ('discrete' variant: Chebyshev angle)
 %   rheome.filters.dampedwave - propagating + decaying wave
-%   rheome.filters.kleingordon- massive (dispersive) wave with a frequency floor
+%   rheome.filters.kleingordon- omega^2 = c^2*lambda + m^2, massive (dispersive) wave with a frequency floor
+%   rheome.filters.schrodinger- exp(-i*lambda*t/hbar), unitary
 %
-% Joint kernels, eigenmode x FREQUENCY ('js')  g(lambda,omega):
-%   rheome.filters.travwave   - traveling-wave dispersion ridge
+% Joint kernels, eigenmode x FREQUENCY ('js')  g(lambda,f), f SIGNED and in HERTZ:
+%   rheome.filters.signedfrequencies - an FFT grid ('full' or one-sided 'positive') read as signed hertz
+%   rheome.filters.travwave   - traveling-wave dispersion ridge, with a sense (+1 / -1 / both)
 %   rheome.filters.resonator  - damped harmonic resonator at f0 (complex)
 %   rheome.filters.gabor      - spatiotemporal Gabor packet (scale x frequency)
 %   rheome.filters.stmatern   - spatiotemporal 1/f (Whittle-Matern) background
-%   rheome.filters.bandpass   - Gaussian temporal band-pass factor g(omega)
+%   rheome.filters.bandpass   - Gaussian temporal band-pass factor g(f)
 %   rheome.filters.resample   - rows resampled fs -> another rate, anti-aliased (polyphase Kaiser sinc: scipy's resample_poly)
 %
 % Joint transform + application:

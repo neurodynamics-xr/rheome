@@ -45,8 +45,8 @@ classdef tJfbCompose < matlab.unittest.TestCase
             tc.verifyEqual(j.NumTime, 1);
             % TimeFilters is the raw input; TimeMembers is the RESOLVED list.
             h = j.TimeMembers{1};
-            tc.verifyEqual(h(2*pi*8),    0, 'AbsTol', 0);
-            tc.verifyEqual(h(2*pi*10.5), 1, 'RelTol', 1e-12);
+            tc.verifyEqual(h(8),    0, 'AbsTol', 0);
+            tc.verifyEqual(h(10.5), 1, 'RelTol', 1e-12);
         end
 
         function explicitTimeFiltersCoexistWithBands(tc)

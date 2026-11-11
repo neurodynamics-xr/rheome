@@ -17,7 +17,7 @@ function E = scalogram(obj, C)
 %
 % Author: Diellor Basha, 2026
 
-    lam = obj.Lambda;  om = obj.Omega;
+    lam = obj.Lambda;  om = obj.Frequencies;
     K = numel(lam);  nO = numel(om);
     if ~isequal(size(C), [K nO])
         error('jointfilterbank:size', ...

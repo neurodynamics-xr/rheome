@@ -11,7 +11,7 @@ function k = centerWavenumbers(obj)
 %
 % Author: Diellor Basha, 2026
 
-    lam = obj.Lambda;  om = obj.Omega;
+    lam = obj.Lambda;  om = obj.Frequencies;
     kk  = sqrt(lam);
     k   = zeros(1, obj.NumMembers);
     for m = 1:obj.NumMembers

@@ -7,7 +7,7 @@ function S = jfb_frameop(obj)
 %
 % Author: Diellor Basha, 2026
 
-    lam = obj.Lambda;  om = obj.Omega;
+    lam = obj.Lambda;  om = obj.Frequencies;
     S = zeros(numel(lam), numel(om));
     for m = 1:obj.NumMembers
         S = S + abs(jfb_member(obj, m, lam, om)).^2;

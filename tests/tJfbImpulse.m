@@ -3,10 +3,10 @@ classdef tJfbImpulse < matlab.unittest.TestCase
     methods (Test)
 
         function speedKernelPeaksOnItsDiagonal(tc)
-            % The kernel selects omega = c*sqrt(lambda).
+            % The kernel selects omega = 2*pi*f = c*sqrt(lambda); its argument is f in HERTZ.
             c = 5;  K = rheome.jointfilterbank.speedkernel(c, 2);
-            lam = (1:10).';  om = c*sqrt(lam).';
-            G = K(lam, om);
+            lam = (1:10).';  f = c*sqrt(lam).' / (2*pi);
+            G = K(lam, f);
             [~, ipk] = max(G, [], 2);
             tc.verifyEqual(ipk, (1:10).');       % the peak is on the diagonal
         end
