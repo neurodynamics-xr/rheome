@@ -100,7 +100,8 @@ function out = view(varargin)
     out = struct('viewer', lower(char(o.Viewer)), 'manifest', '', 'settings', s, 'figure', []);
 
     vdir = viewerFolder();
-    page = fullfile(vdir, 'viewer.html');
+    page = fullfile(vdir, 'view.html');                                 % the Editor's build: the viewer's protocol on the Editor
+    if ~isfile(page), page = fullfile(vdir, 'viewer.html'); end          % else the viewer's own page
     if strcmp(out.viewer, 'auto')
         if ~isMATLABReleaseOlderThan('R2026a') && isfile(page), out.viewer = 'editor'; else, out.viewer = 'app'; end
     end
@@ -110,8 +111,14 @@ function out = view(varargin)
         root = fullfile(vdir, 'bundles');
         if isfolder(root), rmdir(root, 's'); end
         id = char(datetime('now', 'Format', 'yyyyMMdd''T''HHmmssSSS'));
+        labs = o.Labellings;  st = structuresOf(surf);                 % the hemispheres, as the atlas the Editor reads them from
+        if ~isempty(st)
+            if isempty(labs), labs = {}; elseif isstruct(labs), labs = num2cell(labs(:)'); end
+            names = cellfun(@(x) char(x.name), labs, 'UniformOutput', false);
+            if ~any(strcmp(names, 'Structures')), labs = [labs(:)' {st}]; end
+        end
         out.manifest = rheome.io.write.bundle(fullfile(root, id), surf, result, 'Fs', o.Fs, 'Name', o.Name, 'Settings', s, ...
-            'Potentials', o.Potentials, 'Labellings', o.Labellings, 'Points', o.Points);
+            'Potentials', o.Potentials, 'Labellings', labs, 'Points', o.Points);
     end
 
     switch out.viewer
@@ -485,4 +492,19 @@ function fig = viaShow(surf, result, s)
         ax = rheome.show.vectors(surf, x(:, t), opt{:});
     end
     fig = ancestor(ax, 'figure');
+end
+
+function st = structuresOf(S)
+% the surface's hemispheres (rheome.io.read.surface's Hemi / HemiLabel: its 'Structures' atlas) as the bundle's 'Structures'
+% labelling (1 Cortex L, 2 Cortex R, 0 neither); [] without them
+    st = [];
+    if ~isstruct(S), return; end
+    if ~isfield(S, 'Vertices'), f = fieldnames(S); S = S.(f{1}); end
+    if ~isfield(S, 'Hemi') || isempty(S.Hemi), return; end
+    h = zeros(size(S.Vertices, 1), 1);
+    for k = 1:numel(S.Hemi)
+        lab = char(S.HemiLabel{k});
+        if lab(end) == 'L', h(S.Hemi{k}) = 1; else, h(S.Hemi{k}) = 2; end
+    end
+    st = struct('name', 'Structures', 'codes', int32(h), 'entries', struct('code', {0, 1, 2}, 'name', {'unassigned', 'Cortex L', 'Cortex R'}));
 end
