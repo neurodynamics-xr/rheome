@@ -104,7 +104,9 @@ function [T, X, E] = measure_slowosc(name, S, opts)
 %   the direction rule.
 %
 % OUTPUT
-%   X  per row: event, hemi, condition, estimator, param, angleDeg, apCos, speedMS, R, netMM, sourceAPmm, originAPmm
+%   X  per row: event, hemi, condition, estimator, param, angleDeg, apCos, speedMS, R, netMM, sourceAPmm, originAPmm, maskedFrac
+%      (maskedFrac: share of the field's vertices left out because the posterior axis is shorter than MinProjection = sin 20 deg
+%      on their tangent plane; Diellor 2026-11-11)
 %   E  per detected event: sample, nightS, stage, nChannels, negUV, p2pUV, seedChannel, used, and the lagged
 %      null's columns (NaN for unused events)
 %   T  rheome.scale.rows("slowosc"): detection counts, and per estimator/param x condition x hemi: n, circular
@@ -136,6 +138,7 @@ function [T, X, E] = measure_slowosc(name, S, opts)
         opts.UpAxis (1,3) double = [0 0 1]
         opts.HornSchunck double = [0.01 0.1]
         opts.PatchMM (1,1) double = 40
+        opts.MinProjection (1,1) double = sind(20)   % vertices where the posterior axis projects shorter than this on the tangent plane are left out of the direction mean
         opts.PhaseCentres (1,1) double = 300
         opts.Hemis string = ["L" "R"]
         opts.Conditions string = ["original" "reversed" "surrogate" "lagged"]
@@ -406,8 +409,13 @@ function q = i_framework(Xn, c, fs, o)
 end
 
 function q = i_fieldq(Vv, wt, sp, vtx, c)
-% one direction per event from a velocity field at vertices vtx: weighted circular mean of the gauge angles
+% one direction per event from a velocity field at vertices vtx: weighted circular mean of the gauge angles. Vertices where the
+% posterior axis's projection on the tangent plane is shorter than MinProjection (sin 20 deg) are excluded (angle against it is
+% ill-defined); the excluded fraction of the weighted vertices is recorded as maskedFrac.
     q = i_nanq();  wt(~isfinite(wt)) = 0;
+    if ~any(wt > 0), return, end
+    short = c.pLen(vtx) < c.minProj;  q.maskedFrac = mean(short(wt > 0));   % the axis is nearly normal here: its angle is ill-defined
+    wt(short) = 0;
     if ~any(wt > 0), return, end
     th = zeros(numel(vtx), 1);
     for i = 1:numel(vtx), th(i) = i_angle(Vv(i, :), vtx(i), c); end
@@ -449,14 +457,14 @@ function q = i_latency(yl, fs, Loc, post, lat, o)
 end
 
 function q = i_nanq()
-    q = struct('angleDeg', NaN, 'apCos', NaN, 'speedMS', NaN, 'R', NaN, 'netMM', NaN, 'sourceAPmm', NaN, 'originAPmm', NaN);
+    q = struct('angleDeg', NaN, 'apCos', NaN, 'speedMS', NaN, 'R', NaN, 'netMM', NaN, 'sourceAPmm', NaN, 'originAPmm', NaN, 'maskedFrac', NaN);
 end
 
 function r = i_row(ev, h, cnd, est, par, q)
     q0 = i_nanq();  f = fieldnames(q0);
     for i = 1:numel(f), if ~isfield(q, f{i}), q.(f{i}) = q0.(f{i}); end, end
-    r = table(ev, string(h), string(cnd), string(est), par, q.angleDeg, q.apCos, q.speedMS, q.R, q.netMM, q.sourceAPmm, q.originAPmm, ...
-        'VariableNames', {'event','hemi','condition','estimator','param','angleDeg','apCos','speedMS','R','netMM','sourceAPmm','originAPmm'});
+    r = table(ev, string(h), string(cnd), string(est), par, q.angleDeg, q.apCos, q.speedMS, q.R, q.netMM, q.sourceAPmm, q.originAPmm, q.maskedFrac, ...
+        'VariableNames', {'event','hemi','condition','estimator','param','angleDeg','apCos','speedMS','R','netMM','sourceAPmm','originAPmm','maskedFrac'});
 end
 
 %% ---------- per hemisphere, once
@@ -477,6 +485,7 @@ function c = i_hemi(S, h, post, o)
     gg = rheome.operators.gauge(c.V, F, Method="trivial");
     c.N = unit(gg.normal);  c.e1 = gg.e1;  c.e2 = gg.e2;
     pt = post - (c.N * post') .* c.N;  c.pAng = atan2(sum(pt .* c.e2, 2), sum(pt .* c.e1, 2));
+    c.pLen = vecnorm(pt, 2, 2);  c.minProj = o.MinProjection;
     c.Sg = struct('Vertices', c.V, 'Faces', F, 'VertNormals', Nl, 'nV', c.nV, 'Hemi', {{(1:c.nV)'}}, ...
                   'HemiLabel', {{char("Cortex " + h)}}, 'Comment', '', 'SurfaceFile', '');
     c.pc = unique(round(linspace(1, c.nV, min(o.PhaseCentres, c.nV))))';

@@ -48,8 +48,14 @@ function [T, X] = fit(name, S, M, opts)
 %     pg                             phase-gradient statistic: amplitude-weighted mean |wrap(phi_i - phi_j)| over
 %                                    edges between tiles >= half max; NaN with fewer than 3 such tiles
 %     dir_x dir_y dir_z, dir_concentration, dir_azimuth_deg   direction of travel (-grad phi; phase lead to
-%                                    lag) as the amplitude-weighted mean unit vector in template coordinates (SCS:
-%                                    x anterior, y left, z up) and its sphere-frame azimuth (0 = north, 90 = u x north)
+%                                    lag): each tile's unit vector is CARRIED (rheome.geom.GeometryKit, the vector heat
+%                                    method's transport on the tile mesh) to the ANCHOR, the peak-amplitude tile of the
+%                                    pattern (its hemisphere's tiles only), then the amplitude-weighted mean is taken:
+%                                    dir_x/y/z is that mean in the anchor's tangent plane (3-D, template coordinates;
+%                                    SCS: x anterior, y left, z up), dir_concentration its length; dir_azimuth_deg is the
+%                                    circular mean of the tiles' sphere-frame azimuths (0 = north, 90 = u x north), unchanged.
+%                                    CHANGED 2026-11-11: it averaged raw 3-D unit vectors, which cancel on a curved template;
+%                                    dir_x/y/z and dir_concentration made before must be recomputed.
 %     phase_wavelength_mm, speed_m_s, speed_resolved    f_centre x 2 pi/|grad phi|; resolved only at depth >=
 %                                    ResolvableDepth (MS1: speed is recovered at depths 7-8 only), so at depths
 %                                    2-4 it is ALWAYS 0: "direction only"
@@ -280,6 +286,21 @@ function G = i_geom(tl, A)
         for p = nb, q = nb(nb > p);  q = q(A(p, q));  tri = [tri; repmat([a p], numel(q), 1) q(:)]; end %#ok<AGROW>
     end
     G.tri = tri;
+    % the tile mesh for carrying directions: per hemisphere, the Delaunay triangulation of the tiles' unit vectors on the sphere
+    % (their convex hull, outward), on the tiles' template coordinates; GeometryKit's transport runs on it
+    Fm = zeros(0, 3);
+    for h = unique(G.hemi)'
+        ix = find(G.hemi == h);
+        if numel(ix) < 4, continue, end
+        try
+            f = convhulln(G.u(ix, :));  f = ix(f);
+            fd = cross(G.t(f(:,2), :) - G.t(f(:,1), :), G.t(f(:,3), :) - G.t(f(:,1), :), 2);
+            flip = sum(fd .* (G.u(f(:,1), :) + G.u(f(:,2), :) + G.u(f(:,3), :)), 2) < 0;
+            f(flip, [2 3]) = f(flip, [3 2]);  Fm = [Fm; f]; %#ok<AGROW>
+        catch
+        end
+    end
+    G.K = [];  if ~isempty(Fm), G.K = rheome.geom.GeometryKit(G.t, Fm); end
 end
 
 function P = i_phys(m, G, fc, depth, rdepth)
@@ -302,7 +323,21 @@ function P = i_phys(m, G, fc, depth, rdepth)
     end
     ok = all(isfinite(g3), 2) & vecnorm(g3, 2, 2) > 0;
     v = -g3(ok, :) ./ vecnorm(g3(ok, :), 2, 2);  wa = amp(ok);
-    mv = sum(v .* wa, 1) / max(sum(wa), eps);  if ~any(ok), mv = nan(1, 3); end
+    mv = nan(1, 3);
+    if any(ok)
+        % each tile's unit vector is CARRIED to the anchor (the peak-amplitude tile) before the amplitude-weighted mean
+        ti = find(ok);  [~, ia] = max(amp(ti));  a = ti(ia);
+        if ~isempty(G.K) && G.K.Label(a) > 0
+            inc = G.K.Label(ti) == G.K.Label(a);                % tiles on the anchor's component (hemisphere) only
+            if nnz(inc) == 1, mv = v(inc, :);                % the anchor alone: nothing to carry
+            else
+                wcar = G.K.carry(a, v(inc, :), ti(inc));  wc1 = wa(inc);
+                mw = sum(wc1 .* wcar) / max(sum(wc1), eps);
+                mv = G.K.embed(a, mw);  mv = mv(:)';                % 3-D, in the anchor's tangent plane; its length is |mw|
+            end
+        end
+    end
+    mvold = sum(v .* wa, 1) / max(sum(wa), eps);  fprintf('DIRDEBUG old %.4f new %.4f\n', norm(mvold), norm(mv));
     P.dir_x = mv(1);  P.dir_y = mv(2);  P.dir_z = mv(3);  P.dir_concentration = norm(mv);
     P.dir_azimuth_deg = angle(sum(wa .* exp(1i * deg2rad(az(ok))))) * 180/pi;
     gm = median(vecnorm(gx(ok, :), 2, 2));
