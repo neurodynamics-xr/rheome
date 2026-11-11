@@ -33,7 +33,7 @@ function check_install(mltbx)
     out = rheome.demos.filterbank_graph;
     assert(out.ok, 'check_install:quickstart', 'rheome.demos.filterbank_graph self-checks failed');
     [V, F] = rheome.geom.icosphere(4);
-    [L, M] = rheome.operators.laplace_beltrami(V, F, 'galerkin');
+    [L, M] = rheome.operators.laplace_beltrami(V, F, mesh='embedded', mass='galerkin');
     gfb = rheome.graphfilterbank.fromOperator(L, 'Mass', M);
     x = double(V(:,3) > 0.9);
     E = vertexSpectrum(gfb, x);

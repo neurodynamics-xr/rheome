@@ -73,7 +73,7 @@ end
 function [S, lbo] = i_sphere()
     [V, F] = rheome.geom.icosphere(3);
     S = struct('Vertices', V, 'Faces', F, 'VertNormals', V ./ vecnorm(V, 2, 2));
-    [L, M] = rheome.operators.laplace_beltrami(V, F);
+    [L, M] = rheome.operators.laplace_beltrami(V, F, mesh='embedded', mass='galerkin');
     [P, D] = eig(full(L), full(M), 'chol');  [lam, o] = sort(max(diag(D), 0));  P = P(:, o);
     P = P ./ sqrt(sum(P .* (M * P), 1));
     lbo = struct('Phi', P, 'Lambda', lam, 'Mass', M, 'L', L);

@@ -73,7 +73,7 @@ function out = directionfield(name, varargin)
     if isempty(o.Bases), B = rheome.load.bases(name); else, B = o.Bases; end
     H = B.(char(o.Hemi));  S = H.S;  V = S.Vertices;  F = double(S.Faces);
     nV = size(V,1);  nF = size(F,1);
-    if isempty(o.Connection), C = rheome.operators.connection_laplacian(V, F); else, C = o.Connection; end
+    if isempty(o.Connection), C = rheome.operators.connection_laplacian(V, F, mesh='embedded', mass='galerkin'); else, C = o.Connection; end
     wr = @(x) mod(x+pi, 2*pi) - pi;
 
     %% the prescribed singularities

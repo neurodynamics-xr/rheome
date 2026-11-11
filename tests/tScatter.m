@@ -25,7 +25,7 @@ classdef tScatter < matlab.unittest.TestCase
             R = 0.100;
             [V, F] = rheome.geom.icosphere(4);
             V = R * (V ./ vecnorm(V, 2, 2));
-            [L, Mm] = rheome.operators.laplace_beltrami(V, F, 'galerkin');
+            [L, Mm] = rheome.operators.laplace_beltrami(V, F, mesh='embedded', mass='galerkin');
             b = rheome.eigen.modes(L, Mm, 150);
             fr = rheome.filters.frame('mexhat', [], b.Lambda);   % [] -> derived density; Nf=4 warns
             fx = struct('basis', b, 'V', V, 'F', F, 'frame', fr, ...

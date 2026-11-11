@@ -21,8 +21,8 @@ function out = parityWriteGolden(fixture, out)
     for t = 1:T, I(:, t) = exp(-sum((V - (c0 + (t-1)*step)).^2, 2) / (2*sigma^2)); end
     s = struct('Vertices', V, 'Faces', F, 'VertNormals', vertexNormal(triangulation(F, V)), 'nV', size(V, 1));
 
-    [L, Mg] = rheome.operators.laplace_beltrami(V, F, 'galerkin');
-    [~, Ml] = rheome.operators.laplace_beltrami(V, F, 'lumped');
+    [L, Mg] = rheome.operators.laplace_beltrami(V, F, mesh='embedded', mass='galerkin');
+    [~, Ml] = rheome.operators.laplace_beltrami(V, F, mesh='embedded', mass='barycentric');
     G = struct();
     G.Lx = put(out, 'Lx', L*I(:, 1));
     G.Mlumped = put(out, 'Mlumped', full(diag(Ml)));

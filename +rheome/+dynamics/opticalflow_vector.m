@@ -41,12 +41,12 @@ function velocityField = opticalflow_vector(currentField, surface, opts)
     currentField = currentField / max(abs(currentField(:)) + eps);
 
     fg = rheome.operators.face_gradient(surface.Vertices, surface.Faces);
-    [stiffness, ~] = rheome.operators.laplace_beltrami(surface.Vertices, surface.Faces, 'galerkin');
+    [stiffness, ~] = rheome.operators.laplace_beltrami(surface.Vertices, surface.Faces, mesh='embedded', mass='galerkin');
     tb = rheome.dynamics.tangent_basis(surface);
     nV = surface.nV;  nT = size(currentField, 2);
     velocityField = zeros(3*nV, nT-1);
     isCovariant = strcmpi(opts.transport, 'covariant');
-    if isCovariant, conn = rheome.operators.connection_laplacian(surface.Vertices, surface.Faces); end
+    if isCovariant, conn = rheome.operators.connection_laplacian(surface.Vertices, surface.Faces, mesh='embedded', mass='galerkin'); end
 
     for t = 1:nT-1
         currentNow = currentField(:, t);

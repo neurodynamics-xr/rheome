@@ -92,7 +92,7 @@ function [T, X] = windowtable(name, varargin)
     T0 = rheome.geom.tree(S, L=lbo.L, M=lbo.M, MaxDepth=o.MaxDepth);
     keepN = T0.depth >= 1;                                  % the root is the whole hemisphere
     nodes = T0(keepN,:);  nN = height(nodes);
-    C = rheome.operators.connection_laplacian(S.Vertices, double(S.Faces));
+    C = rheome.operators.connection_laplacian(S.Vertices, double(S.Faces), mesh='embedded', mass='galerkin');
     g = rheome.operators.gauge(S.Vertices, double(S.Faces), Connection=C);   % smooth frame, one solve
     if vb, fprintf('%d tiles at depths %d-%d, %.0f-%.0f mm\n', nN, min(nodes.depth), ...
             max(nodes.depth), 1e3*max(nodes.diameter), 1e3*min(nodes.diameter)); end

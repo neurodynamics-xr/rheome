@@ -67,7 +67,7 @@ function out = dirac(studyDir, cortexFile, dataName, K, measure)
         ncov = rheome.io.read.noisecov(ncovF);
         hm   = rheome.io.read.headmodel(hmF);
         S    = rheome.io.read.surface(cortexFile);
-        [L, M] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces, 'galerkin');
+        [L, M] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces, mesh='embedded', mass='galerkin');
         basis  = rheome.eigen.modes(L, M, K);                    % Laplace–Beltrami (returned for reference)
         dbasis = rheome.eigen.dirac_frame(S.Vertices, S.Faces, 0.5, K, S.VertNormals, S.Hemi);   % atlas L/R split
         studyDirOut = studyDir;  dataNameOut = dataName;

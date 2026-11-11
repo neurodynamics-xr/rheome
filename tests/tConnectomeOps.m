@@ -11,7 +11,7 @@ classdef tConnectomeOps < matlab.unittest.TestCase
     methods (TestClassSetup)
         function twoSpheres(tc)
             [Vu, F] = rheome.geom.icosphere(3);  Vu = Vu ./ vecnorm(Vu,2,2);  m = size(Vu,1);
-            [~, M1] = rheome.operators.laplace_beltrami(tc.R*Vu, F, 'galerkin');
+            [~, M1] = rheome.operators.laplace_beltrami(tc.R*Vu, F, mesh='embedded', mass='galerkin');
             tc.n = m;  tc.a = full(sum(M1,2));
             tc.S = struct('Vertices',[tc.R*Vu; tc.R*Vu + [3*tc.R 0 0]], 'Faces',[F; F+m], 'nV',2*m, ...
                 'nF',2*size(F,1), 'VertNormals',[Vu; Vu], 'Comment','two spheres', ...

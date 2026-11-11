@@ -41,7 +41,7 @@ function [A, B, gamma] = lb_connectome(S, W, keep, gamma)
     K = sparse(nV, nV);  M = sparse(nV, nV);
     for h = 1:nH
         Sh = rheome.utils.hemisphere(S, [], h);  g = Sh.GlobalVertices;
-        [Lh, Mh] = rheome.operators.laplace_beltrami(Sh.Vertices, Sh.Faces, 'galerkin');
+        [Lh, Mh] = rheome.operators.laplace_beltrami(Sh.Vertices, Sh.Faces, mesh='embedded', mass='galerkin');
         K(g, g) = Lh;  M(g, g) = Mh;   %#ok<SPRIX>
     end
 

@@ -63,7 +63,7 @@ function file = sphere(name, hemi, K, Kc)
                   'Comment',sprintf('%s %s reg-sphere (ico5 @ %.0fmm)', name, hemi, 1000*radius), ...
                   'SurfaceFile','', 'Sphere',Vs, 'VertConn',[]);
 
-    [L, M] = rheome.operators.laplace_beltrami(Vs, Fl, 'galerkin');
+    [L, M] = rheome.operators.laplace_beltrami(Vs, Fl, mesh='embedded', mass='galerkin');
 
     fprintf('  Dirac eigenbasis (K=%d) ...\n', K);  t = tic;
     dbasis = rheome.eigen.dirac_frame(Vs, Fl, tau, K, Nrm, {(1:nV)'});
@@ -71,7 +71,7 @@ function file = sphere(name, hemi, K, Kc)
     fprintf('    %.1fs\n', toc(t));
 
     fprintf('  connection Laplacian + eigenmodes (Kc=%d) ...\n', Kc);  t = tic;
-    Cc = rheome.operators.connection_laplacian(Vs, Fl);
+    Cc = rheome.operators.connection_laplacian(Vs, Fl, mesh='embedded', mass='galerkin');
     [Psi, Lm]   = rheome.eigen.smallest(Cc.A, Cc.B, Kc);   % negative-sigma shift (not naive smallestabs)
     [Lambda, o] = sort(real(diag(Lm)));  Psi = Psi(:, o);
     fprintf('    %.1fs\n', toc(t));

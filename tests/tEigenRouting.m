@@ -23,7 +23,7 @@ classdef tEigenRouting < matlab.unittest.TestCase
 
         function gaugeSmoothestEqualsTheDirectSolveWhereThatWorks(tc)
             [V, F] = rheome.geom.icosphere(3);  V = V .* [1 1.3 2];
-            C = rheome.operators.connection_laplacian(V, F);
+            C = rheome.operators.connection_laplacian(V, F, mesh='embedded', mass='galerkin');
             g = rheome.operators.gauge(V, F, Method="smoothest", Connection=C);
             wr = warning('off', 'all');  cl = onCleanup(@() warning(wr));
             [u, d] = eigs(C.A, C.B, 1, 'smallestabs', struct('tol', 1e-10));

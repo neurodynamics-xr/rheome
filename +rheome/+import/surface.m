@@ -16,7 +16,7 @@ function file = surface(name, cortexFile)
 
     fprintf('rheome.import.surface[%s]: reading %s\n', name, cortexFile);
     S = rheome.io.read.surface(cortexFile);
-    [L, M] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces, 'galerkin');   %#ok<ASGLU>
+    [L, M] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces, mesh='embedded', mass='galerkin');   %#ok<ASGLU>
 
     file = fullfile(dsdir, 'surface.mat');
     builtin('save', file, 'S', 'L', 'M', 'cortexFile', '-v7.3');

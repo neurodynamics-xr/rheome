@@ -59,7 +59,7 @@ function op = operator(S, bases)
 
         C = i_cachedconn(bases, gvGlobal);                     % try the cache first
         if isempty(C)
-            C = rheome.operators.connection_laplacian(Sh.Vertices, Sh.Faces);   % full-mesh, fresh
+            C = rheome.operators.connection_laplacian(Sh.Vertices, Sh.Faces, mesh='embedded', mass='galerkin');   % full-mesh, fresh
         else
             op.cached(h) = true;
         end

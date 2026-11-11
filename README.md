@@ -53,7 +53,7 @@ A Mexican-hat graph wavelet bank on a sphere, and the energy per scale of a pola
 
 ```matlab
 [V, F] = rheome.geom.icosphere(4);                              % 2562-vertex unit sphere
-[L, M] = rheome.operators.laplace_beltrami(V, F, 'galerkin');   % cotangent Laplace-Beltrami + mass
+[L, M] = rheome.operators.laplace_beltrami(V, F);   % cotangent Laplace-Beltrami + mass (intrinsic Delaunay mesh, mixed-Voronoi mass)
 gfb = rheome.graphfilterbank.fromOperator(L, 'Mass', M);        % bank on L's spectral range (Chebyshev)
 x   = double(V(:,3) > 0.9);                                     % a cap at the north pole
 E   = vertexSpectrum(gfb, x)                                    % energy per scale  [M x 1]

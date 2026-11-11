@@ -100,7 +100,7 @@ function file = bases(name, K, Kc, opts)
         fprintf('  [%s] %d vertices:', lab, Sh.nV);
 
         t = tic;
-        [L, M] = rheome.operators.laplace_beltrami(Sh.Vertices, Sh.Faces, 'galerkin');
+        [L, M] = rheome.operators.laplace_beltrami(Sh.Vertices, Sh.Faces, mesh='embedded', mass='galerkin');
         if K >= Sh.nV
             error('import:bases:K', 'K = %d but hemisphere %s has only %d vertices.', K, lab, Sh.nV);
         end
@@ -113,7 +113,7 @@ function file = bases(name, K, Kc, opts)
             fprintf(' connection REUSED (Kc=%d)\n', Kc);
         else
             t = tic;
-            C = rheome.operators.connection_laplacian(Sh.Vertices, Sh.Faces);
+            C = rheome.operators.connection_laplacian(Sh.Vertices, Sh.Faces, mesh='embedded', mass='galerkin');
             [Psi, Lm]   = rheome.eigen.smallest(C.A, C.B, Kc);   % negative-sigma shift (not naive smallestabs)
             [Lambda, o] = sort(real(diag(Lm)));  Psi = Psi(:, o);
             conn = struct('C',C, 'Psi',Psi, 'Lambda',Lambda);

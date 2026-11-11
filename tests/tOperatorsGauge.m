@@ -10,7 +10,7 @@ classdef tOperatorsGauge < matlab.unittest.TestCase
     methods (TestClassSetup)
         function build(t)
             [t.V, t.F] = i_sphere(3);              % closed, chi = 2
-            t.C = rheome.operators.connection_laplacian(t.V, t.F);
+            t.C = rheome.operators.connection_laplacian(t.V, t.F, mesh='embedded', mass='galerkin');
         end
     end
     methods (Test)

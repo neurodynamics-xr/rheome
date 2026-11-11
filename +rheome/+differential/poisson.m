@@ -19,7 +19,7 @@ function phi = poisson(f, S)
 %
 % Author: Diellor Basha, 2026
 
-    [K, M] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces, 'galerkin');
+    [K, M] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces, mesh='embedded', mass='galerkin');
     nV = size(S.Vertices, 1);
     hemis = dif_hemis(S, nV);
     phi = zeros(nV, size(f, 2));

@@ -37,7 +37,7 @@ classdef tChargeDensity < matlab.unittest.TestCase
             % mass-orthonormalisation. With the default Galerkin M the normalisation ignores
             % the off-diagonal terms, Phi'*M*Phi ~= I, and Phi*E*Phi' STOPS BEING THE HEAT
             % KERNEL -- two cores 5.3 mm from their nearest vertex then read 0.29 and 5.10.
-            [L, M] = rheome.operators.laplace_beltrami(V, F, 'lumped');
+            [L, M] = rheome.operators.laplace_beltrami(V, F, mesh='embedded', mass='barycentric');
             [Phi, D] = eigs(L, M, K, 'smallestabs');
             w = full(diag(M));
             Phi = Phi ./ sqrt(sum(w .* Phi.^2, 1));

@@ -32,7 +32,7 @@ function laplace_beltrami(SurfaceFile)
 
     % --- 2. build the operators ---
     M      = rheome.operators.mass(S.Vertices, S.Faces, 'galerkin');
-    [L, ~] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces, 'galerkin');
+    [L, ~] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces, mesh='embedded', mass='galerkin');
 
     % --- 3. validation ---
     tol = 1e-9;

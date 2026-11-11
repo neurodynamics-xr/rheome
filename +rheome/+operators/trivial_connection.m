@@ -3,7 +3,7 @@ function T = trivial_connection(V, F, C, faces, charges)
 % that is exactly parallel except at prescribed faces, where its index is the prescribed integer.
 %
 %   T = rheome.operators.trivial_connection(V, F, C, faces, charges)
-%       V [nV x 3], F [nF x 3], C = rheome.operators.connection_laplacian(V,F),
+%       V [nV x 3], F [nF x 3], C = rheome.operators.connection_laplacian(V,F, mesh='embedded', mass='galerkin'),
 %       faces [n x 1] face indices, charges [n x 1] integers with sum(charges) = chi.
 %
 % THE EQUATION (Crane, Desbrun & Schroeder 2010, "Trivial connections on discrete surfaces"):
