@@ -31,7 +31,7 @@ function [T, X, Ex] = measure_aperiodic(name, S, opts)
 %              bands     rheome.differential.helmholtzbands of the mean apparent velocity over the crossing: the
 %                        scalar-potential and stream-function extrema in the bands nearest BandMM (130, 183 mm),
 %                        distance to the mid-path (mm); plant and its paired null
-%              flow      rheome.flow.apparent (Horn-Schunck, Alpha 0.01, the validated value): the signed along-chord
+%              flow      rheome.flow.apparent (Horn-Schunck, connection Laplacian, Alpha 0.01; earlier results used the removed frame smoothness: recompute): the signed along-chord
 %                        speed within 2 sigma of the centre (m/s); plant and paired null
 %   NULL     every plant window is a background window + the plant; the same window without it is its paired null.
 %            The HELD-OUT null on-patch rate of a cell: each plant geometry applied to every even (test) null window.
@@ -373,7 +373,7 @@ function Q = i_chain(Y, C, full)
     A = squeeze(mean(reshape(abs(zf(:, 1:nF*bs)), C.nV, bs, nF), 2));
     Q.tile = cellfun(@(Wt) Wt*A, C.Wt, 'uni', 0);
     if full
-        o = rheome.flow.apparent(A, C.S, Rate=C.FE, Band=C.band, Alpha=0.01, Regulariser="frame");   % ⚠ Alpha 0.01; "frame" = the pre-2026-11-11 method this readout was made with (re-check with "connection")
+        o = rheome.flow.apparent(A, C.S, Rate=C.FE, Band=C.band, Alpha=0.01);   % connection Laplacian, Alpha 0.01 (the Editor's); re-validated 2026-11-11
         Q.vel = single(o.velocity*C.FE);                                         % ⚠ .velocity is metres per FRAME
     end
 end

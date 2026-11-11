@@ -16,7 +16,7 @@ function [T, X, G] = measure_periodicflow(name, S, opts)
 %   derived from the data (the ratio of MEANS of |C|^2 and the PSD over the fit band), periodic
 %   gains applied with Hermitian symmetry -> for TOTAL and PERIODIC: 8-16 Hz IIR band-pass,
 %   Hilbert AT THE SENSORS, decimate 600 -> 300 Hz, left-hemisphere minimum-norm current
-%   (S.Res, SnrFixed 3, amplitude), |J^| (rheome.flow.activation), Horn-Schunck Alpha=1 (rheome.flow.apparent).
+%   (S.Res, SnrFixed 3, amplitude), |J^| (rheome.flow.activation), Horn-Schunck, connection Laplacian, Alpha=0.01 (rheome.flow.apparent; before 2026-11-11 the removed frame smoothness, Alpha 1: recompute).
 %
 % Returns rheome.scale.rows (analysis "periodicflow"); band = "total" | "periodic" | "" (spectrum):
 %   periodic_fraction, _q25, _q75   PSD periodic share of 8-16 Hz power, over channels  fraction
@@ -86,7 +86,7 @@ function [T, X, G] = measure_periodicflow(name, S, opts)
         opts.Rate (1,1) double = 300
         opts.TileS (1,1) double = 2
         opts.MarginS (1,1) double = 2
-        opts.Alpha (1,1) double = 1
+        opts.Alpha (1,1) double = 0.01
         opts.SegS (1,1) double = 8
         opts.FitRange (1,2) double = [1 45]
         opts.MaxPowerRatio (1,1) double {mustBeGreaterThan(opts.MaxPowerRatio, 1)} = 3
@@ -169,7 +169,7 @@ function [T, X, G] = measure_periodicflow(name, S, opts)
             if v == 1, Xv = Xw; else, Xv = Xper; end
             Fa = hilbert(filtfilt(bp, Xv.')).';                 % ⚠ time down columns, then back
             A = rheome.flow.activation(K * Fa(:, idx), Rate=rate, Band=band);
-            o = rheome.flow.apparent(A, SL, Rate=rate, Band=band, Alpha=opts.Alpha, Regulariser="frame");   % the pre-2026-11-11 method (re-check with "connection", Alpha 0.01)
+            o = rheome.flow.apparent(A, SL, Rate=rate, Band=band, Alpha=opts.Alpha);   % connection Laplacian; re-validated 2026-11-11
             mE = mean(A(:, 1:end-1), 1);  mS = median(o.speed, 1);
             r = corr(mE(:), mS(:));  ne = i_neff(mE(:), mS(:));
             Am{v} = mean(A, 2);
