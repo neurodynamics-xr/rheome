@@ -41,8 +41,8 @@ shots = { ...
 
 %% Draw them
 vdir = getenv('RHEOME_VIEWER');
-if isempty(vdir) || ~isfile(fullfile(vdir, 'viewer.html'))
-    disp('No viewer here (set RHEOME_VIEWER to the dist-viewer folder); nothing drawn.')
+if isempty(vdir) || ~isfile(fullfile(vdir, 'index.html'))
+    disp('No Editor build here (set RHEOME_VIEWER to the Editor''s build folder); nothing drawn.')
     return
 end
 out = rheome.snapshot(S, result, Shots=shots, Out=tempname, Fs=100);

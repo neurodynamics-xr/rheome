@@ -1,9 +1,9 @@
 classdef tViewBundle < matlab.unittest.TestCase
 % TVIEWBUNDLE  rheome.io.write.bundle writes rheome.bundle@1 as the viewer reads it; rheome.view maps its options to the
 % viewer's settings and needs no viewer: 'none' writes beneath RHEOME_VIEWER (one bundle at a time), 'show' draws with
-% rheome.show. On R2026a+ with a display, the uihtml path is run against a stand-in viewer.html that answers with the
+% rheome.show. On R2026a+ with a display, the uihtml path is run against a stand-in view.html that answers with the
 % settings it received (round trip, a refused setting as a warning, figure reuse, set, screenshot, the 'no-webgpu'
-% fallback). The real viewer (nxr-cortical-flow editor/dist-viewer) is checked by hand: it needs WebGPU.
+% fallback). The real page (nxr-cortical-flow editor/dist, view.html) is checked by hand: it needs WebGPU.
 %
 % Author: Diellor Basha, 2026
     properties
@@ -241,7 +241,7 @@ classdef tViewBundle < matlab.unittest.TestCase
 end
 
 function writePage(d, kind)
-% a stand-in for the viewer's viewer.html with its protocol: Data {bundle, settings}, DataChanged, set, screenshot;
+% a stand-in for the Editor's view.html with the viewer's protocol: Data {bundle, settings}, DataChanged, set, screenshot;
 % events ready, settings, screenshot, error (one refused setting before each ready, as the viewer does)
     if strcmp(kind, 'nogpu')
         js = 'function setup(h){ h.sendEventToMATLAB(''error'', {code: ''no-webgpu'', message: ''no adapter''}) }';
@@ -259,7 +259,7 @@ function writePage(d, kind)
             ' ''data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC''}));' ...
             ' h.addEventListener(''DataChanged'', go); go() }'];
     end
-    fid = fopen(fullfile(d, 'viewer.html'), 'w');
+    fid = fopen(fullfile(d, 'view.html'), 'w');
     fprintf(fid, '<!doctype html><html><body><script>%s</script></body></html>', js);
     fclose(fid);
 end

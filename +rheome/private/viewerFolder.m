@@ -1,11 +1,11 @@
 function vdir = viewerFolder()
-% VIEWERFOLDER  The Cortical Flow viewer's folder (dist-viewer) for rheome.view and rheome.snapshot: RHEOME_VIEWER, else
+% VIEWERFOLDER  The Cortical Flow Editor's build for rheome.view and rheome.snapshot: RHEOME_VIEWER, else
 % prefdir/rheome-viewer, installed there from <rheome>/viewer when that ships a newer copy.
     vdir = getenv('RHEOME_VIEWER');
     if ~isempty(vdir), return; end
     vdir = fullfile(prefdir, 'rheome-viewer');
     shipped = fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'viewer');
-    if (isfile(fullfile(shipped, 'viewer.html')) || isfile(fullfile(shipped, 'view.html'))) && ~strcmp(stamp(shipped), stamp(vdir))
+    if isfile(fullfile(shipped, 'view.html')) && ~strcmp(stamp(shipped), stamp(vdir))
         if isfolder(vdir), rmdir(vdir, 's'); end
         copyfile(shipped, vdir);
     end

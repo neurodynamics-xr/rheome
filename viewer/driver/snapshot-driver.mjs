@@ -1,23 +1,31 @@
 #!/usr/bin/env node
 /**
- * snapshot-driver.mjs — THE ONE DRIVER of the Cortical Flow viewer's snapshot panel, for rheome.snapshot and nxr.snapshot (Rheome's
- * `+rheome/private/snapshot_driver.mjs`, generalised; shipped in the viewer's build at `driver/snapshot-driver.mjs`). Headless Chrome
- * over raw DevTools (no dependencies: Node 22's fetch and WebSocket), the viewer and one bundle served on 127.0.0.1.
+ * snapshot-driver.mjs — THE ONE DRIVER of the snapshot panel, for rheome.snapshot and nxr.snapshot (Rheome's
+ * `+rheome/private/snapshot_driver.mjs`, generalised; shipped in the Editor's build at `driver/snapshot-driver.mjs`). Headless Chrome
+ * over raw DevTools (no dependencies: Node 22's fetch and WebSocket), the Editor and one bundle served on 127.0.0.1; the Editor draws
+ * the panels (editor/figure/cortexPanel.ts). The viewer (`viewer.html`) that drew them before was retired on 2026-11-11.
  *
  *   node snapshot-driver.mjs job.json
  *
  * A SNAPSHOT JOB (`nxr-snapshot-job@1`; relative paths are relative to the job file):
  *   { "format": "nxr-snapshot-job@1",
- *     "viewer": <dist-viewer folder>   (default: the build this driver sits in, `..`),
+ *     "editor": <the Editor's build folder, or a running Editor's url>   (default: the build this driver sits in, `..`),
  *     "bundle": <rheome.bundle@1 folder>                                                     REQUIRED
  *     "out":    <folder written>                                                              REQUIRED
  *     "chrome": <Chrome or Chromium>   (default $RHEOME_CHROME, $CHROME, else the usual install),
  *     "tokens": <figure-tokens.json served as figure/figure-tokens.json>, "tokens_sha256", "tokens_path" (written into each marks file),
  *     "size": [w, h] (the window, default [1000, 760]), "wait": ms after the bundle opens (default 600), "timeout": s per shot (default 120),
- *     "shots": [{ "name": "panel", "shot": <the viewer's Shot: src/viewer/print/panel.ts> }, …] }                       REQUIRED
+ *     "shots": [{ "name": "panel", "shot": <the Shot: editor/src/editor/figure/print/panel.ts> }, …] }                       REQUIRED
  *   → for each shot: <out>/<name>.svg (the panel), <name>.marks.json (nxr.marks@1), <name>.report.json (rheome.snapshot's `out`, 0-based;
- *     `build` the release's VERSION when the viewer folder has one), and each view's raw render <out>/<name>/<label>.png; <out>/driver.json
+ *     `build` the release's VERSION when the Editor's build has one), and each view's raw render <out>/<name>/<label>.png; <out>/driver.json
  *     the viewer's `ready` and each shot's warnings.
+ *   RAW PICTURES (a shot with `stagePx` [w, h], panel.ts `Shot`): each render exactly w × h, and beside it <out>/<name>/<label>.marks.json
+ *     (nxr.marks@1: that render's overlays, pixels in its raster); the report adds `stops`, `fit` and `renders` (each render's view, frame,
+ *     size, mm per pixel, fit, colourbar); <name>.svg only when the shot gives `widthMm`. The window grows to the largest stage (unless "size").
+ *   A shot may have no `field` (a labelling, arrows or the bare cortex; no `unit` then), and `cortex`, `labelling`, `outlines`, a strip of
+ *     several views, `scaleBarKind` "plane", `scaleBarMm` "auto", `scaleBarTile`, `fit`, `dpi`: see panel.ts `Shot`.
+ *   A raw shot's `marksInRaster` true draws the bundle's paths, selection edges and points in its pictures too (still reported in the marks);
+ *     a view may be a camera direction [x, y, z] (its render `<hemisphere>-from-<x>_<y>_<z>`, `-` as m, `.` as p).
  * A PRINT JOB, as Rheome's driver took it: { "chrome", "print": [{ svg, pdf, png, width_mm, height_mm, dpi }] }: each panel printed to PDF
  *   (vector text, exact page size) and PNG (at dpi).
  *
@@ -56,10 +64,26 @@ export function parseJob(text, jobPath = 'job.json') {
     if (names.has(s.name)) throw new Error(`${jobPath}: shots[${i}].name "${s.name}" is used twice`)
     names.add(s.name)
     if (!s.shot || typeof s.shot !== 'object' || Array.isArray(s.shot)) throw new Error(`${jobPath}: shots[${i}].shot is the viewer's Shot (an object)`)
-    if (typeof s.shot.field !== 'string' || typeof s.shot.unit !== 'string' || !(s.shot.widthMm > 0)) throw new Error(`${jobPath}: shots[${i}].shot needs field, unit and widthMm`)
+    const sh = s.shot, raw = sh.stagePx !== undefined
+    if ((sh.field !== undefined && (typeof sh.field !== 'string' || typeof sh.unit !== 'string')) || (!raw && !(sh.widthMm > 0)))
+      throw new Error(`${jobPath}: shots[${i}].shot needs field, unit and widthMm (a unit with a field; no field: a labelling, arrows or the bare cortex; widthMm unless stagePx)`)
+    if (raw && !(Array.isArray(sh.stagePx) && sh.stagePx.length === 2 && sh.stagePx.every((n) => Number.isInteger(n) && n >= 16 && n <= 8192)))
+      throw new Error(`${jobPath}: shots[${i}].shot.stagePx is [width, height], integer pixels 16–8192`)
+    if (sh.fit !== undefined && (!raw || !sh.fit || typeof sh.fit !== 'object' || Array.isArray(sh.fit))) throw new Error(`${jobPath}: shots[${i}].shot.fit is {margin?, shared?}, with stagePx`)
+    if (sh.marksInRaster !== undefined && (!raw || typeof sh.marksInRaster !== 'boolean')) throw new Error(`${jobPath}: shots[${i}].shot.marksInRaster is true or false, with stagePx`)
+    if (sh.views !== undefined && !(Array.isArray(sh.views) && sh.views.every((v) => typeof v === 'string' || (Array.isArray(v) && v.length === 3 && v.every((x) => typeof x === 'number' && Number.isFinite(x))))))
+      throw new Error(`${jobPath}: shots[${i}].shot.views is a list of view names or camera directions [x, y, z]`)
   }
   if (j.size !== undefined && !(Array.isArray(j.size) && j.size.length === 2 && j.size.every((n) => Number.isInteger(n) && n > 0))) throw new Error(`${jobPath}: "size" is [width, height] in pixels`)
-  return { ...j, viewer: abs(j.viewer) ?? path.resolve(HERE, '..'), bundle: abs(j.bundle), out: abs(j.out), tokens: abs(j.tokens), chrome: chromePath(j.chrome) }
+  if (j.viewer !== undefined) throw new Error(`${jobPath}: "viewer": the viewer is retired; the Editor draws the shots ("editor": its build folder or url)`)
+  if (j.editor !== undefined && (typeof j.editor !== 'string' || !j.editor)) throw new Error(`${jobPath}: "editor" is the Editor's build folder or a running Editor's url`)
+  const editor = j.editor === undefined ? path.resolve(HERE, '..') : /^https?:/.test(j.editor) ? j.editor : abs(j.editor)
+  return { ...j, editor, bundle: abs(j.bundle), out: abs(j.out), tokens: abs(j.tokens), chrome: chromePath(j.chrome) }
+}
+
+/** the window: "size" when given, else 1000 × 760, or larger to hold the largest raw stage (`stagePx`) asked */
+export function windowOf(job) {
+  return job.size ?? job.shots.reduce(([w, h], { shot }) => (shot.stagePx ? [Math.max(w, shot.stagePx[0]), Math.max(h, shot.stagePx[1])] : [w, h]), [1000, 760])
 }
 
 /** Chrome: given, $RHEOME_CHROME, $CHROME, else the usual install */
@@ -84,9 +108,9 @@ export async function readSliced(evalp, expr, slice = SLICE) {
   return s
 }
 
-/** the release's build (a VERSION file beside viewer.html: `build: …`), or null for a development build */
-export function releaseBuild(viewer) {
-  const f = path.join(viewer, 'VERSION')
+/** the release's build (a VERSION file beside index.html: `build: …`), or null for a development build */
+export function releaseBuild(dir) {
+  const f = path.join(dir, 'VERSION')
   if (!fs.existsSync(f)) return null
   return /^build:\s*(\S+)/m.exec(fs.readFileSync(f, 'utf8'))?.[1] ?? null
 }
@@ -173,68 +197,68 @@ async function printPanels(job) {
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.wasm': 'application/wasm', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2' }
 
-/** the snapshot shots: the viewer opens the bundle; each shot is the viewer's `figure(shot)`, its answer read back in slices */
-async function snapshots(job) {
-  if (!fs.existsSync(path.join(job.viewer, 'viewer.html'))) fail(`no viewer at ${job.viewer} (viewer.html)`)
+/** THE EDITOR draws the shots (retire-the-viewer): the page frames the Editor (examples/embed/embed.js), opens the bundle with a scene, sizes the
+ *  Stage to each shot's stage and asks it for the panel (`editor.panel`, editor/figure/cortexPanel.ts); its answer is the viewer's `figure` */
+async function editorShots(job) {
   if (!fs.existsSync(path.join(job.bundle, 'manifest.json'))) fail(`no bundle at ${job.bundle} (manifest.json)`)
-  const [W, H] = job.size ?? [1000, 760]
-  /* the files: /b/<file> from the bundle, everything else from the viewer (read only); the tokens the job names, not the viewer's copy */
+  const dev = /^https?:/.test(job.editor), dist = dev ? null : job.editor
+  if (dist && !fs.existsSync(path.join(dist, 'index.html'))) fail(`no Editor build at ${dist} (index.html)`)
+  const embedJs = [path.resolve(HERE, '../examples/embed/embed.js'), path.resolve(HERE, 'embed.js')].find((f) => fs.existsSync(f))
+  if (!embedJs) fail('embed.js is not beside the driver')
+  const tokFile = job.tokens ?? (dist && path.join(dist, 'figure/figure-tokens.json')), tok = tokFile && fs.existsSync(tokFile) ? JSON.parse(fs.readFileSync(tokFile, 'utf8')) : null
+  const stageOf = (shot) => shot.stagePx ?? tok?.cortex?.viewer?.size_px ?? [1000, 760]
+  const [W0, H0] = windowOf(job), W = Math.max(W0, ...job.shots.map((x) => stageOf(x.shot)[0] + 400)), H = Math.max(H0, ...job.shots.map((x) => stageOf(x.shot)[1] + 400))
+  const host = `<!doctype html><meta charset="utf-8"><body style="margin:0"><div id="panel" style="width:${W0}px;height:${H0}px"></div><script type="module">
+import { mount } from '/embed.js'
+window.__editor = mount(document.getElementById('panel'), { editor: ${JSON.stringify(dev ? job.editor : '/editor/')}, theme: 'light' })
+</script>`
+  const compute = dist ? [path.join(dist, 'nxr-compute'), path.resolve(HERE, '../../frontend/public/nxr-compute')].find((f) => fs.existsSync(f)) : null
+  const figTokens = job.tokens ?? (dist && fs.existsSync(path.join(dist, 'figure/figure-tokens.json')) ? path.join(dist, 'figure/figure-tokens.json') : null)
   server = http.createServer((req, res) => {
     const u = decodeURIComponent(new URL(req.url, 'http://x').pathname)
-    if (job.tokens && u === '/figure/figure-tokens.json') {
-      if (!fs.existsSync(job.tokens)) { res.writeHead(500); res.end(); fail('the figure tokens are missing: ' + job.tokens); return }
-      res.writeHead(200, { 'content-type': 'application/json' }); res.end(fs.readFileSync(job.tokens)); return
-    }
-    const [root, rel] = u.startsWith('/b/') ? [job.bundle, u.slice(3)] : [job.viewer, u.slice(1) || 'viewer.html']
-    const f = path.resolve(root, rel)
-    if (!f.startsWith(path.resolve(root) + path.sep) || !fs.existsSync(f) || !fs.statSync(f).isFile()) { res.writeHead(404); res.end(); return }
-    res.writeHead(200, { 'content-type': TYPES[path.extname(f)] ?? 'application/octet-stream' })
+    if (u === '/' || u === '/__host.html') { res.writeHead(200, { 'content-type': 'text/html' }); res.end(host); return }
+    if (u === '/embed.js') { res.writeHead(200, { 'content-type': 'text/javascript' }); res.end(fs.readFileSync(embedJs)); return }
+    if (figTokens && u === '/editor/figure/figure-tokens.json') { res.writeHead(200, { 'content-type': 'application/json' }); res.end(fs.readFileSync(figTokens)); return }
+    const [root, rel] = u.startsWith('/b/') ? [job.bundle, u.slice(3)] : u.startsWith('/editor/nxr-compute/') && compute ? [compute, u.slice('/editor/nxr-compute/'.length)]
+      : u.startsWith('/editor/') && dist ? [dist, u.slice('/editor/'.length) || 'index.html'] : [null, null]
+    const f = root && path.resolve(root, rel)
+    if (!f || !f.startsWith(path.resolve(root) + path.sep) || !fs.existsSync(f) || !fs.statSync(f).isFile()) { res.writeHead(404); res.end(); return }
+    res.writeHead(200, { 'content-type': TYPES[path.extname(f)] ?? 'application/octet-stream', 'access-control-allow-origin': '*' })
     fs.createReadStream(f).pipe(res)
   })
   await new Promise((r) => server.listen(0, '127.0.0.1', r))
-  const url = `http://127.0.0.1:${server.address().port}/viewer.html?bundle=${encodeURIComponent('/b/manifest.json')}`
+  const origin = `http://127.0.0.1:${server.address().port}`
   const { ws, send, evalp, logs } = await devtools(job, W, H)
   await send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 1, mobile: false })
-  await send('Page.addScriptToEvaluateOnNewDocument', { source:
-    `window.__ev=[];for(const n of ['ready','error','warning','figure'])window.addEventListener('viewer:'+n,e=>window.__ev.push([n,e.detail]))` })
-  await send('Page.navigate', { url })
-  let opened = null
-  for (let t = Date.now(); !opened && Date.now() - t < 1000 * (job.timeout ?? 120);) {
-    await sleep(100)
-    opened = await evalp(`(window.__ev||[]).find(e=>e[0]==='ready'||(e[0]==='error'&&e[1].code!=='settings'))||null`)
-  }
-  if (!opened) fail('the viewer did not open the bundle in time\n' + logs.join('\n'))
-  if (opened[0] === 'error') fail(`the viewer: ${opened[1].code}: ${opened[1].message}`)
+  await send('Page.navigate', { url: `${origin}/__host.html` })
+  const T = 1000 * (job.timeout ?? 120)
+  for (let t = Date.now(); !(await evalp('!!window.__editor').catch(() => false)); await sleep(100)) if (Date.now() - t > T) fail('the Editor page did not load\n' + logs.join('\n'))
+  const opened = await evalp(`window.__editor.then((e) => e.show({ manifolds: { cortex: { load: { bundle: ${JSON.stringify(origin + '/b/manifest.json')} } } }, layers: [] }))`)
+  if (!opened?.ok) fail(`the Editor did not open the bundle: ${opened?.error?.message ?? JSON.stringify(opened)}\n${logs.slice(-20).join('\n')}`)
   await sleep(job.wait ?? 600)
   fs.mkdirSync(job.out, { recursive: true })
-  const build = releaseBuild(job.viewer), done = { ready: opened[1], build, shots: [] }
+  const build = dist ? releaseBuild(dist) : null, done = { ready: { editor: job.editor }, build, shots: [] }
   for (const { name, shot } of job.shots) {
-    let timer
-    /* the figure stays in the page (window.__fig: svg, marks and report as JSON text, each render's PNG); only its sizes come back here */
-    const head = await Promise.race([evalp(`(async()=>{window.__ev=[];const p=new Promise(r=>{window.addEventListener('viewer:figure',e=>r({ok:e.detail}),{once:true});`
-      + `window.addEventListener('viewer:error',e=>r({err:e.detail}),{once:true})});await window.viewer.figure(${JSON.stringify(shot)}, true);const a=await p;`
-      + `if(a.err)return{error:a.err.message};const d=a.ok;window.__fig={svg:d.svg,marks:JSON.stringify(d.marks),report:JSON.stringify(d.report),renders:d.renders||[]};`
-      + `return{renders:window.__fig.renders.map(r=>r.label),warnings:window.__ev.filter(e=>e[0]==='warning').map(e=>e[1].message)}})()`),
-    new Promise((r) => { timer = setTimeout(r, 1000 * (job.timeout ?? 120)) }).then(() => fail(`${name}: no figure in ${job.timeout ?? 120} s\n${logs.slice(-20).join('\n')}`))])
-    clearTimeout(timer)
-    if (!head || head.error) fail(`${name}: the viewer refused the shot: ${head?.error ?? 'no answer'}`)
-    const svg = await readSliced(evalp, 'window.__fig.svg'), marks = JSON.parse(await readSliced(evalp, 'window.__fig.marks'))
-    const report = JSON.parse(await readSliced(evalp, 'window.__fig.report'))
-    const pngs = []
-    for (const [i, label] of head.renders.entries()) {
-      const png = await readSliced(evalp, `window.__fig.renders[${i}].png`)
-      if (!png.startsWith('data:image/png;base64,')) fail(`${name}: the render ${label} is no PNG`)
-      pngs.push([label, Buffer.from(png.slice(png.indexOf(',') + 1), 'base64')])
+    /* THE STAGE exactly the shot's (the panel holds the Editor's own bars too): measured, the panel resized, until the canvas is W × H */
+    const want = stageOf(shot)
+    let size = [want[0], want[1]]
+    for (let i = 0; i < 6; i++) {
+      await evalp(`(() => { const p = document.getElementById('panel'); p.style.width = '${size[0]}px'; p.style.height = '${size[1]}px' })()`)
+      await sleep(250)
+      const got = (await evalp('window.__editor.then((e) => e.stage())'))?.size
+      if (!got) fail('the Editor has no Stage')
+      if (got[0] === want[0] && got[1] === want[1]) break
+      size = [size[0] + want[0] - got[0], size[1] + want[1] - got[1]]
+      if (i === 5) fail(`${name}: the Stage is ${got.join('×')} CSS px, not ${want.join('×')}`)
     }
-    await evalp('delete window.__fig')
-    if (build) report.build = build                                        // a release records its VERSION's build
-    const dir = path.join(job.out, name)
-    fs.mkdirSync(dir, { recursive: true })
-    for (const [label, buf] of pngs) fs.writeFileSync(path.join(dir, `${label}.png`), buf)
-    fs.writeFileSync(path.join(job.out, `${name}.svg`), svg)
-    const sha = job.tokens_sha256 ?? (job.tokens && fs.existsSync(job.tokens) ? createHash('sha256').update(fs.readFileSync(job.tokens)).digest('hex') : undefined)
-    fs.writeFileSync(path.join(job.out, `${name}.marks.json`), JSON.stringify(job.tokens ? { ...marks, tokens_sha256: sha, tokens_path: job.tokens_path ?? job.tokens } : marks, null, 2))
-    fs.writeFileSync(path.join(job.out, `${name}.report.json`), JSON.stringify(report, null, 2))
+    let timer
+    const head = await Promise.race([evalp(`window.__editor.then(async (e) => { const d = await e.panel(${JSON.stringify(shot)}); if (!d.ok) return { error: d.error?.message ?? 'refused' };`
+      + `window.__fig = { svg: d.svg, marks: JSON.stringify(d.marks), report: JSON.stringify(d.report), renders: d.renders || [] };`
+      + `return { svg: typeof d.svg === 'string', renders: window.__fig.renders.map((r) => r.label), marked: window.__fig.renders.map((r) => typeof r.marks === 'string'), warnings: d.warnings || [] } })`),
+    new Promise((r) => { timer = setTimeout(r, T) }).then(() => fail(`${name}: no figure in ${job.timeout ?? 120} s\n${logs.slice(-20).join('\n')}`))])
+    clearTimeout(timer)
+    if (!head || head.error) fail(`${name}: the Editor refused the shot: ${head?.error ?? 'no answer'}`)
+    await writeShot(job, name, head, evalp, build)
     done.shots.push({ name, renders: head.renders, warnings: head.warnings })
     for (const w of head.warnings) console.error(`snapshot: ${name}: ${w}`)
   }
@@ -242,12 +266,40 @@ async function snapshots(job) {
   ws.close(); cleanup(); process.exit(0)
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+/** a shot's answer, held by the page in window.__fig, read back in slices and written: <out>/<name>.svg, .marks.json, .report.json, each render */
+async function writeShot(job, name, head, evalp, build) {
+  const svg = head.svg ? await readSliced(evalp, 'window.__fig.svg') : null, marks = JSON.parse(await readSliced(evalp, 'window.__fig.marks'))
+  const report = JSON.parse(await readSliced(evalp, 'window.__fig.report'))
+  const pngs = []
+  for (const [i, label] of head.renders.entries()) {
+    const png = await readSliced(evalp, `window.__fig.renders[${i}].png`)
+    if (!png.startsWith('data:image/png;base64,')) fail(`${name}: the render ${label} is no PNG`)
+    const own = head.marked[i] ? JSON.parse(await readSliced(evalp, `window.__fig.renders[${i}].marks`)) : null      // raw pictures: each render's marks
+    pngs.push([label, Buffer.from(png.slice(png.indexOf(',') + 1), 'base64'), own])
+  }
+  await evalp('delete window.__fig')
+  if (build) report.build = build                                        // a release records its VERSION's build
+  const dir = path.join(job.out, name)
+  fs.mkdirSync(dir, { recursive: true })
+  const sha = job.tokens_sha256 ?? (job.tokens && fs.existsSync(job.tokens) ? createHash('sha256').update(fs.readFileSync(job.tokens)).digest('hex') : undefined)
+  const stamp = (m) => (job.tokens ? { ...m, tokens_sha256: sha, tokens_path: job.tokens_path ?? job.tokens } : m)
+  for (const [label, buf, own] of pngs) {
+    fs.writeFileSync(path.join(dir, `${label}.png`), buf)
+    if (own) fs.writeFileSync(path.join(dir, `${label}.marks.json`), JSON.stringify(stamp(own), null, 2))
+  }
+  if (svg !== null) fs.writeFileSync(path.join(job.out, `${name}.svg`), svg)
+  fs.writeFileSync(path.join(job.out, `${name}.marks.json`), JSON.stringify(stamp(marks), null, 2))
+  fs.writeFileSync(path.join(job.out, `${name}.report.json`), JSON.stringify(report, null, 2))
+}
+
+/** run, not imported: argv[1] is the path as typed, import.meta.url the real one (a library release is a symlink), so both are compared real */
+const isMain = () => { try { return fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url)) } catch { return false } }
+if (process.argv[1] && isMain()) {
   process.on('exit', cleanup)
   const file = process.argv[2]
   if (!file) fail('usage: node snapshot-driver.mjs <job.json>')
   let job
   try { job = parseJob(fs.readFileSync(file, 'utf8'), file) } catch (e) { fail(e.message) }
   if (job.print) await printPanels(job)
-  else await snapshots(job)
+  else await editorShots(job)
 }

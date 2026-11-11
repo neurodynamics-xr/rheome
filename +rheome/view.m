@@ -9,8 +9,8 @@ function out = view(varargin)
 %
 % Rheome RUNS without the viewer (R2023b and later); its figures of the cortex are drawn by it (rheome.viz).
 % The result is written as a rheome.bundle@1 folder (rheome.io.write.bundle) and opened:
-%   R2026a+       inside MATLAB, a uifigure + uihtml on the viewer's viewer.html (the Cortical Flow viewer,
-%                 the Cortical Flow viewer build; its README.md has the format and protocol). The viewer folder is RHEOME_VIEWER, default prefdir/rheome-viewer, installed
+%   R2026a+       inside MATLAB, a uifigure + uihtml on view.html of the Cortical Flow Editor's build (its
+%                 editor/figure/README.md has the format and protocol). The folder is RHEOME_VIEWER, default prefdir/rheome-viewer, installed
 %                 there from the copy shipped in <rheome>/viewer when that exists; the bundle is written beneath
 %                 it, because uihtml serves only that folder's tree. The figure is reused by the next call.
 %   R2023b-R2025b the Cortical Flow desktop app, by its URL (corticalflow://view?bundle=<folder>).
@@ -101,7 +101,6 @@ function out = view(varargin)
 
     vdir = viewerFolder();
     page = fullfile(vdir, 'view.html');                                 % the Editor's build: the viewer's protocol on the Editor
-    if ~isfile(page), page = fullfile(vdir, 'viewer.html'); end          % else the viewer's own page
     if strcmp(out.viewer, 'auto')
         if ~isMATLABReleaseOlderThan('R2026a') && isfile(page), out.viewer = 'editor'; else, out.viewer = 'app'; end
     end
