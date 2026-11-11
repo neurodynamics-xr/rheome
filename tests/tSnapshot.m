@@ -6,7 +6,8 @@ classdef tSnapshot < matlab.unittest.TestCase
 %
 % Author: Diellor Basha, 2026
     properties
-        S = struct('Vertices', [0 0 0; 1 0 0; 0 1 0; 0 0 1] * 0.05, 'Faces', [1 2 3; 1 3 4; 1 4 2; 2 4 3]);
+        S = struct('Vertices', [0 0 0; 1 0 0; 0 1 0; 0 0 1] * 0.05, 'Faces', [1 2 3; 1 3 4; 1 4 2; 2 4 3], ...
+            'Hemi', {{[1; 2]; [3; 4]}}, 'HemiLabel', {{'Cortex L'; 'Cortex R'}});   % its Structures atlas, as rheome.io.read.surface gives it
         Fake
     end
     methods (TestMethodSetup)
@@ -294,15 +295,20 @@ function vdir = libraryViewer(tc)
 % the viewer to draw with: RHEOME_VIEWER, else the library's release; Chrome
     vdir = getenv('RHEOME_VIEWER');
     if isempty(vdir), vdir = fullfile(char(java.lang.System.getProperty('user.home')), 'workspace', 'library', 'software', 'cortical-flow-viewer'); end
-    tc.assumeTrue(isfile(fullfile(vdir, 'viewer.html')) && isfile(fullfile(vdir, 'driver', 'snapshot-driver.mjs')), 'needs the viewer (RHEOME_VIEWER)');
+    tc.assumeTrue(isBuild(vdir) && isfile(fullfile(vdir, 'driver', 'snapshot-driver.mjs')), 'needs the viewer (RHEOME_VIEWER)');
     tc.assumeTrue(isfile('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome') || ~isempty(getenv('RHEOME_CHROME')), 'needs Chrome');
 end
 
 function [vdir, S] = needs(tc)
     vdir = getenv('RHEOME_VIEWER');
     if isempty(vdir), vdir = fullfile(char(java.lang.System.getProperty('user.home')), 'workspace', 'research', 'code', 'nxr-cortical-flow', 'editor', 'dist-viewer'); end
-    tc.assumeTrue(isfile(fullfile(vdir, 'viewer.html')), 'needs the viewer (RHEOME_VIEWER)');
+    tc.assumeTrue(isBuild(vdir), 'needs the viewer (RHEOME_VIEWER)');
     tc.assumeTrue(isfile('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome') || ~isempty(getenv('RHEOME_CHROME')), 'needs Chrome');
     tc.assumeTrue(rheome.load.has('omega_sub0002'), 'needs the omega_sub0002 surface in +data');
     S = rheome.load.surface('omega_sub0002');
+end
+
+function ok = isBuild(vdir)
+% an Editor build (index.html) or a viewer build (viewer.html): rheome.snapshot draws with either
+    ok = isfile(fullfile(vdir, 'index.html')) || isfile(fullfile(vdir, 'viewer.html'));
 end
