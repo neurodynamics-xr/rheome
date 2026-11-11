@@ -231,7 +231,8 @@ function out = snapshot(surf, result, varargin)
     [tok, tokFile, tokSha, tokShown] = tokens(o.Tokens, work);
     vdir = char(o.Viewer);
     if isempty(vdir), vdir = viewerFolder(); end
-    if ~isfile(fullfile(vdir, 'viewer.html')), error('rheome:snapshot:noviewer', 'No viewer at %s (Viewer= or RHEOME_VIEWER).', vdir); end
+    editor = isfile(fullfile(vdir, 'index.html')) && ~isfile(fullfile(vdir, 'viewer.html'));   % THE EDITOR's build draws the snapshots
+    if ~isfile(fullfile(vdir, 'viewer.html')) && ~editor, error('rheome:snapshot:noviewer', 'No viewer at %s (Viewer= or RHEOME_VIEWER): an Editor build (index.html) or a viewer build (viewer.html).', vdir); end
     drv = fullfile(vdir, 'driver', 'snapshot-driver.mjs');
     if ~isfile(drv)
         error('rheome:snapshot:driver', ['The viewer at %s has no snapshot driver (driver/snapshot-driver.mjs): rheome.snapshot needs ' ...
@@ -247,12 +248,17 @@ function out = snapshot(surf, result, varargin)
 
     % one bundle, one job, one viewer run for every shot
     if isfield(surf, 'Vertices'), bs = surf; else, bs = surfs; end
+    labs = o.Labellings;  st = structures(surfs.(snames{1}));      % the hemispheres, as the atlas the Editor reads them from
+    if ~isempty(st) && ~any(strcmp(labellingNames(labs), 'Structures'))
+        if isempty(labs), labs = {}; elseif isstruct(labs), labs = num2cell(labs(:)'); end
+        labs = [labs(:)' {st}];
+    end
     rheome.io.write.bundle(fullfile(work, 'bundle'), bs, result, 'Fs', o.Fs, 'Name', 'rheome.snapshot', ...
-        'Labellings', o.Labellings, 'Points', o.Points, 'Paths', o.BundlePaths, 'Selections', o.Selections);
+        'Labellings', labs, 'Points', o.Points, 'Paths', o.BundlePaths, 'Selections', o.Selections);
     list = cell(1, numel(shots));
     for k = 1:numel(shots), list{k} = struct('name', shots(k).Name, 'shot', viewerShot(shots(k), folded, o, J)); end
     job = struct();
-    job.format = 'nxr-snapshot-job@1';  job.viewer = vdir;  job.bundle = 'bundle';  job.out = 'out';
+    job.format = 'nxr-snapshot-job@1';  if editor, job.editor = vdir; else, job.viewer = vdir; end;  job.bundle = 'bundle';  job.out = 'out';
     job.chrome = chromePath(o.Chrome);  job.tokens = tokFile;  job.tokens_sha256 = tokSha;  job.tokens_path = tokShown;
     job.size = windowSize(double(tok.cortex.viewer.size_px(:)'), shots);  job.wait = o.Wait;  job.timeout = o.Timeout;  job.shots = list;
     node = nodePath(o.Node);
@@ -392,6 +398,10 @@ function shots = normalise(in, result, surfs, T, fs, tok, cmaps, labs, barTile)
         if ~noField
             if isempty(q)
                 if isempty(hemi), hemi = hemispheres(S1); end
+                if isempty(hemi) && any(~strcmp(s.views(:, 2), 'both'))
+                    error('rheome:snapshot:hemispheres', '%s: a view of one hemisphere needs the surface''s hemispheres (its ''Structures'' atlas: Cortex L, Cortex R).', s.Name);
+                end
+                if isempty(hemi), hemi = ones(size(S1.Vertices, 1), 1); end
                 shown = ismember(hemi, find(ismember({'left', 'right'}, s.views(:, 2)))) | any(strcmp(s.views(:, 2), 'both'));
                 x = result.(s.Field);  xs = x(shown, fr);  xs = xs(isfinite(xs));
                 if any(xs < 0) && any(xs > 0), cls = 'signed'; else, cls = 'magnitude'; end
@@ -785,17 +795,24 @@ function W = panelWidth(W, ncol, J)
 end
 
 function h = hemispheres(S)
-% 1 left, 2 right, 0 neither: the mesh's two largest connected components, the left the one with larger mean y (as
-% the viewer finds them); for the default quantity's check only
-    F = double(S.Faces);  nV = size(S.Vertices, 1);
-    g = graph([F(:,1); F(:,2); F(:,3)], [F(:,2); F(:,3); F(:,1)], [], nV);
-    c = conncomp(g)';
-    n = accumarray(c, 1);
-    [~, o] = sort(n, 'descend');
-    h = zeros(nV, 1);
-    if numel(o) < 2, h(:) = 1; return; end
-    a = c == o(1);  b = c == o(2);
-    if mean(S.Vertices(a, 2)) >= mean(S.Vertices(b, 2)), h(a) = 1; h(b) = 2; else, h(a) = 2; h(b) = 1; end
+% 1 left, 2 right, 0 neither: the surface's ATLAS (its 'Structures' hemispheres, rheome.io.read.surface's Hemi / HemiLabel:
+% Cortex L, Cortex R) -- a hemisphere is the set of vertices the atlas names, never found from the mesh (2026-11-10). [] without one
+    h = [];
+    if ~isfield(S, 'Hemi') || isempty(S.Hemi), return; end
+    h = zeros(size(S.Vertices, 1), 1);
+    for k = 1:numel(S.Hemi)
+        lab = char(S.HemiLabel{k});
+        if lab(end) == 'L', h(S.Hemi{k}) = 1; else, h(S.Hemi{k}) = 2; end
+    end
+end
+
+function st = structures(S)
+% the surface's hemispheres as the bundle's 'Structures' labelling (codes 1 Cortex L, 2 Cortex R, 0 neither) -- what the
+% Editor shows a hemisphere from; [] without them
+    st = [];
+    h = hemispheres(S);
+    if isempty(h), return; end
+    st = struct('name', 'Structures', 'codes', int32(h), 'entries', struct('code', {0, 1, 2}, 'name', {'unassigned', 'Cortex L', 'Cortex R'}));
 end
 
 %% ---------------------------------------------------------------- tokens, colormaps, tools
