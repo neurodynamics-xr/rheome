@@ -5,7 +5,7 @@ function vdir = viewerFolder()
     if ~isempty(vdir), return; end
     vdir = fullfile(prefdir, 'rheome-viewer');
     shipped = fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'viewer');
-    if isfile(fullfile(shipped, 'viewer.html')) && ~strcmp(stamp(shipped), stamp(vdir))
+    if (isfile(fullfile(shipped, 'viewer.html')) || isfile(fullfile(shipped, 'view.html'))) && ~strcmp(stamp(shipped), stamp(vdir))
         if isfolder(vdir), rmdir(vdir, 's'); end
         copyfile(shipped, vdir);
     end
