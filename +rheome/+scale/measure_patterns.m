@@ -299,7 +299,7 @@ function X = i_twoflows(C, Fa, tc, Lt, dec, rate, fs, dur, h)
         idx = tc(i) - Lt/2 + (0:dec:Lt-1);
         Jc = C.K * Fa(:, idx);
         A = rheome.flow.activation(Jc, Rate=rate, Band=[8 16]);
-        Ap = rheome.flow.apparent(A, C.Sh, Rate=rate, Band=[8 16], Alpha=1);
+        Ap = rheome.flow.apparent(A, C.Sh, Rate=rate, Band=[8 16], Alpha=1, Regulariser="frame");   % the pre-2026-11-11 method (re-check with "connection")
         vJ = rheome.differential.curl(real(Jc), C.Sh, C.fg);
         cv{i} = abs(mean(Ap.vorticity, 2));  cj{i} = abs(mean(vJ(:, 1:end-1), 2));
     end

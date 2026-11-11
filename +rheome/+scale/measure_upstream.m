@@ -317,7 +317,7 @@ function U = i_of(S, H, Za, valid, rate, V1, chunk)
         for s = 1:chunk:nT-1
             fr = s:min(s + chunk, nT);  if numel(fr) < 2, continue; end
             J = reshape(Kh * Za(:, fr), 3, nV, []);  A = squeeze(sqrt(sum(abs(J).^2, 1)));
-            o = rheome.flow.apparent(A, Hh.S, Rate=rate, Band=V1.Band, Alpha=V1.OfAlpha);
+            o = rheome.flow.apparent(A, Hh.S, Rate=rate, Band=V1.Band, Alpha=V1.OfAlpha, Regulariser="frame");   % readout v1 is frozen: the pre-2026-11-11 method
             v = permute(reshape(o.velocity, 3, nV, []), [2 1 3]);              % [nV x 3 x nPairs]
             ok = reshape(valid(fr(1:end-1)) & valid(fr(2:end)), 1, 1, []);
             up = sum(v .* Hh.gradg, 2) > 0;  w = vecnorm(v, 2, 2) .* gn .* Hh.a .* ok;
