@@ -123,6 +123,10 @@ function out = view(varargin)
     switch out.viewer
         case 'editor'
             if ~isfile(page), error('rheome:view:noviewer', 'No viewer at %s (set RHEOME_VIEWER).', page); end
+            % the lab's figure tokens are the client's (the Editor's build ships none): written beside the page, where uihtml serves them
+            tok = rheome.viz.tokenspath();  fdir = fullfile(vdir, 'figure');
+            if ~isfolder(fdir), mkdir(fdir); end
+            copyfile(tok, fullfile(fdir, 'figure-tokens.json'), 'f');
             [ok, out.figure, h, out.ready] = viaEditor(page, ['bundles/' id '/manifest.json'], s, o.Timeout);
             if ok && ~isempty(h)
                 setappdata(h, 'rheomeLayers', []);
