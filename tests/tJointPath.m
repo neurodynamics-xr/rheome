@@ -19,7 +19,7 @@ classdef tJointPath < matlab.unittest.TestCase
         function tiles(tc)
             [V, F] = rheome.geom.icosphere(3);
             S = struct('Vertices', V * 0.07, 'Faces', F);
-            [L, M] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces);
+            [L, M] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces, mesh='embedded', mass='galerkin');
             T = rheome.geom.tree(S, L=L, M=M, MaxDepth=3);
             tc.G = rheome.geom.tiles(T, S, 3, Ruler=rheome.geom.edgegraph(S));
             tc.nTile = numel(tc.G.node_id);

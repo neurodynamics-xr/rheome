@@ -1,13 +1,15 @@
-function [L, M] = laplace_beltrami(V, F, massType)
-% OPERATORS.LAPLACE_BELTRAMI  Cotangent Laplace-Beltrami stiffness (and mass).
+function [L, M, info] = laplace_beltrami(V, F, opt)
+% OPERATORS.LAPLACE_BELTRAMI  Cotangent Laplace-Beltrami stiffness (and mass), on the intrinsic mesh by default.
 %
-%   [L, M] = rheome.operators.laplace_beltrami(V, F)
-%   [L, M] = rheome.operators.laplace_beltrami(V, F, massType)   % 'galerkin' (default) | 'lumped'
+%   [L, M]       = rheome.operators.laplace_beltrami(V, F)
+%   [L, M, info] = rheome.operators.laplace_beltrami(V, F, mesh='intrinsic', mass='mixedVoronoi', mollify=1e-6, flipEps=1e-6)
+%   [L, M]       = rheome.operators.laplace_beltrami(V, F, mesh='embedded', mass='galerkin')   % the pre-2026-11-10 operator
 %
-% Builds the discrete Laplace-Beltrami operator using the classic COTANGENT weights
-% -- the same "cotan Laplacian" Brainstorm computes (tess_operators ->
-% nxr_compute('operators', h, 'laplacian', 'cotan')), reproduced here in pure MATLAB
-% so the demo needs no compiled plugin.
+% "One mesh and mass" (PI, 2026-11-10; the Cortical Flow Editor's intrinsicDelaunay.ts is the reference):
+% the DEFAULT is the cotangent Laplacian of the INTRINSIC, mollified Delaunay triangulation
+% (rheome.operators.intrinsic_delaunay: S.L, weights >= 0) with the mixed-Voronoi mass of the mollified input
+% mesh (S.mass), as nxr and the Editor build it. The embedded mesh and the Galerkin / barycentric masses
+% remain as NAMED OPTIONS, never silent defaults.
 %
 % CONVENTION (positive-semidefinite "stiffness" / Poisson form):
 %   For an interior edge (i,j) with the two opposite triangle angles alpha, beta,
@@ -17,19 +19,25 @@ function [L, M] = laplace_beltrami(V, F, massType)
 %   constant vector is the null mode (lambda_0 = 0), and the smooth eigenmodes
 %   solve the generalized problem  L phi = lambda M phi.
 %
-% Sign note: this returns the PSD stiffness (positive diagonal, negative
-% off-diagonal), matching Brainstorm's cotanL used as the operator A in
-% eigs(A, M, k, 'smallestabs'). This is the negative of the "geometric Laplacian"
-% div-grad; the eigenvalues lambda >= 0 are the ones the atom filters act on.
+% Sign note: this returns the PSD stiffness (positive diagonal, negative off-diagonal), matching
+% Brainstorm's cotanL used as the operator A in eigs(A, M, k, 'smallestabs'). The eigenvalues lambda >= 0
+% are the ones the atom filters act on.
 %
 % INPUTS:
 %   V        [nV x 3] vertex coordinates
 %   F        [nF x 3] triangle vertex indices (1-based)
-%   massType mass matrix pairing for the second output: 'galerkin' (default) | 'lumped'
+%   mesh     'intrinsic' (default: mollified intrinsic Delaunay triangulation) | 'embedded' (the surface's own
+%            triangles, no flips, no mollification: Brainstorm's cotanL)
+%   mass     'mixedVoronoi' (default) | 'galerkin' | 'barycentric' (A/3); see rheome.operators.mass. The
+%            galerkin and barycentric masses are those of the embedded triangles.
+%   mollify  relative mollification delta of the intrinsic mesh, default 1e-6 (intrinsic mesh only)
+%   flipEps  flip tolerance of the intrinsic mesh, default 1e-6 (intrinsic mesh only)
 %
 % OUTPUTS:
-%   L  [nV x nV] sparse symmetric PSD cotan stiffness
-%   M  [nV x nV] sparse mass matrix (companion for the eigenproblem L phi = lambda M phi)
+%   L     [nV x nV] sparse symmetric PSD cotan stiffness
+%   M     [nV x nV] sparse mass matrix (companion for the eigenproblem L phi = lambda M phi)
+%   info  struct recording what was built: .mesh, .mass, .mollify, .flipEps, .mollifyEps (the length added to every
+%         edge), .flips (number of intrinsic flips); the last three are NaN for the embedded mesh
 %
 % Example:
 %   [V, F] = rheome.geom.icosphere(4);
@@ -37,11 +45,37 @@ function [L, M] = laplace_beltrami(V, F, massType)
 %   z = V(:, 3);                                       % an l = 1 harmonic: eigenvalue l(l+1) = 2
 %   assert(norm(L * ones(size(z))) < 1e-10 && abs((z' * L * z) / (z' * M * z) - 2) < 0.01)
 %
-% See also: rheome.operators.mass, rheome.eigen.modes
+% See also: rheome.operators.mass, rheome.operators.intrinsic_delaunay, rheome.eigen.modes
 %
 % Author: Diellor Basha, 2026
 
-    if nargin < 3 || isempty(massType), massType = 'galerkin'; end
+    arguments
+        V (:,3) double, F (:,3) double
+        opt.mesh (1,1) string {mustBeMember(opt.mesh, ["intrinsic" "embedded"])} = "intrinsic"
+        opt.mass (1,1) string {mustBeMember(opt.mass, ["mixedVoronoi" "galerkin" "barycentric"])} = "mixedVoronoi"
+        opt.mollify (1,1) double = 1e-6
+        opt.flipEps (1,1) double = 1e-6
+    end
+    info = struct('mesh', opt.mesh, 'mass', opt.mass, 'mollify', NaN, 'flipEps', NaN, 'mollifyEps', NaN, 'flips', NaN);
+    nV = size(V, 1);
+    if opt.mesh == "intrinsic"
+        S = rheome.operators.intrinsic_delaunay(V, F, mollify=opt.mollify, flipEps=opt.flipEps);
+        L = S.L;  L = (L + L') / 2;
+        info.mollify = opt.mollify;  info.flipEps = opt.flipEps;  info.mollifyEps = S.mollifyEps;  info.flips = S.flips;
+        if nargout > 1
+            if opt.mass == "mixedVoronoi", M = spdiags(S.mass, 0, nV, nV);
+            else, M = rheome.operators.mass(V, F, opt.mass); end
+        end
+    else
+        L = i_embedded_cotan(V, F);
+        if nargout > 1
+            if opt.mass == "mixedVoronoi", M = rheome.operators.mass(V, F, 'mixedVoronoi', mollify=opt.mollify);
+            else, M = rheome.operators.mass(V, F, opt.mass); end
+        end
+    end
+end
+
+function L = i_embedded_cotan(V, F)
     nV = size(V, 1);
 
     % --- per-corner cotangents ---
@@ -75,10 +109,6 @@ function [L, M] = laplace_beltrami(V, F, massType)
     d = full(sum(W, 2));
     L = spdiags(d, 0, nV, nV) - W;
     L = (L + L') / 2;   % enforce exact symmetry
-
-    if nargout > 1
-        M = rheome.operators.mass(V, F, massType);
-    end
 end
 
 % Author: Diellor Basha, 2026

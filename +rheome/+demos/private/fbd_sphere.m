@@ -16,7 +16,7 @@ function S = fbd_sphere(nSub, K)
     R = 0.100;
     [V, F] = rheome.geom.icosphere(nSub);
     V = R * (V ./ vecnorm(V, 2, 2));
-    [L, M] = rheome.operators.laplace_beltrami(V, F, 'galerkin');
+    [L, M] = rheome.operators.laplace_beltrami(V, F, mesh='embedded', mass='galerkin');
     b = rheome.eigen.modes(L, M, K);
 
     S = struct('V', V, 'F', F, 'nV', b.nV, 'R', R, ...

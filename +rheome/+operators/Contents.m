@@ -4,9 +4,9 @@
 % just the mesh (vertices + faces).
 %
 % Functions (per-hemisphere, mesh-only):
-%   rheome.operators.mass              - FEM mass matrix (galerkin / lumped)
-%   rheome.operators.laplace_beltrami  - cotangent Laplace-Beltrami stiffness (+ mass)
-%   rheome.operators.connection_laplacian - Levi-Civita connection Laplacian (complex tangent)
+%   rheome.operators.mass              - mass matrix (mixedVoronoi default / galerkin / barycentric)
+%   rheome.operators.laplace_beltrami  - cotangent Laplace-Beltrami stiffness (+ mass); intrinsic Delaunay mesh + mixed-Voronoi mass by default (mesh=, mass=, mollify=, flipEps=)
+%   rheome.operators.connection_laplacian - Levi-Civita connection Laplacian (complex tangent); intrinsic by default, mesh='embedded' option
 %   rheome.operators.gauge             - a per-vertex tangent FRAME: a reference direction field, by
 %                                 vector diffusion, the smoothest eigenvector (Knoppel 2013) or a
 %                                 trivial connection (parallel, singular only at chosen poles).

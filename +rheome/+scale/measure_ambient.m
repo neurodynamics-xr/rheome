@@ -64,7 +64,7 @@ function [T, X, Ex] = measure_ambient(name, opts)
         V = double(s.S.Vertices);  F = double(s.S.Faces);  nV = size(V, 1);  Sx = struct('Vertices', V, 'Faces', F);
         fg = rheome.operators.face_gradient(V, F);
         n = fg.W * fg.FaceNormal;  n = n ./ vecnorm(n, 2, 2);          % the normals the face divergence sees
-        [L, M] = rheome.operators.laplace_beltrami(V, F, 'lumped');  a = full(diag(M));
+        [L, M] = rheome.operators.laplace_beltrami(V, F, mesh='embedded', mass='barycentric');  a = full(diag(M));
         H = 0.5 * sum(((L * V) ./ a) .* n, 2);                         % cotan mean curvature, 1/m
         if s.surface == "sphere"                                       % H = 1/R, signed as n is (the winding)
             Hk = sign(median(H)) * ones(nV, 1) / R;  Hrel = sqrt(a' * (H - Hk).^2 / sum(a)) * R;

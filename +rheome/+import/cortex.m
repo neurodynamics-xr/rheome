@@ -56,7 +56,7 @@ function file = cortex(name, hemi, K, Kc)
                  'Hemi',{{}}, 'HemiLabel',{{}}, 'Comment',sprintf('%s %s cortex (folded)', name, hemi), ...
                  'SurfaceFile','', 'Sphere',[], 'VertConn',[]);
 
-    [L, M] = rheome.operators.laplace_beltrami(Vc, Fc, 'galerkin');
+    [L, M] = rheome.operators.laplace_beltrami(Vc, Fc, mesh='embedded', mass='galerkin');
 
     fprintf('  Dirac eigenbasis (K=%d) ...\n', K);  t = tic;
     dbasis = rheome.eigen.dirac_frame(Vc, Fc, tau, K, Nrm, {(1:nV)'});
@@ -64,7 +64,7 @@ function file = cortex(name, hemi, K, Kc)
     fprintf('    %.1fs\n', toc(t));
 
     fprintf('  connection Laplacian + eigenmodes (Kc=%d) ...\n', Kc);  t = tic;
-    Cc = rheome.operators.connection_laplacian(Vc, Fc);
+    Cc = rheome.operators.connection_laplacian(Vc, Fc, mesh='embedded', mass='galerkin');
     [Psi, Lm]   = rheome.eigen.smallest(Cc.A, Cc.B, Kc);   % negative-sigma shift (not naive smallestabs)
     [Lambda, o] = sort(real(diag(Lm)));  Psi = Psi(:, o);
     fprintf('    %.1fs\n', toc(t));

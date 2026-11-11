@@ -9,7 +9,7 @@ function fx = jfbFixture()
     R = 0.100;
     [V, F] = rheome.geom.icosphere(3);                 % 642 vertices
     V = R * (V ./ vecnorm(V, 2, 2));
-    [L, M] = rheome.operators.laplace_beltrami(V, F, 'galerkin');
+    [L, M] = rheome.operators.laplace_beltrami(V, F, mesh='embedded', mass='galerkin');
     b = rheome.eigen.modes(L, M, 40);
 
     fx = struct();

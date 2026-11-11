@@ -45,7 +45,7 @@ function out = wavelet(SurfaceFile, outDir, K)
     % --- 1. surface, operators, eigenbasis ---
     S = rheome.io.read.surface(SurfaceFile);
     fprintf('Surface: %s  (%d vertices)\n', S.Comment, S.nV);
-    [L, M] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces, 'galerkin');
+    [L, M] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces, mesh='embedded', mass='galerkin');
     fprintf('Computing %d Laplace-Beltrami eigenmodes...\n', K);
     basis = rheome.eigen.modes(L, M, K);
     lmax  = max(basis.Lambda);

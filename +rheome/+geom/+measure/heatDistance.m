@@ -1,16 +1,20 @@
-function [distance, solver] = heatDistance(S, sourceVertices, solver)
+function [distance, solver] = heatDistance(S, sourceVertices, solver, opt)
 % GEOM.MEASURE.HEATDISTANCE  Single-/multi-source geodesic distance by Crane's heat method.
 %
 %   [distance, solver] = rheome.geom.measure.heatDistance(S, sourceVertices)          % builds the solver
 %   [distance, solver] = rheome.geom.measure.heatDistance(S, sourceVertices, solver)  % reuse cached factors
+%   [distance, solver] = rheome.geom.measure.heatDistance(S, sourceVertices, mollify=1e-6, flipEps=1e-6)
 %
 % Distance ON THE SURFACE (not the ambient embedding) from a set of source vertices, via the
 % heat method (Crane, Weischedel & Wardetzky 2013): diffuse a heat spike briefly, march down
 % the normalised heat gradient, and integrate. Follows geometry-central's
 % HeatMethodDistanceSolver (robust): everything is built INTRINSICALLY from edge lengths, first
 % mollified (Sharp & Crane 2020) so that zero-area triangles (fsaverage has two) still factor, then
-% flipped to the intrinsic Delaunay triangulation (nonnegative cotan weights); the heat step uses the
-% LUMPED mass, t = h^2 (h = mean edge length).
+% flipped to the intrinsic Delaunay triangulation (nonnegative cotan weights). The triangulation, its mollification
+% and the mass are rheome.operators.intrinsic_delaunay's (the Cortical Flow Editor's intrinsicDelaunay.ts: ONE Delaunay,
+% PI 2026-11-10): FIFO flips at opt.flipEps (1e-6), mollify opt.mollify (1e-6), and the heat step uses the
+% mixed-Voronoi mass of the mollified input mesh (S.mass; it was the barycentric A/3 of the flipped mesh), t = h^2
+% (h = mean edge length of the mollified input). The solver records .mesh (the intrinsic_delaunay struct), .mollify, .flipEps.
 %
 % ⭐ WHY THE REWRITE (2026-10-14). The earlier version saturated at ~46 mm on fsaverage6 pial (true
 % max ~240 mm) and was 20-30 % off within 40 mm, and its Cholesky failed on fsaverage. Three causes:
@@ -20,7 +24,7 @@ function [distance, solver] = heatDistance(S, sourceVertices, solver)
 %      only its DIRECTION is used, so it is normalised wherever it is nonzero;
 %   2. it used the Galerkin (consistent) mass and the extrinsic cotan weights, which are negative on
 %      obtuse triangles: the heat operator loses the M-matrix sign pattern, the far heat cancels to
-%      roundoff, flips sign and the direction field turns. Lumped mass on the intrinsic Delaunay
+%      roundoff, flips sign and the direction field turns. A diagonal mass on the intrinsic Delaunay
 %      triangulation keeps it an M-matrix and the heat positive;
 %   3. it pinned the Poisson nullspace with 1e-10*M, which is not scale invariant: in metres the
 %      shift is ~1e-16 and the factorisation fails. The shift is now relative to the spectrum.
@@ -45,8 +49,13 @@ function [distance, solver] = heatDistance(S, sourceVertices, solver)
 %
 % Author: Diellor Basha, 2026
 
-    if nargin < 3 || isempty(solver)
-        solver = i_build(double(S.Vertices), double(S.Faces));
+    arguments
+        S, sourceVertices, solver = []
+        opt.mollify (1,1) double = 1e-6
+        opt.flipEps (1,1) double = 1e-6
+    end
+    if isempty(solver)
+        solver = i_build(double(S.Vertices), double(S.Faces), opt.mollify, opt.flipEps);
     end
 
     sourceIndicator = zeros(solver.nV, 1);
@@ -63,23 +72,18 @@ function [distance, solver] = heatDistance(S, sourceVertices, solver)
     distance(heat == 0) = Inf;                             % unreached: another connected component
 end
 
-function solver = i_build(V, F)
-% Intrinsic operators from (mollified) edge lengths on the intrinsic Delaunay triangulation, each face
-% laid out in its own 2-D frame.
+function solver = i_build(V, F, mollify, flipEps)
+% Intrinsic operators on the intrinsic Delaunay triangulation of rheome.operators.intrinsic_delaunay (the reference port:
+% mollify, FIFO flips at flipEps, the mixed-Voronoi mass of the mollified input), each face laid out in its own 2-D frame.
     nV = size(V, 1);  nF = size(F, 1);
-    pairs = [F(:,[2 3]); F(:,[3 1]); F(:,[1 2])];          % edge opposite corner 1, 2, 3
-    [edges, ~, id] = unique(sort(pairs, 2), 'rows');
-    FE = reshape(id, nF, 3);                                % FE(f,c): the edge opposite corner c
-    len = vecnorm(V(edges(:,1),:) - V(edges(:,2),:), 2, 2);
-    % intrinsic mollification (Sharp & Crane 2020): lengthen every edge by the same epsilon so each
-    % triangle inequality holds with margin delta = 1e-6 h; makes degenerate triangles well defined
-    L = len(FE);
-    delta = 1e-6*mean(len);
-    epsilon = max([0; delta - (L(:,2) + L(:,3) - L(:,1)); delta - (L(:,3) + L(:,1) - L(:,2)); ...
-                   delta - (L(:,1) + L(:,2) - L(:,3))]);
-    len = len + epsilon;
-    h = mean(len);
-    [F, FE, len] = i_delaunay(F, FE, len);
+    D = rheome.operators.intrinsic_delaunay(V, F, mollify=mollify, flipEps=flipEps);
+    pairs = [F(:,[2 3]); F(:,[3 1]); F(:,[1 2])];
+    ue = unique(sort(pairs, 2), 'rows');
+    h = mean(vecnorm(V(ue(:,1),:) - V(ue(:,2),:), 2, 2)) + D.mollifyEps;   % heat time t = h^2: mean mollified edge length of the INPUT mesh
+    he = reshape(1:3*nF, 3, [])';                           % halfedge of (f,k): corner k -> k+1
+    len = D.len;
+    FE = D.edgeOf(he(:, [2 3 1]));                          % FE(f,c): the edge opposite corner c (corner c+1 -> c+2)
+    F = reshape(D.F, 3, nF)';                               % vertex of corner k of face f, after the flips
 
     % layout: p1 = (0,0), p2 = (l3,0), p3 = (x3,y3); hat-function gradient = rot90(opposite edge)/2A
     l1 = len(FE(:,1));  l2 = len(FE(:,2));  l3 = len(FE(:,3));
@@ -95,57 +99,11 @@ function solver = i_build(V, F)
     A = spdiags(area, 0, nF, nF);
     stiffness = solver.Gx'*A*solver.Gx + solver.Gy'*A*solver.Gy;     % = the cotan Laplacian
     stiffness = (stiffness + stiffness')/2;
-    lumped = accumarray(cols, repmat(area/3, 3, 1), [nV 1]);
+    lumped = D.mass;                                                   % mixed-Voronoi mass of the mollified input (recorded before the flips)
+    solver.mesh = D;  solver.mollify = mollify;  solver.flipEps = flipEps;
     solver.heatOp = decomposition(spdiags(lumped,0,nV,nV) + h^2*stiffness, 'chol');
     % pin the constant nullspace (one per connected component) with a shift 1e-10 below the top of
     % the spectrum: scale invariant, and its bias on the slowest mode is ~1e-5 on a hemisphere
     shift = 1e-10*mean(diag(stiffness))/mean(lumped);
     solver.poissonOp = decomposition(stiffness + shift*spdiags(lumped,0,nV,nV), 'chol');
 end
-
-function [F, FE, len] = i_delaunay(F, FE, len)
-% Intrinsic Delaunay triangulation by edge flips (Fisher et al. 2007): flip every interior edge whose
-% two opposite angles sum past pi. Same vertices, new connectivity and lengths; the cotan weights are
-% then nonnegative, which keeps the heat positive far from the source (pial meshes are full of
-% obtuse triangles). Edges on a boundary, non-manifold or between inconsistently oriented faces stay.
-    nE = numel(len);  nF = size(F, 1);
-    EF = zeros(nE, 2);  cnt = zeros(nE, 1);
-    for f = 1:nF
-        for c = 1:3
-            e = FE(f,c);  cnt(e) = cnt(e) + 1;
-            if cnt(e) <= 2, EF(e, cnt(e)) = f; end
-        end
-    end
-    interior = cnt == 2;
-    stack = find(interior);  top = numel(stack);  queued = interior;
-    stack(end+1:end+4*nE) = 0;
-    while top > 0
-        e = stack(top);  top = top - 1;  queued(e) = false;
-        f = EF(e,1);  g = EF(e,2);
-        ca = find(FE(f,:) == e, 1);  cd = find(FE(g,:) == e, 1);
-        if i_cot(len(FE(f,:)), ca) + i_cot(len(FE(g,:)), cd) >= -1e-12, continue, end
-        a = F(f,ca);  b = F(f,mod(ca,3)+1);  c = F(f,mod(ca+1,3)+1);  d = F(g,cd);
-        if F(g,mod(cd,3)+1) ~= c || F(g,mod(cd+1,3)+1) ~= b || a == d, continue, end
-        eca = FE(f,mod(ca,3)+1);  eab = FE(f,mod(ca+1,3)+1);
-        ebd = FE(g,mod(cd,3)+1);  edc = FE(g,mod(cd+1,3)+1);
-        % lay the quad out on edge (b,c): b = 0, c = (lbc,0), a above, d below
-        lbc = len(e);
-        xa = (len(eab)^2 - len(eca)^2 + lbc^2)/(2*lbc);  ya =  sqrt(max(len(eab)^2 - xa^2, 0));
-        xd = (len(ebd)^2 - len(edc)^2 + lbc^2)/(2*lbc);  yd = -sqrt(max(len(ebd)^2 - xd^2, 0));
-        len(e) = hypot(xa - xd, ya - yd);
-        F(f,:) = [a b d];  FE(f,:) = [ebd e eab];
-        F(g,:) = [a d c];  FE(g,:) = [edc eca e];
-        EF(ebd, EF(ebd,:) == g) = f;  EF(eca, EF(eca,:) == f) = g;
-        for n = [eab eca ebd edc]
-            if interior(n) && ~queued(n), top = top + 1;  stack(top) = n;  queued(n) = true; end
-        end
-    end
-end
-
-function c = i_cot(l, i)
-% cotangent of the corner opposite edge i of a triangle with edge lengths l
-    s = sum(l)/2;  A = sqrt(max(s*(s-l(1))*(s-l(2))*(s-l(3)), 0));
-    c = (sum(l.^2) - 2*l(i)^2)/(4*max(A, realmin));
-end
-
-% Author: Diellor Basha, 2026

@@ -16,7 +16,7 @@ classdef tTilePath < matlab.unittest.TestCase
         function tiles(tc)
             [V, F] = rheome.geom.icosphere(3);
             S = struct('Vertices', V * 0.07, 'Faces', F);
-            [L, M] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces);
+            [L, M] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces, mesh='embedded', mass='galerkin');
             T = rheome.geom.tree(S, L=L, M=M, MaxDepth=4);
             tc.G = rheome.geom.tiles(T, S, 4, Ruler=rheome.geom.edgegraph(S));
             tc.nTile = numel(tc.G.node_id);
@@ -110,7 +110,7 @@ classdef tTilePath < matlab.unittest.TestCase
         function aStillFeatureKeepsMinFrames(tc)
             [V, F] = rheome.geom.icosphere(4);
             S = struct('Vertices', V * 0.07, 'Faces', F);
-            [L, M] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces);
+            [L, M] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces, mesh='embedded', mass='galerkin');
             Lad = rheome.geom.jointladder(rheome.geom.tree(S, L=L, M=M, MaxDepth=8), Fs=600);
             row = rheome.geom.jointcell(Lad, SigmaMM=30, Hz=10, SpeedMS=0);
             tc.verifyGreaterThanOrEqual(row.framesPerWindow, 8);

@@ -4,7 +4,7 @@ function g = gauge(V, F, varargin)
 %   g = rheome.operators.gauge(V, F)                       % smooth frame by vector diffusion
 %   g = rheome.operators.gauge(V, F, Method="trivial")     % exactly parallel frame, two +1 poles
 %   g = rheome.operators.gauge(V, F, Method="smoothest")   % Knoppel 2013: lowest connection-Laplacian eigenvector
-%   g = rheome.operators.gauge(V, F, ..., Connection=C)    % reuse rheome.operators.connection_laplacian(V,F)
+%   g = rheome.operators.gauge(V, F, ..., Connection=C)    % reuse rheome.operators.connection_laplacian(V,F, mesh='embedded', mass='galerkin')
 %
 % WHY THIS EXISTS. rheome.operators.connection_laplacian returns .e1/.e2 and calls them a gauge, but
 % they are built along each vertex's reference half-edge -- an arbitrary choice with no relation
@@ -43,7 +43,7 @@ function g = gauge(V, F, varargin)
 %   Method         "diffusion" (default) | "smoothest" | "trivial"
 %   Time           diffusion time, default 1 (the result is insensitive to it; see above)
 %   Seed           diffusion seed vertex, default round(nV/2)
-%   Connection     a precomputed rheome.operators.connection_laplacian(V,F), to avoid rebuilding
+%   Connection     a precomputed rheome.operators.connection_laplacian(V,F, mesh='embedded', mass='galerkin'), to avoid rebuilding
 %   Singular       ('trivial') face indices to place singularities at, default the two faces of
 %                  largest separation
 %   SingularCharge ('trivial') integer indices, default +1 at each of two faces
@@ -87,7 +87,7 @@ function g = gauge(V, F, varargin)
 
     F = double(F);  nV = size(V,1);  nF = size(F,1);
     C = o.Connection;
-    if isempty(C), C = rheome.operators.connection_laplacian(V, F); end
+    if isempty(C), C = rheome.operators.connection_laplacian(V, F, mesh='embedded', mass='galerkin'); end
     wr = @(z) mod(z + pi, 2*pi) - pi;
 
     switch method

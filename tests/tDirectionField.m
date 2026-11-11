@@ -10,7 +10,7 @@ classdef tDirectionField < matlab.unittest.TestCase
             rheomeTestSubject(t, 'subject');   % skips, with the reason, when the cache or the subject is absent
             try
                 t.B = rheome.load.bases(rheomeTestSubject());
-                t.C = rheome.operators.connection_laplacian(t.B.L.S.Vertices, double(t.B.L.S.Faces));
+                t.C = rheome.operators.connection_laplacian(t.B.L.S.Vertices, double(t.B.L.S.Faces), mesh='embedded', mass='galerkin');
             catch
                 t.assumeFail('cached bases for test subject are not present');
             end

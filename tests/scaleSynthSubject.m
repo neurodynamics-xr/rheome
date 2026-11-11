@@ -19,13 +19,13 @@ function scaleSynthSubject(d)
     bases = struct('hemi', {{'L', 'R'}});
     for h = 1:2
         Sh = struct('Vertices', Vs{h}, 'Faces', F0, 'VertNormals', V0, 'nV', nh, 'nF', size(F0, 1));
-        [L, M] = rheome.operators.laplace_beltrami(Sh.Vertices, Sh.Faces);
+        [L, M] = rheome.operators.laplace_beltrami(Sh.Vertices, Sh.Faces, mesh='embedded', mass='galerkin');
         [P, D] = eig(full(L), full(M), 'chol');  [lam, o] = sort(max(diag(D), 0));  P = P(:, o(1:200));  lam = lam(1:200);
         P = P ./ sqrt(sum(P .* (M * P), 1));
         lr = 'LR';  bases.(lr(h)) = struct('lbo', struct('L', L, 'M', M, 'Phi', P, 'Lambda', lam, 'Mass', M), ...
                                  'gv', (1:nh)' + (h-1)*nh, 'S', Sh);
     end
-    save(fullfile(d, 'bases.mat'), 'bases');  [L, M] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces);  save(fullfile(d, 'surface.mat'), 'S', 'L', 'M');
+    save(fullfile(d, 'bases.mat'), 'bases');  [L, M] = rheome.operators.laplace_beltrami(S.Vertices, S.Faces, mesh='embedded', mass='galerkin');  save(fullfile(d, 'surface.mat'), 'S', 'L', 'M');
     C = 40;  fs = 600;  N = 40 * fs;  az = 2*pi*(0:C-1)/C;  el = linspace(0.2, 1.2, C);
     loc = 0.12 * [cos(el).*cos(az); cos(el).*sin(az); sin(el)];
     Gain = zeros(C, 3*S.nV);                                   % dipole-like falloff, so the gain is smooth

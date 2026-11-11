@@ -1,10 +1,11 @@
-function dbasis = dirac_frame(V, F, tau, nModes, N, hemis, normalize)
+function dbasis = dirac_frame(V, F, tau, nModes, N, hemis, normalize, opt)
 % EIGEN.DIRAC_FRAME  Per-hemisphere eigenbasis of the relative Dirac.
 %
 %   dbasis = rheome.eigen.dirac_frame(V, F, tau, nModes)
 %   dbasis = rheome.eigen.dirac_frame(V, F, tau, nModes, N)          % supply the Gauss map
 %   dbasis = rheome.eigen.dirac_frame(V, F, tau, nModes, N, hemis)   % supply the hemisphere split
 %   dbasis = rheome.eigen.dirac_frame(..., hemis, normalize)         % normalize=false -> physical eigenvalues
+%   dbasis = rheome.eigen.dirac_frame(..., mass='mixedVoronoi', mollify=1e-6)   % mass 'mixedVoronoi' (default) | 'galerkin' | 'barycentric'
 %
 % Reproduces Brainstorm bst_dirac's basis: split the cortex into hemispheres, build the
 % relative Dirac (default: the (1-tau)*intrinsic + tau*extrinsic blend)
@@ -41,9 +42,15 @@ function dbasis = dirac_frame(V, F, tau, nModes, N, hemis, normalize)
 %
 % Author: Diellor Basha, 2026
 
-    if nargin < 5, N = []; end
-    if nargin < 6, hemis = []; end
-    if nargin < 7 || isempty(normalize), normalize = true; end
+    arguments
+        V, F, tau, nModes
+        N = []
+        hemis = []
+        normalize = true
+        opt.mass (1,1) string {mustBeMember(opt.mass, ["mixedVoronoi" "galerkin" "barycentric"])} = "mixedVoronoi"
+        opt.mollify (1,1) double = 1e-6
+    end
+    if isempty(normalize), normalize = true; end
     nV = size(V,1);
     if ~isempty(hemis)
         comps = cellfun(@(v) v(:), hemis(:)', 'uni', 0);  % authoritative partition (Structures atlas)
@@ -56,7 +63,7 @@ function dbasis = dirac_frame(V, F, tau, nModes, N, hemis, normalize)
     for c = 1:numel(comps)
         vidx = comps{c}(:);                               % global vertex indices of this component
         [Vc, Fc, Nc] = i_submesh(V, F, N, vidx);
-        [Ac, Bc, sc] = rheome.operators.dirac_frame(Vc, Fc, tau, Nc, normalize);
+        [Ac, Bc, sc] = rheome.operators.dirac_frame(Vc, Fc, tau, Nc, normalize, mass=opt.mass, mollify=opt.mollify);
         Sc(c,:) = sc;                                     % physical lambda = lambda_norm * sL(hemisphere)
         bc = rheome.eigen.modes(Ac, Bc, nModes);                 % [4nVc x mc] B-orthonormal, ascending
         mc = size(bc.Phi, 2);
@@ -70,10 +77,10 @@ function dbasis = dirac_frame(V, F, tau, nModes, N, hemis, normalize)
     end
     Phi = sparse(Ii, Jj, Vv, 4*nV, col0);
 
-    M = rheome.operators.mass(V, F, 'galerkin');
+    M = rheome.operators.mass(V, F, opt.mass, mollify=opt.mollify);
     dbasis = struct('Phi', Phi, 'Lambda', Lam, 'Mass', kron(M, speye(4)), ...
                     'nVert', nV, 'nModes', col0, 'Tau', tau, 'Hemisphere', Hemi, ...
-                    'Normalize', normalize, 'Scales', Sc);   % Scales [nComp x 2] = [sL sE]; physical lambda = Lambda.*Sc(Hemisphere,1)
+                    'Normalize', normalize, 'Scales', Sc, 'MassType', opt.mass);   % Scales [nComp x 2] = [sL sE]; physical lambda = Lambda.*Sc(Hemisphere,1)
 end
 
 % ---- connected components of the mesh graph (hemispheres are the components) ----

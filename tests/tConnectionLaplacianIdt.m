@@ -10,7 +10,7 @@ classdef tConnectionLaplacianIdt < matlab.unittest.TestCase
         function sameSpectrumAsInputMeshOperatorOnDelaunaySphere(tc)
             [V, F] = rheome.geom.icosphere(2);
             L = rheome.operators.connection_laplacian_idt(V, F);
-            C = rheome.operators.connection_laplacian(V, F);
+            C = rheome.operators.connection_laplacian(V, F, mesh='embedded', mass='galerkin');
             tc.verifyLessThan(norm(L - L', 'fro'), 1e-12);
             Cf = full(C.A); ev = sort(real(eig((Cf + Cf')/2)));
             el = sort(eig(full(L)));

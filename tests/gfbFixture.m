@@ -14,7 +14,7 @@ function fx = gfbFixture(nSub, K)
     R = 0.100;                                   % m, FreeSurfer registration-sphere radius
     [V, F] = rheome.geom.icosphere(nSub);
     V = R * (V ./ vecnorm(V, 2, 2));
-    [L, M] = rheome.operators.laplace_beltrami(V, F, 'galerkin');
+    [L, M] = rheome.operators.laplace_beltrami(V, F, mesh='embedded', mass='galerkin');
     b = rheome.eigen.modes(L, M, K);
 
     fx = struct('Phi', b.Phi, 'Lambda', b.Lambda, 'Mass', b.Mass, ...

@@ -1,7 +1,17 @@
-function C = connection_laplacian(V, F)
+function C = connection_laplacian(V, F, opt)
 % OPERATORS.CONNECTION_LAPLACIAN  Levi-Civita connection Laplacian on the tangent bundle.
 %
-%   C = rheome.operators.connection_laplacian(V, F)
+%   C = rheome.operators.connection_laplacian(V, F)                                   % intrinsic Delaunay mesh (default)
+%   C = rheome.operators.connection_laplacian(V, F, mesh='embedded', mass='galerkin')  % the pre-2026-11-10 operator
+%   C = rheome.operators.connection_laplacian(V, F, mesh='intrinsic', mass='mixedVoronoi', mollify=1e-6, flipEps=1e-6)
+%
+% ONE connection Laplacian with a mesh option (PI, 2026-11-10: "one mesh and mass"). 'intrinsic' (default) is the
+% construction of rheome.operators.connection_laplacian_idt (the Editor's connectionLaplacian.ts: signposts on the
+% mollified intrinsic Delaunay triangulation, weights >= 0), returned as the complex n x n Hermitian A; 'embedded' is the
+% surface's own triangles. On the intrinsic mesh .Rt lives on the intrinsic edges (flipped edges join vertices that are
+% not neighbours in F), and .e1 is the unit tangent along the signposts' reference direction; the detectors and flow
+% code that walk the faces of F with .Rt (detect.*, flow.*, operators.gauge / trivial_connection) ask for 'embedded'.
+% The intrinsic form also works on a mesh with boundary; the embedded one needs a closed patch.
 %
 % Pure-MATLAB port of geometry-central's vertex connection Laplacian (the operator behind
 % nxr-compute's 'laplacian','connection'). It lifts the scalar cotan Laplacian to the
@@ -18,7 +28,7 @@ function C = connection_laplacian(V, F)
 %
 % OUTPUT (struct C):
 %   .A        [nV x nV] complex Hermitian connection Laplacian
-%   .B        [nV x nV] real Galerkin mass (rheome.operators.mass)
+%   .B        [nV x nV] real mass (rheome.operators.mass, type opt.mass; default mixedVoronoi)
 %   .e1 .e2   [nV x 3]  per-vertex tangent frame (gauge); e2 = normal x e1
 %   .normal   [nV x 3]  per-vertex unit normal (area-weighted)
 %   ⚠ .e1/.e2 ARE NOT A USABLE GAUGE. They are built along each vertex's reference half-edge, an
@@ -40,11 +50,22 @@ function C = connection_laplacian(V, F)
 %                       vector from i to j (for the winding: see rheome.detect.criticalPoints)
 %   .nV
 %
-% See also: rheome.operators.laplace_beltrami, rheome.operators.mass, rheome.utils.hemisphere, rheome.detect.criticalPoints
+% OPTIONS: mesh 'intrinsic' (default) | 'embedded';  mass 'mixedVoronoi' (default) | 'galerkin' | 'barycentric';
+%   mollify, flipEps  the intrinsic mesh's relative mollification (1e-6) and flip tolerance (1e-6)
+% Also in C: .mesh, .massType, .mollify, .flipEps, .mollifyEps, .flips (NaN for the embedded mesh).
+%
+% See also: rheome.operators.connection_laplacian_idt, rheome.operators.laplace_beltrami, rheome.operators.mass, rheome.utils.hemisphere, rheome.detect.criticalPoints
 %
 % Author: Diellor Basha, 2026 (formulas: geometry-central, Sharp/Crane)
 
-    V = double(V);  F = double(F);
+    arguments
+        V (:,3) double, F (:,3) double
+        opt.mesh (1,1) string {mustBeMember(opt.mesh, ["intrinsic" "embedded"])} = "intrinsic"
+        opt.mass (1,1) string {mustBeMember(opt.mass, ["mixedVoronoi" "galerkin" "barycentric"])} = "mixedVoronoi"
+        opt.mollify (1,1) double = 1e-6
+        opt.flipEps (1,1) double = 1e-6
+    end
+    if opt.mesh == "intrinsic", C = i_intrinsic(V, F, opt); return, end
     nV = size(V,1);  nF = size(F,1);
 
     % ---- half-edge structure (slot s: edge F(:,s) -> F(:,s+1)); he index = (s-1)*nF + f ----
@@ -112,8 +133,32 @@ function C = connection_laplacian(V, F)
     e1 = d - sum(d.*N,2).*N;  e1 = e1 ./ max(vecnorm(e1,2,2), eps);
     e2 = cross(N, e1, 2);
 
-    [~, M] = rheome.operators.laplace_beltrami(V, F, 'galerkin');
-    C = struct('A', A, 'B', (M+M')/2, 'e1', e1, 'e2', e2, 'normal', N, 'Rt', Rt, 'nV', nV);
+    M = i_mass(V, F, opt);
+    C = struct('A', A, 'B', (M+M')/2, 'e1', e1, 'e2', e2, 'normal', N, 'Rt', Rt, 'nV', nV, 'mesh', "embedded", 'massType', opt.mass, ...
+               'mollify', NaN, 'flipEps', NaN, 'mollifyEps', NaN, 'flips', NaN);
+end
+
+function M = i_mass(V, F, opt)
+    if opt.mass == "mixedVoronoi", M = rheome.operators.mass(V, F, 'mixedVoronoi', mollify=opt.mollify);
+    else, M = rheome.operators.mass(V, F, opt.mass); end
+end
+
+function C = i_intrinsic(V, F, opt)
+% The complex form of connection_laplacian_idt: vertex block (i,j) of the real 2n form [a -b; b a] is the complex a + ib.
+    nV = size(V,1);
+    [L, ~, S, T] = rheome.operators.connection_laplacian_idt(V, F, 1, mollify=opt.mollify, flipEps=opt.flipEps);
+    A = L(1:2:end, 1:2:end) + 1i * L(2:2:end, 1:2:end);  A = (A + A') / 2;
+    % transport i -> j along an intrinsic edge is the conjugate of the rotation in A(i,j) = -w e^{ir}
+    Rt = sparse([T.i; T.j], [T.j; T.i], [exp(-1i*T.r); exp(1i*T.r)], nV, nV);
+    fn = cross(V(F(:,2),:)-V(F(:,1),:), V(F(:,3),:)-V(F(:,1),:), 2);
+    N  = i_vertex_normals(F, fn, nV);
+    ref = S.ref;  e1 = zeros(nV,3);  ok = ref > 0;      % the signposts' reference direction, in the tangent plane
+    d = V(max(ref,1),:) - V;  d(~ok,:) = 0;
+    e1 = d - sum(d.*N,2).*N;  e1 = e1 ./ max(vecnorm(e1,2,2), eps);
+    e2 = cross(N, e1, 2);
+    M = i_mass(V, F, opt);
+    C = struct('A', A, 'B', (M+M')/2, 'e1', e1, 'e2', e2, 'normal', N, 'Rt', Rt, 'nV', nV, 'mesh', "intrinsic", 'massType', opt.mass, ...
+               'mollify', opt.mollify, 'flipEps', opt.flipEps, 'mollifyEps', S.mollifyEps, 'flips', S.flips);
 end
 
 % area-weighted unit vertex normals

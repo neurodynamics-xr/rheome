@@ -36,7 +36,7 @@ function s = smoothness(X, S, lbo)
             u = [X(a+1,t) X(a+2,t) X(a+3,t)];  v = [X(b+1,t) X(b+2,t) X(b+3,t)];
             s.coherence(t) = sum(sum(u .* v, 2)) / max(sum(vecnorm(u, 2, 2) .* vecnorm(v, 2, 2)), realmin);
         end
-        C = rheome.operators.connection_laplacian(S.Vertices, S.Faces);  [i, j, r] = find(C.Rt);
+        C = rheome.operators.connection_laplacian(S.Vertices, S.Faces, mesh='embedded', mass='galerkin');  [i, j, r] = find(C.Rt);
         s.transportCoherence = zeros(1, nT);
         for t = 1:nT
             w = [X(1:3:end,t) X(2:3:end,t) X(3:3:end,t)];  w = w - sum(w .* C.normal, 2) .* C.normal;

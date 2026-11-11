@@ -31,7 +31,7 @@ function velocityField = opticalflow_scalar(activityMap, surface, opts)
     activityMap = activityMap / max(abs(activityMap(:)) + eps);
 
     fg = rheome.operators.face_gradient(surface.Vertices, surface.Faces);
-    [stiffness, massMatrix] = rheome.operators.laplace_beltrami(surface.Vertices, surface.Faces, 'galerkin');
+    [stiffness, massMatrix] = rheome.operators.laplace_beltrami(surface.Vertices, surface.Faces, mesh='embedded', mass='galerkin');
     tb = rheome.dynamics.tangent_basis(surface);
     massVec = full(sum(massMatrix, 2));
     nV = surface.nV;  nT = size(activityMap, 2);

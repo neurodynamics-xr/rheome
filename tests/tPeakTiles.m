@@ -16,7 +16,7 @@ classdef tPeakTiles < matlab.unittest.TestCase
         function mesh(tc)
             [V, F] = rheome.geom.icosphere(3);                         % 642 vertices
             tc.S = struct('Vertices', V * tc.R, 'Faces', F, 'nV', size(V,1), 'nF', size(F,1));
-            [tc.L, tc.M] = rheome.operators.laplace_beltrami(tc.S.Vertices, tc.S.Faces);
+            [tc.L, tc.M] = rheome.operators.laplace_beltrami(tc.S.Vertices, tc.S.Faces, mesh='embedded', mass='galerkin');
             tc.basis = rheome.eigen.modes(tc.L, tc.M, 120);
         end
     end

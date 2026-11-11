@@ -7,10 +7,10 @@ function S = intrinsic_delaunay(V, F, opt)
 %       S.edgeOf [3nF x 1]  edge of each halfedge;  S.edgeHe [nE x 1] one halfedge of each edge
 %       S.len    [nE x 1]   intrinsic edge lengths;  S.mass [nV x 1] mixed-Voronoi lumped mass of the INPUT mesh
 %       S.L      [nV x nV]  cotangent Laplacian of the intrinsic triangulation (PSD, weights >= 0)
-%       S.flips, S.nonDelaunay, S.mollifyEps (m added to every edge length; 0 when no triangle is degenerate; opt.mollify = 0 turns it off)
+%       S.flips, S.nonDelaunay, S.flipEps (the flip tolerance used), S.mollify (the relative delta used), S.mollifyEps (m added to every edge length; 0 when no triangle is degenerate; opt.mollify = 0 turns it off)
 %
 % Same vertices and metric as the input; edges are flipped intrinsically (flipped length laid out
-% from the two triangles) until every cotangent weight is >= -eps. Port of the Cortical Flow Editor's
+% from the two triangles) until every cotangent weight is >= -opt.flipEps (default 1e-6). Port of the Cortical Flow Editor's
 % intrinsicDelaunay.ts, itself geometry-central's flipToDelaunay (Sharp, Soliman & Crane 2019),
 % Bobenko & Springborn 2007. The mass is the mixed Voronoi area of the input triangulation
 % (Meyer, Desbrun, Schroeder & Barr 2003), recorded before the first flip. Edge and halfedge
@@ -18,8 +18,8 @@ function S = intrinsic_delaunay(V, F, opt)
 % boundary (a boundary edge is never flipped). Edge lengths are mollified (opt.mollify, S.mollifyEps) and signposts are computed (opt.signposts) as in the Editor; the tufted cover is not ported.
 %
 % Author: Diellor Basha, 2026
-arguments, V (:,3) double, F (:,3) double, opt.eps (1,1) double = 1e-6, opt.signposts (1,1) logical = false, opt.mollify (1,1) double = 1e-6, end
-nV = size(V,1); nF = size(F,1); H = 3*nF; epsw = opt.eps;
+arguments, V (:,3) double, F (:,3) double, opt.flipEps (1,1) double = 1e-6, opt.signposts (1,1) logical = false, opt.mollify (1,1) double = 1e-6, end
+nV = size(V,1); nF = size(F,1); H = 3*nF; epsw = opt.flipEps;
 Fh = reshape(F', [], 1);                                     % halfedge h = 3(f-1)+k tails
 nxt = @(h) h - mod(h-1,3) + mod(mod(h-1,3)+1,3);
 hs = (1:H)'; Fn = Fh(nxt(hs));
@@ -54,7 +54,7 @@ w = ew(keep); i = i(keep); j = j(keep);
 S.L = sparse([i;j;i;j], [j;i;i;j], [-w;-w;w;w], nV, nV);
 S.F = Fh; S.twin = twin; S.edgeOf = edgeOf; S.edgeHe = edgeHe; S.len = len; S.mass = mass;
 if opt.signposts, S.angle = ang; S.angleSum = angSum; S.ref = ref; S.boundary = bnd; end
-S.mollifyEps = mollifyEps; S.star1 = ew; S.nV = nV; S.nF = nF; S.nE = nE; S.flips = flips; S.nonDelaunay = nnz(ew < -epsw);
+S.mollifyEps = mollifyEps; S.mollify = opt.mollify; S.flipEps = epsw; S.star1 = ew; S.nV = nV; S.nF = nF; S.nE = nE; S.flips = flips; S.nonDelaunay = nnz(ew < -epsw);
 
     function w = wgt(e)
         hh = edgeHe(e); tt = twin(hh); w = hcot(hh);

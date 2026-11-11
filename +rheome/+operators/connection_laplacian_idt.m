@@ -1,21 +1,23 @@
-function [L, M, S] = connection_laplacian_idt(V, F, nSym)
+function [L, M, S, T] = connection_laplacian_idt(V, F, nSym, opt)
 % OPERATORS.CONNECTION_LAPLACIAN_IDT  Connection (vector) Laplacian on the intrinsic Delaunay triangulation.
 %
-%   [L, M, S] = rheome.operators.connection_laplacian_idt(V, F, nSym)
+%   [L, M, S, T] = rheome.operators.connection_laplacian_idt(V, F, nSym, mollify=1e-6, flipEps=1e-6)
 %       L  [2nV x 2nV] real symmetric PSD (vertex i: rows 2i-1 = real, 2i = imaginary part)
 %       M  [2nV x 1]   mass: the lumped mass of each vertex twice
-%       S  the rheome.operators.intrinsic_delaunay struct (with signposts)
+%       S  the rheome.operators.intrinsic_delaunay struct (with signposts; records .mollify, .mollifyEps, .flipEps, .flips)
+%       T  the edge list of the construction: T.i, T.j (the tail and tip of each intrinsic edge), T.w (its cotan weight), T.r (its rotation r_ji)
 %
 %   (L u)_i = sum_j w_ij (u_i - e^{i r_ji} u_j),  r_ji = psi_ij + pi - psi_ji,  psi the signpost angle
 %   rescaled to 2*pi at its vertex (a boundary vertex keeps its own angle sum). nSym raises every
 %   rotation to that power (n-RoSy: 1 vector, 2 line, 4 cross field). Same operator as
-%   rheome.operators.connection_laplacian, but on the Delaunay triangulation (weights >= 0, no
+%   rheome.operators.connection_laplacian(V, F) (mesh='intrinsic'), which is built from this (the complex n x n form of
+%   this real 2n x 2n one), here as the Editor's real interleaved layout; on the Delaunay triangulation (weights >= 0, no
 %   sliver-driven spectrum top). Port of the Cortical Flow Editor's connectionLaplacian.ts
 %   (Sharp, Soliman & Crane, "The Vector Heat Method", 2019, sec. 5).
 %
 % Author: Diellor Basha, 2026
-arguments, V (:,3) double, F (:,3) double, nSym (1,1) double = 1, end
-S = rheome.operators.intrinsic_delaunay(V, F, signposts=true);
+arguments, V (:,3) double, F (:,3) double, nSym (1,1) double = 1, opt.mollify (1,1) double = 1e-6, opt.flipEps (1,1) double = 1e-6, end
+S = rheome.operators.intrinsic_delaunay(V, F, signposts=true, mollify=opt.mollify, flipEps=opt.flipEps);
 nV = S.nV; nE = S.nE;
 nxt = @(h) h - mod(h-1,3) + mod(mod(h-1,3)+1,3);
 h = S.edgeHe; i = S.F(h); j = S.F(nxt(h));
@@ -35,4 +37,5 @@ r = nSym * (psi(h) + pi - rev);
 Z = @(p, q, A, B) sparse([2*p-1; 2*p-1; 2*p; 2*p], [2*q-1; 2*q; 2*q-1; 2*q], [A; -B; B; A], 2*nV, 2*nV);
 L = Z(i, i, w, 0*w) + Z(j, j, w, 0*w) + Z(i, j, -w.*cos(r), -w.*sin(r)) + Z(j, i, -w.*cos(r), w.*sin(r));
 M = repelem(S.mass, 2);
+T = struct('i', i, 'j', j, 'w', w, 'r', r);
 end
