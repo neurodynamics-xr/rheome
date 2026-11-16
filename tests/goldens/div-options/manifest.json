@@ -85,7 +85,7 @@
     2562
    ],
    "unit": "flow units / m",
-   "note": "divergence of the tangent flow (the default; Editor flowFieldCpu tangential=true, Rheome 4th argument 'tan'): div_curl(J, 'tan', .)"
+   "note": "divergence of the tangent flow (the default; Studio flowFieldCpu tangential=true, Rheome 4th argument 'tan'): div_curl(J, 'tan', .)"
   },
   "div3d": {
    "file": "div3d.bin",
@@ -158,7 +158,7 @@
    45.0
   ],
   "native_positions_unit": "m (nxr); V_mm here is x1000, curl / div / H are per metre and need V_mm/1000",
-  "positions_cast": "float32 then float64 (FaceOperators.__init__), as the Editor",
+  "positions_cast": "float32 then float64 (FaceOperators.__init__), as the Studio",
   "current": "tangent swirl about z + tangent source from the +x pole + normal part 1 + 0.5x + 0.3 sin(2 pi y) z, (x,y,z) unit-sphere coordinates"
  },
  "nxr_commit": "f9de14e5d4121df11030a05e6c7a8e09c5e436e8"

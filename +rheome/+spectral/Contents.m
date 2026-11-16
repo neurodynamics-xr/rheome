@@ -12,7 +12,7 @@
 %   carrier    - carrier frequency estimated on the PERIODIC component only
 %   synthesise - the inverse of aperiodic: real series with a prescribed 1/f background
 %
-% THE SPECTRAL ROOT (the editor's per-frame chain, run on the CPU):
+% THE SPECTRAL ROOT (the studio's per-frame chain, run on the CPU):
 %   root       - one chunk's rows to their one-sided spectra (mean out, mirror-padded, N = nextpow2)
 %   column     - the sensor column at a time cut from the root with a gain on frequency: real and analytic
 %   meyerband  - a band's gain a bin (Meyer transitions; neighbouring bands partition power)

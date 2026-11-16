@@ -12,7 +12,7 @@ classdef tSnapshot < matlab.unittest.TestCase
     end
     methods (TestMethodSetup)
         function fakeViewer(tc)
-        % an Editor build folder with the files read before rendering: index.html, the driver and the default colormap library
+        % a Studio build folder with the files read before rendering: index.html, the driver and the default colormap library
             d = tempname;  mkdir(fullfile(d, 'colormaps', 'default'));  mkdir(fullfile(d, 'driver'));
             fclose(fopen(fullfile(d, 'index.html'), 'w'));
             fclose(fopen(fullfile(d, 'driver', 'snapshot-driver.mjs'), 'w'));
@@ -301,7 +301,7 @@ end
 
 function [vdir, S] = needs(tc)
     vdir = getenv('RHEOME_VIEWER');
-    if isempty(vdir), vdir = fullfile(char(java.lang.System.getProperty('user.home')), 'workspace', 'research', 'code', 'nxr-cortical-flow', 'editor', 'dist'); end
+    if isempty(vdir), vdir = fullfile(char(java.lang.System.getProperty('user.home')), 'workspace', 'research', 'code', 'nxr-cortical-flow', 'studio', 'dist'); end
     tc.assumeTrue(isBuild(vdir), 'needs the viewer (RHEOME_VIEWER)');
     tc.assumeTrue(isfile('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome') || ~isempty(getenv('RHEOME_CHROME')), 'needs Chrome');
     tc.assumeTrue(rheome.load.has('omega_sub0002'), 'needs the omega_sub0002 surface in +data');
@@ -309,6 +309,6 @@ function [vdir, S] = needs(tc)
 end
 
 function ok = isBuild(vdir)
-% an Editor build (index.html): what rheome.snapshot draws with
+% a Studio build (index.html): what rheome.snapshot draws with
     ok = isfile(fullfile(vdir, 'index.html'));
 end

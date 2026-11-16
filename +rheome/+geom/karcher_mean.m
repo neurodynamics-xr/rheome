@@ -4,7 +4,7 @@ function varargout = karcher_mean(varargin)
 %   [centerVertex, centerPos, dispersion] = rheome.geom.karcher_mean(S, points, opts)
 %
 % Moved 2026-11-10 when rheome.geom's surface functions were grouped by job into measure (numbers), select (a set of
-% vertices) and draw (a curve on the surface), the Editor's and nxr's names. This name forwards to
+% vertices) and draw (a curve on the surface), the Studio's and nxr's names. This name forwards to
 % rheome.geom.measure.karcherMean with the same inputs and outputs, and warns once per session (rheome:deprecated).
 % Call rheome.geom.measure.karcherMean.
 %

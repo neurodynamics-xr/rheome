@@ -1,5 +1,5 @@
 function vdir = viewerFolder()
-% VIEWERFOLDER  The Cortical Flow Editor's build for rheome.view and rheome.snapshot: RHEOME_VIEWER, else
+% VIEWERFOLDER  The Cortical Flow Studio's build for rheome.view and rheome.snapshot: RHEOME_VIEWER, else
 % prefdir/rheome-viewer, installed there from <rheome>/viewer when that ships a newer copy.
     vdir = getenv('RHEOME_VIEWER');
     if ~isempty(vdir), return; end

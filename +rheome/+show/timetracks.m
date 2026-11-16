@@ -6,7 +6,7 @@ function [hFig, V] = timetracks(t, tracks, varargin)
 %
 % What a travelling, rotating or standing pattern DOES over time: where its extremum is, its scale, its heading, its
 % rotation and chirality, its divergence and curl, its amplitude, each a row. A row holds the PLANT (the analytic
-% course an analytic field was made with: rheome.show.track, the Editor's track) as a line and/or the DETECTED values
+% course an analytic field was made with: rheome.show.track, the Studio's track) as a line and/or the DETECTED values
 % (what an analysis measured from the data) as markers, so the same figure shows a planted pattern, its detection, and
 % how far one is from the other. A keyed plant's keys are ink diamonds. The key (plant / keys / detected) is in the
 % panel's key band; every lane says its quantity and unit at its left (tokens dynamics.timeTrack, as
@@ -157,7 +157,7 @@ function [hFig, V] = timetracks(t, tracks, varargin)
     end
     keys = {};
     if hasPlant, keys{end+1} = struct('kind', 'line', 'text', 'plant (analytic course)', 'color', T.rgb.neutral_ink); end
-    if hasKeys, keys{end+1} = struct('kind', 'marker', 'text', sprintf('keyframes (%s, as the Editor''s)', char(9670)), 'color', T.rgb.neutral_ink); end
+    if hasKeys, keys{end+1} = struct('kind', 'marker', 'text', sprintf('keyframes (%s, as the Studio''s)', char(9670)), 'color', T.rgb.neutral_ink); end
     if hasDet, keys{end+1} = struct('kind', 'marker', 'text', 'detected', 'color', T.rgb.atlas_event); end
     nxr_key(F, 'A', keys);
     finish(F, o.Title, o.Export);

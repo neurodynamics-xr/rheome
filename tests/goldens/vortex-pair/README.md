@@ -1,4 +1,4 @@
-# Vortex pair goldens (step 10a; written by nxr; for Rheome and the Cortical Flow Editor)
+# Vortex pair goldens (step 10a; written by nxr; for Rheome and the Cortical Flow Studio)
 
 Regenerate: `python tests/goldens/vortex_pair_goldens.py` (deterministic, seeded, synthetic only). `tests/test_vortex_pair_goldens.py` regenerates in memory, compares with this folder, replays the stored Wishart draws and asserts the planted
 answers. About 2.1 MB. Format as `tests/goldens/vortex/README.md` (`manifest.json`: per array `file`, `dtype`, `shape`, `unit`, `note`, `source` = nxr function and line; little-endian, C order; **complex values are two arrays, `_real` and `_imag`**).

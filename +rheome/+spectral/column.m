@@ -9,9 +9,9 @@ function [x, xa] = column(S, c, H)
 %       nothing at DC or Nyquist. abs(xa) the amplitude, angle(xa) the phase of the band at that time.
 %
 % Then the modes' synthesis weights are w = B * x (rheome.inverse.hodge_weights), and the analytic weights B * xa.
-% The phase k*n is reduced mod N in integers before the angle, as the editor does (k*n reaches 10^9).
+% The phase k*n is reduced mod N in integers before the angle, as the studio does (k*n reaches 10^9).
 %
-% Port of the editor's spectralColumnCpu and spectralAnalyticCpu (modeView.ts), the CPU twins of its per-frame device pass.
+% Port of the studio's spectralColumnCpu and spectralAnalyticCpu (modeView.ts), the CPU twins of its per-frame device pass.
 %
 % See also: rheome.spectral.root, rheome.spectral.meyerband
 %

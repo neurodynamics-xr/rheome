@@ -8,10 +8,10 @@ function H = hodge_dirac(V, F, varargin)
 %
 % D = M^-1 K is self-adjoint in M; its eigenvalues come in pairs +-mu and D^2 is block diagonal with
 % the Hodge Laplacians. Solve the pencil (K, M). star0 = the mixed-Voronoi lumped mass of the (mollified) input mesh (intrinsic_delaunay S.mass, recorded before the flips), star1 = cotan weight,
-% star2 = 1/area. Port of the Cortical Flow Editor's hodgeDirac.ts.
+% star2 = 1/area. Port of the Cortical Flow Studio's hodgeDirac.ts.
 %
 % Option star1Floor (default 0 = off): star1 is the raw intrinsic cotan edge weight with no floor, exactly as nxr
-% (nxr.eigen.hodge_dirac) and the Cortical Flow Editor build it (PI decision, 2026-11-10). A positive value floors
+% (nxr.eigen.hodge_dirac) and the Cortical Flow Studio build it (PI decision, 2026-11-10). A positive value floors
 % star1 = max(star1, star1Floor) and counts the edges floored in H.star1Clamped. The floor guards near-cocircular edges
 % whose cotan weight is <= 0 (Delaunay within the flip tolerance): their mass is then not positive and star1^-1 blows up.
 % Use rheome.operators.hodge_dirac(V, F, star1Floor=1e-6) on a mesh with such edges (e.g. a cube).

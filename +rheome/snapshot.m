@@ -126,8 +126,8 @@ function out = snapshot(surf, result, varargin)
 %   'Tokens'    the figure tokens' JSON (default $NXR_FIGURE_TOKENS, else $HOME/workspace/library/styles/tokens/
 %               figure-tokens.json if it exists, else the viewer's vendored viewer/figure/figure-tokens.json). The viewer
 %               is served the file used, and its sha256 and path go into every <Name>.marks.json (tokens_sha256, tokens_path).
-%   'Viewer'    the Editor's build folder (default as rheome.view: $RHEOME_VIEWER, else prefdir/rheome-viewer); it must ship
-%               index.html and driver/snapshot-driver.mjs (a Cortical Flow Editor build of 2026-11-11 or later)
+%   'Viewer'    the Studio's build folder (default as rheome.view: $RHEOME_VIEWER, else prefdir/rheome-viewer); it must ship
+%               index.html and driver/snapshot-driver.mjs (a Cortical Flow Studio build of 2026-11-11 or later)
 %   'Chrome'    Chrome or Chromium (default $RHEOME_CHROME, else the usual install)
 %   'Node'      Node.js 22+ (default $RHEOME_NODE, else the usual install)
 %   'Labellings' partitions for the viewer (rheome.viz.tiles), named by a shot's Labelling and Outlines (or Settings)
@@ -170,7 +170,7 @@ function out = snapshot(surf, result, varargin)
 % cut at exactly 'ScaleBar' mm of its length, placed by Rheome's rule (an anchor among the front-most vertices near
 % the lower right of the silhouette, ends 1-1.2 L away, flat to the view, horizontal and leftward first) where every
 % point of it is seen; one bar a row. Limits, visibility (a ray cast toward the camera) and the bar are the viewer's
-% (the Cortical Flow Editor's viewer/print/limits.ts, visible.ts, scalebar.ts), by the rules Rheome used.
+% (the Cortical Flow Studio's viewer/print/limits.ts, visible.ts, scalebar.ts), by the rules Rheome used.
 %
 % Needs the viewer (WebGPU), Chrome and Node; nothing else in Rheome does.
 %
@@ -231,8 +231,8 @@ function out = snapshot(surf, result, varargin)
     [tok, tokFile, tokSha, tokShown] = tokens(o.Tokens, work);
     vdir = char(o.Viewer);
     if isempty(vdir), vdir = viewerFolder(); end
-    % THE EDITOR's build draws the snapshots (the viewer, viewer.html, was retired 2026-11-11)
-    if ~isfile(fullfile(vdir, 'index.html')), error('rheome:snapshot:noviewer', 'No Editor build at %s (Viewer= or RHEOME_VIEWER): the build folder with index.html.', vdir); end
+    % THE STUDIO's build draws the snapshots (the viewer, viewer.html, was retired 2026-11-11)
+    if ~isfile(fullfile(vdir, 'index.html')), error('rheome:snapshot:noviewer', 'No Studio build at %s (Viewer= or RHEOME_VIEWER): the build folder with index.html.', vdir); end
     drv = fullfile(vdir, 'driver', 'snapshot-driver.mjs');
     if ~isfile(drv)
         error('rheome:snapshot:driver', ['The viewer at %s has no snapshot driver (driver/snapshot-driver.mjs): rheome.snapshot needs ' ...
@@ -248,7 +248,7 @@ function out = snapshot(surf, result, varargin)
 
     % one bundle, one job, one viewer run for every shot
     if isfield(surf, 'Vertices'), bs = surf; else, bs = surfs; end
-    labs = o.Labellings;  st = structures(surfs.(snames{1}));      % the hemispheres, as the atlas the Editor reads them from
+    labs = o.Labellings;  st = structures(surfs.(snames{1}));      % the hemispheres, as the atlas the Studio reads them from
     if ~isempty(st) && ~any(strcmp(labellingNames(labs), 'Structures'))
         if isempty(labs), labs = {}; elseif isstruct(labs), labs = num2cell(labs(:)'); end
         labs = [labs(:)' {st}];
@@ -258,7 +258,7 @@ function out = snapshot(surf, result, varargin)
     list = cell(1, numel(shots));
     for k = 1:numel(shots), list{k} = struct('name', shots(k).Name, 'shot', viewerShot(shots(k), folded, o, J)); end
     job = struct();
-    job.format = 'nxr-snapshot-job@1';  job.editor = vdir;  job.bundle = 'bundle';  job.out = 'out';
+    job.format = 'nxr-snapshot-job@1';  job.studio = vdir;  job.bundle = 'bundle';  job.out = 'out';
     job.chrome = chromePath(o.Chrome);  job.tokens = tokFile;  job.tokens_sha256 = tokSha;  job.tokens_path = tokShown;
     job.size = windowSize(double(tok.cortex.viewer.size_px(:)'), shots);  job.wait = o.Wait;  job.timeout = o.Timeout;  job.shots = list;
     node = nodePath(o.Node);
@@ -653,7 +653,7 @@ function P = paths(a, name, nV)
 end
 
 function v = viewerShot(s, folded, o, J)
-% the viewer's Shot (the Cortical Flow Editor's viewer/print/panel.ts): 0-based frames and vertices, the width in
+% the viewer's Shot (the Cortical Flow Studio's viewer/print/panel.ts): 0-based frames and vertices, the width in
 % mm; the keys in one order, so nxr.snapshot's job is this one byte for byte
     v = struct();
     if ~isempty(s.Field), v.field = s.Field;  v.unit = s.Unit;  v.label = s.Label; end
@@ -808,7 +808,7 @@ end
 
 function st = structures(S)
 % the surface's hemispheres as the bundle's 'Structures' labelling (codes 1 Cortex L, 2 Cortex R, 0 neither) -- what the
-% Editor shows a hemisphere from; [] without them
+% Studio shows a hemisphere from; [] without them
     st = [];
     h = hemispheres(S);
     if isempty(h), return; end

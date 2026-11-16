@@ -1,9 +1,9 @@
 function [velocityField, info] = opticalflow_connection(activityMap, surface, opts)
-% DYNAMICS.OPTICALFLOW_CONNECTION  Horn-Schunck optical flow smoothed by the CONNECTION LAPLACIAN (the Cortical Flow Editor's method).
+% DYNAMICS.OPTICALFLOW_CONNECTION  Horn-Schunck optical flow smoothed by the CONNECTION LAPLACIAN (the Cortical Flow Studio's method).
 %
 %   [velocityField, info] = rheome.dynamics.opticalflow_connection(activityMap, surface [,opts])
 %
-% A port of the Editor's toolbox/flow/opticalFlow.ts (with differential/intrinsicGauge.ts) and of nxr-neuro's
+% A port of the Studio's toolbox/flow/opticalFlow.ts (with differential/intrinsicGauge.ts) and of nxr-neuro's
 % opticalflow_connection.cpp: the same mathematics, the same numbers. Per frame t, with I the map normalised to unit peak,
 % Idot = I(t+1) - I(t), grad I the vertex gradient and v a tangent vector at a vertex, written z = (a, b) in C's gauge:
 %
@@ -15,15 +15,15 @@ function [velocityField, info] = opticalflow_connection(activityMap, surface, op
 % coefficients in per-vertex (1,1,1)xn frames did, and was removed 2026-11-11.)
 %
 % The system is in C's own gauge: vectors go in and out FACE BY FACE through the intrinsic corner angles (the signposts of the
-% INPUT faces, before the Delaunay flips), never through a vertex's projected plane. The Editor's DATA TERM is reproduced: the
-% gradient of the input faces (positions rounded to single and the face gradients stored in single, as the Editor holds them),
+% INPUT faces, before the Delaunay flips), never through a vertex's projected plane. The Studio's DATA TERM is reproduced: the
+% gradient of the input faces (positions rounded to single and the face gradients stored in single, as the Studio holds them),
 % each face's gradient placed at its corners' intrinsic angles and averaged by area; the data blocks are vertex-lumped
 % (M_v g g'); a ridge of 1e-9 * alpha * mean(diag C) keeps a patch with a parallel field definite.
 %
 % INPUTS:
 %   activityMap  [nV x nT] non-negative scalar activity per vertex per frame
 %   surface      struct with .Vertices [nV x 3] and .Faces [nF x 3] (in metres: the velocity is in surface units per frame)
-%   opts.alpha   smoothness weight, dimensionless (default 0.01, the Editor's). ⚠ vCv is not zero on a rigid rotation of a sphere (curvature term), so the
+%   opts.alpha   smoothness weight, dimensionless (default 0.01, the Studio's). ⚠ vCv is not zero on a rigid rotation of a sphere (curvature term), so the
 %                prior pulls the speed LOW as alpha grows (sphere bump: 95 % of truth at 0.01, 80 % at 0.1, 33 % at 1).
 %   opts.peak    the normaliser (default max of the map)
 %   opts.mollify, opts.flipEps  as rheome.operators.intrinsic_delaunay (1e-6)
@@ -61,7 +61,7 @@ function [velocityField, info] = opticalflow_connection(activityMap, surface, op
     K = rheome.operators.intrinsic_delaunay(V, F, signposts=true, mollify=opts.mollify, flipEps=Inf);   % input halfedges
     cr = i_corners(V, F, K);
     Nrm = i_normals(V, F);
-    g = i_face_gradient(V, F);                                   % [nF x 3], as the Editor holds them (single)
+    g = i_face_gradient(V, F);                                   % [nF x 3], as the Studio holds them (single)
     ridge = 1e-9 * alpha * (full(trace(C)) / (2*n));
     aC = alpha * C;
     d1 = 2*(1:n)' - 1;  d2 = 2*(1:n)';
@@ -165,5 +165,5 @@ function N = i_normals(V, F)
     fn = cross(V(F(:,2),:) - V(F(:,1),:), V(F(:,3),:) - V(F(:,1),:), 2);
     N = zeros(n, 3);
     for k = 1:3, for c = 1:3, N(:,c) = N(:,c) + accumarray(F(:,k), fn(:,c), [n 1]); end, end
-    N = double(single(N ./ max(vecnorm(N, 2, 2), realmin)));   % the Editor holds its normals in single
+    N = double(single(N ./ max(vecnorm(N, 2, 2), realmin)));   % the Studio holds its normals in single
 end

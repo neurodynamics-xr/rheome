@@ -1,6 +1,6 @@
 % SELECT  Surface geometry that returns a set of vertices.
 %
-% One of rheome.geom's three jobs (measure, select, draw: the Cortical Flow Editor's and nxr's words).
+% One of rheome.geom's three jobs (measure, select, draw: the Cortical Flow Studio's and nxr's words).
 %
 % Functions:
 %   rheome.geom.select.cortex  - which vertices are cortex: the medial wall closes the hemisphere but holds no

@@ -12,11 +12,11 @@ function M = mass(V, F, type, opt)
 %
 %   mixedVoronoi (DEFAULT, "one mesh and mass", PI 2026-11-10)  diagonal; the mixed Voronoi area
 %                (Meyer, Desbrun, Schroeder & Barr 2003) of the MOLLIFIED input mesh, recorded before any
-%                flip: rheome.operators.intrinsic_delaunay's S.mass. The Cortical Flow Editor's and nxr's
+%                flip: rheome.operators.intrinsic_delaunay's S.mass. The Cortical Flow Studio's and nxr's
 %                "lumped mass" (the Hodge-Dirac star0).
 %   galerkin     consistent P1 mass, (A/12) [2 1 1; 1 2 1; 1 1 2] per triangle (Brainstorm's pairing). Embedded.
 %   barycentric  (A/3) I3 per triangle, the row sums of galerkin. Diagonal. Embedded. (Formerly named 'lumped';
-%                nxr and the Editor call the mixed Voronoi mass "lumped", so that name is gone here.)
+%                nxr and the Studio call the mixed Voronoi mass "lumped", so that name is gone here.)
 % Each assembles to a total mass equal to the surface area.
 %
 % INPUTS:

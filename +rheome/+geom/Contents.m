@@ -4,7 +4,7 @@
 % intrinsic-geometry primitives ported from geometry-central (via nxr-compute).
 %
 % BY JOB (2026-11-10): a function that MEASURES, SELECTS or DRAWS lives in a sub-package named for its job, with the
-% same names as nxr and the Cortical Flow Editor; mesh structure and bookkeeping stay here in rheome.geom.
+% same names as nxr and the Cortical Flow Studio; mesh structure and bookkeeping stay here in rheome.geom.
 %   rheome.geom.measure  returns numbers               (distances, tile means, the intrinsic mean)
 %   rheome.geom.select   returns a set of vertices     (the cortex)
 %   rheome.geom.draw     returns a curve on the surface (the FlipOut geodesic)
@@ -20,7 +20,7 @@
 %                        radius: sigma-25 mm tracked on 23-33 mm tiles, lost at 47 mm and coarser.
 %   rheome.geom.select.cortex             - which vertices are cortex (the medial wall excluded)
 %   rheome.geom.draw.flipOut              - the FlipOut geodesic between two vertices (Sharp & Crane 2020): a port
-%                        of geometry-central's, the line the viewer, nxr and the Editor draw (to 1e-9 m)
+%                        of geometry-central's, the line the viewer, nxr and the Studio draw (to 1e-9 m)
 %   rheome.geom.draw.line                 - a geodesic between two vertices on the faces (calls draw.flipOut)
 %   rheome.geom.draw.flipMesh             - the mesh FlipOut works on, built once (pass it to line / flipOut)
 %
@@ -33,8 +33,8 @@
 %   rheome.geom.edgegraph     - the mesh as a Dijkstra graph, edges + intrinsic diagonals: +1.4% against the
 %                        analytic great circle at any range, symmetric. The ruler for a speed.
 %   rheome.geom.glue          - the two hemispheres made one closed surface by anatomy (medial walls cut, a bridge
-%                        grown): the editor's glueMesh, bit-identical to nxr.geom.glue
-%   rheome.geom.meshkey       - the editor's mesh fingerprint '<nF>:<fnv1a>' a stored basis or kernel records
+%                        grown): the studio's glueMesh, bit-identical to nxr.geom.glue
+%   rheome.geom.meshkey       - the studio's mesh fingerprint '<nF>:<fnv1a>' a stored basis or kernel records
 %
 % THE SPATIAL PYRAMID (2026-09-25):
 %   rheome.geom.tree   - recursive spectral bisection of a surface: a NESTED, DISJOINT partition,

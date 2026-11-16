@@ -11,7 +11,7 @@ function sol = hodge_dirac(H, nModes)
 % Laplacian ladders: about nModes/2 + 1 pairs each (half and half by Weyl's law), the constants (lambda <= 1e-6 max) out, both cut at
 % ONE lambda (the smaller ladder's top) so the band is complete. Shift-invert just below 0 (sigma = -1e-3), as nxr.
 %
-% Port of nxr.eigen.hodge_dirac solve_hodge (the editor's make-hodge-package split); parity in tests/tHodgeDiracSolveParity.
+% Port of nxr.eigen.hodge_dirac solve_hodge (the studio's make-hodge-package split); parity in tests/tHodgeDiracSolveParity.
 %
 % Example:
 %   [V, F] = rheome.geom.icosphere(3);

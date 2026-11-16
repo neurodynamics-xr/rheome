@@ -28,7 +28,7 @@ result = struct('activity', I(:, 1:T-1), 'velocity', v);
 %% Open it
 % One call writes the result as a bundle (a folder of raw arrays and a
 % |manifest.json|, see |rheome.io.write.bundle|) and opens it. |out.viewer|
-% says where it opened: |'editor'| (inside MATLAB), |'app'|, or |'show'|
+% says where it opened: |'studio'| (inside MATLAB), |'app'|, or |'show'|
 % (the static fallback, as on the machine that built this page).
 
 out = rheome.view(S, result, Fs=fs, Name="Moving bump");
@@ -119,7 +119,7 @@ out = rheome.view(r, Fs=fs, Layers={{"velocity", "abs"}, {"velocity"}});
 
 %% Install the viewer
 % Inside MATLAB (R2026a+) the viewer is a folder with |view.html| (the
-% Cortical Flow Editor's build, |editor/dist|).
+% Cortical Flow Studio's build, |studio/dist|).
 % Rheome uses |RHEOME_VIEWER| if you set it, else |prefdir/rheome-viewer|,
 % which it installs from the copy shipped with Rheome (its |viewer| folder)
 % when there is one. On R2023b-R2025b, install the Cortical Flow desktop app

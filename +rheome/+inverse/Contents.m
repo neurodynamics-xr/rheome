@@ -11,7 +11,7 @@
 %   rheome.inverse.dirac      - the same five stages with the source side in the Dirac eigenbasis;
 %                        a legitimate alternative, not the baseline (rheome.flow.context)
 %   rheome.inverse.hodge_weights   - a kernel fused into the Hodge-Dirac modes: B [2K x C], sensors straight to each mode's
-%                        synthesis weights (the editor's fused matrix; the kernel carried onto the glued bridge)
+%                        synthesis weights (the studio's fused matrix; the kernel carried onto the glued bridge)
 %   rheome.inverse.hodge_synthesis - the current those weights make: flow -grad A - n x grad S, and the normal current
 %   rheome.inverse.hodge_register  - fused weights registered to a template: [T a; muT^-1 T muS b] (flow as flow fields)
 %   rheome.inverse.resolution - the resolution matrix R = K*Gain reduced to MILLIMETRES: PSF spread

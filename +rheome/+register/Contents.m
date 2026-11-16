@@ -3,7 +3,7 @@
 % The registration is the sphere registration R [template vertices x subject vertices] (the two registered spheres). It is
 % applied to something measured on the subject's own cortex (never re-derived on the template's smaller one), by VERTICES (a
 % map, points) or in the MODES (R written in the two Hodge-Dirac bases, T = A_template R P_subject: a map, or the weights of a
-% kernel). The same package, names and mathematics as nxr.register (nxr) and the Cortical Flow Editor's "Register to template".
+% kernel). The same package, names and mathematics as nxr.register (nxr) and the Cortical Flow Studio's "Register to template".
 %
 % The sphere registration (nxr.register.sphere):
 %   rheome.register.hemispheres          - 'L'/'R' per vertex: the two largest pieces, told apart by the left axis (+y SCS, -x MNI)

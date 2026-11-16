@@ -1,5 +1,5 @@
 classdef tShowTrack < matlab.unittest.TestCase
-% rheome.show.track: the Editor's track course (engine surfaceKit trackValue), value by value.
+% rheome.show.track: the Studio's track course (engine surfaceKit trackValue), value by value.
 %
 % Author: Diellor Basha, 2026
     methods (Test)

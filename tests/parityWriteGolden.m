@@ -1,15 +1,15 @@
 function out = parityWriteGolden(fixture, out)
-% PARITYWRITEGOLDEN  Rheome's numbers on the Cortical Flow Editor's cortex fixture, for the Editor's parity test (rheome.golden@1).
+% PARITYWRITEGOLDEN  Rheome's numbers on the Cortical Flow Studio's cortex fixture, for the Studio's parity test (rheome.golden@1).
 %
 %   parityWriteGolden(fixture, out)
-%     fixture : the Editor's fixture stem, e.g. '<nxr-cortical-flow>/editor/fixtures/cortex_pial_low'
+%     fixture : the Studio's fixture stem, e.g. '<nxr-cortical-flow>/studio/fixtures/cortex_pial_low'
 %               (reads <stem>.positions.f32, float32 [3 x nV], and <stem>.faces.u32, uint32 0-based)
-%     out     : the golden folder (created). The Editor reads it: RHEOME_GOLDEN=<out> in editor/src/parity/rheome.parity.test.ts
+%     out     : the golden folder (created). The Studio reads it: RHEOME_GOLDEN=<out> in studio/src/parity/rheome.parity.test.ts
 %
 % A Gaussian bump (sigma 12 mm) moves 5 mm a frame along +y for 21 frames at 100 Hz. Written as float64 little-endian,
 % ROW-MAJOR [rows x cols] as golden.json names them: Lx (mesh cotan L * frame 1), Mlumped, MgalRowSum, I [T x nV],
-% flow_alpha1 and flow_alpha0_01 [(T-1) x 3nV] (rheome.dynamics.opticalflow_scalar = opticalflow_connection, the Editor's method), div and curl of flow_alpha1
-% [(T-1) x nV] (the face gradient). Not a test: the parity test lives on the Editor's side; Rheome is the reference.
+% flow_alpha1 and flow_alpha0_01 [(T-1) x 3nV] (rheome.dynamics.opticalflow_scalar = opticalflow_connection, the Studio's method), div and curl of flow_alpha1
+% [(T-1) x nV] (the face gradient). Not a test: the parity test lives on the Studio's side; Rheome is the reference.
 %
 % Author: Diellor Basha, 2026
 
@@ -37,7 +37,7 @@ function out = parityWriteGolden(fixture, out)
     G.curl = put(out, 'curl', rheome.differential.curl(v1, s, fg)');
 
     r = regexp(fileread(fullfile(fileparts(fileparts(mfilename('fullpath'))), 'Contents.m')), '% Version (\S+)', 'tokens', 'once');   % not ver(): the clone's folder name may differ
-    m = struct('format', 'rheome.golden@1', 'fixture', 'editor/fixtures/cortex_pial_low', 'nV', size(V, 1), 'T', T, 'fs', fs, ...
+    m = struct('format', 'rheome.golden@1', 'fixture', 'studio/fixtures/cortex_pial_low', 'nV', size(V, 1), 'T', T, 'fs', fs, ...
         'bump', struct('c0', c0, 'step_per_frame', step, 'sigma', sigma), 'rheome', r{1}, 'matlab', version('-release'), ...
         'seconds', struct('flow_alpha1', t1, 'flow_alpha0_01', t2), 'arrays', G);
     fid = fopen(fullfile(out, 'golden.json'), 'w'); fwrite(fid, jsonencode(m, 'PrettyPrint', true)); fclose(fid);

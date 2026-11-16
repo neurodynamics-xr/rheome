@@ -31,7 +31,7 @@ function [A, B, scales] = dirac_frame(V, F, tau, N, normalize, opt)
 % (rheome.operators.mass, DEFAULT) -- 'galerkin' (Brainstorm's, the previous default) and 'barycentric' are named options.
 % MESH: only the mass default changed. The Delta part D_int^2 (rheome.operators.dirac_intrinsic_sq) and E are
 % built from the embedded edge vectors and the Gauss map; a Dirac on the intrinsic Delaunay mesh (and the
-% relative-Dirac scaling, normals and domain, which the Editor and nxr-compute treat differently) is an OPEN decision.
+% relative-Dirac scaling, normals and domain, which the Studio and nxr-compute treat differently) is an OPEN decision.
 %
 % INPUTS:  V,F surface;  tau in [0,1] (0=pure intrinsic, 1=pure extrinsic, 0.5=balanced);
 %          N (optional) [V x 3] unit vertex normals for the Gauss map;

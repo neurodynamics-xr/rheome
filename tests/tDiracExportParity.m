@@ -27,7 +27,7 @@ end
 function [V, F, d] = i_bunny(tc)
 ws = fullfile(getenv('HOME'), 'workspace');
 d  = fullfile(ws, 'research/results/dirac-eigenmodes-bunny-closed/exports/export');
-fx = fullfile(ws, 'research/code/nxr-cortical-flow/editor/fixtures/bunny-closed');
+fx = fullfile(ws, 'research/code/nxr-cortical-flow/studio/fixtures/bunny-closed');
 tc.assumeTrue(isfile([fx '.faces.u32']) && isfile(fullfile(d, 'diracD.row.i32')));
 V = reshape(i_read([fx '.positions.f32'], 'single'), 3, [])';
 F = reshape(i_read([fx '.faces.u32'], 'uint32'), 3, [])' + 1;

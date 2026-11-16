@@ -7,7 +7,7 @@ function [P, info] = line(S, from, to, mesh)
 % A path ON the folded surface: rheome.geom.draw.flipOut, geometry-central's FlipOut (Sharp & Crane 2020) ported to
 % MATLAB -- the shortest path along the edges, straightened by edge flips until it is locally shortest, traced back
 % onto the faces. It is the line every lab tool draws for "the geodesic between two vertices" (the viewer through
-% nxr-compute, nxr, the Editor), matched point for point (tests/tFlipOut.m). Its points lie on the mesh, so its
+% nxr-compute, nxr, the Studio), matched point for point (tests/tFlipOut.m). Its points lie on the mesh, so its
 % length is a length along the surface. It is locally shortest, not always the shortest: the exact distance (MMP)
 % can be a few percent less on a folded cortex (rheome.snapshot reports both). Drawing is not measuring: the line
 % does not use the heat distance (rheome.geom.measure.heatDistance).

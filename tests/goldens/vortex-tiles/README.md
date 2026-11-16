@@ -1,4 +1,4 @@
-# Vortex tile goldens (steps 8-9; written by nxr; for Rheome and the Cortical Flow Editor)
+# Vortex tile goldens (steps 8-9; written by nxr; for Rheome and the Cortical Flow Studio)
 
 Regenerate: `python tests/goldens/vortex_tiles_goldens.py` (deterministic, seeded, synthetic only). `tests/test_vortex_tiles_goldens.py` regenerates in memory, compares
 with this folder, replays the shuffles from the stored permutations and asserts the planted answer. About 2.5 MB. File format, units and reading: those of

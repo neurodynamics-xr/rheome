@@ -1,20 +1,20 @@
 classdef tGlueHodgeParity < matlab.unittest.TestCase
-% rheome.geom.glue, rheome.operators.intrinsic_delaunay / hodge_dirac and rheome.eigen.hodge_dirac against the editor and nxr:
-% the editor's golden files (nxr tests/convert/fixtures/editor-parity: a two-piece mesh with a medial wall on each, written by the
-% editor's own code) and nxr's solve_hodge on it (tests/fixtures/hodge-solve, written by nxr). The same checks as
-% nxr's test_eigen_parity.py. Skipped when the editor fixtures are absent.
+% rheome.geom.glue, rheome.operators.intrinsic_delaunay / hodge_dirac and rheome.eigen.hodge_dirac against the studio and nxr:
+% the studio's golden files (nxr tests/convert/fixtures/studio-parity: a two-piece mesh with a medial wall on each, written by the
+% studio's own code) and nxr's solve_hodge on it (tests/fixtures/hodge-solve, written by nxr). The same checks as
+% nxr's test_eigen_parity.py. Skipped when the studio fixtures are absent.
 %
 % Author: Diellor Basha, 2026
 
     properties
-        G   % the editor-parity folder
+        G   % the studio-parity folder
         P, F, wall
     end
 
     methods (TestClassSetup)
         function load(tc)
-            tc.G = fullfile(getenv('NXR'), 'tests/convert/fixtures/editor-parity');       % $NXR: the nxr checkout
-            tc.assumeTrue(isfile(fullfile(tc.G, 'mesh.wall.u8')), 'the editor-parity fixtures are absent');
+            tc.G = fullfile(getenv('NXR'), 'tests/convert/fixtures/studio-parity');       % $NXR: the nxr checkout
+            tc.assumeTrue(isfile(fullfile(tc.G, 'mesh.wall.u8')), 'the studio-parity fixtures are absent');
             tc.P = reshape(i_read(fullfile(tc.G, 'mesh.P.f64'), 'double'), 3, [])';
             tc.F = reshape(i_read(fullfile(tc.G, 'mesh.F.i32'), 'int32'), 3, [])' + 1;
             tc.wall = i_read(fullfile(tc.G, 'mesh.wall.u8'), 'uint8') > 0;
@@ -22,14 +22,14 @@ classdef tGlueHodgeParity < matlab.unittest.TestCase
     end
 
     methods (Test)
-        function glueIsTheEditors(tc)
+        function glueIsTheStudios(tc)
             meta = jsondecode(fileread(fullfile(tc.G, 'meta.json')));
             [X, Gf, keep, bridge] = rheome.geom.glue(tc.P, tc.F, tc.wall);
             tc.verifyEqual(reshape((Gf - 1)', [], 1), i_read(fullfile(tc.G, 'glued.F.i32'), 'int32'), 'the same triangles');
             tc.verifyEqual(keep - 1, i_read(fullfile(tc.G, 'glued.keep.i32'), 'int32'), 'the same kept vertices');
             tc.verifyEqual(reshape(X', [], 1), i_read(fullfile(tc.G, 'glued.P.f64'), 'double'), 'AbsTol', 1e-15, 'the bridge''s points');
             tc.verifyEqual([bridge.vertices bridge.rings], [meta.bridge.vertices meta.bridge.rings]);
-            tc.verifyEqual(rheome.geom.meshkey(Gf), meta.meshKey, 'the fingerprint the editor checks stored products by');
+            tc.verifyEqual(rheome.geom.meshkey(Gf), meta.meshKey, 'the fingerprint the studio checks stored products by');
         end
 
         function glueDoesNotDependOnTheWinding(tc)
@@ -39,7 +39,7 @@ classdef tGlueHodgeParity < matlab.unittest.TestCase
             tc.verifyEqual(sortrows(sort(F1, 2)), sortrows(sort(F2, 2)));
         end
 
-        function flipsAndPencilAreTheEditors(tc)
+        function flipsAndPencilAreTheStudios(tc)
             meta = jsondecode(fileread(fullfile(tc.G, 'meta.json')));
             [X, Gf] = rheome.geom.glue(tc.P, tc.F, tc.wall);
             H = rheome.operators.hodge_dirac(X, Gf);

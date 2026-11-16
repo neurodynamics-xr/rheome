@@ -1,5 +1,5 @@
 function S = nxrsurface(store, subject, opts)
-% IO.READ.NXRSURFACE  Read a subject's cortical surface and its medial wall from an nxr store (the editor's dataset folder).
+% IO.READ.NXRSURFACE  Read a subject's cortical surface and its medial wall from an nxr store (the studio's dataset folder).
 %
 %   S = rheome.io.read.nxrsurface(store, subject)
 %   S = rheome.io.read.nxrsurface(store, subject, Surface="cortex_white")
@@ -17,7 +17,7 @@ function S = nxrsurface(store, subject, opts)
 %   .Wall     [nV x 1] logical, the medial wall      .Comment the surface's name   .Subject   .SurfaceFile its positions' folder
 %   .Sphere   [nV x 3] its registered sphere (the surface <name>_sphere, as stored), [] when none
 %
-% ⚠ The editor receives positions as float32: for a basis the editor will accept (rheome.geom.glue -> rheome.eigen.hodge_dirac,
+% ⚠ The studio receives positions as float32: for a basis the studio will accept (rheome.geom.glue -> rheome.eigen.hodge_dirac,
 %   as nxr prepares it) round first, double(single(S.Vertices)).
 %
 % Reads the catalogue in process through MATLAB's Python (sqlite3, read-only; schema 50 only) and the

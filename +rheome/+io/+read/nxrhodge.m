@@ -8,7 +8,7 @@ function H = nxrhodge(store, subject, opts)
 % potential psi/sqrt(2); 2 coexact), the selection <name>_support (the primary-cortex vertices kept) and the operator
 % <name>_eigenvectors [V x K]. When that operator's surface records a glued mesh (its producer_json 'mesh'), V is the glued
 % surface's vertices (the support, then the bridge) and the surface is returned with it; otherwise V is the primary cortex,
-% zero off the support. The lookups are the editor's (adapters/nxr hodgeStore.ts). The mass is not stored: rebuild it on the
+% zero off the support. The lookups are the studio's (adapters/nxr hodgeStore.ts). The mass is not stored: rebuild it on the
 % surface (rheome.operators.hodge_dirac).
 %
 % OPTIONS: Name the basis' name (default "hodgeDirac");  Modes the first k modes only (default: all)

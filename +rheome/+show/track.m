@@ -1,10 +1,10 @@
 function v = track(spec, x)
-% SHOW.TRACK  A parameter's course over its support, from an analytic track: the Editor's track, in Rheome.
+% SHOW.TRACK  A parameter's course over its support, from an analytic track: the Studio's track, in Rheome.
 %
 %   v = rheome.show.track(spec, x)        x in [0, 1] of the support (any size); v the same size
 %
-% The same course the Cortical Flow Editor gives a time atom's parameter (engine surfaceKit trackValue), so a
-% plant drawn in a Rheome figure is the plant the Editor made. A TRACK is
+% The same course the Cortical Flow Studio gives a time atom's parameter (engine surfaceKit trackValue), so a
+% plant drawn in a Rheome figure is the plant the Studio made. A TRACK is
 %   KEYS     a struct array with .x (0..1), .v and .seg (the segment AFTER the key: 'hold' | 'linear' (default) |
 %            'ease' | 'steps' (four dyadic quarters) | 'curve' (monotone cubic, flat at the ends and at a turn)),
 %            or an [n x 2] matrix [x v] (linear segments); before the first key its value, after the last its value

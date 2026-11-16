@@ -1,4 +1,4 @@
-# Vortex signal goldens (steps 5-7; written by nxr; for Rheome and the Cortical Flow Editor)
+# Vortex signal goldens (steps 5-7; written by nxr; for Rheome and the Cortical Flow Studio)
 
 Regenerate: `python tests/goldens/vortex_signal_goldens.py` (deterministic, seeded, synthetic only). `tests/test_vortex_signal_goldens.py` regenerates in memory,
 compares with this folder and asserts the planted answer. About 2.4 MB. Reading, units and file format are those of `tests/goldens/vortex/README.md`

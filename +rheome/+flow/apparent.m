@@ -28,7 +28,7 @@ function R = apparent(A, S, opts)
 % can be either genuine propagation converging or an amplitude change the model cannot
 % express. That ambiguity is intrinsic to the method, not to this implementation.
 %
-% ⚠ THE SMOOTHNESS IS THE CONNECTION LAPLACIAN (PI ruling, 2026-11-11): the Cortical Flow Editor's and nxr's method, frame-free.
+% ⚠ THE SMOOTHNESS IS THE CONNECTION LAPLACIAN (PI ruling, 2026-11-11): the Cortical Flow Studio's and nxr's method, frame-free.
 % The earlier 'frame' smoothness (alpha (a'Ka + b'Kb) on the coefficients in the (1,1,1)xn frames) depended on the frame and was
 % REMOVED: on a real 1 s alpha window its divergence/curl correlated 0.05/0.00 with this flow and its speed was nearly uniform.
 % ⚠ Results made before 2026-11-11 used it and must be recomputed. .alpha is recorded.
@@ -55,7 +55,7 @@ function R = apparent(A, S, opts)
 %     Rate   frame rate of A in Hz. ⚠ REQUIRED for .speed to be in m/s; without it .speed is
 %            returned empty and only .speedPerFrame is filled.
 %     Band   [fLo fHi] recorded for provenance
-%     Alpha  Horn-Schunck smoothness weight (default 0.01, the Editor's)
+%     Alpha  Horn-Schunck smoothness weight (default 0.01, the Studio's)
 %     Frames restrict to these frame indices before estimating (all)
 %
 % OUTPUT (struct R):

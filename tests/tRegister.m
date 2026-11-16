@@ -3,7 +3,7 @@ classdef tRegister < matlab.unittest.TestCase
 % register_values, nearest_vertices) and rheome.inverse.hodge_register on a synthetic
 % two-piece surface (two icospheres side by side, a medial cap cut on each, each its own registered sphere), registered onto
 % itself: what must hold exactly. The sampling is held to nxr's own (nxr.register.sphere) on a synthetic sphere when nxr and uv are
-% found ($NXR, the nxr checkout; skipped otherwise). The parity with the editor's stored registration is in tNxrStoreParity.
+% found ($NXR, the nxr checkout; skipped otherwise). The parity with the studio's stored registration is in tNxrStoreParity.
 %
 % Author: Diellor Basha, 2026
 

@@ -6,7 +6,7 @@ function G = nxrregistration(store, subject, template)
 %
 % The registration is the operator hodgeDirac_to_<template> (kind 'registration', stored on the subject by `nxr register build`):
 % T [K_template x K_subject], the sphere registration written in the two Hodge-Dirac mode bases (rheome.register.mode_registration),
-% from the subject's stored basis (rheome.io.read.nxrhodge) to the template's. Followed by its rows, as the Cortical Flow Editor's
+% from the subject's stored basis (rheome.io.read.nxrhodge) to the template's. Followed by its rows, as the Cortical Flow Studio's
 % hodgeStore reads it (hodgeTransferStoreSource) and nxr's store_mode_registration writes it.
 %
 % OUTPUT (struct G)

@@ -42,7 +42,7 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
                 py = @(n, w) reshape(i_read(fullfile(o, n + ".f64")), w, [])';
 
                 S = rheome.io.read.nxrsurface(tc.store, s);
-                P = double(single(S.Vertices));                              % as the editor receives them, as modes_input does
+                P = double(single(S.Vertices));                              % as the studio receives them, as modes_input does
                 tc.verifyEqual(P, py("P", 3), [at ': positions']);
                 tc.verifyEqual(S.Faces, py("F", 3) + 1, [at ': faces']);
                 tc.verifyEqual(S.Wall, i_read(fullfile(o, 'wall.f64')) ~= 0, [at ': medial wall']);
@@ -55,7 +55,7 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
 
                 H = rheome.operators.hodge_dirac(X, G);
                 tc.verifyEqual(H.mesh.F - 1, i_read(fullfile(o, 'iF.f64')), [at ': flips']);
-                tc.verifyEqual(H.star1Clamped, 0, [at ': no edge weight floored (the editor floors none)']);
+                tc.verifyEqual(H.star1Clamped, 0, [at ': no edge weight floored (the studio floors none)']);
 
                 sol = rheome.eigen.hodge_dirac(H, 200);
                 el = i_read(fullfile(o, 'el.f64')); cl = i_read(fullfile(o, 'cl.f64'));
@@ -68,8 +68,8 @@ classdef tNxrStoreParity < matlab.unittest.TestCase
             end
         end
 
-        function chainInputsAreTheEditors(tc)
-            % the spectral chain's inputs as the editor reads them: each kernel that carries fused weights, its recording, one 2^15-sample
+        function chainInputsAreTheStudios(tc)
+            % the spectral chain's inputs as the studio reads them: each kernel that carries fused weights, its recording, one 2^15-sample
             % chunk of it; every array against zarr-python's read; and the weights' basis rebuilt here (glue, flips, solve) against the
             % eigenvalues and glued mesh the weights record
             here = fileparts(mfilename('fullpath')); tmpl = [];

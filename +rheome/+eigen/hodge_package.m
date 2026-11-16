@@ -1,14 +1,14 @@
 function pkg = hodge_package(sol, H)
-% EIGEN.HODGE_PACKAGE  Hodge-Dirac modes as one vertex potential each, merged and ordered by mu: the basis the editor reads.
+% EIGEN.HODGE_PACKAGE  Hodge-Dirac modes as one vertex potential each, merged and ordered by mu: the basis the studio reads.
 %
 %   pkg = rheome.eigen.hodge_package(rheome.eigen.hodge_dirac(H, nModes), H)      % H = rheome.operators.hodge_dirac(V, F)
 %       pkg.mu [K x 1]    the positive Dirac eigenvalues sqrt(lambda), ascending (the two ladders merged, stable)
 %       pkg.kind [K x 1]  0 exact, 2 coexact
 %       pkg.P [V x K]     single: the vertex potential of each mode, A = psi/sqrt(2) (exact) or S = <chi/sqrt(2), omega_v> (coexact:
 %                         the star2-weighted mean of chi over the intrinsic faces round v); the flow of mode k is (grad A + n x grad S)/mu
-%       pkg.mass [V x 1]  the 0-form (vertex) mass star0, the inner product the editor reads the modes under
+%       pkg.mass [V x 1]  the 0-form (vertex) mass star0, the inner product the studio reads the modes under
 %
-% The potentials are rounded to single as nxr stores them (package: float32) and the editor holds them on the device.
+% The potentials are rounded to single as nxr stores them (package: float32) and the studio holds them on the device.
 % Port of nxr hodge.py _package_split (its W and the 1/sqrt(2) of a unit-normalised ladder).
 %
 % See also: rheome.eigen.hodge_dirac, rheome.inverse.hodge_weights

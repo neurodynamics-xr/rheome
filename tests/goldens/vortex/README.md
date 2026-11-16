@@ -1,4 +1,4 @@
-# Vortex goldens (written by nxr; read by Rheome and the Cortical Flow Editor)
+# Vortex goldens (written by nxr; read by Rheome and the Cortical Flow Studio)
 
 Regenerate: `python tests/goldens/vortex_goldens.py` (deterministic, seeded; no participant data). `tests/test_vortex_goldens.py` regenerates in memory
 and fails if nxr's numbers move. Plan: `docs/plans/2026-11-02-vortex-ports.md`. Total about 4.1 MB.

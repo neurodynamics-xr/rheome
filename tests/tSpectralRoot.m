@@ -1,9 +1,9 @@
 classdef tSpectralRoot < matlab.unittest.TestCase
 % rheome.spectral.root / column / meyerband: the spectral root of a chunk and the column at a time cut from it.
 % Synthetic rows only. The method's own checks (the raw column is the sample; the analytic column's imaginary part is the
-% Hilbert transform of its real part; neighbouring Meyer bands partition power), then the editor's own functions on the same
-% chunk (tests/editor_spectral.mts: fftCpu, bandGains, spectralColumnCpu, spectralAnalyticCpu, compiled from the editor's
-% source), skipped when the editor checkout or node are absent.
+% Hilbert transform of its real part; neighbouring Meyer bands partition power), then the studio's own functions on the same
+% chunk (tests/studio_spectral.mts: fftCpu, bandGains, spectralColumnCpu, spectralAnalyticCpu, compiled from the studio's
+% source), skipped when the studio checkout or node are absent.
 %
 % Author: Diellor Basha, 2026
 
@@ -46,23 +46,23 @@ classdef tSpectralRoot < matlab.unittest.TestCase
             tc.verifyEqual(rheome.spectral.meyerband([0; 10.2; 1e3], 8, 13), [0; 1; 0], 'AbsTol', 1e-12);   % 10.2 Hz: past 8*2^(1/3) = 10.08, short of 13*2^(-1/3) = 10.32
         end
 
-        function editorFunctionsAgree(tc)
+        function studioFunctionsAgree(tc)
             R = fullfile(getenv('HOME'), 'workspace/research/code/nxr-cortical-flow');
-            tc.assumeTrue(isfile(fullfile(R, 'editor/src/editor/engine/gpu/modeView.ts')) && system('command -v npx >/dev/null') == 0, 'no editor checkout or node');
+            tc.assumeTrue(isfile(fullfile(R, 'studio/src/studio/engine/gpu/modeView.ts')) && system('command -v npx >/dev/null') == 0, 'no studio checkout or node');
             d = tempname; mkdir(d); c = onCleanup(@() rmdir(d, 's'));
             fid = fopen(fullfile(d, 'rows.f32'), 'w'); fwrite(fid, tc.x', 'single'); fclose(fid);
             m = struct('C', size(tc.x, 1), 'w', size(tc.x, 2), 'halo', tc.halo, 'rate', tc.rate, 'band', tc.band, 'cols', tc.cols);
             fid = fopen(fullfile(d, 'meta.json'), 'w'); fwrite(fid, jsonencode(m)); fclose(fid);
-            [st, out] = system(sprintf('cd "%s/editor" && npx --no-install tsx "%s" "%s" "%s" 2>&1', R, fullfile(fileparts(mfilename('fullpath')), 'editor_spectral.mts'), R, d));
+            [st, out] = system(sprintf('cd "%s/studio" && npx --no-install tsx "%s" "%s" "%s" 2>&1', R, fullfile(fileparts(mfilename('fullpath')), 'studio_spectral.mts'), R, d));
             tc.assertEqual(st, 0, out);
             S = rheome.spectral.root(tc.x, tc.halo); C = m.C; bins = S.N / 2 + 1;
             Xe = reshape(i_read(fullfile(d, 'X.f32'), 'single'), 2, bins, C); Xe = squeeze(complex(Xe(1,:,:), Xe(2,:,:))).';
             He = i_read(fullfile(d, 'H.f64'), 'double');
             E = reshape(i_read(fullfile(d, 'cols.f64'), 'double'), 3, C, []);
-            tc.verifyLessThan(max(abs(S.X - Xe), [], 'all') / max(abs(Xe), [], 'all'), 1e-7, 'the root: the editor holds it in single');
+            tc.verifyLessThan(max(abs(S.X - Xe), [], 'all') / max(abs(Xe), [], 'all'), 1e-7, 'the root: the studio holds it in single');
             H = rheome.spectral.meyerband((0:S.N/2)' * tc.rate / S.N, tc.band(1), tc.band(2));
             tc.verifyEqual(H, He, 'AbsTol', 1e-7, 'bandGains (single)');
-            S.X = Xe; x0 = rheome.spectral.column(S, tc.cols); [~, xa] = rheome.spectral.column(S, tc.cols, He);   % the editor's single inputs
+            S.X = Xe; x0 = rheome.spectral.column(S, tc.cols); [~, xa] = rheome.spectral.column(S, tc.cols, He);   % the studio's single inputs
             sc = @(a, b) max(abs(a - b), [], 'all') / max(abs(b), [], 'all');
             tc.verifyLessThan(sc(x0, squeeze(E(1,:,:))), 1e-6, 'spectralColumnCpu');
             tc.verifyLessThan(sc(real(xa), squeeze(E(2,:,:))), 1e-6, 'spectralAnalyticCpu, real');

@@ -1,4 +1,4 @@
-# FlipOut reference answers (written by the released viewer's nxr-compute WASM; read by Rheome, nxr and the Editor)
+# FlipOut reference answers (written by the released viewer's nxr-compute WASM; read by Rheome, nxr and the Studio)
 
 `flipout-reference.json`: geometry-central's FlipOut geodesic (Sharp & Crane 2020) as the viewer draws it,
 `new Manifold(V, F).tracePath(a, b)` in nxr-compute's WASM (`tracePathSurface`: Dijkstra edge path,

@@ -7,7 +7,7 @@ function R = nxrrecording(store, subject, recording, opts)
 % A recording is a field of kind 'recording' on the product (channels x a time Line): its channels a points manifold whose
 % members are named by the partition with one code a member (<set>_names), its time Line a lattice whose dimension row states
 % the spacing (1/fs) and origin (t0) under the 'clock' coordinate system. Its bad channels are the <recording>_flags labelling
-% ('bad'). The lookups are the editor's (adapters/nxr recordingFromRows, lineFromRows, setFromRows).
+% ('bad'). The lookups are the studio's (adapters/nxr recordingFromRows, lineFromRows, setFromRows).
 %
 % INPUTS:  store the dataset folder (holds dataset.sqlite);  subject its subject.name;  recording the field's name
 % OPTIONS: Samples [first last] 1-based, inclusive (default: none read)
