@@ -373,7 +373,7 @@ function Q = i_chain(Y, C, full)
     A = squeeze(mean(reshape(abs(zf(:, 1:nF*bs)), C.nV, bs, nF), 2));
     Q.tile = cellfun(@(Wt) Wt*A, C.Wt, 'uni', 0);
     if full
-        o = rheome.flow.apparent(A, C.S, Rate=C.FE, Band=C.band, Alpha=0.01);   % connection Laplacian, Alpha 0.01 (the Editor's); re-validated 2026-11-11
+        o = rheome.flow.apparent(A, C.S, Rate=C.FE, Band=C.band, Alpha=0.01);   % connection Laplacian, Alpha 0.01 (the Studio's); re-validated 2026-11-11
         Q.vel = single(o.velocity*C.FE);                                         % ⚠ .velocity is metres per FRAME
     end
 end

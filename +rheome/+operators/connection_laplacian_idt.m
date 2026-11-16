@@ -11,8 +11,8 @@ function [L, M, S, T] = connection_laplacian_idt(V, F, nSym, opt)
 %   rescaled to 2*pi at its vertex (a boundary vertex keeps its own angle sum). nSym raises every
 %   rotation to that power (n-RoSy: 1 vector, 2 line, 4 cross field). Same operator as
 %   rheome.operators.connection_laplacian(V, F) (mesh='intrinsic'), which is built from this (the complex n x n form of
-%   this real 2n x 2n one), here as the Editor's real interleaved layout; on the Delaunay triangulation (weights >= 0, no
-%   sliver-driven spectrum top). Port of the Cortical Flow Editor's connectionLaplacian.ts
+%   this real 2n x 2n one), here as the Studio's real interleaved layout; on the Delaunay triangulation (weights >= 0, no
+%   sliver-driven spectrum top). Port of the Cortical Flow Studio's connectionLaplacian.ts
 %   (Sharp, Soliman & Crane, "The Vector Heat Method", 2019, sec. 5).
 %
 % Author: Diellor Basha, 2026

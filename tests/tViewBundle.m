@@ -197,20 +197,20 @@ classdef tViewBundle < matlab.unittest.TestCase
             tc.verifyEqual(out.settings.layers{1}, struct('field', 'J_phi', 'form', 'f', 'as', 'colour'));
             tc.verifyTrue(contains(fileread(out.manifest), '"derivedFrom":"J"'));
         end
-        function editorRoundTrip(tc)
+        function studioRoundTrip(tc)
             tc.assumeFalse(isMATLABReleaseOlderThan('R2026a'), 'uihtml viewer path: R2026a+');
             tc.assumeTrue(usejava('desktop') || feature('ShowFigureWindows'), 'needs a display');
             d = tempname;  mkdir(d);  old = getenv('RHEOME_VIEWER');  setenv('RHEOME_VIEWER', d);
             c = onCleanup(@() cleanup(d, old));
             writePage(d, 'echo');
-            a = tc.verifyWarning(@() rheome.view(tc.S, struct('a', rand(4, 3)), Viewer="editor", CLim=[0 1], Time=1, ...
+            a = tc.verifyWarning(@() rheome.view(tc.S, struct('a', rand(4, 3)), Viewer="studio", CLim=[0 1], Time=1, ...
                 Timeout=30), 'rheome:view:settings');   % the page refuses one setting first: a warning, then ready
             tc.addTeardown(@() delete(a.figure));
-            tc.verifyEqual(a.viewer, 'editor');
+            tc.verifyEqual(a.viewer, 'studio');
             tc.verifyEqual(a.ready.settings.layers.clim(:)', [0 1]);
             tc.verifyEqual(a.ready.settings.frame, 1);
             tc.verifyEqual(a.ready.bytes(:)', [48 48 48]);   % positions, faces, the field: every file served
-            b = rheome.view(tc.S, struct('a', rand(4, 3)), Viewer="editor", Layers={{"a", "f", "isolines"}}, Fs=100, Timeout=30);
+            b = rheome.view(tc.S, struct('a', rand(4, 3)), Viewer="studio", Layers={{"a", "f", "isolines"}}, Fs=100, Timeout=30);
             tc.verifySameHandle(b.figure, a.figure);    % the figure is reused
             tc.verifyEqual(b.ready.settings.layers.as, 'isolines');
             h = findobj(b.figure, 'Type', 'uihtml');
@@ -226,7 +226,7 @@ classdef tViewBundle < matlab.unittest.TestCase
             b.screenshot(f, 2);
             tc.verifyEqual(size(imread(f)), [1 1 3]);
         end
-        function editorWithoutWebGPUShows(tc)
+        function studioWithoutWebGPUShows(tc)
             tc.assumeFalse(isMATLABReleaseOlderThan('R2026a'), 'uihtml viewer path: R2026a+');
             tc.assumeTrue(usejava('desktop') || feature('ShowFigureWindows'), 'needs a display');
             d = tempname;  mkdir(d);  old = getenv('RHEOME_VIEWER');  setenv('RHEOME_VIEWER', d);
@@ -241,7 +241,7 @@ classdef tViewBundle < matlab.unittest.TestCase
 end
 
 function writePage(d, kind)
-% a stand-in for the Editor's view.html with the viewer's protocol: Data {bundle, settings}, DataChanged, set, screenshot;
+% a stand-in for the Studio's view.html with the viewer's protocol: Data {bundle, settings}, DataChanged, set, screenshot;
 % events ready, settings, screenshot, error (one refused setting before each ready, as the viewer does)
     if strcmp(kind, 'nogpu')
         js = 'function setup(h){ h.sendEventToMATLAB(''error'', {code: ''no-webgpu'', message: ''no adapter''}) }';

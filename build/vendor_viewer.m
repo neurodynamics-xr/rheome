@@ -1,5 +1,5 @@
 function v = vendor_viewer(src)
-% VENDOR_VIEWER  Ship the Cortical Flow Editor's build in Rheome: copy it into <rheome>/viewer, stamped with its commit.
+% VENDOR_VIEWER  Ship the Cortical Flow Studio's build in Rheome: copy it into <rheome>/viewer, stamped with its commit.
 %
 %   v = vendor_viewer()      % from $NXR_VIEWER_DIST, else ~/workspace/research/code/nxr-cortical-flow/studio/dist
 %   v = vendor_viewer(src)
@@ -13,7 +13,7 @@ function v = vendor_viewer(src)
 % Author: Diellor Basha, 2026
     if nargin < 1 || isempty(src), src = getenv('NXR_VIEWER_DIST'); end
     if isempty(src), src = fullfile(getenv('HOME'), 'workspace', 'research', 'code', 'nxr-cortical-flow', 'studio', 'dist'); end
-    assert(isfile(fullfile(src, 'view.html')), 'vendor_viewer:src', 'No Editor build at %s (view.html).', src);
+    assert(isfile(fullfile(src, 'view.html')), 'vendor_viewer:src', 'No Studio build at %s (view.html).', src);
     repo = fileparts(fileparts(src));
     [rc, sha] = system(sprintf('git -C "%s" rev-parse --short HEAD', repo));
     assert(rc == 0, 'vendor_viewer:git', 'The viewer build is not in a git repo: %s', repo);

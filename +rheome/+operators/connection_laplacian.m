@@ -6,7 +6,7 @@ function C = connection_laplacian(V, F, opt)
 %   C = rheome.operators.connection_laplacian(V, F, mesh='intrinsic', mass='mixedVoronoi', mollify=1e-6, flipEps=1e-6)
 %
 % ONE connection Laplacian with a mesh option (PI, 2026-11-10: "one mesh and mass"). 'intrinsic' (default) is the
-% construction of rheome.operators.connection_laplacian_idt (the Editor's connectionLaplacian.ts: signposts on the
+% construction of rheome.operators.connection_laplacian_idt (the Studio's connectionLaplacian.ts: signposts on the
 % mollified intrinsic Delaunay triangulation, weights >= 0), returned as the complex n x n Hermitian A; 'embedded' is the
 % surface's own triangles. On the intrinsic mesh .Rt lives on the intrinsic edges (flipped edges join vertices that are
 % not neighbours in F), and .e1 is the unit tangent along the signposts' reference direction; the detectors and flow

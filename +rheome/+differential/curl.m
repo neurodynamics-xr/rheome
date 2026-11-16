@@ -11,7 +11,7 @@ function vort = curl(J, S, fg, tangent)
 % face, area-weighted to vertices -- faithful to Brainstorm's bst_curl ambient branch.
 % The field is first projected onto the tangent plane at each vertex (J - (J.n)n, n = the area-weighted
 % vertex normal fg.W*FaceNormal, normalised), exactly as nxr-analysis (nxr._port.faces.FaceOperators.div_curl)
-% and the Cortical Flow Editor (flowFieldCpu, tangential) do: one pipeline, one mathematics. The normal part of
+% and the Cortical Flow Studio (flowFieldCpu, tangential) do: one pipeline, one mathematics. The normal part of
 % an ambient field is not rotation on the surface, and on a folded cortex it moves the curl by ~1e-4 relative.
 % Positive = counter-clockwise rotation seen from outside; a pure gradient (irrotational)
 % field gives ~0. Uses the full 3-vector via rheome.operators.face_gradient.
@@ -22,10 +22,10 @@ function vort = curl(J, S, fg, tangent)
 %   fg (optional) a precomputed rheome.operators.face_gradient(S.Vertices,S.Faces); pass it to avoid
 %      rebuilding the operator per call (e.g. per-frame loops / rheome.detect.operator). S may be [].
 %   tangent (optional, default true) which field the curl is taken of; true/false or one of three names (nxr
-%      FaceOperators.div_curl(curl=...), Editor flowFieldCpu tangential):
+%      FaceOperators.div_curl(curl=...), Studio flowFieldCpu tangential):
 %        true  | "tan"   the tangent flow J - J_n n (what is happening in the surface; the default)
 %        false | "3d"    the raw ambient curl, no projection; what rheome.differential.diracparts reads off the Dirac
-%                        (kept for that identity); not the Editor's / nxr's default
+%                        (kept for that identity); not the Studio's / nxr's default
 %        "curv"          the curl of J_n n alone (J_n = J.n, n the area-weighted vertex normal): zero in the continuum, so
 %                        what is left is mesh error. Exactly (linearity)  curl3d = curl_tan + curl_curv.
 %

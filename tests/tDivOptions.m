@@ -50,7 +50,7 @@ classdef tDivOptions < matlab.unittest.TestCase
         end
 
         function unprojectedPositionsAlsoMatch(t)
-            % Rheome does not cast positions to single (nxr and the Editor do): the effect on the maps
+            % Rheome does not cast positions to single (nxr and the Studio do): the effect on the maps
             S0 = t.S;  S0.Vertices = t.G.V_mm / 1000;  R0 = rheome.differential.divcurl(t.J, S0);
             for k = ["div_tan" "div_curv" "div3d" "curl_tan" "curl_curv" "curl3d"]
                 e = max(abs(R0.(k) - t.G.(k))) / max(abs(t.G.(k)));  fprintf('  %-10s double positions, max rel %.2e\n', k, e);

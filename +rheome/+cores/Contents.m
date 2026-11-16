@@ -3,7 +3,7 @@
 % Cores here are connected patches of the smoothed curl whose |curl| passes a high percentile, one rotation sense per
 % patch, tracked frame to frame. This is NOT the critical-point route of rheome.detect (criticalPoints, vortex, track).
 % Ported function for function from nxr-analysis (commit 903fdc2 and the goldens of 9d97761): rheome, nxr and the
-% Cortical Flow Editor are one pipeline and one mathematics. Operator stages are float32, as in nxr.
+% Cortical Flow Studio are one pipeline and one mathematics. Operator stages are float32, as in nxr.
 % Burst stages, band frames and the lag-free envelope-matched null (commit 30b9622, goldens tests/goldens/vortex-signal) are
 % the vortex pipeline's own; rheome.detect.spindle and rheome.detect.risefall (sleep spindles) are unchanged.
 %

@@ -5,10 +5,10 @@ function [L, M, info] = laplace_beltrami(V, F, opt)
 %   [L, M, info] = rheome.operators.laplace_beltrami(V, F, mesh='intrinsic', mass='mixedVoronoi', mollify=1e-6, flipEps=1e-6)
 %   [L, M]       = rheome.operators.laplace_beltrami(V, F, mesh='embedded', mass='galerkin')   % the pre-2026-11-10 operator
 %
-% "One mesh and mass" (PI, 2026-11-10; the Cortical Flow Editor's intrinsicDelaunay.ts is the reference):
+% "One mesh and mass" (PI, 2026-11-10; the Cortical Flow Studio's intrinsicDelaunay.ts is the reference):
 % the DEFAULT is the cotangent Laplacian of the INTRINSIC, mollified Delaunay triangulation
 % (rheome.operators.intrinsic_delaunay: S.L, weights >= 0) with the mixed-Voronoi mass of the mollified input
-% mesh (S.mass), as nxr and the Editor build it. The embedded mesh and the Galerkin / barycentric masses
+% mesh (S.mass), as nxr and the Studio build it. The embedded mesh and the Galerkin / barycentric masses
 % remain as NAMED OPTIONS, never silent defaults.
 %
 % CONVENTION (positive-semidefinite "stiffness" / Poisson form):

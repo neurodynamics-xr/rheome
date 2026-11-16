@@ -13,7 +13,7 @@ function P = diracparts(J, S, D)
 %   P.gradNF  [3nF x nT]   Im (D J) tangential        = grad (J . n_f)  (rows x1,y1,z1 per face)
 %   P.curl P.div           [nV x nT] area-weighted to vertices, as rheome.differential.curl(J,S,[],false) /
 %                          rheome.differential.divergence do (the RAW ambient field; curl's default now
-%                          projects onto the tangent plane first, as the Editor and nxr do)
+%                          projects onto the tangent plane first, as the Studio and nxr do)
 %   P.energy  struct: face-area integrals of curlF^2, divF^2, |gradNF|^2 (each [1 x nT]) and
 %             .total = ||D J||^2 in the face mass, which is their sum
 %

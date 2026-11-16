@@ -20,8 +20,8 @@ function div = divergence(J, S, fg, tangential)
 %   fg (optional) a precomputed rheome.operators.face_gradient(S.Vertices,S.Faces); pass it to avoid
 %      rebuilding the operator per call (e.g. per-frame loops / rheome.detect.operator). S may be [].
 %   tangential (optional, default false) which field the divergence is taken of; true/false or one of three names (nxr
-%      FaceOperators.div_curl(div=...), Editor flowFieldCpu tangential):
-%        false | "3d"    the ambient divergence, no projection (the default, as the Editor's default)
+%      FaceOperators.div_curl(div=...), Studio flowFieldCpu tangential):
+%        false | "3d"    the ambient divergence, no projection (the default, as the Studio's default)
 %        true  | "tan"   the tangent flow J - J_n n, what is happening in the surface (div J_tan = div J - div(J_n n))
 %        "curv"          the divergence of J_n n alone (J_n = J.n, n the area-weighted vertex normal): the source or sink
 %                        the surface's bending makes of a normal current, continuum 2 H J_n (rheome.differential.curvaturesource).

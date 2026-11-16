@@ -1,5 +1,5 @@
 function M = flipMesh(S)
-% GEOM.DRAW.FLIPMESH  The mesh FlipOut works on, built once for a surface (the Editor's flipMesh).
+% GEOM.DRAW.FLIPMESH  The mesh FlipOut works on, built once for a surface (the Studio's flipMesh).
 %
 %   M = rheome.geom.draw.flipMesh(S)
 %   [P, info] = rheome.geom.draw.line(S, from, to, M)      % many paths on S share it

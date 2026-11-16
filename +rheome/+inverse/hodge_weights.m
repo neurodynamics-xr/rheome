@@ -9,7 +9,7 @@ function B = hodge_weights(W, pkg, X, G, keep, Pin)
 % keep  [V x 1] each glued vertex's input vertex, 0 on the bridge (kept first);  Pin [nIn x 3] the input positions
 %       (keep = [] and Pin = []: W is already on the glued surface, [3V x C], and is read as it is)
 % B     [2K x C] rows 1..K the normal-current weights a (coexact modes; 0 on an exact one: an MEG current has no charge),
-%       rows K+1..2K the flow weights b — the editor's fused matrix: w = B*x(t) for a sensor column x(t)
+%       rows K+1..2K the flow weights b — the studio's fused matrix: w = B*x(t) for a sensor column x(t)
 %
 % THE CARRY. A kept vertex takes its own rows; a bridge vertex the inverse-distance blend of its 3 nearest cut-out wall vertices
 % (in the input positions). THE FORMS. Each channel's current J on the glued surface gives its normal current n.J and its tangent
@@ -19,8 +19,8 @@ function B = hodge_weights(W, pkg, X, G, keep, Pin)
 % (column k: the divergence and curl of mode k's flow, -grad P_k exact or -n x grad P_k coexact, read the same way), so a flow
 % synthesised from b reads back to b whatever the discretisation. Linear in W.
 %
-% Port of nxr.inverse.fused (fused_weights, carry_kernel; FaceOperators = the editor's faceGradient.ts), itself the
-% editor's hodgeSynthesisWeights. Positions are rounded to single first, as the editor receives them.
+% Port of nxr.inverse.fused (fused_weights, carry_kernel; FaceOperators = the studio's faceGradient.ts), itself the
+% studio's hodgeSynthesisWeights. Positions are rounded to single first, as the studio receives them.
 %
 % See also: rheome.eigen.hodge_package, rheome.io.read.nxrkernel, rheome.spectral.column
 %

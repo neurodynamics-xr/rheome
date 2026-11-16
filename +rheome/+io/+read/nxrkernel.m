@@ -5,9 +5,9 @@ function K = nxrkernel(store, subject, kernel)
 %
 % A kernel is an operator of kind 'inverse kernel': [3V x M] with a free orientation (x, y, z of each primary-cortex vertex,
 % interleaved) or [V x M] with a fixed one, its M columns the channels <kernel>_channels names (0-based members of the
-% recording's channel set). It applies to the raw recording as stored: the editor applies no whitener or noise covariance of
-% its own. Its recording is the editor's choice (sourceMappingSource): a recording on its channel set, the one of its acquisition
-% first. Its FUSED WEIGHTS B (the editor's hodgeSynthesisWeights, nxr fused_weights) are the operator of kind
+% recording's channel set). It applies to the raw recording as stored: the studio applies no whitener or noise covariance of
+% its own. Its recording is the studio's choice (sourceMappingSource): a recording on its channel set, the one of its acquisition
+% first. Its FUSED WEIGHTS B (the studio's hodgeSynthesisWeights, nxr fused_weights) are the operator of kind
 % 'hodge-dirac weights' whose params name this kernel: [2K x M], rows 1..K the normal-current weights a, K+1..2K the flow
 % weights b, both in the mode order of the basis they were fused with (whose eigenvalues mu and glued mesh key they record).
 %

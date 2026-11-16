@@ -1,12 +1,12 @@
 classdef tOpticalflowConnection < matlab.unittest.TestCase
 % rheome.dynamics.opticalflow_connection (the smoothness of opticalflow_scalar / flow.apparent) is the Cortical Flow
-% Editor's optical flow: parity with the Editor's own output (tests/goldens/opticalflow-connection, made by nxr-neuro's generator
-% from the Editor's code) and the Editor test's assertions (sphere bump direction and speed, gauge freedom, stationary -> 0).
+% Studio's optical flow: parity with the Studio's own output (tests/goldens/opticalflow-connection, made by nxr-neuro's generator
+% from the Studio's code) and the Studio test's assertions (sphere bump direction and speed, gauge freedom, stationary -> 0).
 %
 % Author: Diellor Basha, 2026
 
     methods (Test)
-        function matchesTheEditorsPencilAndVelocity(tc)
+        function matchesTheStudiosPencilAndVelocity(tc)
             G = i_golden(fullfile(fileparts(mfilename('fullpath')), 'goldens', 'opticalflow-connection', 'golden.txt'));
             tc.assertGreaterThanOrEqual(numel(G), 3);
             for m = 1:numel(G)
@@ -16,13 +16,13 @@ classdef tOpticalflowConnection < matlab.unittest.TestCase
                 Cg = sparse(g.C(:,1)+1, g.C(:,2)+1, g.C(:,3), 2*g.n, 2*g.n);
                 tc.verifyLessThan(norm(L - Cg, 'fro') / norm(Cg, 'fro'), 1e-10, g.name + ": C");
                 tc.verifyEqual(Sd.mass, g.M, 'RelTol', 1e-10, g.name + ": M");
-                % the velocity of frame 0: the Editor's dense float64 solve (zv) to 1e-10, its float32 output to float32
+                % the velocity of frame 0: the Studio's dense float64 solve (zv) to 1e-10, its float32 output to float32
                 [v, info] = i_flow(g.I, S, g.alpha);
                 tc.verifyEqual(info.peak, g.peak, 'RelTol', 1e-15);
                 v0 = reshape(v(:,1), 3, [])';
                 tc.verifyLessThan(max(abs(v0 - g.zv), [], 'all') / max(abs(g.zv), [], 'all'), 1e-10, g.name + ": frame 0 vs the dense solve");
                 vg = reshape(g.velocity', 3*g.n, []);                  % [3n x nT-1]
-                tc.verifyLessThan(max(abs(v - vg), [], 'all') / max(abs(vg), [], 'all'), 2e-6, g.name + ": every frame vs the Editor's float32 velocity");
+                tc.verifyLessThan(max(abs(v - vg), [], 'all') / max(abs(vg), [], 'all'), 2e-6, g.name + ": every frame vs the Studio's float32 velocity");
             end
         end
 
@@ -33,7 +33,7 @@ classdef tOpticalflowConnection < matlab.unittest.TestCase
             v = rheome.dynamics.opticalflow_scalar(I, S);                       % the default: connection, alpha 0.01
             [cs, sp] = i_read(V, v(:,1), cen(:,1), R);
             tc.verifyGreaterThan(cs, 0.99);
-            tc.verifyGreaterThan(sp, 0.85);  tc.verifyLessThan(sp, 1.1);        % the prior pulls the speed low (Editor: 94.8 % at sub 4)
+            tc.verifyGreaterThan(sp, 0.85);  tc.verifyLessThan(sp, 1.1);        % the prior pulls the speed low (Studio: 94.8 % at sub 4)
         end
 
         function isGaugeFree(tc)
@@ -54,7 +54,7 @@ classdef tOpticalflowConnection < matlab.unittest.TestCase
             tc.verifyEqual(max(abs(v), [], 'all'), 0);
         end
 
-        function theDefaultsAreTheEditorsAndTheFrameMethodIsGone(tc)
+        function theDefaultsAreTheStudiosAndTheFrameMethodIsGone(tc)
             [V, F] = rheome.geom.icosphere(2);  V = 0.1*V;  n = size(V, 1);
             S = struct('Vertices', V, 'Faces', F, 'nV', n);
             [I, ~] = i_bump(V, 0.1, 3);
@@ -73,7 +73,7 @@ function [v, info] = i_flow(I, S, alpha)
 end
 
 function [I, cen] = i_bump(V, R, nT)
-% the Editor test's travelling bump: a Gaussian of geodesic width 0.2 R whose centre turns about y at 3 rad/s, dt = 0.004 s
+% the Studio test's travelling bump: a Gaussian of geodesic width 0.2 R whose centre turns about y at 3 rad/s, dt = 0.004 s
     n = size(V, 1);  sigma = 0.2*R;  I = zeros(n, nT);  cen = zeros(3, nT);
     for k = 1:nT
         th = 3*(k-1)*0.004;  c = [R*cos(th); 0; -R*sin(th)];  cen(:,k) = c;

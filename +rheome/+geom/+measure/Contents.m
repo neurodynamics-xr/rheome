@@ -1,6 +1,6 @@
 % MEASURE  Surface geometry that returns numbers: distances on the surface, the intrinsic mean, a field pooled over tiles.
 %
-% One of rheome.geom's three jobs (measure, select, draw: the Cortical Flow Editor's and nxr's words).
+% One of rheome.geom's three jobs (measure, select, draw: the Cortical Flow Studio's and nxr's words).
 %
 % Functions:
 %   rheome.geom.measure.heatDistance      - single-/multi-source geodesic distance by the heat method (geometry-

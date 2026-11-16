@@ -1,4 +1,4 @@
-# Hard vortex goldens (written by nxr; for Rheome and the Cortical Flow Editor)
+# Hard vortex goldens (written by nxr; for Rheome and the Cortical Flow Studio)
 
 Cases the first set (`tests/goldens/vortex/`) does not exercise. Regenerate: `python tests/goldens/vortex_hard_goldens.py` (deterministic, no random numbers, no participant data).
 `tests/test_vortex_hard_goldens.py` regenerates in memory, compares with this folder and asserts each scenario's known answer. About 1 MB in total.

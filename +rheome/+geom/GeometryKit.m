@@ -13,7 +13,7 @@ classdef GeometryKit < handle
 % to one place along the surface, where they lie in one plane, and only then added. The carry is the vector heat method's transport
 % ((L + M/t) X = M delta e^{i psi}, Sharp, Soliman and Crane 2019), solved on the intrinsic Delaunay triangulation, per connected component
 % (a hemisphere). A vector is measured by its angle in the connection Laplacian's gauge, face by face through the INPUT faces' corners
-% (the Editor's intrinsicGauge.ts: toIntrinsic / embedAt); a vector with no angle (zero, or normal to the surface) carries 0.
+% (the Studio's intrinsicGauge.ts: toIntrinsic / embedAt); a vector with no angle (zero, or normal to the surface) carries 0.
 %
 % Ports nxr.geom.logmap.GeometryKit (lift, turn, carry, turns_to, embed_at_vertices, embed) and nxr.operators.intrinsic_gauge. Vertices are 1-based.
 % Component-wise, the gauge is the one of rheome.operators.connection_laplacian (mesh='intrinsic'): e1 along the signposts' reference.

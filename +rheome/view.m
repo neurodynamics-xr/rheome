@@ -9,8 +9,8 @@ function out = view(varargin)
 %
 % Rheome RUNS without the viewer (R2023b and later); its figures of the cortex are drawn by it (rheome.viz).
 % The result is written as a rheome.bundle@1 folder (rheome.io.write.bundle) and opened:
-%   R2026a+       inside MATLAB, a uifigure + uihtml on view.html of the Cortical Flow Editor's build (its
-%                 editor/figure/README.md has the format and protocol). The folder is RHEOME_VIEWER, default prefdir/rheome-viewer, installed
+%   R2026a+       inside MATLAB, a uifigure + uihtml on view.html of the Cortical Flow Studio's build (its
+%                 studio/figure/README.md has the format and protocol). The folder is RHEOME_VIEWER, default prefdir/rheome-viewer, installed
 %                 there from the copy shipped in <rheome>/viewer when that exists; the bundle is written beneath
 %                 it, because uihtml serves only that folder's tree. The figure is reused by the next call.
 %   R2023b-R2025b the Cortical Flow desktop app, by its URL (corticalflow://view?bundle=<folder>).
@@ -60,14 +60,14 @@ function out = view(varargin)
 %   'Labellings'  partitions for the viewer (rheome.viz.tiles: tiles by level; see rheome.io.write.bundle)
 %   'Points'      point sets for the viewer (rheome.viz.points: critical points, one set a type)
 %   'Name'    the bundle's name (default 'Rheome result')
-%   'Viewer'  'auto' (default) | 'editor' (uihtml) | 'app' | 'show' | 'none' (write the bundle only)
+%   'Viewer'  'auto' (default) | 'studio' (uihtml) | 'app' | 'show' | 'none' (write the bundle only)
 %   'Timeout' seconds to wait for the viewer's 'ready' (default 60)
 %
 % OUTPUT:
-%   out : struct .viewer (the path taken: 'editor' | 'app' | 'show' | 'none'), .manifest (the bundle's
+%   out : struct .viewer (the path taken: 'studio' | 'app' | 'show' | 'none'), .manifest (the bundle's
 %         manifest.json, '' for 'show'), .settings (the viewer's settings sent, as in the manifest's 'settings';
 %         the layer options are sent as 'layers', a cell of layer structs, set whole),
-%         .figure (the uifigure or figure, [] for 'app' and 'none'), and on the 'editor' path:
+%         .figure (the uifigure or figure, [] for 'app' and 'none'), and on the 'studio' path:
 %         .ready      what the viewer said when it opened the bundle (its fields, surfaces, every setting)
 %         .set(Name=Value, ...)      changes the open view (the options above) without reopening it; a layer
 %                                    option given acts on the layers last sent
@@ -100,9 +100,9 @@ function out = view(varargin)
     out = struct('viewer', lower(char(o.Viewer)), 'manifest', '', 'settings', s, 'figure', []);
 
     vdir = viewerFolder();
-    page = fullfile(vdir, 'view.html');                                 % the Editor's build: the viewer's protocol on the Editor
+    page = fullfile(vdir, 'view.html');                                 % the Studio's build: the viewer's protocol on the Studio
     if strcmp(out.viewer, 'auto')
-        if ~isMATLABReleaseOlderThan('R2026a') && isfile(page), out.viewer = 'editor'; else, out.viewer = 'app'; end
+        if ~isMATLABReleaseOlderThan('R2026a') && isfile(page), out.viewer = 'studio'; else, out.viewer = 'app'; end
     end
 
     if ~strcmp(out.viewer, 'show')
@@ -110,7 +110,7 @@ function out = view(varargin)
         root = fullfile(vdir, 'bundles');
         if isfolder(root), rmdir(root, 's'); end
         id = char(datetime('now', 'Format', 'yyyyMMdd''T''HHmmssSSS'));
-        labs = o.Labellings;  st = structuresOf(surf);                 % the hemispheres, as the atlas the Editor reads them from
+        labs = o.Labellings;  st = structuresOf(surf);                 % the hemispheres, as the atlas the Studio reads them from
         if ~isempty(st)
             if isempty(labs), labs = {}; elseif isstruct(labs), labs = num2cell(labs(:)'); end
             names = cellfun(@(x) char(x.name), labs, 'UniformOutput', false);
@@ -121,13 +121,13 @@ function out = view(varargin)
     end
 
     switch out.viewer
-        case 'editor'
+        case 'studio'
             if ~isfile(page), error('rheome:view:noviewer', 'No viewer at %s (set RHEOME_VIEWER).', page); end
-            % the lab's figure tokens are the client's (the Editor's build ships none): written beside the page, where uihtml serves them
+            % the lab's figure tokens are the client's (the Studio's build ships none): written beside the page, where uihtml serves them
             tok = rheome.viz.tokenspath();  fdir = fullfile(vdir, 'figure');
             if ~isfolder(fdir), mkdir(fdir); end
             copyfile(tok, fullfile(fdir, 'figure-tokens.json'), 'f');
-            [ok, out.figure, h, out.ready] = viaEditor(page, ['bundles/' id '/manifest.json'], s, o.Timeout);
+            [ok, out.figure, h, out.ready] = viaStudio(page, ['bundles/' id '/manifest.json'], s, o.Timeout);
             if ok && ~isempty(h)
                 setappdata(h, 'rheomeLayers', []);
                 if isfield(s, 'layers'), setappdata(h, 'rheomeLayers', s.layers); end
@@ -172,12 +172,13 @@ function o = options(args, opening)
         p.addParameter('Labellings', []);
         p.addParameter('Points', []);
         p.addParameter('Name', 'Rheome result');
-        p.addParameter('Viewer', 'auto', @(x) any(strcmpi(x, {'auto', 'editor', 'app', 'show', 'none'})));
+        p.addParameter('Viewer', 'auto', @(x) any(strcmpi(x, {'auto', 'studio', 'editor', 'app', 'show', 'none'})));   % 'editor': the Studio's name before 2026-11-16
         p.addParameter('Timeout', 60);
     end
     p.parse(args{:});
     o = p.Results;
     if ~opening, o.Potentials = false; end
+    if strcmpi(o.Viewer, 'editor'), o.Viewer = 'studio'; end   % the Studio's name before 2026-11-16
 end
 
 function f = firstField(result)
@@ -374,7 +375,7 @@ function bad(name, what)
     error('rheome:view:option', '%s: %s is expected.', name, what);
 end
 
-function [ok, fig, h, ready] = viaEditor(page, manifest, s, timeout)
+function [ok, fig, h, ready] = viaStudio(page, manifest, s, timeout)
 % the viewer inside MATLAB; ok = false when it has no WebGPU; h the uihtml ([] when it did not answer)
     persistent hh
     if isempty(hh) || ~isvalid(hh) || ~strcmp(hh.HTMLSource, page)
@@ -395,7 +396,7 @@ function [ok, fig, h, ready] = viaEditor(page, manifest, s, timeout)
                 delete(fig); fig = []; h = []; ok = false;
                 return
             end
-            error('rheome:view:editor', 'The viewer could not open the bundle (%s): %s', field(d, 'code'), field(d, 'message'));
+            error('rheome:view:studio', 'The viewer could not open the bundle (%s): %s', field(d, 'code'), field(d, 'message'));
         otherwise
             if isvalid(h), warning('rheome:view:timeout', 'The viewer did not say ready within %g s; the figure is left open.', timeout); end
             h = [];

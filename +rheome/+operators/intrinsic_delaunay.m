@@ -10,12 +10,12 @@ function S = intrinsic_delaunay(V, F, opt)
 %       S.flips, S.nonDelaunay, S.flipEps (the flip tolerance used), S.mollify (the relative delta used), S.mollifyEps (m added to every edge length; 0 when no triangle is degenerate; opt.mollify = 0 turns it off)
 %
 % Same vertices and metric as the input; edges are flipped intrinsically (flipped length laid out
-% from the two triangles) until every cotangent weight is >= -opt.flipEps (default 1e-6). Port of the Cortical Flow Editor's
+% from the two triangles) until every cotangent weight is >= -opt.flipEps (default 1e-6). Port of the Cortical Flow Studio's
 % intrinsicDelaunay.ts, itself geometry-central's flipToDelaunay (Sharp, Soliman & Crane 2019),
 % Bobenko & Springborn 2007. The mass is the mixed Voronoi area of the input triangulation
 % (Meyer, Desbrun, Schroeder & Barr 2003), recorded before the first flip. Edge and halfedge
 % numbering is the cortical-flow one (so matrices are comparable index by index). Closed or with
-% boundary (a boundary edge is never flipped). Edge lengths are mollified (opt.mollify, S.mollifyEps) and signposts are computed (opt.signposts) as in the Editor; the tufted cover is not ported.
+% boundary (a boundary edge is never flipped). Edge lengths are mollified (opt.mollify, S.mollifyEps) and signposts are computed (opt.signposts) as in the Studio; the tufted cover is not ported.
 %
 % Author: Diellor Basha, 2026
 arguments, V (:,3) double, F (:,3) double, opt.flipEps (1,1) double = 1e-6, opt.signposts (1,1) logical = false, opt.mollify (1,1) double = 1e-6, end

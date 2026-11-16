@@ -7,7 +7,7 @@ function [P, f, info] = cleanwelch(F, fs, span, mask, nf)
 % pwelch(F(:, span).', hann(nf, 'periodic'), nf/2, nf, fs) with the segments that overlap a true sample of
 % mask left out of the average. The segments are pwelch's own: start 1 + (k-1)*nf/2 within the
 % span, k = 1 .. fix((L - nf/2) / (nf/2)). The window is the PERIODIC Hann,
-% w(i) = 1/2 - 1/2 cos(2 pi i/nf) (Diellor, 2026-11-02; as nxr-analysis and the Cortical Flow Editor), not MATLAB's
+% w(i) = 1/2 - 1/2 cos(2 pi i/nf) (Diellor, 2026-11-02; as nxr-analysis and the Cortical Flow Studio), not MATLAB's
 % default symmetric hann(nf).
 %
 % ⭐ WHEN NO SEGMENT TOUCHES THE MASK THIS IS THE pwelch CALL ITSELF, bit for bit -- the masked

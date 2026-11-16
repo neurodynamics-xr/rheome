@@ -12,7 +12,7 @@ classdef tSnapshot < matlab.unittest.TestCase
     end
     methods (TestMethodSetup)
         function fakeViewer(tc)
-        % an Editor build folder with the files read before rendering: index.html, the driver and the default colormap library
+        % a Studio build folder with the files read before rendering: index.html, the driver and the default colormap library
             d = tempname;  mkdir(fullfile(d, 'colormaps', 'default'));  mkdir(fullfile(d, 'driver'));
             fclose(fopen(fullfile(d, 'index.html'), 'w'));
             fclose(fopen(fullfile(d, 'driver', 'snapshot-driver.mjs'), 'w'));
@@ -309,6 +309,6 @@ function [vdir, S] = needs(tc)
 end
 
 function ok = isBuild(vdir)
-% an Editor build (index.html): what rheome.snapshot draws with
+% a Studio build (index.html): what rheome.snapshot draws with
     ok = isfile(fullfile(vdir, 'index.html'));
 end

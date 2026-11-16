@@ -6,7 +6,7 @@
 %   rheome.dynamics.flow_readout       - GCF readouts of a propagation velocity field.
 %   rheome.dynamics.mode_coefficients  - Reduced-order coefficient time series for the dynamics fits.
 %   rheome.dynamics.opticalflow_scalar - Manifold Horn-Schunck optical flow of a scalar activity map.
-%   rheome.dynamics.opticalflow_connection - Horn-Schunck smoothed by the connection Laplacian (the Editor's method; the default of opticalflow_scalar).
+%   rheome.dynamics.opticalflow_connection - Horn-Schunck smoothed by the connection Laplacian (the Studio's method; the default of opticalflow_scalar).
 %   rheome.dynamics.pde_fit            - Fit the per-mode temporal dynamics to candidate PDEs (the model-based law).
 %
 % Author: Diellor Basha, 2026

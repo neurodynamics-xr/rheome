@@ -7,7 +7,7 @@ function H = meyerband(f, lo, hi, halfWidth)
 % rise(f) = sin(pi/2 nu((log2(f/lo) + h)/(2h))), fall(f) = cos(pi/2 nu((log2(f/hi) + h)/(2h))), H = rise * fall; nu Meyer's
 % auxiliary polynomial (0 to 1 on [0, 1], nu(x) + nu(1-x) = 1). lo = 0 has no rise, hi = Inf no fall; H(0) = 0 unless lo = 0.
 % Neighbouring bands sharing an edge partition power: H1^2 + H2^2 = 1 across it.
-% Port of the editor's meyerBand and meyerNu (dyadicFrame.ts), the gain its per-frame view applies.
+% Port of the studio's meyerBand and meyerNu (dyadicFrame.ts), the gain its per-frame view applies.
 %
 % See also: rheome.spectral.column
 %

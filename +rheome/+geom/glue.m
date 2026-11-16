@@ -11,15 +11,15 @@ function [X, G, keep, bridge] = glue(P, F, wall)
 % Each hemisphere's wall is cut as one disk (its largest component, its islands filled, pinches and extra rims cut until one rim
 % is left). The two rims are oriented by geometry (along the axis between their centres), resampled to N = round(mean perimeter /
 % mean edge) points, aligned by the least-squares shift, and joined by R = round(median gap / mean edge) - 1 rings; each band is
-% stitched by the triangulation of least total edge length. Checked as the editor checks: every half-edge once, every edge on two
+% stitched by the triangulation of least total edge length. Checked as the studio checks: every half-edge once, every edge on two
 % faces, one piece, chi = chi1 + chi2 - 2.
 %
-% Port of the Cortical Flow editor's glue.ts (glueMesh), held equal to it through nxr.geom.glue: the same faces, the same bridge
-% points (tests/tGlueHodgeParity). Every sum runs in the editor's order, so the positions match bit for bit.
+% Port of the Cortical Flow studio's glue.ts (glueMesh), held equal to it through nxr.geom.glue: the same faces, the same bridge
+% points (tests/tGlueHodgeParity). Every sum runs in the studio's order, so the positions match bit for bit.
 %
 % See also: rheome.geom.meshkey, rheome.operators.intrinsic_delaunay, rheome.eigen.hodge_dirac
 %
-% Author: Diellor Basha, 2026 (port of the Cortical Flow editor's glue.ts)
+% Author: Diellor Basha, 2026 (port of the Cortical Flow studio's glue.ts)
 arguments, P (:,3) double, F (:,3) double, wall (:,1), end
 n = size(P,1);
 if numel(wall) ~= n, error('rheome:glue', 'glue: the medial-wall mask has %d entries for %d vertices', numel(wall), n); end
@@ -91,7 +91,7 @@ bridge = struct('vertices', R*N, 'rings', R, 'area', 0.5 * sum(vecnorm(cross(e1,
 end
 
 function [lab, nb] = i_labels(n, F, on)
-% components through the faces' edges among ON, numbered by their lowest vertex (the editor's union-find, read in vertex order); 0 off ON
+% components through the faces' edges among ON, numbered by their lowest vertex (the studio's union-find, read in vertex order); 0 off ON
 E = [F(:,[1 2]); F(:,[2 3]); F(:,[3 1])];
 E = E(on(E(:,1)) & on(E(:,2)), :);
 bins = conncomp(graph(sparse(E(:,1), E(:,2), 1, n, n) + sparse(E(:,2), E(:,1), 1, n, n)))';
@@ -186,7 +186,7 @@ x = a + t * (b - a);
 end
 
 function T = i_stitch(A, B0, X)
-% the band of least total edge length between two loops running the same way (the editor's stitch); faces as a column, 3 per face
+% the band of least total edge length between two loops running the same way (the studio's stitch); faces as a column, 3 per face
 A = A(:); B0 = B0(:);
 j0 = 1;
 for j = 2:numel(B0)

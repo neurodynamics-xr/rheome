@@ -4,7 +4,7 @@ function varargout = flipOut(varargin)
 %   [P, info] = rheome.geom.flipOut(S, from, to, mesh)          % mesh = rheome.geom.draw.flipMesh(S) (formerly info.cache)
 %
 % Moved 2026-11-10 when rheome.geom's surface functions were grouped by job into measure (numbers), select (a set of
-% vertices) and draw (a curve on the surface), the Editor's and nxr's names. This name forwards to rheome.geom.draw.flipOut
+% vertices) and draw (a curve on the surface), the Studio's and nxr's names. This name forwards to rheome.geom.draw.flipOut
 % with the same inputs and outputs, and warns once per session (rheome:deprecated). Call rheome.geom.draw.flipOut.
 %
 % See also: rheome.geom.draw.flipOut

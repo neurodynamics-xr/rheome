@@ -1,17 +1,17 @@
 /**
- * The editor's own CPU functions on one chunk, for tSpectralRoot's parity: the load (chunkFft.ts: less the row mean, mirror-padded),
+ * The studio's own CPU functions on one chunk, for tSpectralRoot's parity: the load (chunkFft.ts: less the row mean, mirror-padded),
  * fftCpu (fft.oracle), N·mean back in bin 0, the one-sided spectrum held as float32 (as on the device), bandGains, spectralColumnCpu
- * and spectralAnalyticCpu at the asked columns.  npx tsx editor_spectral.mts <editor> <dir>  (editor: the Cortical Flow checkout; dir: rows.f32 [C × w] row-major, meta.json)
+ * and spectralAnalyticCpu at the asked columns.  npx tsx studio_spectral.mts <studio> <dir>  (studio: the Cortical Flow checkout; dir: rows.f32 [C × w] row-major, meta.json)
  */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-const R = process.argv[2]!, E = `${R}/editor/src`
+const R = process.argv[2]!, E = `${R}/studio/src`
 const { fftCpu, nextPow2 } = await import(`${E}/engine/toolbox/primitives/fft/fft.oracle.ts`)
 const { meyerBand } = await import(`${E}/engine/toolbox/wavelets/dyadicFrame.ts`)
 /* modeView.ts imports the device (three/tsl) at load: its three CPU functions are taken from its SOURCE, verbatim, and compiled alone */
 const { transformSync } = await import(`${R}/node_modules/esbuild/lib/main.js`)
-const src = readFileSync(`${E}/editor/engine/gpu/modeView.ts`, 'utf8')
+const src = readFileSync(`${E}/studio/engine/gpu/modeView.ts`, 'utf8')
 const fn = (name: string) => { const a = src.indexOf(`export function ${name}(`); const b = src.indexOf('\n}\n', a); if (a < 0 || b < 0) throw new Error(name); return src.slice(a, b + 3) }
 ;(globalThis as any).__meyerBand = meyerBand
 const js = transformSync(['spectralColumnCpu', 'bandGains', 'spectralAnalyticCpu'].map(fn).join('\n'), { loader: 'ts', format: 'esm' }).code

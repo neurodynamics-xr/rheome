@@ -12,8 +12,8 @@
  
   Rheome RUNS without the viewer (R2023b and later); its figures of the cortex are drawn by it (rheome.viz).
   The result is written as a rheome.bundle@1 folder (rheome.io.write.bundle) and opened:
-    R2026a+       inside MATLAB, a uifigure + uihtml on view.html of the Cortical Flow Editor's build (its
-                  editor/figure/README.md has the format and protocol). The folder is RHEOME_VIEWER, default prefdir/rheome-viewer, installed
+    R2026a+       inside MATLAB, a uifigure + uihtml on view.html of the Cortical Flow Studio's build (its
+                  studio/figure/README.md has the format and protocol). The folder is RHEOME_VIEWER, default prefdir/rheome-viewer, installed
                   there from the copy shipped in &lt;rheome&gt;/viewer when that exists; the bundle is written beneath
                   it, because uihtml serves only that folder's tree. The figure is reused by the next call.
     R2023b-R2025b the Cortical Flow desktop app, by its URL (corticalflow://view?bundle=&lt;folder&gt;).
@@ -63,14 +63,14 @@
     'Labellings'  partitions for the viewer (rheome.viz.tiles: tiles by level; see rheome.io.write.bundle)
     'Points'      point sets for the viewer (rheome.viz.points: critical points, one set a type)
     'Name'    the bundle's name (default 'Rheome result')
-    'Viewer'  'auto' (default) | 'editor' (uihtml) | 'app' | 'show' | 'none' (write the bundle only)
+    'Viewer'  'auto' (default) | 'studio' (uihtml) | 'app' | 'show' | 'none' (write the bundle only)
     'Timeout' seconds to wait for the viewer's 'ready' (default 60)
  
   OUTPUT:
-    out : struct .viewer (the path taken: 'editor' | 'app' | 'show' | 'none'), .manifest (the bundle's
+    out : struct .viewer (the path taken: 'studio' | 'app' | 'show' | 'none'), .manifest (the bundle's
           manifest.json, '' for 'show'), .settings (the viewer's settings sent, as in the manifest's 'settings';
           the layer options are sent as 'layers', a cell of layer structs, set whole),
-          .figure (the uifigure or figure, [] for 'app' and 'none'), and on the 'editor' path:
+          .figure (the uifigure or figure, [] for 'app' and 'none'), and on the 'studio' path:
           .ready      what the viewer said when it opened the bundle (its fields, surfaces, every setting)
           .set(Name=Value, ...)      changes the open view (the options above) without reopening it; a layer
                                      option given acts on the layers last sent

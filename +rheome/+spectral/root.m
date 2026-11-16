@@ -9,13 +9,13 @@ function S = root(x, halo)
 %   S.halo   the context columns before the block's first own column (n = halo + c reads block column c, 0-based)
 %   S.width  the block's own columns (w - 2*halo)
 %
-% THE LOAD (the editor's chunkFft): each row less its mean over the w loaded columns, mirror-padded to N (sample i >= w reads
+% THE LOAD (the studio's chunkFft): each row less its mean over the w loaded columns, mirror-padded to N (sample i >= w reads
 % 2(w-1) - i), transformed; the mean put back as N*mean in bin 0, so the views keep the DC. The mean is taken out because a
 % float32 transform rounds every butterfly at the offset's size; in double it changes nothing measurable, and the bins equal
 % the FFT of the mirror-padded row.
 % The transform is circular: a filter's needed context (about 3 cycles of its lowest frequency) must fit in the halo.
 %
-% Port of the Cortical Flow editor's chunkFft.ts (its spectral root); the views: rheome.spectral.column.
+% Port of the Cortical Flow studio's chunkFft.ts (its spectral root); the views: rheome.spectral.column.
 %
 % See also: rheome.spectral.column, rheome.spectral.meyerband
 %

@@ -10,7 +10,7 @@ function [T, R] = mode_registration(subject, template, reg)
 %    and rotations inside near-degenerate eigenspaces cancel, and T is exact for what the two bands share.
 % R  [V_template x V_subject] sparse, the registration on the glued surfaces (rheome.register.glued_registration).
 %
-% As nxr.register.modes.mode_registration (the Cortical Flow Editor's registration to the template). Its check:
+% As nxr.register.modes.mode_registration (the Cortical Flow Studio's registration to the template). Its check:
 % rheome.register.check_mode_registration.
 %
 % See also: rheome.register.check_mode_registration, rheome.inverse.hodge_register, rheome.register.registration

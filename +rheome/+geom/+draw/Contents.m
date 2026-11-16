@@ -1,12 +1,12 @@
 % DRAW  Surface geometry that returns a curve on the surface.
 %
-% One of rheome.geom's three jobs (measure, select, draw: the Cortical Flow Editor's and nxr's words).
+% One of rheome.geom's three jobs (measure, select, draw: the Cortical Flow Studio's and nxr's words).
 %
 % Functions:
 %   rheome.geom.draw.flipOut  - the FlipOut geodesic between two vertices (Sharp & Crane 2020): a port of
-%                               geometry-central's, the line the viewer, nxr and the Editor draw (to 1e-9 m)
+%                               geometry-central's, the line the viewer, nxr and the Studio draw (to 1e-9 m)
 %   rheome.geom.draw.line     - a geodesic between two vertices on the faces (calls draw.flipOut)
-%   rheome.geom.draw.flipMesh - the mesh FlipOut works on, built once for a surface (the Editor's flipMesh): pass it
+%   rheome.geom.draw.flipMesh - the mesh FlipOut works on, built once for a surface (the Studio's flipMesh): pass it
 %                               to line / flipOut as `mesh` for many paths on one surface
 %
 % Drawing is not measuring: the line does not use the heat distance (rheome.geom.measure.heatDistance). A heat

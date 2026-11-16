@@ -106,7 +106,7 @@ classdef tVortexCores < matlab.unittest.TestCase
 
         function faceCurlVsNxr(t)
             % rheome.differential.curl on the golden flow against nxr's curl_vertex, raw flow in (the call projects onto
-            % the tangent plane itself, as nxr and the Editor do). nxr's curl is per metre (the golden mesh is stored in
+            % the tangent plane itself, as nxr and the Studio do). nxr's curl is per metre (the golden mesh is stored in
             % mm), so the mesh goes in as metres.
             S = struct('Vertices', t.G.V_mm / 1000, 'Faces', t.G.F + 1);
             nV = size(t.G.V_mm, 1); nT = size(t.G.flow, 3);
