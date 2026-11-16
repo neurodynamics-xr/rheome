@@ -294,7 +294,7 @@ end
 function vdir = libraryViewer(tc)
 % the viewer to draw with: RHEOME_VIEWER, else the library's release; Chrome
     vdir = getenv('RHEOME_VIEWER');
-    if isempty(vdir), vdir = fullfile(char(java.lang.System.getProperty('user.home')), 'workspace', 'library', 'software', 'cortical-flow-editor'); end
+    if isempty(vdir), vdir = fullfile(char(java.lang.System.getProperty('user.home')), 'workspace', 'library', 'software', 'cortical-flow-studio'); end
     tc.assumeTrue(isBuild(vdir) && isfile(fullfile(vdir, 'driver', 'snapshot-driver.mjs')), 'needs the viewer (RHEOME_VIEWER)');
     tc.assumeTrue(isfile('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome') || ~isempty(getenv('RHEOME_CHROME')), 'needs Chrome');
 end
