@@ -8,7 +8,7 @@ classdef tSpectraParity < matlab.unittest.TestCase
 
     properties (Constant)
         Res = fullfile(getenv('HOME'), 'workspace/research/results/dirac-eigenmodes-bunny-closed')
-        Fx  = fullfile(getenv('HOME'), 'workspace/research/code/nxr-cortical-flow/editor/fixtures/bunny-closed')
+        Fx  = fullfile(getenv('HOME'), 'workspace/research/code/nxr-cortical-flow/studio/fixtures/bunny-closed')
     end
     methods (Test)
         function hodgeSpectrum(tc)

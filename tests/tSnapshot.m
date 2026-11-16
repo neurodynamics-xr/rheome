@@ -301,7 +301,7 @@ end
 
 function [vdir, S] = needs(tc)
     vdir = getenv('RHEOME_VIEWER');
-    if isempty(vdir), vdir = fullfile(char(java.lang.System.getProperty('user.home')), 'workspace', 'research', 'code', 'nxr-cortical-flow', 'editor', 'dist'); end
+    if isempty(vdir), vdir = fullfile(char(java.lang.System.getProperty('user.home')), 'workspace', 'research', 'code', 'nxr-cortical-flow', 'studio', 'dist'); end
     tc.assumeTrue(isBuild(vdir), 'needs the viewer (RHEOME_VIEWER)');
     tc.assumeTrue(isfile('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome') || ~isempty(getenv('RHEOME_CHROME')), 'needs Chrome');
     tc.assumeTrue(rheome.load.has('omega_sub0002'), 'needs the omega_sub0002 surface in +data');

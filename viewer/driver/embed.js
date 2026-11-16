@@ -33,7 +33,7 @@ export async function mount(element, { editor = '/', theme = 'light' } = {}) {
   window.addEventListener('message', (e) => {
     if (e.source !== frame.contentWindow || e.origin !== origin) return
     const d = e.data
-    if (!d || d.type !== 'nxr-editor') return
+    if (!d || (d.type !== 'nxr-studio' && d.type !== 'nxr-editor')) return   // nxr-editor: the Studio's builds before its rename (2026-11-16)
     if (d.state === 'hello') hello()
     else if (d.state === 'result' && waiting.has(d.id)) { waiting.get(d.id)(d); waiting.delete(d.id) }
     else if (d.state === 'error') { failed = d.code === 'no-webgpu' ? 'this browser has no WebGPU (use Chrome or Edge)' : d.message; for (const [id, ok] of waiting) { ok({ ok: false, error: { section: 'scene', name: '', message: failed } }); waiting.delete(id) } }

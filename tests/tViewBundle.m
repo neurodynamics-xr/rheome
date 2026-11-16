@@ -3,7 +3,7 @@ classdef tViewBundle < matlab.unittest.TestCase
 % viewer's settings and needs no viewer: 'none' writes beneath RHEOME_VIEWER (one bundle at a time), 'show' draws with
 % rheome.show. On R2026a+ with a display, the uihtml path is run against a stand-in view.html that answers with the
 % settings it received (round trip, a refused setting as a warning, figure reuse, set, screenshot, the 'no-webgpu'
-% fallback). The real page (nxr-cortical-flow editor/dist, view.html) is checked by hand: it needs WebGPU.
+% fallback). The real page (nxr-cortical-flow studio/dist, view.html) is checked by hand: it needs WebGPU.
 %
 % Author: Diellor Basha, 2026
     properties

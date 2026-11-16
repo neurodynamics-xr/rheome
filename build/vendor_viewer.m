@@ -1,23 +1,23 @@
 function v = vendor_viewer(src)
 % VENDOR_VIEWER  Ship the Cortical Flow Editor's build in Rheome: copy it into <rheome>/viewer, stamped with its commit.
 %
-%   v = vendor_viewer()      % from $NXR_VIEWER_DIST, else ~/workspace/research/code/nxr-cortical-flow/editor/dist
+%   v = vendor_viewer()      % from $NXR_VIEWER_DIST, else ~/workspace/research/code/nxr-cortical-flow/studio/dist
 %   v = vendor_viewer(src)
 %
 % The viewer is Rheome's renderer of the cortex (rheome.view, rheome.snapshot; Diellor, 2026-10-14), so it is versioned
 % with Rheome: viewer/ is tracked, packaged by build_toolbox and installed by rheome.view into prefdir/rheome-viewer
-% when its VERSION differs. Build the Editor first (npm --prefix editor run build in nxr-cortical-flow), then run
+% when its VERSION differs. Build the Studio first (npm --prefix studio run build in nxr-cortical-flow), then run
 % this and commit viewer/. The demo bundles (bundles/) are not shipped. Refuses a source repo with uncommitted changes
-% under editor/, so VERSION names exactly what was built.
+% under studio/, so VERSION names exactly what was built.
 %
 % Author: Diellor Basha, 2026
     if nargin < 1 || isempty(src), src = getenv('NXR_VIEWER_DIST'); end
-    if isempty(src), src = fullfile(getenv('HOME'), 'workspace', 'research', 'code', 'nxr-cortical-flow', 'editor', 'dist'); end
+    if isempty(src), src = fullfile(getenv('HOME'), 'workspace', 'research', 'code', 'nxr-cortical-flow', 'studio', 'dist'); end
     assert(isfile(fullfile(src, 'view.html')), 'vendor_viewer:src', 'No Editor build at %s (view.html).', src);
     repo = fileparts(fileparts(src));
     [rc, sha] = system(sprintf('git -C "%s" rev-parse --short HEAD', repo));
     assert(rc == 0, 'vendor_viewer:git', 'The viewer build is not in a git repo: %s', repo);
-    [~, dirty] = system(sprintf('git -C "%s" status --porcelain -- editor/src editor/package.json', repo));
+    [~, dirty] = system(sprintf('git -C "%s" status --porcelain -- studio/src studio/package.json', repo));
     assert(isempty(strtrim(dirty)), 'vendor_viewer:dirty', 'Uncommitted viewer sources in %s:\n%s', repo, dirty);
 
     dst = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'viewer');
