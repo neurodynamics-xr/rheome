@@ -228,8 +228,8 @@
    "cite": "Neurath O (1936) International Picture Language; ISO 7001:2023 public information symbols (pictograms).",
    "says": "A pictogram is a simplified picture of an object, readable without words at its size; detail is cut to what is legible at that size."
   },
-  "studio-time-sequence-2026-10-02": {
-   "cite": "Cortical Flow Studio design spec \"Time in the Studio: the sequence and its clips\" (research/code/nxr-cortical-flow/docs/superpowers/specs/2026-10-02-studio-time-sequence-and-clips-design.md), agreed by Diellor 2026-10-02",
+  "editor-time-sequence-2026-10-02": {
+   "cite": "Cortical Flow Editor design spec \"Time in the Editor: the sequence and its clips\" (research/code/nxr-cortical-flow/docs/superpowers/specs/2026-10-02-editor-time-sequence-and-clips-design.md), agreed by Diellor 2026-10-02",
    "says": "every tool result has tracks: its parameters along the time Line, flat when static, keyed when dynamic; masks are tracks with keyable lanes (centre, radius, level)"
   },
   "crane2013": {
@@ -1027,7 +1027,7 @@
    "check": "style.inset refuses an inset whose source has fewer than 2x the parent's pixels per mm of the object (I1)",
    "shapes": [
     "square (a rectangle on the image)",
-    "circle: a GEODESIC DISK selection (Rheome / Studio), its outline the disk's boundary on the surface",
+    "circle: a GEODESIC DISK selection (Rheome / Editor), its outline the disk's boundary on the surface",
     "tile: the tile's own outline (a dyadic tile selection)"
    ],
    "outline": "the same shape on the origin and the inset, 0.5 pt ink; a 0.5 pt ink leader joins them when they are not adjacent",
@@ -1037,7 +1037,7 @@
     "lab"
    ],
    "selection": "an inset takes the shape of the selection it shows: style.inset(..., shape='tile' | 'disk' | 'circle' | 'rect'); tile and disk insets are cut by the region's own mask, outlined by its contour",
-   "revision3": "REVISION 3 (Diellor's board comments 23-28, 2026-10-14; request 32d86cd6): the tile itself as an inset shape, beside square and circle; insets follow the Rheome / Studio selections"
+   "revision3": "REVISION 3 (Diellor's board comments 23-28, 2026-10-14; request 32d86cd6): the tile itself as an inset shape, beside square and circle; insets follow the Rheome / Editor selections"
   }
  },
  "outline": {
@@ -1150,7 +1150,7 @@
   },
   "timeTrack": {
    "status": "REVISION 2 (Diellor's board comment 15, 2026-10-14; request 5539a667)",
-   "what": "a component that shows how a parameter of a pattern changes over time: one LANE per parameter on a shared time axis (the Cortical Flow Studio tracks: a tool's parameters along the time Line, flat when static, keyed when dynamic)",
+   "what": "a component that shows how a parameter of a pattern changes over time: one LANE per parameter on a shared time axis (the Cortical Flow Editor tracks: a tool's parameters along the time Line, flat when static, keyed when dynamic)",
    "parameters": [
     "position of the extremum (mm along the path, or the tile)",
     "scale / diffusion of the heat wavelet (mm, or the level)",
@@ -1179,7 +1179,7 @@
    "code": "style.time_tracks(F, k, t, tracks)",
    "source": [
     "lab",
-    "studio-time-sequence-2026-10-02"
+    "editor-time-sequence-2026-10-02"
    ]
   }
  },
@@ -1359,16 +1359,16 @@
   },
   "selection": {
    "status": "REVISION 3 (Diellor's board comments 23-28, 2026-10-14; request 32d86cd6)",
-   "rule": "a SELECTED tile or region is a state of the surface, as in Rheome and the Studio: one colour blended inside it, never a heavy border. The selection's outline is the shown level's tile outline (0.35 pt ink), no heavier.",
+   "rule": "a SELECTED tile or region is a state of the surface, as in Rheome and the Editor: one colour blended inside it, never a heavy border. The selection's outline is the shown level's tile outline (0.35 pt ink), no heavier.",
    "colour": "the selected cell's axis colour: atlas-space for a space tile or a geodesic disk on the cortex, atlas-time for a time tile, atlas-joint-cell for a joint cell (no new colour: the selection is a cell of that axis)",
    "fill_alpha": 0.35,
    "centre": "the selected tile's centre is the same size as every other centre, filled with the selection colour",
    "vs_support": "a wavelet support or mask is an EXTENT: a dashed ink line (0.8 pt, dashes 2 / 1.5), never a fill, so a support never reads as a selection",
    "kinds": {
-    "tile": "a dyadic tile (Rheome rheome.selection.wavelettile, the Studio's tile selection)",
+    "tile": "a dyadic tile (Rheome rheome.selection.wavelettile, the Editor's tile selection)",
     "geodesic disk": "all points within r mm along the folded surface (the heat-method distance); shown and inset as a circle"
    },
-   "studio_note": "the Studio's mask layer desaturates the outside and edges the mask in its selection colour (--c-sel); the figure convention is the blended fill inside; Product asked to align the viewer's selection highlight (request to org:cortical-flow-lead)",
+   "editor_note": "the Editor's mask layer desaturates the outside and edges the mask in its selection colour (--c-sel); the figure convention is the blended fill inside; Product asked to align the viewer's selection highlight (request to org:cortical-flow-lead)",
    "code": "style.select_fill(ax, r.mask(v, f, in_tile), cell='space'); key: style.key(kind='patch', color=style.selection_colour('space'), alpha=0.35)",
    "source": [
     "lab"
@@ -1387,7 +1387,7 @@
   },
   "paths": {
    "status": "REVISION 3 (Diellor's board comments 23-28, 2026-10-14; request 32d86cd6)",
-   "rule": "a path on the cortex is a GEODESIC on the folded surface: traced on the mesh, never a polyline joined in the image or through the volume. Method: FlipOut (Sharp & Crane 2020, ported from geometry-central): draw.flipOut, called by nxr.geom.draw.line, rheome.geom.draw.line, the Studio's Geodesic line tool and the viewer, which draw the same line (to 1e-9 m). A FlipOut line is a geodesic, shortest among the routes near it; its length is measured along the surface and is at least the exact distance between its ends (geometry-central's MMP, exactDistance), which the viewer reports beside it (length_mm, geodesic_mm).",
+   "rule": "a path on the cortex is a GEODESIC on the folded surface: traced on the mesh, never a polyline joined in the image or through the volume. Method: FlipOut (Sharp & Crane 2020, ported from geometry-central): draw.flipOut, called by nxr.geom.draw.line, rheome.geom.draw.line, the Editor's Geodesic line tool and the viewer, which draw the same line (to 1e-9 m). A FlipOut line is a geodesic, shortest among the routes near it; its length is measured along the surface and is at least the exact distance between its ends (geometry-central's MMP, exactDistance), which the viewer reports beside it (length_mm, geodesic_mm).",
    "width_pt": 1.0,
    "check": "G1 (figure_check, from <stem>.marks.json): a path drawn without geodesic provenance (style.path_on_cortex(..., geodesic=True, how=…))",
    "code": "style.path_on_cortex(ax, F, k, r.xy(points), geodesic=True, how='FlipOut (nxr.geom.draw.line)')",
@@ -2125,7 +2125,7 @@
   ]
  },
  "illustration": {
-  "$description": "The ILLUSTRATION look: one camera-attached light rig, one material, one silhouette rule and role colours, shared by the PyVista recipe (library/styles/illustrations/recipe.py reads this group) and the Cortical Flow viewer's look 'illustration' (nxr-cortical-flow studio/src/viewer). No number of the look is written in either renderer. Objects encode nothing: roles map to neutrals only. Shape: the viewer's IllustrationTokens (nxr-cortical-flow studio/src/viewer/illustration.ts): lights [{name, dir, intensity}], material {ambient, diffuse, specular, power}, silhouette {colour, width_pt, atWidth_mm}, role {role: colour token}, cortex {colormap, mute, muteTo, tone}; the other keys are the recipe's and are ignored by the viewer.",
+  "$description": "The ILLUSTRATION look: one camera-attached light rig, one material, one silhouette rule and role colours, shared by the PyVista recipe (library/styles/illustrations/recipe.py reads this group) and the Cortical Flow viewer's look 'illustration' (nxr-cortical-flow editor/src/viewer). No number of the look is written in either renderer. Objects encode nothing: roles map to neutrals only. Shape: the viewer's IllustrationTokens (nxr-cortical-flow editor/src/viewer/illustration.ts): lights [{name, dir, intensity}], material {ambient, diffuse, specular, power}, silhouette {colour, width_pt, atWidth_mm}, role {role: colour token}, cortex {colormap, mute, muteTo, tone}; the other keys are the recipe's and are ignored by the viewer.",
   "status": "DRAFT 2026-10-14 (Graphics, request cc624568; design edbf0aca part 2): the values are the recipe's as rendered since 2026-10-08, moved here unchanged; acceptance is the side-by-side review of cf-ill-eeg (PyVista vs viewer) after the viewer's look PR",
   "lights": [
    {

@@ -1,23 +1,23 @@
 #!/usr/bin/env node
 /**
  * snapshot-driver.mjs — THE ONE DRIVER of the snapshot panel, for rheome.snapshot and nxr.snapshot (Rheome's
- * `+rheome/private/snapshot_driver.mjs`, generalised; shipped in the Studio's build at `driver/snapshot-driver.mjs`). Headless Chrome
- * over raw DevTools (no dependencies: Node 22's fetch and WebSocket), the Studio and one bundle served on 127.0.0.1; the Studio draws
- * the panels (studio/figure/cortexPanel.ts). The viewer (`viewer.html`) that drew them before was retired on 2026-11-11.
+ * `+rheome/private/snapshot_driver.mjs`, generalised; shipped in the Editor's build at `driver/snapshot-driver.mjs`). Headless Chrome
+ * over raw DevTools (no dependencies: Node 22's fetch and WebSocket), the Editor and one bundle served on 127.0.0.1; the Editor draws
+ * the panels (editor/figure/cortexPanel.ts). The viewer (`viewer.html`) that drew them before was retired on 2026-11-11.
  *
  *   node snapshot-driver.mjs job.json
  *
  * A SNAPSHOT JOB (`nxr-snapshot-job@1`; relative paths are relative to the job file):
  *   { "format": "nxr-snapshot-job@1",
- *     "studio": <the Studio's build folder, or a running Studio's url>   (default: the build this driver sits in, `..`),
+ *     "editor": <the Editor's build folder, or a running Editor's url>   (default: the build this driver sits in, `..`),
  *     "bundle": <rheome.bundle@1 folder>                                                     REQUIRED
  *     "out":    <folder written>                                                              REQUIRED
  *     "chrome": <Chrome or Chromium>   (default $RHEOME_CHROME, $CHROME, else the usual install),
  *     "tokens": <figure-tokens.json served as figure/figure-tokens.json>, "tokens_sha256", "tokens_path" (written into each marks file),
  *     "size": [w, h] (the window, default [1000, 760]), "wait": ms after the bundle opens (default 600), "timeout": s per shot (default 120),
- *     "shots": [{ "name": "panel", "shot": <the Shot: studio/src/studio/figure/print/panel.ts> }, …] }                       REQUIRED
+ *     "shots": [{ "name": "panel", "shot": <the Shot: editor/src/editor/figure/print/panel.ts> }, …] }                       REQUIRED
  *   → for each shot: <out>/<name>.svg (the panel), <name>.marks.json (nxr.marks@1), <name>.report.json (rheome.snapshot's `out`, 0-based;
- *     `build` the release's VERSION when the Studio's build has one), and each view's raw render <out>/<name>/<label>.png; <out>/driver.json
+ *     `build` the release's VERSION when the Editor's build has one), and each view's raw render <out>/<name>/<label>.png; <out>/driver.json
  *     the viewer's `ready` and each shot's warnings.
  *   RAW PICTURES (a shot with `stagePx` [w, h], panel.ts `Shot`): each render exactly w × h, and beside it <out>/<name>/<label>.marks.json
  *     (nxr.marks@1: that render's overlays, pixels in its raster); the report adds `stops`, `fit` and `renders` (each render's view, frame,
@@ -75,10 +75,10 @@ export function parseJob(text, jobPath = 'job.json') {
       throw new Error(`${jobPath}: shots[${i}].shot.views is a list of view names or camera directions [x, y, z]`)
   }
   if (j.size !== undefined && !(Array.isArray(j.size) && j.size.length === 2 && j.size.every((n) => Number.isInteger(n) && n > 0))) throw new Error(`${jobPath}: "size" is [width, height] in pixels`)
-  if (j.viewer !== undefined) throw new Error(`${jobPath}: "viewer": the viewer is retired; the Studio draws the shots ("studio": its build folder or url)`)
-  if (j.studio !== undefined && (typeof j.studio !== 'string' || !j.studio)) throw new Error(`${jobPath}: "studio" is the Studio's build folder or a running Studio's url`)
-  const studio = j.studio === undefined ? path.resolve(HERE, '..') : /^https?:/.test(j.studio) ? j.studio : abs(j.studio)
-  return { ...j, studio, bundle: abs(j.bundle), out: abs(j.out), tokens: abs(j.tokens), chrome: chromePath(j.chrome) }
+  if (j.viewer !== undefined) throw new Error(`${jobPath}: "viewer": the viewer is retired; the Editor draws the shots ("editor": its build folder or url)`)
+  if (j.editor !== undefined && (typeof j.editor !== 'string' || !j.editor)) throw new Error(`${jobPath}: "editor" is the Editor's build folder or a running Editor's url`)
+  const editor = j.editor === undefined ? path.resolve(HERE, '..') : /^https?:/.test(j.editor) ? j.editor : abs(j.editor)
+  return { ...j, editor, bundle: abs(j.bundle), out: abs(j.out), tokens: abs(j.tokens), chrome: chromePath(j.chrome) }
 }
 
 /** the window: "size" when given, else 1000 × 760, or larger to hold the largest raw stage (`stagePx`) asked */
@@ -197,12 +197,12 @@ async function printPanels(job) {
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.wasm': 'application/wasm', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2' }
 
-/** THE STUDIO draws the shots (retire-the-viewer): the page frames the Studio (examples/embed/embed.js), opens the bundle with a scene, sizes the
- *  Stage to each shot's stage and asks it for the panel (`studio.panel`, studio/figure/cortexPanel.ts); its answer is the viewer's `figure` */
-async function studioShots(job) {
+/** THE EDITOR draws the shots (retire-the-viewer): the page frames the Editor (examples/embed/embed.js), opens the bundle with a scene, sizes the
+ *  Stage to each shot's stage and asks it for the panel (`editor.panel`, editor/figure/cortexPanel.ts); its answer is the viewer's `figure` */
+async function editorShots(job) {
   if (!fs.existsSync(path.join(job.bundle, 'manifest.json'))) fail(`no bundle at ${job.bundle} (manifest.json)`)
-  const dev = /^https?:/.test(job.studio), dist = dev ? null : job.studio
-  if (dist && !fs.existsSync(path.join(dist, 'index.html'))) fail(`no Studio build at ${dist} (index.html)`)
+  const dev = /^https?:/.test(job.editor), dist = dev ? null : job.editor
+  if (dist && !fs.existsSync(path.join(dist, 'index.html'))) fail(`no Editor build at ${dist} (index.html)`)
   const embedJs = [path.resolve(HERE, '../examples/embed/embed.js'), path.resolve(HERE, 'embed.js')].find((f) => fs.existsSync(f))
   if (!embedJs) fail('embed.js is not beside the driver')
   const tokFile = job.tokens ?? (dist && path.join(dist, 'figure/figure-tokens.json')), tok = tokFile && fs.existsSync(tokFile) ? JSON.parse(fs.readFileSync(tokFile, 'utf8')) : null
@@ -210,7 +210,7 @@ async function studioShots(job) {
   const [W0, H0] = windowOf(job), W = Math.max(W0, ...job.shots.map((x) => stageOf(x.shot)[0] + 400)), H = Math.max(H0, ...job.shots.map((x) => stageOf(x.shot)[1] + 400))
   const host = `<!doctype html><meta charset="utf-8"><body style="margin:0"><div id="panel" style="width:${W0}px;height:${H0}px"></div><script type="module">
 import { mount } from '/embed.js'
-window.__studio = mount(document.getElementById('panel'), { studio: ${JSON.stringify(dev ? job.studio : '/studio/')}, theme: 'light' })
+window.__editor = mount(document.getElementById('panel'), { editor: ${JSON.stringify(dev ? job.editor : '/editor/')}, theme: 'light' })
 </script>`
   const compute = dist ? [path.join(dist, 'nxr-compute'), path.resolve(HERE, '../../frontend/public/nxr-compute')].find((f) => fs.existsSync(f)) : null
   const figTokens = job.tokens ?? (dist && fs.existsSync(path.join(dist, 'figure/figure-tokens.json')) ? path.join(dist, 'figure/figure-tokens.json') : null)
@@ -218,9 +218,9 @@ window.__studio = mount(document.getElementById('panel'), { studio: ${JSON.strin
     const u = decodeURIComponent(new URL(req.url, 'http://x').pathname)
     if (u === '/' || u === '/__host.html') { res.writeHead(200, { 'content-type': 'text/html' }); res.end(host); return }
     if (u === '/embed.js') { res.writeHead(200, { 'content-type': 'text/javascript' }); res.end(fs.readFileSync(embedJs)); return }
-    if (figTokens && u === '/studio/figure/figure-tokens.json') { res.writeHead(200, { 'content-type': 'application/json' }); res.end(fs.readFileSync(figTokens)); return }
-    const [root, rel] = u.startsWith('/b/') ? [job.bundle, u.slice(3)] : u.startsWith('/studio/nxr-compute/') && compute ? [compute, u.slice('/studio/nxr-compute/'.length)]
-      : u.startsWith('/studio/') && dist ? [dist, u.slice('/studio/'.length) || 'index.html'] : [null, null]
+    if (figTokens && u === '/editor/figure/figure-tokens.json') { res.writeHead(200, { 'content-type': 'application/json' }); res.end(fs.readFileSync(figTokens)); return }
+    const [root, rel] = u.startsWith('/b/') ? [job.bundle, u.slice(3)] : u.startsWith('/editor/nxr-compute/') && compute ? [compute, u.slice('/editor/nxr-compute/'.length)]
+      : u.startsWith('/editor/') && dist ? [dist, u.slice('/editor/'.length) || 'index.html'] : [null, null]
     const f = root && path.resolve(root, rel)
     if (!f || !f.startsWith(path.resolve(root) + path.sep) || !fs.existsSync(f) || !fs.statSync(f).isFile()) { res.writeHead(404); res.end(); return }
     res.writeHead(200, { 'content-type': TYPES[path.extname(f)] ?? 'application/octet-stream', 'access-control-allow-origin': '*' })
@@ -232,32 +232,32 @@ window.__studio = mount(document.getElementById('panel'), { studio: ${JSON.strin
   await send('Emulation.setDeviceMetricsOverride', { width: W, height: H, deviceScaleFactor: 1, mobile: false })
   await send('Page.navigate', { url: `${origin}/__host.html` })
   const T = 1000 * (job.timeout ?? 120)
-  for (let t = Date.now(); !(await evalp('!!window.__studio').catch(() => false)); await sleep(100)) if (Date.now() - t > T) fail('the Studio page did not load\n' + logs.join('\n'))
-  const opened = await evalp(`window.__studio.then((e) => e.show({ manifolds: { cortex: { load: { bundle: ${JSON.stringify(origin + '/b/manifest.json')} } } }, layers: [] }))`)
-  if (!opened?.ok) fail(`the Studio did not open the bundle: ${opened?.error?.message ?? JSON.stringify(opened)}\n${logs.slice(-20).join('\n')}`)
+  for (let t = Date.now(); !(await evalp('!!window.__editor').catch(() => false)); await sleep(100)) if (Date.now() - t > T) fail('the Editor page did not load\n' + logs.join('\n'))
+  const opened = await evalp(`window.__editor.then((e) => e.show({ manifolds: { cortex: { load: { bundle: ${JSON.stringify(origin + '/b/manifest.json')} } } }, layers: [] }))`)
+  if (!opened?.ok) fail(`the Editor did not open the bundle: ${opened?.error?.message ?? JSON.stringify(opened)}\n${logs.slice(-20).join('\n')}`)
   await sleep(job.wait ?? 600)
   fs.mkdirSync(job.out, { recursive: true })
-  const build = dist ? releaseBuild(dist) : null, done = { ready: { studio: job.studio }, build, shots: [] }
+  const build = dist ? releaseBuild(dist) : null, done = { ready: { editor: job.editor }, build, shots: [] }
   for (const { name, shot } of job.shots) {
-    /* THE STAGE exactly the shot's (the panel holds the Studio's own bars too): measured, the panel resized, until the canvas is W × H */
+    /* THE STAGE exactly the shot's (the panel holds the Editor's own bars too): measured, the panel resized, until the canvas is W × H */
     const want = stageOf(shot)
     let size = [want[0], want[1]]
     for (let i = 0; i < 6; i++) {
       await evalp(`(() => { const p = document.getElementById('panel'); p.style.width = '${size[0]}px'; p.style.height = '${size[1]}px' })()`)
       await sleep(250)
-      const got = (await evalp('window.__studio.then((e) => e.stage())'))?.size
-      if (!got) fail('the Studio has no Stage')
+      const got = (await evalp('window.__editor.then((e) => e.stage())'))?.size
+      if (!got) fail('the Editor has no Stage')
       if (got[0] === want[0] && got[1] === want[1]) break
       size = [size[0] + want[0] - got[0], size[1] + want[1] - got[1]]
       if (i === 5) fail(`${name}: the Stage is ${got.join('×')} CSS px, not ${want.join('×')}`)
     }
     let timer
-    const head = await Promise.race([evalp(`window.__studio.then(async (e) => { const d = await e.panel(${JSON.stringify(shot)}); if (!d.ok) return { error: d.error?.message ?? 'refused' };`
+    const head = await Promise.race([evalp(`window.__editor.then(async (e) => { const d = await e.panel(${JSON.stringify(shot)}); if (!d.ok) return { error: d.error?.message ?? 'refused' };`
       + `window.__fig = { svg: d.svg, marks: JSON.stringify(d.marks), report: JSON.stringify(d.report), renders: d.renders || [] };`
       + `return { svg: typeof d.svg === 'string', renders: window.__fig.renders.map((r) => r.label), marked: window.__fig.renders.map((r) => typeof r.marks === 'string'), warnings: d.warnings || [] } })`),
     new Promise((r) => { timer = setTimeout(r, T) }).then(() => fail(`${name}: no figure in ${job.timeout ?? 120} s\n${logs.slice(-20).join('\n')}`))])
     clearTimeout(timer)
-    if (!head || head.error) fail(`${name}: the Studio refused the shot: ${head?.error ?? 'no answer'}`)
+    if (!head || head.error) fail(`${name}: the Editor refused the shot: ${head?.error ?? 'no answer'}`)
     await writeShot(job, name, head, evalp, build)
     done.shots.push({ name, renders: head.renders, warnings: head.warnings })
     for (const w of head.warnings) console.error(`snapshot: ${name}: ${w}`)
@@ -301,5 +301,5 @@ if (process.argv[1] && isMain()) {
   let job
   try { job = parseJob(fs.readFileSync(file, 'utf8'), file) } catch (e) { fail(e.message) }
   if (job.print) await printPanels(job)
-  else await studioShots(job)
+  else await editorShots(job)
 }
